@@ -1319,6 +1319,35 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     font-size: 10px !important;
   }
 
+  /* ── CALCULATOR — Budget / Drift / Checkboxes row stacks ──── */
+  /* Desktop: Monthly Budget, Drift Limit, and 3 checkboxes sit in a
+     single horizontal row. On mobile this overflows and forces a
+     side-scroll. Stack the whole thing so the checkboxes sit beneath
+     the inputs naturally and nothing scrolls. */
+  .calc-controls-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    overflow-x: visible !important;
+    gap: 14px !important;
+  }
+  /* Hide the desktop vertical divider that sits between Budget and
+     Drift Limit — it doesn't make sense in a stacked layout. */
+  .calc-controls-row > div[style*="height:48px"][style*="width:1px"] {
+    display: none !important;
+  }
+  /* Inputs side: put Monthly Budget + Drift Limit side-by-side (they're
+     small enough to share a row), then the checkboxes stack underneath. */
+  .calc-controls-row > div:not([style*="display:flex"]):not([style*="margin-left:auto"]) {
+    margin-left: 0 !important;
+  }
+  /* Checkboxes block fills full width */
+  .calc-controls-row > div[style*="flex-direction:column"] {
+    width: 100%;
+  }
+  .calc-controls-row .check-wrap {
+    font-size: 13px !important;
+  }
+
   /* ── CALCULATOR — Fund Holdings & Prices header row ────────── */
   /* The heading sits next to three Pull from buttons; on mobile the
      buttons squash the heading text to wrap awkwardly. Stack instead. */
@@ -1371,6 +1400,21 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #bgt-history-view .bgt-table {
     min-width: 540px;
   }
+  /* Row backgrounds must be SOLID so the sticky first column doesn't
+     show overlapping content as it scrolls past. Use the card colour
+     so it blends with the table container. */
+  #bgt-main-table .bgt-row,
+  #bgt-history-view .bgt-row {
+    background: var(--card);
+  }
+  #bgt-main-table .bgt-row td,
+  #bgt-history-view .bgt-row td {
+    background: var(--card);
+  }
+  #bgt-main-table .bgt-thead th,
+  #bgt-history-view .bgt-thead th {
+    background: var(--card);
+  }
   /* Pin the Category column on the left so users always see what row
      they're reading, while planned / actual / difference can scroll. */
   #bgt-main-table .bgt-thead th:first-child,
@@ -1383,13 +1427,25 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     left: 0;
     background: var(--card);
     z-index: 2;
-    min-width: 130px;
-    max-width: 130px;
-    box-shadow: 6px 0 8px -6px rgba(0,0,0,0.6);
+    min-width: 140px;
+    max-width: 140px;
+    box-shadow: 6px 0 8px -6px rgba(0,0,0,0.7);
   }
-  /* Net Position row uses a tinted blue background — sticky cell needs to match */
-  #bgt-main-table .bgt-row.bgt-net td:first-child {
-    background: linear-gradient(to right, rgba(10,132,255,0.08), var(--card)) !important;
+  /* The Net Position row gets a tinted blue background — its sticky cell
+     needs to use a solid colour version of that tint so it stays opaque. */
+  #bgt-main-table .bgt-row.bgt-net td,
+  #bgt-history-view .bgt-row.bgt-net td {
+    background: #0d2840 !important;
+  }
+  /* Section header rows span colspan=4 so they don't need sticky;
+     just make sure their background is solid. */
+  #bgt-main-table tr td.bgt-section-label,
+  #bgt-history-view tr td.bgt-section-label {
+    background: var(--card) !important;
+    position: static !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    box-shadow: none !important;
   }
   /* Net Position row — keep figures readable; smaller when wrapping */
   .bgt-row.bgt-net td {
@@ -1413,21 +1469,94 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     min-width: 540px;
   }
 
-  /* ── ANALYSE — Bed & ISA Priority grid ──────────────────────── */
-  /* Renders as nested CSS grid divs (not <table>). Scroll horizontally
-     and force grid children to render at full width so the Position
-     column gets enough room for "19486 units @ £0.89 avg cost" instead
-     of crushing each character onto its own line. */
+  /* ── ANALYSE — Bed & ISA Priority list as stacked cards on mobile ─ */
+  /* The desktop 6-column grid (Ticker / Position / Market Value /
+     Unrealised Gain / Est. CGT Cost / Priority) doesn't fit a 380px
+     screen. Restructure each row into a stacked card: ticker + priority
+     badge on top, position description on a row beneath, then the three
+     monetary figures laid out in a 3-column row at the bottom. Hide the
+     header row entirely since the layout becomes self-explanatory. */
   #analyse-bedisa-list {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible;
   }
-  #analyse-bedisa-list > div {
-    min-width: 580px;
+  /* Hide the original header row (it's the first child of the container) */
+  #analyse-bedisa-list > div:first-child {
+    display: none !important;
   }
-  /* Ensure the position description never wraps inside its grid cell */
-  #analyse-bedisa-list > div > div:nth-child(2) {
-    white-space: nowrap;
+  /* Each data row becomes a stacked block */
+  #analyse-bedisa-list > div:not(:first-child) {
+    display: block !important;
+    min-width: 0 !important;
+    padding: 12px 0 !important;
+    border-bottom: 1px solid var(--border);
+  }
+  /* Ticker on top — bigger, more prominent */
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(1) {
+    font-size: 16px !important;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--white);
+  }
+  /* Position description gets full width, 2-line wrap allowed */
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(2) {
+    white-space: normal !important;
+    margin-bottom: 10px;
+    font-size: 11px !important;
+    color: var(--muted);
+    text-align: left !important;
+  }
+  /* Wrap the 4 numerical values in a flex row spread evenly across width.
+     Each gets a small label above its value via ::before pseudo-elements. */
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(3),
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(4),
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(5),
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(6) {
+    display: inline-block !important;
+    width: 24% !important;
+    text-align: left !important;
+    font-size: 13px !important;
+    margin-right: 0;
+  }
+  /* Add small descriptive labels above each value */
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(3)::before {
+    content: 'Market Value';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(4)::before {
+    content: 'Gain';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(5)::before {
+    content: 'Est. CGT';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(6)::before {
+    content: 'Priority';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-weight: 500;
   }
 
   /* ── SELL CALCULATOR — CGT/ISA remaining-allowance figure ───── */
@@ -1441,6 +1570,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     text-align: left !important;
     width: 100%;
     margin-top: 4px;
+    margin-bottom: 14px;
   }
   .sell-allowance-row {
     gap: 16px !important;
@@ -1596,7 +1726,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Budget row -->
-  <div class="card card-left mb24" style="display:flex;align-items:center;gap:20px;flex-wrap:nowrap;overflow-x:auto">
+  <div class="card card-left mb24 calc-controls-row" style="display:flex;align-items:center;gap:20px;flex-wrap:nowrap;overflow-x:auto">
     <div style="flex-shrink:0">
       <div class="input-label mb8">Monthly Budget</div>
       <div class="flex-center">
