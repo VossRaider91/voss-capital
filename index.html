@@ -1292,6 +1292,136 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     min-height: 40px;
     opacity: 0.85 !important;
   }
+
+  /* ── CALCULATOR — Active Account selector stacks vertically ── */
+  /* Desktop has label + select + helper text on one row. On mobile this
+     crushes; stack them so the select can grow to full width and show
+     the long option label ("GIA — General Investment Account") in full. */
+  #tab-calculator .card[style*="ACTIVE ACCOUNT"],
+  #tab-calculator .card:has(> .input-label):has(#activeWrapper) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  /* Fallback for browsers without :has() — target by class via JS-friendly hook */
+  .active-account-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .active-account-card #activeWrapper {
+    width: 100% !important;
+    font-size: 14px !important;
+    padding: 10px 14px !important;
+    min-height: 44px;
+  }
+  .active-account-card > div:last-child {
+    font-size: 10px !important;
+  }
+
+  /* ── CALCULATOR — Fund Holdings & Prices header row ────────── */
+  /* The heading sits next to three Pull from buttons; on mobile the
+     buttons squash the heading text to wrap awkwardly. Stack instead. */
+  .fund-holdings-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .fund-holdings-header > div:last-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .fund-holdings-header .pull-wrapper-btn {
+    font-size: 11px !important;
+    padding: 8px 4px !important;
+    min-height: 38px;
+    white-space: nowrap;
+  }
+
+  /* ── CALCULATOR — Paste HL Prices row ───────────────────────── */
+  /* The placeholder text gets truncated. Stack input above button so
+     the full input width is available for typing/pasting. */
+  .calc-paste-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .calc-paste-row input {
+    width: 100% !important;
+    min-height: 44px;
+  }
+  .calc-paste-row button {
+    align-self: flex-start;
+    min-height: 38px;
+  }
+
+  /* ── BUDGET TRACKER table — horizontal scroll within card ───── */
+  /* The 4-column table (Category / Planned / Actual / Difference) plus
+     the 90px-wide input fields exceeds 380px easily. Wrap the table
+     in a scroll container so it can swipe horizontally inside the card. */
+  #bgt-main-table .card,
+  #bgt-history-view .card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #bgt-main-table .bgt-table,
+  #bgt-history-view .bgt-table {
+    min-width: 560px;
+  }
+  /* Net Position row — keep figures readable; smaller when wrapping */
+  .bgt-row.bgt-net td {
+    font-size: 16px !important;
+    letter-spacing: -0.4px !important;
+  }
+
+  /* ── SELL CALCULATOR — wide tables scroll horizontally ──────── */
+  /* The Holdings Breakdown, Optimal CGT Sale Plan, and Remaining GIA
+     Position tables all have 5+ columns and won't fit in 380px.
+     Same approach: scroll inside their container card. */
+  #sellHoldingsTable,
+  #sellPlan,
+  #sellPostSale,
+  #analyse-bedisa-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #sellHoldingsTable table,
+  #sellPlan table,
+  #sellPostSale table,
+  #analyse-bedisa-list table {
+    min-width: 540px;
+  }
+
+  /* ── ANALYSE — Asset Breakdown rows wrap cleanly ────────────── */
+  /* Each row has icon + label + (note) + tag + value. On mobile the
+     inline (note) gets squashed. Make rows wrap and tighten typography. */
+  #analyse-nw-breakdown > div > div {
+    padding: 8px 0 !important;
+  }
+  #analyse-nw-breakdown > div > div > div:first-child {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 6px !important;
+    align-items: center !important;
+  }
+  #analyse-nw-breakdown > div > div > div:first-child > span {
+    line-height: 1.4 !important;
+  }
+
+  /* ── DROPDOWNS — make all selects readable on mobile ────────── */
+  /* Many selects have small font sizes set inline for desktop density.
+     On mobile they need to be tappable (44px tall) and readable. */
+  select.num-input,
+  select.text-input,
+  select#activeWrapper,
+  select#bgt-qa-category,
+  select#new-type,
+  select#new-wrapper {
+    min-height: 44px !important;
+    font-size: 14px !important;
+    padding: 10px 30px 10px 12px !important;
+  }
 }
 
 /* Even tighter for very narrow screens (older small iPhones) */
@@ -1402,7 +1532,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Active account selector -->
-  <div class="card mb16" style="display:flex;align-items:center;gap:12px;border-left:2px solid rgba(10,132,255,0.4);padding:10px 20px">
+  <div class="card mb16 active-account-card" style="display:flex;align-items:center;gap:12px;border-left:2px solid rgba(10,132,255,0.4);padding:10px 20px">
     <div class="input-label" style="white-space:nowrap;color:var(--gold);font-size:9px;letter-spacing:3px">ACTIVE ACCOUNT</div>
     <select id="activeWrapper" onchange="onWrapperChange(this.value)" style="background:var(--dark);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:11px;font-weight:600;padding:5px 10px;outline:none;cursor:pointer">
       <option value="GIA">GIA — General Investment Account</option>
@@ -1449,7 +1579,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Fund cards -->
-  <div class="flex-between mb12">
+  <div class="flex-between mb12 fund-holdings-header">
     <div class="section-label" style="margin-bottom:0">Fund Holdings &amp; Prices</div>
     <div style="display:flex;gap:8px">
       <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-GIA" onclick="pullFromWrapper('GIA', this)">Pull from GIA</button>
@@ -1459,7 +1589,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Paste price import — same format as Total Portfolio page -->
-  <div style="display:flex;gap:10px;align-items:center;margin-top:16px;margin-bottom:16px;padding-top:14px;border-top:1px solid var(--border)">
+  <div class="calc-paste-row" style="display:flex;gap:10px;align-items:center;margin-top:16px;margin-bottom:16px;padding-top:14px;border-top:1px solid var(--border)">
     <input class="text-input" type="text" id="calc-price-paste"
       placeholder="Paste HL prices — e.g. VWRP £133.26 VUAG £101.82 (spaces optional)"
       style="flex:1;font-size:11px">
@@ -2470,7 +2600,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
           <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
           <input class="budget-input" type="text" inputmode="numeric" id="cgt-used" value="0" step="100" style="width:110px">
         </div>
-        <div style="font-size:9px;color:var(--muted);margin-top:4px">Syncs everywhere instantly</div>
       </div>
       <!-- Hidden field for backward compat — total income fed from inputs above -->
       <input type="hidden" id="cgt-income" value="100000">
@@ -2617,7 +2746,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
         <input class="budget-input" type="text" inputmode="numeric" id="sell-used" value="0" step="100" style="width:110px">
       </div>
-      <div style="font-size:9px;color:var(--muted);margin-top:4px">Syncs everywhere instantly</div>
     </div>
     <div style="height:48px;width:1px;background:var(--border)"></div>
     <div>
