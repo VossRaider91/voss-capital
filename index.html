@@ -2493,6 +2493,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <button class="btn-ghost btn-sm" onclick="parseCalcPrices()">Paste &amp; Fill</button>
   </div>
   <div id="calcPasteResult" style="font-size:10px;margin-bottom:12px;display:none"></div>
+  <div id="auto-refresh-countdown-calc" style="font-size:10px;color:var(--muted);margin-bottom:12px;font-weight:500;letter-spacing:-0.05px;opacity:0.7"></div>
 
   <!-- Layered Strategy header — Edit Layers opens the modal that mutates FUNDS -->
   <div class="flex-between mb12" style="padding-top:14px;border-top:1px solid var(--border)">
@@ -3255,6 +3256,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
       <div id="price-update-timestamp-text" style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:500;letter-spacing:-0.05px"></div>
+      <div id="auto-refresh-countdown" style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:500;letter-spacing:-0.05px;opacity:0.7"></div>
     </div>
 
     <!-- Mobile-only always-visible Update button. Hidden on desktop via CSS;
@@ -3280,14 +3282,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div id="priceUpdaterGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px"></div>
     <!-- Update All Prices fetches live from Hargreaves Lansdown (via our
          Cloudflare Worker proxy) and Twelve Data (for NVDA), fills the grid,
-         then commits. The secondary "Apply Manual Prices" button is the
-         fallback path for users who have typed values into the grid by hand
-         (or pasted via Paste & Fill above) and want to commit without
-         hitting the live-fetch APIs. -->
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="btn-gold desktop-only-action" onclick="refreshLivePrices(this)">Update All Prices</button>
-      <button class="btn-ghost btn-sm" onclick="applyPriceUpdates()" title="Commit manually-typed values without fetching live prices">Apply Manual Prices</button>
-    </div>
+         then commits. Manual fallback is the Paste Prices field above —
+         Paste & Fill parses the string, fills the grid, and commits all in
+         one click. -->
+    <button class="btn-gold desktop-only-action" onclick="refreshLivePrices(this)">Update All Prices</button>
     <div id="priceUpdateNote" style="font-size:10px;color:var(--green);margin-top:8px;display:none"></div>
     </div><!-- /collapsible-body -->
   </div>
@@ -4148,6 +4146,7 @@ const LS = {
   MORTGAGE: 'rma_mortgage_v1',
   BUDGET: 'rma_budget_v1',
   FUNDS_CONFIG: 'rma_funds_config_v1',
+  MANUAL_OVERRIDE_UNTIL: 'rma_manual_override_until',
 };
 
 // Standalone localStorage key for the "last price update" timestamp shown
@@ -4448,10 +4447,23 @@ async function fetchAllLivePrices() {
 // the verbose summary toast with a quieter "Prices refreshed" toast (or
 // nothing if all tickers failed silently). Used by auto-fetch on page load
 // and tab-focus so the refresh feels invisible. The timestamp pill still
-// shows a brief "Live · refreshing..." indicator during the fetch so the
-// user knows something is happening if they happen to be looking at it.
+// shows a brief "Market Open · refreshing..." (or "Market Closed · refreshing...")
+// indicator during the fetch so the user knows something is happening if
+// they happen to be looking at it.
 async function refreshLivePrices(triggerButton = null, opts = {}) {
   const silent = opts.silent === true;
+
+  // Manual click on Update All Prices: user explicitly wants live data, so
+  // clear any active manual-override pause. Without this, the pause set by
+  // a recent paste would still tick down even though the user has now
+  // explicitly opted back into live polling. Auto-fetch paths don't clear
+  // the pause — they're the ones that defer to it.
+  if (!silent) {
+    try { localStorage.removeItem(LS.MANUAL_OVERRIDE_UNTIL); } catch (e) {}
+    // Push the cleared state so the other device also resumes polling.
+    if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced(LS.MANUAL_OVERRIDE_UNTIL);
+    if (typeof _renderAutoRefreshCountdown === 'function') _renderAutoRefreshCountdown();
+  }
 
   // Manual mode: lock both Update All Prices buttons to prevent double-clicks
   // during the in-flight fetch. Captures their original labels so we can
@@ -4522,8 +4534,10 @@ async function refreshLivePrices(triggerButton = null, opts = {}) {
   }
 
   // Commit via the existing apply flow so snapshotState, daily-baseline
-  // anchoring, sync push, and all derived views fire correctly.
-  applyPriceUpdates();
+  // anchoring, sync push, and all derived views fire correctly. Pass the
+  // silent flag through so the apply flow knows to preserve scroll
+  // position and suppress the green status note + summary toast.
+  applyPriceUpdates({ silent });
 
   // Tag the timestamp as a live update (default is manual). Done AFTER
   // applyPriceUpdates so _setPriceUpdateTimestamp's localStorage write
@@ -4553,11 +4567,13 @@ async function refreshLivePrices(triggerButton = null, opts = {}) {
 // Show a "refreshing..." indicator in the timestamp pill while a live fetch
 // is in flight. Used by both manual and auto refreshes so the user always
 // has a visual cue that something is happening, regardless of whether the
-// button itself is showing a loading state.
+// button itself is showing a loading state. Prefix matches the new pill
+// convention — "Market Open" during market hours, "Market Closed" outside.
 function _setTimestampRefreshing() {
   const el = document.getElementById('price-update-timestamp-text');
   if (!el) return;
-  el.textContent = 'Live · refreshing…';
+  const open = (typeof _isLseMarketOpen === 'function' && _isLseMarketOpen());
+  el.textContent = open ? 'Market Open · refreshing…' : 'Market Closed · refreshing…';
   el.style.opacity = '';
 }
 
@@ -4572,7 +4588,13 @@ function _autoFetchOnLoad() {
   // Skip if no portfolio yet — first-time users have nothing to refresh.
   const portfolio = lsGet(LS.PORTFOLIO, []);
   if (!portfolio || portfolio.length === 0) return;
+  // Respect manual override pause — opening the app during a paused
+  // window must NOT overwrite the prices the user just pasted.
+  if (_getManualOverrideUntil() > 0) return;
   setTimeout(() => {
+    // Re-check the pause inside the timer too (in case sync just landed
+    // a pause from the other device while we were waiting).
+    if (_getManualOverrideUntil() > 0) return;
     try { refreshLivePrices(null, { silent: true }); } catch (e) {
       console.warn('[Voss] auto-fetch on load failed:', e);
     }
@@ -4601,9 +4623,235 @@ function _autoFetchOnVisibilityChange() {
   const portfolio = lsGet(LS.PORTFOLIO, []);
   if (!portfolio || portfolio.length === 0) return;
 
+  // Respect manual override pause.
+  if (_getManualOverrideUntil() > 0) return;
+
   try { refreshLivePrices(null, { silent: true }); } catch (e) {
     console.warn('[Voss] auto-fetch on focus failed:', e);
   }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// AUTOMATIC LIVE PRICE POLLING (60-second interval)
+// ════════════════════════════════════════════════════════════════════
+// Polls live prices every 60 seconds with two guards to prevent runaway
+// API usage and respect the user's attention:
+//
+//   1. Tab must be visible — backgrounded tabs don't poll
+//   2. Soft daily counter — once we hit 350 refreshes (700 Twelve Data
+//      calls), polling pauses for the rest of the day. Resets at midnight.
+//      Manual Update All Prices button still works regardless.
+//
+// Polling runs 24/7 inside those two guards. During market hours fetched
+// prices change. Outside market hours fetched prices are the last close —
+// same fetch path, just static data. The timestamp pill swaps "Live" for
+// "Market Closed" outside hours via _formatPriceUpdateTimestamp's check
+// against _isLseMarketOpen, so the user always sees the current time
+// alongside the correct status.
+//
+// Polling runs on EVERY tab — not just Portfolio/Calculator. The whole
+// app feels live: tax calcs, retirement projections, analyse-tab metrics,
+// and any other view that depends on share prices stays current. Visual
+// jolts from re-renders are mitigated by preserving scroll position
+// during silent updates, so users reading mid-tab don't lose their place.
+
+const POLL_INTERVAL_MS = 60 * 1000; // 60 seconds — matches Worker edge cache
+const POLL_DAILY_CAP = 350;          // refreshes per day (700 Twelve Data calls)
+const POLL_COUNTER_KEY = 'rma_poll_counter';
+let _pollTimer = null;
+
+// Get/increment today's poll counter, scoped per UK calendar day so it
+// resets automatically at midnight.
+function _getTodayPollKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+function _getPollCount() {
+  try {
+    const raw = localStorage.getItem(POLL_COUNTER_KEY);
+    if (!raw) return 0;
+    const data = JSON.parse(raw);
+    if (data.date !== _getTodayPollKey()) return 0; // stale, treat as fresh
+    return Number(data.count) || 0;
+  } catch (e) { return 0; }
+}
+function _incrementPollCount() {
+  try {
+    const next = { date: _getTodayPollKey(), count: _getPollCount() + 1 };
+    localStorage.setItem(POLL_COUNTER_KEY, JSON.stringify(next));
+  } catch (e) {}
+}
+
+// LSE market hours check: 8am-4:30pm UK time, Monday-Friday. Uses
+// Europe/London via Intl so it correctly handles BST/GMT transitions
+// without manual offset maths.
+function _isLseMarketOpen() {
+  const now = new Date();
+  // Get the day-of-week and HH:MM as it would read in London right now
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(now);
+  const day = parts.find(p => p.type === 'weekday')?.value || '';
+  const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+  const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+  if (day === 'Sat' || day === 'Sun') return false;
+  const minutesSinceMidnight = hour * 60 + minute;
+  const open = 8 * 60;        // 08:00
+  const close = 16 * 60 + 30; // 16:30
+  return minutesSinceMidnight >= open && minutesSinceMidnight < close;
+}
+
+// Active tab check: only Portfolio Overview ('portfolio') and Calculator
+// ('calculator') show live prices, so polling on other tabs is pointless.
+function _isOnPriceTab() {
+  const active = document.querySelector('.nav-tab.active');
+  if (!active) return false;
+  const onclick = active.getAttribute('onclick') || '';
+  return /switchTab\('(portfolio|calculator)'/.test(onclick);
+}
+
+// The tick function — runs every 60s once polling has started. Checks the
+// guards in order; first failure short-circuits. Each pass is a silent
+// refresh (no button changes, no toast unless something errors). Outside
+// market hours the fetch still runs but returns last-close prices; the
+// timestamp pill displays "Market Closed · time" in that case.
+function _livePricePollTick() {
+  if (document.visibilityState !== 'visible') return;
+  if (_getPollCount() >= POLL_DAILY_CAP) return;
+  // Manual override: user just pasted prices, respect that for 10 minutes.
+  // Update All Prices button bypasses this — only the auto-poll defers.
+  if (_getManualOverrideUntil() > 0) return;
+
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  if (!portfolio || portfolio.length === 0) return;
+
+  _incrementPollCount();
+  _lastPollAt = Date.now(); // power the countdown
+  try { refreshLivePrices(null, { silent: true }); } catch (e) {
+    console.warn('[Voss] poll tick failed:', e);
+  }
+}
+
+// Start the polling interval. Idempotent — clears any existing timer first
+// so re-calling doesn't stack timers. Called once at end of init().
+function _startLivePricePolling() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(_livePricePollTick, POLL_INTERVAL_MS);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// MANUAL OVERRIDE PAUSE + AUTO-REFRESH COUNTDOWN
+// ════════════════════════════════════════════════════════════════════
+// When the user pastes prices via Paste & Fill (either Portfolio Overview
+// or Calculator), they're explicitly setting values they want preserved.
+// To respect that, the 60-second auto-refresh polling pauses for 10 minutes
+// after any manual paste. The pause-until timestamp is stored in LS so it
+// syncs across devices — paste on mobile, desktop also respects the pause.
+//
+// A live countdown is shown on both Portfolio Overview and Calculator pages
+// so the user always knows when the next refresh will fire (or when the
+// manual pause expires). Updates every second via setInterval.
+//
+// Update All Prices button explicitly bypasses the pause — clicking it is
+// an explicit live request.
+
+const MANUAL_OVERRIDE_PAUSE_MS = 10 * 60 * 1000; // 10 minutes
+let _lastPollAt = null;       // unix ms of last successful poll (for countdown to next)
+let _countdownTimer = null;
+
+// Read pause-until from localStorage. Returns 0 if not set or in the past.
+// lsSet wraps everything in JSON.stringify, so we JSON.parse on the way out.
+function _getManualOverrideUntil() {
+  try {
+    const raw = localStorage.getItem(LS.MANUAL_OVERRIDE_UNTIL);
+    if (!raw) return 0;
+    const n = Number(JSON.parse(raw));
+    if (!isFinite(n) || n <= 0) return 0;
+    return n > Date.now() ? n : 0; // expired pauses count as 0
+  } catch (e) { return 0; }
+}
+
+// Set pause-until to now + 10 minutes. Called from parsePastedPrices and
+// parseCalcPrices after a successful Paste & Fill commit.
+function _setManualOverridePause() {
+  const until = Date.now() + MANUAL_OVERRIDE_PAUSE_MS;
+  // Use lsSet so the change syncs to the other device — peer respects the
+  // pause too. Stored as a number string for simple parsing.
+  lsSet(LS.MANUAL_OVERRIDE_UNTIL, until);
+  _renderAutoRefreshCountdown(); // refresh display immediately
+}
+
+// Format a millisecond duration as "M:SS" (e.g. "9:34", "0:42").
+function _formatCountdown(ms) {
+  if (ms < 0) ms = 0;
+  const totalSeconds = Math.ceil(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+// Render the countdown text into both display elements (Portfolio Overview
+// and Calculator). Decides between four states based on current conditions.
+function _renderAutoRefreshCountdown() {
+  const els = [
+    document.getElementById('auto-refresh-countdown'),
+    document.getElementById('auto-refresh-countdown-calc'),
+  ].filter(Boolean);
+  if (els.length === 0) return;
+
+  // Daily cap reached — polling won't fire today regardless of any other
+  // state. Show this case first as it's the strongest stop condition.
+  if (_getPollCount() >= POLL_DAILY_CAP) {
+    els.forEach(el => { el.textContent = 'Daily refresh cap reached · resets at midnight'; });
+    return;
+  }
+
+  // Manual override pause active — countdown to pause expiry.
+  const pauseUntil = _getManualOverrideUntil();
+  if (pauseUntil > 0) {
+    const remaining = pauseUntil - Date.now();
+    els.forEach(el => { el.textContent = `Manual prices · auto-refresh in ${_formatCountdown(remaining)}`; });
+    return;
+  }
+
+  // No portfolio yet — nothing to refresh, hide the countdown entirely.
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  if (!portfolio || portfolio.length === 0) {
+    els.forEach(el => { el.textContent = ''; });
+    return;
+  }
+
+  // Normal polling: countdown to the next tick. The poll interval is
+  // 60s aligned to whenever polling started (or last fired). If we don't
+  // have a last-poll timestamp yet, show "any moment" rather than a number.
+  if (_lastPollAt === null) {
+    els.forEach(el => { el.textContent = 'Auto-refresh starting…'; });
+    return;
+  }
+  const elapsed = Date.now() - _lastPollAt;
+  const remaining = POLL_INTERVAL_MS - elapsed;
+  if (remaining <= 0) {
+    els.forEach(el => { el.textContent = 'Auto-refresh due any moment…'; });
+    return;
+  }
+  els.forEach(el => { el.textContent = `Auto-refresh in ${_formatCountdown(remaining)}`; });
+}
+
+// 1Hz ticker that re-renders the countdown text. Idempotent — clears any
+// existing timer so re-calls don't stack. Skips updates while the tab is
+// hidden (no point repainting unseen DOM). Called once at end of init.
+function _startAutoRefreshCountdown() {
+  if (_countdownTimer) clearInterval(_countdownTimer);
+  _renderAutoRefreshCountdown(); // immediate first paint
+  _countdownTimer = setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    _renderAutoRefreshCountdown();
+  }, 1000);
 }
 
 // Today's gain tracking. We snapshot the portfolio's total value once per
@@ -5658,7 +5906,7 @@ function parsePastedPrices() {
   resultEl.style.display = 'block';
   resultEl.style.color = filled > 0 ? 'var(--green)' : 'var(--amber)';
   resultEl.textContent = `${filled} price${filled!==1?'s':''} filled in from paste.`
-    + (notFound.length > 0 ? ` Not in your portfolio: ${notFound.join(', ')}.` : ' Hit Update All Prices to apply.');
+    + (notFound.length > 0 ? ` Not in your portfolio: ${notFound.join(', ')}.` : '');
 
   // Also sync to calculator fund card price inputs
   FUNDS.forEach(f => {
@@ -5671,6 +5919,22 @@ function parsePastedPrices() {
 
   // Clear the input
   document.getElementById('hl-price-paste').value = '';
+
+  // Commit immediately — Paste & Fill is a one-click flow now that the
+  // separate "Apply Manual Prices" button has been removed. Goes through
+  // the same applyPriceUpdates path as the live-fetch flow so snapshotState,
+  // daily-baseline anchoring, sync push, and all derived views fire correctly.
+  // The source key stays as 'manual' (the default applyPriceUpdates sets) so
+  // the timestamp pill reads "Manual · time" — distinguishes pasted prices
+  // from live-fetched ones.
+  //
+  // Trigger the 10-minute manual override pause: the user just typed in
+  // values they want to keep, so auto-poll defers for 10 minutes before
+  // overwriting them with live prices. Sync to the other device too.
+  if (filled > 0) {
+    applyPriceUpdates();
+    _setManualOverridePause();
+  }
 }
 
 function parseCalcPrices() {
@@ -5760,6 +6024,11 @@ function parseCalcPrices() {
     + (notFilled.length > 0 ? ` Also updated: ${notFilled.join(', ')} in portfolio store.` : ' All prices synced across the site.');
 
   document.getElementById('calc-price-paste').value = '';
+
+  // Trigger the 10-minute manual override pause — same as the Portfolio
+  // Overview's Paste & Fill. User just typed in values they want kept,
+  // so auto-poll defers for 10 minutes. Synced to the other device.
+  if (filled > 0) _setManualOverridePause();
 }
 
 function buildPriceUpdater() {
@@ -5822,7 +6091,16 @@ function buildPriceUpdater() {
   _renderPriceUpdateTimestamp();
 }
 
-function applyPriceUpdates() {
+function applyPriceUpdates(opts = {}) {
+  const silent = opts.silent === true;
+
+  // Capture scroll position upfront — silent (auto) refreshes preserve it
+  // across re-renders so the user reading any tab mid-page doesn't get
+  // jumped to the top. Manual user clicks don't need this preservation
+  // (the user is actively interacting with the price card and a small
+  // scroll adjustment is expected).
+  const savedScrollY = silent ? (window.scrollY || window.pageYOffset || 0) : null;
+
   // Read all input values FIRST so we can compare against current state
   // and only persist changes (avoids accidental rollback from stale inputs).
   const portfolioBefore = lsGet(LS.PORTFOLIO, []);
@@ -5858,14 +6136,16 @@ function applyPriceUpdates() {
   // are from, not when we last pressed the button.
   const actuallyChanged = Object.values(changeMap).filter(c => c.changed);
   if (actuallyChanged.length === 0) {
-    const note = document.getElementById('priceUpdateNote');
-    if (note) {
-      note.style.display = 'block';
-      note.style.color = 'var(--muted)';
-      note.textContent = 'No price changes to apply — values match what is already stored.';
-      setTimeout(() => { note.style.display = 'none'; note.style.color = 'var(--green)'; }, 3000);
+    if (!silent) {
+      const note = document.getElementById('priceUpdateNote');
+      if (note) {
+        note.style.display = 'block';
+        note.style.color = 'var(--muted)';
+        note.textContent = 'No price changes to apply — values match what is already stored.';
+        setTimeout(() => { note.style.display = 'none'; note.style.color = 'var(--green)'; }, 3000);
+      }
+      toast('No price changes — already up to date');
     }
-    toast('No price changes — already up to date');
     return;
   }
 
@@ -5933,18 +6213,38 @@ function applyPriceUpdates() {
     if (liveEl) flashInput(liveEl);
   });
 
-  const note = document.getElementById('priceUpdateNote');
-  if (note) {
-    note.style.display = 'block';
-    note.style.color = 'var(--green)';
-    note.textContent = `${updated} ticker${updated !== 1 ? 's' : ''} updated — portfolio value and CGT calculations refreshed`;
-    setTimeout(() => note.style.display = 'none', 3000);
+  // Manual flow: green status note and summary toast. Silent flow: neither —
+  // the user shouldn't be interrupted by a refresh they didn't trigger. The
+  // only visual cues for silent refreshes are the price-input pulses (above)
+  // and the timestamp pill update.
+  if (!silent) {
+    const note = document.getElementById('priceUpdateNote');
+    if (note) {
+      note.style.display = 'block';
+      note.style.color = 'var(--green)';
+      note.textContent = `${updated} ticker${updated !== 1 ? 's' : ''} updated — portfolio value and CGT calculations refreshed`;
+      setTimeout(() => note.style.display = 'none', 3000);
+    }
   }
 
   // Stamp the "last updated" timestamp next to the section heading
   _setPriceUpdateTimestamp();
 
-  toast(`Prices updated — ${updated} ticker${updated !== 1 ? 's' : ''}`);
+  if (!silent) toast(`Prices updated — ${updated} ticker${updated !== 1 ? 's' : ''}`);
+
+  // Restore scroll position for silent refreshes. Done at the very end so
+  // every re-render in the cascade has completed before we snap back. Uses
+  // 'instant' behaviour so the user never sees a scroll animation — they
+  // shouldn't be aware that the scroll moved at all.
+  if (silent && savedScrollY !== null) {
+    try {
+      window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
+    } catch (e) {
+      // Older Safari doesn't support 'instant' behaviour. Fall through to
+      // the no-options form which is also synchronous.
+      window.scrollTo(0, savedScrollY);
+    }
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -5965,11 +6265,26 @@ function _formatPriceUpdateTimestamp(iso, source) {
   h = h % 12; if (h === 0) h = 12;
   const time = `${h}:${m}${ampm}`;
   // Source prefix:
-  //   'live'   → "Live · time"
-  //   'manual' → "Manual · time"
+  //   'live' during market hours    → "Market Open · time" (LSE is open,
+  //                                   prices are moving, this is the local
+  //                                   device time of the most recent fetch)
+  //   'live' outside market hours   → "Market Closed · time" (fetched data
+  //                                   is the last close, won't change until
+  //                                   the market reopens, but timestamp
+  //                                   still ticks because we did just fetch)
+  //   'manual'                      → "Manual · time"
   //   null/missing → "Prices from time" (legacy / first-load — no source recorded yet)
+  //
+  // Time displayed is always the local device time — most useful for "how
+  // long ago was that?". Market open/closed status is determined by London
+  // time via _isLseMarketOpen so the pill reads correctly regardless of
+  // where the user physically is.
   let prefix;
-  if (source === 'live') prefix = 'Live';
+  if (source === 'live') {
+    prefix = (typeof _isLseMarketOpen === 'function' && _isLseMarketOpen())
+      ? 'Market Open'
+      : 'Market Closed';
+  }
   else if (source === 'manual') prefix = 'Manual';
   else prefix = null;
   if (prefix === null) {
@@ -15982,6 +16297,17 @@ function init() {
   // hammering the API on every brief switch (the 60s threshold matches the
   // dedupe cache window). Single listener wired once at init.
   document.addEventListener('visibilitychange', _autoFetchOnVisibilityChange);
+
+  // Start the 60-second polling timer. Polling itself is gated by visibility,
+  // daily cap, and manual-override pause on each tick, so the timer can run
+  // permanently without burning quota.
+  _startLivePricePolling();
+
+  // Start the 1Hz countdown ticker that paints "Auto-refresh in M:SS" on
+  // both Portfolio Overview and Calculator pages. Idempotent. Pauses
+  // updating while the tab is hidden but the timer keeps running so it
+  // resumes immediately on visibility change.
+  _startAutoRefreshCountdown();
 }
 
 init();
