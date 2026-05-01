@@ -79,6 +79,27 @@ body::before {
   color: var(--green);
   letter-spacing: 0;
 }
+/* Tax status pills used on the Tax tab to label each wrapper card with
+   a consistent "CGT Applies" or "Tax Exempt" badge. */
+.tax-status-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tax-status-pill.tax-status-cgt {
+  background: rgba(255,69,58,0.14);
+  color: var(--red);
+}
+.tax-status-pill.tax-status-exempt {
+  background: rgba(48,209,88,0.14);
+  color: var(--green);
+}
 .vc-status-date {
   font-size: 11px; font-weight: 400;
   color: var(--muted2);
@@ -1533,19 +1554,53 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     background: rgba(10,132,255,0.10);
     border-top: 1px solid var(--blue);
     border-bottom: 1px solid var(--blue);
-    margin-top: 4px;
-    padding: 14px 10px !important;
+    margin-top: 8px;
+    padding: 16px 14px !important;
+    grid-template-areas:
+      "label  label  label"
+      "plan   act    diff" !important;
+    row-gap: 12px !important;
   }
-  #bgt-main-table .bgt-row.bgt-net td,
-  #bgt-history-view .bgt-row.bgt-net td {
-    font-size: 16px !important;
-    letter-spacing: -0.3px !important;
-    font-weight: 700 !important;
-  }
+  /* Title cell: bigger gold heading, full width on its own row */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(1),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(1) {
-    font-size: 13px !important;
+    font-size: 14px !important;
     color: var(--gold) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    padding-bottom: 4px !important;
+    border-bottom: 0.5px solid rgba(10,132,255,0.25);
+  }
+  /* All three value cells get the same treatment — left align, smaller
+     than the original 16px so they fit cleanly across three columns. */
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(2),
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(3),
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(2),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(3),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(4) {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.3px !important;
+    text-align: left !important;
+    align-self: start !important;
+  }
+  /* The Difference cell sits in column 3 — left-align too for consistency
+     with Planned and Actual, rather than right-aligned like other rows. */
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(4) {
+    text-align: left !important;
+  }
+  /* Tighten the Net Position label pseudos to match */
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(2)::before,
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(3)::before,
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(4)::before,
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(2)::before,
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(3)::before,
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(4)::before {
+    text-align: left !important;
+    color: var(--muted) !important;
+    opacity: 0.85;
   }
   /* Variable expense rows have an inline progress bar inside the Actual cell —
      make sure it stays visible and sized correctly in the new grid layout. */
@@ -1697,6 +1752,27 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     line-height: 1.4 !important;
   }
 
+  /* ── ANALYSE — Net Worth Overview stacks vertically on mobile ── */
+  /* Desktop has Asset Breakdown + Tax Exposure side-by-side. On mobile
+     this crushes the (Tax-free wrapper) labels and the "27.0% of gross
+     assets" descriptive text wraps awkwardly. Stack them so each card
+     gets the full screen width. */
+  #analyse-nw-breakdown {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── ANALYSE — Concentration & Overlap stacks vertically too ── */
+  /* Desktop: Geographic Exposure (left) and Overlap/Indices (right) in
+     a 2-column grid. Right column gets crushed because Geographic
+     Exposure has space-greedy percentages. On mobile, stack vertically
+     so Unique Indices Tracked drops below Geographic Exposure and uses
+     the full width — much more readable than crushed against the right. */
+  #analyse-concentration > div {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
   /* ── DROPDOWNS — make all selects readable on mobile ────────── */
   /* Many selects have small font sizes set inline for desktop density.
      On mobile they need to be tappable (44px tall) and readable. */
@@ -1709,6 +1785,28 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     min-height: 44px !important;
     font-size: 14px !important;
     padding: 10px 30px 10px 12px !important;
+  }
+
+  /* ── DATE OF BIRTH input — fits screen, looks like other fields ─ */
+  /* iOS Safari default chrome on type="date" inputs can spill outside
+     the parent container. Constrain to 100% width and match the visual
+     style of other num-input fields. */
+  input[type="date"]#ret-dob {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  /* When empty, iOS Safari shows the placeholder format dd/mm/yyyy
+     in a faint colour. Make sure that colour matches the rest of the
+     muted text styling so it doesn't stand out. */
+  input[type="date"]#ret-dob:not(:valid)::-webkit-datetime-edit {
+    color: var(--muted2);
+    opacity: 0.6;
   }
 }
 
@@ -2939,7 +3037,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">GIA — General Investment Account</div>
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--red);font-weight:600">Capital Gains Tax Applies</div>
+      <span class="tax-status-pill tax-status-cgt">CGT Applies</span>
     </div>
 
     <div class="grid-4 mb16" id="giaSummary"></div>
@@ -2958,7 +3056,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">ISA — Individual Savings Account</div>
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:600">Tax Exempt</div>
+      <span class="tax-status-pill tax-status-exempt">Tax Exempt</span>
     </div>
     <div id="isaTable"></div>
   </div>
@@ -2967,7 +3065,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">SIPP — Self Invested Personal Pension</div>
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:600">Tax Exempt</div>
+      <span class="tax-status-pill tax-status-exempt">Tax Exempt</span>
     </div>
     <div id="sippTable"></div>
   </div>
