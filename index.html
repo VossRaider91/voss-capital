@@ -4443,10 +4443,21 @@ async function fetchAllLivePrices() {
 //
 // On any total failure (network down, both proxies dead) the manual
 // paste flow remains intact and the user is told to use it.
-async function refreshLivePrices(triggerButton = null) {
-  // Lock both Update All Prices buttons to prevent double-clicks during
-  // the in-flight fetch. Captures their original labels so we can restore.
-  const buttons = Array.from(document.querySelectorAll('button')).filter(b => {
+//
+// opts.silent — when true, suppresses the button-state change and replaces
+// the verbose summary toast with a quieter "Prices refreshed" toast (or
+// nothing if all tickers failed silently). Used by auto-fetch on page load
+// and tab-focus so the refresh feels invisible. The timestamp pill still
+// shows a brief "Live · refreshing..." indicator during the fetch so the
+// user knows something is happening if they happen to be looking at it.
+async function refreshLivePrices(triggerButton = null, opts = {}) {
+  const silent = opts.silent === true;
+
+  // Manual mode: lock both Update All Prices buttons to prevent double-clicks
+  // during the in-flight fetch. Captures their original labels so we can
+  // restore them. Silent mode skips this — auto-fetches don't fight the user
+  // for control of the buttons.
+  const buttons = silent ? [] : Array.from(document.querySelectorAll('button')).filter(b => {
     const t = (b.textContent || '').trim();
     return t === 'Update All Prices' || t === 'Fetching live prices…';
   });
@@ -4456,6 +4467,12 @@ async function refreshLivePrices(triggerButton = null) {
     b.textContent = 'Fetching live prices…';
     b.style.opacity = '0.7';
   });
+
+  // Stamp the timestamp pill with a "refreshing" indicator so the user has
+  // visual confirmation that a fetch is running. Survives until either
+  // success (overwritten by _setPriceUpdateTimestamp) or failure (restored
+  // by _renderPriceUpdateTimestamp from the last successful timestamp).
+  _setTimestampRefreshing();
 
   const restoreButtons = () => {
     buttons.forEach((b, i) => {
@@ -4470,7 +4487,8 @@ async function refreshLivePrices(triggerButton = null) {
     results = await fetchAllLivePrices();
   } catch (e) {
     restoreButtons();
-    toast('Live fetch failed — paste prices manually below');
+    _renderPriceUpdateTimestamp(); // clear "refreshing" indicator
+    if (!silent) toast('Live fetch failed — paste prices manually below');
     return;
   }
 
@@ -4498,7 +4516,8 @@ async function refreshLivePrices(triggerButton = null) {
 
   if (successful.length === 0) {
     restoreButtons();
-    toast('Live fetch failed — paste prices manually below');
+    _renderPriceUpdateTimestamp(); // clear "refreshing" indicator
+    if (!silent) toast('Live fetch failed — paste prices manually below');
     return;
   }
 
@@ -4515,15 +4534,76 @@ async function refreshLivePrices(triggerButton = null) {
   restoreButtons();
 
   // Summary toast — include FX rate for NVDA when available so the user
-  // can see what conversion rate was applied.
-  let summary = `Updated ${successful.length} live price${successful.length !== 1 ? 's' : ''}`;
-  if (nvdaMeta && nvdaMeta.fxRate) {
-    summary += ` · NVDA at $1 = £${nvdaMeta.fxRate.toFixed(4)}`;
+  // can see what conversion rate was applied. Silent mode shows a quieter
+  // toast only when something actually changed (prices ticked since last
+  // fetch); on identical-price refreshes, applyPriceUpdates already short-
+  // circuits with its own subtle "no changes" message.
+  if (!silent) {
+    let summary = `Updated ${successful.length} live price${successful.length !== 1 ? 's' : ''}`;
+    if (nvdaMeta && nvdaMeta.fxRate) {
+      summary += ` · NVDA at $1 = £${nvdaMeta.fxRate.toFixed(4)}`;
+    }
+    if (failed.length > 0) {
+      summary += ` · ${failed.length} failed: ${failed.join(', ')}`;
+    }
+    toast(summary);
   }
-  if (failed.length > 0) {
-    summary += ` · ${failed.length} failed: ${failed.join(', ')}`;
+}
+
+// Show a "refreshing..." indicator in the timestamp pill while a live fetch
+// is in flight. Used by both manual and auto refreshes so the user always
+// has a visual cue that something is happening, regardless of whether the
+// button itself is showing a loading state.
+function _setTimestampRefreshing() {
+  const el = document.getElementById('price-update-timestamp-text');
+  if (!el) return;
+  el.textContent = 'Live · refreshing…';
+  el.style.opacity = '';
+}
+
+// Auto-fetch live prices on page load. Called after init and after the
+// initial Supabase pull completes (so the user sees the most recent
+// cross-device prices first, then this device's auto-fetch updates them
+// to the current market). Silent — no button state changes, no verbose
+// toast. Wrapped in a 1.5s delay so the page settles before the fetch
+// starts.
+function _autoFetchOnLoad() {
+  // Skip if sync is disabled — implies a deliberate offline-only setup.
+  // Skip if no portfolio yet — first-time users have nothing to refresh.
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  if (!portfolio || portfolio.length === 0) return;
+  setTimeout(() => {
+    try { refreshLivePrices(null, { silent: true }); } catch (e) {
+      console.warn('[Voss] auto-fetch on load failed:', e);
+    }
+  }, 1500);
+}
+
+// Track when the tab was last visible/focused so we can decide whether to
+// auto-refresh on visibility change. Less than 60 seconds = dedupe cache
+// will catch any redundant fetch anyway, so we skip. More than 60 seconds
+// = tab was genuinely backgrounded, fire a silent refresh.
+let _lastVisibleAt = Date.now();
+function _autoFetchOnVisibilityChange() {
+  if (document.visibilityState !== 'visible') {
+    // Going hidden — record the moment so we can compare on return
+    _lastVisibleAt = Date.now();
+    return;
   }
-  toast(summary);
+  // Coming back from hidden. If we were away long enough that the dedupe
+  // cache (60s) would have expired, fire a silent refresh. Short app-switches
+  // (<60s) are no-ops because the cache absorbs them.
+  const awayMs = Date.now() - _lastVisibleAt;
+  _lastVisibleAt = Date.now();
+  if (awayMs < 60 * 1000) return;
+
+  // Only fetch if the user actually has portfolio holdings — defensive.
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  if (!portfolio || portfolio.length === 0) return;
+
+  try { refreshLivePrices(null, { silent: true }); } catch (e) {
+    console.warn('[Voss] auto-fetch on focus failed:', e);
+  }
 }
 
 // Today's gain tracking. We snapshot the portfolio's total value once per
@@ -15889,6 +15969,19 @@ function init() {
     _vossSyncInit();
   }
   // Otherwise the head module will fire _vossSyncOnReady() once it loads.
+
+  // Live prices auto-refresh on page load. Runs after a 1.5s delay so the
+  // app has settled and the initial Supabase pull (if any) has had a chance
+  // to apply cross-device prices first. Silent — no button state, quiet
+  // toast. The Update All Prices button remains the manual override.
+  _autoFetchOnLoad();
+
+  // Live prices auto-refresh when the tab regains focus after being away
+  // for more than 60 seconds. iOS Safari aggressively backgrounds tabs, so
+  // this catches the common pattern of "switch app, come back" without
+  // hammering the API on every brief switch (the 60s threshold matches the
+  // dedupe cache window). Single listener wired once at init.
+  document.addEventListener('visibilitychange', _autoFetchOnVisibilityChange);
 }
 
 init();
