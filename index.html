@@ -1385,72 +1385,177 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     min-height: 38px;
   }
 
-  /* ── BUDGET TRACKER table — horizontal scroll within card ───── */
-  /* The 4-column table (Category / Planned / Actual / Difference) plus
-     the 90px-wide input fields exceeds 380px easily. Wrap the table
-     in a scroll container so it can swipe horizontally inside the card.
-     First column stays pinned so the label is always visible. */
+  /* ── BUDGET TRACKER table — full stacked layout on mobile ──── */
+  /* The 4-column table never works cleanly on a 380px screen, so on
+     mobile we throw away the table layout entirely and reflow each row
+     as a self-contained block: category label on top, then a horizontal
+     row of three labelled values (Planned / Actual / Difference)
+     underneath. No sticky columns, no horizontal scroll, no overlap.
+     Achieved purely via CSS — the JS render logic remains untouched. */
   #bgt-main-table .card,
   #bgt-history-view .card {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 14px !important;
+    overflow-x: visible;
+    padding: 8px !important;
   }
   #bgt-main-table .bgt-table,
   #bgt-history-view .bgt-table {
-    min-width: 540px;
+    display: block;
+    min-width: 0;
+    width: 100%;
   }
-  /* Row backgrounds must be SOLID so the sticky first column doesn't
-     show overlapping content as it scrolls past. Use the card colour
-     so it blends with the table container. */
+  /* Hide the original thead — we use ::before pseudo-labels instead */
+  #bgt-main-table .bgt-thead,
+  #bgt-history-view .bgt-thead {
+    display: none;
+  }
+  #bgt-main-table .bgt-table tbody,
+  #bgt-history-view .bgt-table tbody {
+    display: block;
+    width: 100%;
+  }
+  /* Each row becomes a card */
   #bgt-main-table .bgt-row,
   #bgt-history-view .bgt-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas:
+      "label  label  label"
+      "plan   act    diff";
+    column-gap: 8px;
+    row-gap: 6px;
+    padding: 12px 10px !important;
     background: var(--card);
+    border-bottom: 0.5px solid var(--border);
+    border-radius: 0;
   }
+  /* Section header rows still span full width */
+  #bgt-main-table tr:has(td.bgt-section-label),
+  #bgt-history-view tr:has(td.bgt-section-label) {
+    display: block !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-bottom: none !important;
+  }
+  #bgt-main-table tr:has(td.bgt-section-label) td,
+  #bgt-history-view tr:has(td.bgt-section-label) td {
+    display: block !important;
+    width: 100%;
+    padding: 16px 6px 6px !important;
+  }
+  /* Cells: position them via grid-area */
   #bgt-main-table .bgt-row td,
   #bgt-history-view .bgt-row td {
-    background: var(--card);
+    display: block;
+    border-bottom: none !important;
+    padding: 0 !important;
+    background: transparent;
+    text-align: left;
+    font-size: 13px;
   }
-  #bgt-main-table .bgt-thead th,
-  #bgt-history-view .bgt-thead th {
-    background: var(--card);
+  #bgt-main-table .bgt-row td:nth-child(1),
+  #bgt-history-view .bgt-row td:nth-child(1) {
+    grid-area: label;
+    color: var(--white) !important;
+    font-weight: 600;
+    font-size: 13px !important;
+    text-align: left !important;
   }
-  /* Pin the Category column on the left so users always see what row
-     they're reading, while planned / actual / difference can scroll. */
-  #bgt-main-table .bgt-thead th:first-child,
-  #bgt-main-table .bgt-row td:first-child,
-  #bgt-main-table .bgt-section-label,
-  #bgt-history-view .bgt-thead th:first-child,
-  #bgt-history-view .bgt-row td:first-child,
-  #bgt-history-view .bgt-section-label {
-    position: sticky;
-    left: 0;
-    background: var(--card);
-    z-index: 2;
-    min-width: 140px;
-    max-width: 140px;
-    box-shadow: 6px 0 8px -6px rgba(0,0,0,0.7);
+  #bgt-main-table .bgt-row td:nth-child(2),
+  #bgt-history-view .bgt-row td:nth-child(2) {
+    grid-area: plan;
   }
-  /* The Net Position row gets a tinted blue background — its sticky cell
-     needs to use a solid colour version of that tint so it stays opaque. */
+  #bgt-main-table .bgt-row td:nth-child(3),
+  #bgt-history-view .bgt-row td:nth-child(3) {
+    grid-area: act;
+  }
+  #bgt-main-table .bgt-row td:nth-child(4),
+  #bgt-history-view .bgt-row td:nth-child(4) {
+    grid-area: diff;
+    text-align: right !important;
+    align-self: end;
+  }
+  /* Add small column labels above each numeric cell so users know what they're looking at */
+  #bgt-main-table .bgt-row td:nth-child(2)::before,
+  #bgt-history-view .bgt-row td:nth-child(2)::before {
+    content: 'Planned';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+    font-weight: 500;
+  }
+  #bgt-main-table .bgt-row td:nth-child(3)::before,
+  #bgt-history-view .bgt-row td:nth-child(3)::before {
+    content: 'Actual';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+    font-weight: 500;
+  }
+  #bgt-main-table .bgt-row td:nth-child(4)::before,
+  #bgt-history-view .bgt-row td:nth-child(4)::before {
+    content: 'Difference';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+    font-weight: 500;
+    text-align: right;
+  }
+  /* Inputs need full width of their grid cell */
+  #bgt-main-table .bgt-planned-input,
+  #bgt-main-table .bgt-actual-input,
+  #bgt-history-view .bgt-planned-input,
+  #bgt-history-view .bgt-actual-input {
+    width: 100% !important;
+    min-height: 36px;
+    text-align: left !important;
+    font-size: 14px !important;
+    padding: 4px 0 !important;
+  }
+  /* Section subtotal rows ("Total Income", "Total Tax Provision" etc.)
+     get a slightly different visual treatment to mark them out. */
+  #bgt-main-table .bgt-row.bgt-total,
+  #bgt-history-view .bgt-row.bgt-total {
+    background: rgba(255,255,255,0.02);
+    border-top: 1px solid var(--border2);
+  }
+  /* Net Position row — hero treatment */
+  #bgt-main-table .bgt-row.bgt-net,
+  #bgt-history-view .bgt-row.bgt-net {
+    background: rgba(10,132,255,0.10);
+    border-top: 1px solid var(--blue);
+    border-bottom: 1px solid var(--blue);
+    margin-top: 4px;
+    padding: 14px 10px !important;
+  }
   #bgt-main-table .bgt-row.bgt-net td,
   #bgt-history-view .bgt-row.bgt-net td {
-    background: #0d2840 !important;
-  }
-  /* Section header rows span colspan=4 so they don't need sticky;
-     just make sure their background is solid. */
-  #bgt-main-table tr td.bgt-section-label,
-  #bgt-history-view tr td.bgt-section-label {
-    background: var(--card) !important;
-    position: static !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    box-shadow: none !important;
-  }
-  /* Net Position row — keep figures readable; smaller when wrapping */
-  .bgt-row.bgt-net td {
     font-size: 16px !important;
-    letter-spacing: -0.4px !important;
+    letter-spacing: -0.3px !important;
+    font-weight: 700 !important;
+  }
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(1),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(1) {
+    font-size: 13px !important;
+    color: var(--gold) !important;
+  }
+  /* Variable expense rows have an inline progress bar inside the Actual cell —
+     make sure it stays visible and sized correctly in the new grid layout. */
+  #bgt-main-table .bgt-cell-actual,
+  #bgt-history-view .bgt-cell-actual {
+    align-items: flex-start !important;
+  }
+  #bgt-main-table .bgt-progress-wrap,
+  #bgt-history-view .bgt-progress-wrap {
+    width: 100%;
   }
 
   /* ── SELL CALCULATOR — wide tables scroll horizontally ──────── */
