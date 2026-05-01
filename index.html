@@ -976,7 +976,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* Mobile-only elements hidden by default on desktop */
 #mobile-nav-pill { display: none; }
-.mobile-fab { display: none; }
 .collapsible-chevron { display: none; }
 .collapsible-header { cursor: default; }
 .mobile-always-action { display: none !important; }
@@ -1206,37 +1205,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     gap: 8px !important;
   }
 
-  /* ── FLOATING ACTION BUTTON ───────────────────────────────── */
-  .mobile-fab {
-    display: flex !important;
-    position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    right: 16px;
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    padding: 13px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: -0.1px;
-    border-radius: 999px;
-    box-shadow: 0 8px 24px rgba(10,132,255,0.35),
-                inset 0 1px 0 rgba(255,255,255,0.18);
-    z-index: 80;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    font-family: inherit;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .mobile-fab:active {
-    transform: scale(0.96);
-  }
-
   /* ── TOAST — reposition to centre-bottom on mobile ────────── */
   .save-toast {
-    bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+    bottom: calc(24px + env(safe-area-inset-bottom)) !important;
     right: 50% !important;
     transform: translateX(50%) !important;
     text-align: center;
@@ -2968,14 +2939,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 <div class="save-toast" id="saveToast">Saved</div>
 
-<!-- Mobile-only Floating Action Buttons. Visibility tied to active tab via JS. -->
-<button class="mobile-fab" id="fab-calculator" style="display:none" onclick="calculate()">
-  <span style="font-size:14px;line-height:1">⚡</span> Calculate
-</button>
-<button class="mobile-fab" id="fab-budget" style="display:none" onclick="(function(){var f=document.getElementById('bgt-qa-amount');if(f){f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){f.focus();},400);}})()">
-  <span style="font-size:16px;line-height:1">+</span> Add line
-</button>
-
 <div class="data-controls-footer" style="text-align:center;padding:40px 0 20px;border-top:1px solid var(--border);margin-top:40px">
   <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;font-weight:700">Data Controls</div>
   <div style="display:flex;justify-content:center;gap:12px;align-items:center">
@@ -3327,19 +3290,6 @@ function switchTab(name, btn) {
   // Mobile nav: refresh pill label and collapse the grid (no-op on desktop)
   _updateMobileNavPill();
   _closeMobileNav();
-  _updateMobileFabs(name);
-}
-
-// ════════════════════════════════════════════════════════
-// MOBILE FABs — Floating Action Buttons for Calculator & Budget tabs.
-// Hidden by default; shown only when their tab is active. CSS gates
-// display to mobile viewports only via a media-query class toggle.
-// ════════════════════════════════════════════════════════
-function _updateMobileFabs(activeTabName) {
-  const fabCalc = document.getElementById('fab-calculator');
-  const fabBgt  = document.getElementById('fab-budget');
-  if (fabCalc) fabCalc.style.display = (activeTabName === 'calculator') ? '' : 'none';
-  if (fabBgt)  fabBgt.style.display  = (activeTabName === 'budget')     ? '' : 'none';
 }
 
 function switchHistoryTab(type, btn) {
@@ -13519,8 +13469,6 @@ function init() {
 
   // Mobile nav: set initial pill label/icon (no-op on desktop)
   _updateMobileNavPill();
-  // Mobile FABs default hidden (Portfolio is the boot tab)
-  _updateMobileFabs('portfolio');
   // Apply persisted collapsed state on the Update Prices and Add Holding cards
   _applyMobileCollapseState();
 }
