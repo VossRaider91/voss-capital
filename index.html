@@ -79,6 +79,27 @@ body::before {
   color: var(--green);
   letter-spacing: 0;
 }
+/* Sync status pill — sits next to the live clock in the header.
+   States: synced (green), syncing (blue), offline (amber), error (red),
+   disabled (muted). All variants share the same shape. */
+.vc-sync-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 50px;
+  border: none;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  margin-left: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.vc-sync-pill.vc-sync-synced  { background: rgba(48,209,88,0.12); color: var(--green); }
+.vc-sync-pill.vc-sync-syncing { background: rgba(10,132,255,0.14); color: var(--blue-bright); }
+.vc-sync-pill.vc-sync-offline { background: rgba(255,159,10,0.14); color: var(--amber); }
+.vc-sync-pill.vc-sync-error   { background: rgba(255,69,58,0.14); color: var(--red); }
+.vc-sync-pill.vc-sync-idle    { background: rgba(255,255,255,0.06); color: var(--muted); }
 /* Tax status pills used on the Tax tab to label each wrapper card with
    a consistent "CGT Applies" or "Tax Exempt" badge. */
 .tax-status-pill {
@@ -1894,6 +1915,23 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 </style>
 
+<!-- Supabase JS client for cross-device sync. ESM module loaded from CDN.
+     Exposes window._vossSupabase once loaded. Falls back to offline-only
+     gracefully if the CDN can't be reached (e.g. on aeroplane). -->
+<script type="module">
+  try {
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const SUPABASE_URL = 'https://jnjpwzkksciygfzmfmrg.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_v3qlfHWf6Vfj3a5_tjef9w_Bt_uBdHx';
+    window._vossSupabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    if (typeof window._vossSyncOnReady === 'function') window._vossSyncOnReady();
+  } catch (e) {
+    console.warn('[Voss Sync] Supabase client failed to load — running offline only:', e);
+    window._vossSupabase = null;
+    if (typeof window._vossSyncOnReady === 'function') window._vossSyncOnReady();
+  }
+</script>
+
 </head>
 <body>
 <div class="container">
@@ -1939,6 +1977,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="vc-status">
     <span class="vc-status-pill" id="vc-status-pill">Live</span>
     <span class="vc-status-date" id="vc-status-date"></span>
+    <span class="vc-sync-pill" id="vc-sync-pill" title="Cross-device sync status. Click to force a sync." onclick="_vossSyncForce()">Sync</span>
   </div>
   <!-- Mobile-only collapsing nav pill — hidden on desktop via CSS -->
   <div id="mobile-nav-pill" onclick="toggleMobileNav()" role="button" aria-label="Toggle navigation">
@@ -3684,9 +3723,11 @@ function lsGet(key, fallback=[]) { try { const v=localStorage.getItem(key); retu
 // Strategy: try the write, on QuotaExceededError prune the undo stack
 // (which is the largest growable thing), retry once, and only if still
 // failing surface a visible error so the user knows their data isn't saving.
+// Also: every successful write triggers a debounced cross-device sync push.
 function lsSet(key, val) {
   try {
     localStorage.setItem(key, JSON.stringify(val));
+    if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced(key);
     return true;
   } catch (e) {
     // QuotaExceededError or NS_ERROR_DOM_QUOTA_REACHED depending on browser
@@ -3702,6 +3743,7 @@ function lsSet(key, val) {
       }
       localStorage.setItem(key, JSON.stringify(val));
       if (typeof toast === 'function') toast('Storage was almost full — older undo history was pruned to make room');
+      if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced(key);
       return true;
     } catch (e2) {}
 
@@ -3710,6 +3752,7 @@ function lsSet(key, val) {
       localStorage.removeItem(UNDO_KEY);
       localStorage.setItem(key, JSON.stringify(val));
       if (typeof toast === 'function') toast('Storage almost full — undo history cleared to save your data');
+      if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced(key);
       return true;
     } catch (e3) {}
 
@@ -3722,6 +3765,284 @@ function lsSet(key, val) {
     return false;
   }
 }
+
+// ════════════════════════════════════════════════════════════════════
+// CROSS-DEVICE SYNC LAYER (Supabase)
+// ════════════════════════════════════════════════════════════════════
+// Architecture: offline-first localStorage with a Supabase mirror.
+// Every lsSet writes to localStorage immediately (zero latency, works
+// offline) then queues a debounced push to Supabase. Every 30 seconds
+// the app pulls from Supabase and merges if the remote copy is newer
+// than our local copy. Last-write-wins on conflict.
+//
+// Single shared row keyed by VOSS_SYNC_UUID. The publishable key alone
+// can't access this row without knowing the UUID — the UUID is the
+// effective auth token. Keep it out of public places.
+//
+// State machine:
+//   idle       — sync ready but nothing to do (initial state, or just synced)
+//   synced     — last operation succeeded, in sync with server
+//   syncing    — push or pull in flight
+//   offline    — network unreachable, will retry when back online
+//   error      — server returned an error (will retry with next change)
+//   disabled   — Supabase client failed to load, sync permanently off
+const VOSS_SYNC_UUID  = '809603ac-ea4f-4fe4-8a8a-a67a16d83178';
+const VOSS_SYNC_TABLE = 'voss_state';
+const VOSS_SYNC_PULL_INTERVAL_MS = 30 * 1000; // 30 seconds
+const VOSS_SYNC_PUSH_DEBOUNCE_MS = 1500;       // 1.5 second debounce
+
+// Per-device flag: holds the last seen remote `updated_at` so we know
+// whether a pulled row is newer than what we already have. Standalone
+// localStorage key, NOT in the LS map (per-device, not in backups).
+const VOSS_SYNC_LAST_REMOTE_KEY = 'rma_sync_last_remote_at';
+const VOSS_SYNC_LOCAL_DIRTY_KEY = 'rma_sync_local_dirty_at';
+// Optional opt-out flag: if user sets this to '1', sync stops permanently
+// for this device until they remove it. Currently not exposed in UI.
+const VOSS_SYNC_DISABLED_KEY    = 'rma_sync_disabled';
+
+let _vossSyncPushTimer = null;
+let _vossSyncPullTimer = null;
+let _vossSyncInFlight  = false;
+let _vossSyncReady     = false;
+let _vossSyncStatus    = 'idle';
+
+function _vossSyncSetStatus(status, label) {
+  _vossSyncStatus = status;
+  const pill = document.getElementById('vc-sync-pill');
+  if (!pill) return;
+  pill.classList.remove('vc-sync-synced','vc-sync-syncing','vc-sync-offline','vc-sync-error','vc-sync-idle');
+  pill.classList.add(`vc-sync-${status}`);
+  pill.textContent = label || ({
+    idle:     'Sync',
+    synced:   'Synced',
+    syncing:  'Syncing',
+    offline:  'Offline',
+    error:    'Sync error',
+    disabled: 'Sync off',
+  }[status] || 'Sync');
+}
+
+// Build a snapshot of every LS key for upload. Only the canonical schema
+// keys go up — standalone per-device keys (price-update timestamps, mobile
+// collapse state, sync metadata, undo stack) stay device-local.
+function _vossSyncBuildSnapshot() {
+  const snap = {};
+  Object.values(LS).forEach(key => {
+    const v = localStorage.getItem(key);
+    if (v !== null) snap[key] = v;
+  });
+  return snap;
+}
+
+// Apply a snapshot received from the server back into localStorage.
+// IMPORTANT: writes via raw localStorage.setItem rather than lsSet so we
+// don't trigger another push back to the server in a feedback loop.
+// After applying, runs the same re-init path used by undo and import.
+function _vossSyncApplySnapshot(data) {
+  if (!data || typeof data !== 'object') return;
+  Object.values(LS).forEach(key => {
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      try { localStorage.setItem(key, data[key]); } catch (e) {}
+    }
+  });
+}
+
+// Re-render the visible app after a remote pull replaced local state.
+// Mirrors the init flow but stops short of the network-dependent bits
+// like the daily refresh schedule which is already running.
+function _vossSyncRehydrateUi() {
+  try {
+    loadFundsConfig();
+    loadCalcInputs();
+    buildFundCards();
+    renderAdditionalFunds();
+    syncExtraFundsToPortfolio();
+    loadRetirementInputs();
+    loadTaxSettings();
+    mpInitFromStorage();
+    loadNetWorthInputs();
+    buildEmpFundsInput();
+    syncPortfolioFromHistory();
+    buildPriceUpdater();
+    updateUndoButton();
+    refreshTaxYearLabels();
+    initCommaInputs();
+    _recomputeTaxAllowancesFromHistory();
+    calculateGlobalRetirement();
+    renderCurrentPosition();
+
+    // Re-render whichever tab is currently active
+    const active = document.querySelector('.nav-tab.active');
+    if (active) {
+      const onclick = active.getAttribute('onclick') || '';
+      const m = onclick.match(/switchTab\('([^']+)'/);
+      if (m) {
+        // Don't actually switch tabs — just re-render the currently-active one
+        const tabName = m[1];
+        if (tabName === 'portfolio')      renderPortfolio(getPortfolioFilter());
+        else if (tabName === 'budget')    { try { renderBudgetTab(); } catch(e){} }
+        else if (tabName === 'history')   { try { renderHistory(getHistoryActiveFilter()); } catch(e){} }
+        else if (tabName === 'tax')       { try { renderTaxTab(); } catch(e){} }
+        else if (tabName === 'sell')      { try { renderSellCalculator(); } catch(e){} }
+        else if (tabName === 'retirement'){ try { calculateRetirement(); renderNetWorth(); } catch(e){} }
+        else if (tabName === 'analyse')   { try { renderAnalyse(); } catch(e){} }
+      }
+    }
+  } catch (e) {
+    console.warn('[Voss Sync] rehydrate UI failed:', e);
+  }
+}
+
+// Push the current local state up to Supabase. No-op if sync is disabled,
+// not ready, or another push/pull is in flight (the debouncer will retry).
+async function _vossSyncPush() {
+  if (!_vossSyncReady) return;
+  if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') return;
+  if (!window._vossSupabase) { _vossSyncSetStatus('disabled'); return; }
+  if (_vossSyncInFlight) return;
+
+  _vossSyncInFlight = true;
+  _vossSyncSetStatus('syncing');
+  try {
+    const snapshot = _vossSyncBuildSnapshot();
+    const { data, error } = await window._vossSupabase
+      .from(VOSS_SYNC_TABLE)
+      .upsert({ id: VOSS_SYNC_UUID, data: snapshot })
+      .select('updated_at')
+      .single();
+    if (error) {
+      console.warn('[Voss Sync] push error:', error);
+      _vossSyncSetStatus('error');
+      return;
+    }
+    if (data && data.updated_at) {
+      try { localStorage.setItem(VOSS_SYNC_LAST_REMOTE_KEY, data.updated_at); } catch (e) {}
+    }
+    try { localStorage.removeItem(VOSS_SYNC_LOCAL_DIRTY_KEY); } catch (e) {}
+    _vossSyncSetStatus('synced');
+  } catch (e) {
+    console.warn('[Voss Sync] push failed:', e);
+    _vossSyncSetStatus(navigator.onLine === false ? 'offline' : 'error');
+  } finally {
+    _vossSyncInFlight = false;
+  }
+}
+
+// Pull from Supabase. If the remote row's updated_at is newer than the
+// last one we saw AND we don't have unsaved local changes pending, apply
+// the remote snapshot and re-render.
+async function _vossSyncPull(opts = {}) {
+  if (!_vossSyncReady) return;
+  if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') return;
+  if (!window._vossSupabase) { _vossSyncSetStatus('disabled'); return; }
+  if (_vossSyncInFlight) return;
+
+  _vossSyncInFlight = true;
+  _vossSyncSetStatus('syncing');
+  try {
+    const { data, error } = await window._vossSupabase
+      .from(VOSS_SYNC_TABLE)
+      .select('data, updated_at')
+      .eq('id', VOSS_SYNC_UUID)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[Voss Sync] pull error:', error);
+      _vossSyncSetStatus('error');
+      return;
+    }
+
+    if (!data) {
+      // First-ever load on the cloud. Push our local state up so the row
+      // exists for next time.
+      _vossSyncInFlight = false;
+      await _vossSyncPush();
+      return;
+    }
+
+    const lastSeen   = localStorage.getItem(VOSS_SYNC_LAST_REMOTE_KEY) || '';
+    const localDirty = localStorage.getItem(VOSS_SYNC_LOCAL_DIRTY_KEY) || '';
+    const remoteAt   = data.updated_at || '';
+
+    // If remote is newer than what we last saw AND we don't have unsaved
+    // local changes pending, accept the remote.
+    if (remoteAt > lastSeen && (!localDirty || localDirty < remoteAt)) {
+      _vossSyncApplySnapshot(data.data || {});
+      try { localStorage.setItem(VOSS_SYNC_LAST_REMOTE_KEY, remoteAt); } catch (e) {}
+      _vossSyncRehydrateUi();
+      if (opts.userInitiated && typeof toast === 'function') toast('Updated from another device');
+    } else if (localDirty && localDirty > remoteAt) {
+      // We have newer local changes — push them up
+      _vossSyncInFlight = false;
+      await _vossSyncPush();
+      return;
+    }
+    _vossSyncSetStatus('synced');
+  } catch (e) {
+    console.warn('[Voss Sync] pull failed:', e);
+    _vossSyncSetStatus(navigator.onLine === false ? 'offline' : 'error');
+  } finally {
+    _vossSyncInFlight = false;
+  }
+}
+
+// Debounced push: called by lsSet on every successful write. Marks the
+// local state as dirty (so a pull can't stomp our pending changes) and
+// schedules a single push 1.5s after the last write.
+function _vossSyncPushDebounced(_keyHint) {
+  if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') return;
+  try { localStorage.setItem(VOSS_SYNC_LOCAL_DIRTY_KEY, new Date().toISOString()); } catch (e) {}
+  if (_vossSyncPushTimer) clearTimeout(_vossSyncPushTimer);
+  _vossSyncPushTimer = setTimeout(() => { _vossSyncPush(); }, VOSS_SYNC_PUSH_DEBOUNCE_MS);
+}
+
+// User-initiated force sync (clicking the pill in the header).
+function _vossSyncForce() {
+  if (!_vossSyncReady) return;
+  if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') {
+    if (typeof toast === 'function') toast('Sync is disabled on this device');
+    return;
+  }
+  _vossSyncPull({ userInitiated: true });
+}
+
+// Initialise sync. Called from the Supabase client's ready callback in
+// the head <script type="module">. Pulls once, then starts the periodic
+// pull timer.
+function _vossSyncInit() {
+  _vossSyncReady = true;
+  if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') {
+    _vossSyncSetStatus('disabled', 'Sync off');
+    return;
+  }
+  if (!window._vossSupabase) {
+    _vossSyncSetStatus('disabled', 'Sync off');
+    return;
+  }
+  _vossSyncSetStatus('syncing');
+  _vossSyncPull();
+  if (_vossSyncPullTimer) clearInterval(_vossSyncPullTimer);
+  _vossSyncPullTimer = setInterval(() => { _vossSyncPull(); }, VOSS_SYNC_PULL_INTERVAL_MS);
+
+  // Pull immediately when the tab regains focus after being backgrounded
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _vossSyncPull();
+  });
+  // Push pending changes when network comes back online
+  window.addEventListener('online',  () => { _vossSyncPull(); });
+  window.addEventListener('offline', () => { _vossSyncSetStatus('offline'); });
+}
+
+// Hooked from the head module — fires when the Supabase client is loaded
+// (or has failed to load). If the app's init() has already run, start
+// sync now; otherwise init() will call _vossSyncInit when it's ready.
+window._vossSyncOnReady = function() {
+  if (window._vossSyncAppReady) _vossSyncInit();
+};
+// ════════════════════════════════════════════════════════════════════
+// END CROSS-DEVICE SYNC LAYER
+// ════════════════════════════════════════════════════════════════════
+
 
 // Estimate localStorage usage as a percentage of the typical 5MB quota.
 // Used by init() to warn early if you're approaching the limit, rather
@@ -11834,6 +12155,8 @@ function undoLastAction() {
   const agoStr = ago < 60 ? `${ago}s ago` : `${Math.round(ago/60)}m ago`;
   toast(`Undone: ${snapshot.label || 'last action'} (${agoStr})`);
   updateUndoButton();
+  // Push the restored state up so other devices see the undo
+  if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced('undo');
 }
 
 function updateUndoButton() {
@@ -12141,6 +12464,8 @@ function importData(event) {
       false
     );
     toast('Backup restored — all data reloaded successfully');
+    // Push the imported state up so other devices see it
+    if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced('import');
   };
 
   reader.readAsText(file);
@@ -14224,6 +14549,19 @@ function init() {
   _updateMobileNavPill();
   // Apply persisted collapsed state on the Update Prices and Add Holding cards
   _applyMobileCollapseState();
+
+  // Cross-device sync: signal that the app is ready. The Supabase client
+  // is loaded asynchronously from the head <script type="module">, so it
+  // may have already loaded (in which case _vossSyncOnReady has been set
+  // and we call init now) or it may still be loading (the head module
+  // will call _vossSyncOnReady when it finishes). Either way, by setting
+  // _vossSyncAppReady=true we coordinate the two sides correctly.
+  window._vossSyncAppReady = true;
+  if (window._vossSupabase || window._vossSupabase === null) {
+    // Client already finished loading (success or failure). Start sync.
+    _vossSyncInit();
+  }
+  // Otherwise the head module will fire _vossSyncOnReady() once it loads.
 }
 
 init();
