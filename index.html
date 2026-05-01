@@ -1081,6 +1081,19 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-section-fixed { color: var(--amber); }
 .bgt-section-variable { color: var(--blue); }
 .bgt-quick-add { display: grid; grid-template-columns: 1fr 120px 1fr auto; gap: 10px; align-items: end; }
+/* Each input-group inside Quick Add must have a uniform vertical structure
+   — label on top at the same height across all columns, field below at the
+   same height. Without this, the label for Category drifts higher because
+   <select> has a different intrinsic height from <input> on most platforms,
+   throwing off the row's visual rhythm. */
+.bgt-quick-add .input-group { display: flex; flex-direction: column; gap: 6px; }
+.bgt-quick-add .input-group .input-label { line-height: 1.2; }
+.bgt-quick-add .input-group .num-input,
+.bgt-quick-add .input-group select.num-input {
+  height: 44px;
+  box-sizing: border-box;
+}
+.bgt-quick-add .btn-gold { height: 44px; align-self: end; }
 .bgt-audit-row {
   display: grid; grid-template-columns: 1fr auto auto 28px 28px;
   gap: 10px; align-items: center; padding: 10px 0;
