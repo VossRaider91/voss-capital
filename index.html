@@ -1359,15 +1359,37 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   /* ── BUDGET TRACKER table — horizontal scroll within card ───── */
   /* The 4-column table (Category / Planned / Actual / Difference) plus
      the 90px-wide input fields exceeds 380px easily. Wrap the table
-     in a scroll container so it can swipe horizontally inside the card. */
+     in a scroll container so it can swipe horizontally inside the card.
+     First column stays pinned so the label is always visible. */
   #bgt-main-table .card,
   #bgt-history-view .card {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    padding: 14px !important;
   }
   #bgt-main-table .bgt-table,
   #bgt-history-view .bgt-table {
-    min-width: 560px;
+    min-width: 540px;
+  }
+  /* Pin the Category column on the left so users always see what row
+     they're reading, while planned / actual / difference can scroll. */
+  #bgt-main-table .bgt-thead th:first-child,
+  #bgt-main-table .bgt-row td:first-child,
+  #bgt-main-table .bgt-section-label,
+  #bgt-history-view .bgt-thead th:first-child,
+  #bgt-history-view .bgt-row td:first-child,
+  #bgt-history-view .bgt-section-label {
+    position: sticky;
+    left: 0;
+    background: var(--card);
+    z-index: 2;
+    min-width: 130px;
+    max-width: 130px;
+    box-shadow: 6px 0 8px -6px rgba(0,0,0,0.6);
+  }
+  /* Net Position row uses a tinted blue background — sticky cell needs to match */
+  #bgt-main-table .bgt-row.bgt-net td:first-child {
+    background: linear-gradient(to right, rgba(10,132,255,0.08), var(--card)) !important;
   }
   /* Net Position row — keep figures readable; smaller when wrapping */
   .bgt-row.bgt-net td {
@@ -1381,16 +1403,47 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      Same approach: scroll inside their container card. */
   #sellHoldingsTable,
   #sellPlan,
-  #sellPostSale,
-  #analyse-bedisa-list {
+  #sellPostSale {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
   #sellHoldingsTable table,
   #sellPlan table,
-  #sellPostSale table,
-  #analyse-bedisa-list table {
+  #sellPostSale table {
     min-width: 540px;
+  }
+
+  /* ── ANALYSE — Bed & ISA Priority grid ──────────────────────── */
+  /* Renders as nested CSS grid divs (not <table>). Scroll horizontally
+     and force grid children to render at full width so the Position
+     column gets enough room for "19486 units @ £0.89 avg cost" instead
+     of crushing each character onto its own line. */
+  #analyse-bedisa-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #analyse-bedisa-list > div {
+    min-width: 580px;
+  }
+  /* Ensure the position description never wraps inside its grid cell */
+  #analyse-bedisa-list > div > div:nth-child(2) {
+    white-space: nowrap;
+  }
+
+  /* ── SELL CALCULATOR — CGT/ISA remaining-allowance figure ───── */
+  /* On desktop the remaining-allowance div uses margin-left:auto to push
+     itself flush right beside its inputs. On mobile that flex-wrap puts
+     the figure on its own row right-aligned, which looks orphaned. Drop
+     the auto margin and left-align so the figure sits cleanly beneath
+     the inputs. */
+  .margin-left-auto-mobile-reset {
+    margin-left: 0 !important;
+    text-align: left !important;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .sell-allowance-row {
+    gap: 16px !important;
   }
 
   /* ── ANALYSE — Asset Breakdown rows wrap cleanly ────────────── */
@@ -1556,7 +1609,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <div class="input-label mb8">Drift Limit %</div>
       <div class="flex-center">
         <input class="budget-input" type="number" id="driftLimit" value="5" step="0.5" min="0" max="100" style="width:80px">
-        <span style="font-size:26px;font-weight:700;color:var(--gold)">%</span>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
@@ -2762,12 +2814,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
       <div id="sell-rate-note" style="font-size:9px;margin-top:6px;max-width:240px;line-height:1.5;color:var(--muted)"></div>
     </div>
-    <div style="margin-left:auto;text-align:right">
+    <div class="margin-left-auto-mobile-reset" style="margin-left:auto;text-align:right">
       <div class="stat-val gold" id="sell-remaining-allowance" style="font-size:22px">£3,000</div>
       <div class="stat-sub">remaining CGT allowance</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+  <div class="sell-allowance-row" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
     <div>
       <div class="input-label mb8">ISA Annual Allowance</div>
       <div class="flex-center">
@@ -2782,7 +2834,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <input class="budget-input" type="text" inputmode="numeric" id="sell-isa-used" value="0" step="100" style="width:120px">
       </div>
     </div>
-    <div style="margin-left:auto;text-align:right">
+    <div class="margin-left-auto-mobile-reset" style="margin-left:auto;text-align:right">
       <div class="stat-val" style="font-size:18px;color:var(--green)" id="sell-remaining-isa">£20,000</div>
       <div class="stat-sub">remaining ISA allowance</div>
     </div>
