@@ -1371,19 +1371,29 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   .nav-tabs.mobile-nav-open {
     display: grid !important;
-    /* Render in normal flow under the sticky header rather than sticky-pinned
-       at a hardcoded offset. Earlier we used `top: 90px` which broke on
-       devices with different notch heights. The header above stays sticky;
-       the expanded nav scrolls away with content. Tapping the pill in the
-       sticky header re-opens it from anywhere. */
+    /* Anchor to the bottom of the sticky header via position:fixed so the menu
+       opens in place wherever the user is on the page. Earlier approaches
+       (sticky with hardcoded top:90px, then normal-flow under header) both
+       failed: the first broke on different notch heights, the second meant
+       the menu opened above the fold and required scrolling to the top.
+       --vc-mobile-nav-top is set by toggleMobileNav() each time the menu
+       opens, reading the real header height from the DOM. */
+    position: fixed !important;
+    top: var(--vc-mobile-nav-top, 90px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 89 !important;  /* below sync banners, above page content */
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
-    margin: 0 -12px 12px -12px !important;
-    padding: 8px 14px 10px;
-    background: rgba(13,13,13,0.85);
+    margin: 0 !important;
+    padding: 10px 14px 12px;
+    background: rgba(13,13,13,0.92);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 0.5px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    max-height: calc(100vh - var(--vc-mobile-nav-top, 90px) - 20px);
+    overflow-y: auto;
   }
 
   /* The collapsed pill that lives in the sticky header */
@@ -1703,6 +1713,213 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     display: none !important;
   }
 
+  /* ── NET WORTH INPUTS GRID — single column on mobile ─────────── */
+  /* Desktop fits 4 input cards (Property / Cash & Other / Cars / Whiskey)
+     in a 2-column grid. On mobile two side-by-side cards are too crushed —
+     particularly Cars and Whiskey which have side-by-side Cost Basis /
+     Current Value subcolumns inside each card. Stack them vertically. */
+  #nw-inputs-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── SELL & SAVE TO HISTORY ROW — stack helper text on its own line ─── */
+  /* Desktop has the button and a thin grey helper sentence side-by-side.
+     On mobile the helper text wraps mid-flow next to the button which
+     looks broken. Stack vertically so the button is full-width and the
+     helper text sits centred underneath. */
+  #bedISASaveSection {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px !important;
+  }
+  #bedISASaveSection .btn-gold {
+    margin-right: 0 !important;
+    width: 100%;
+    text-align: center;
+  }
+  #bedISASaveSection .bedisa-save-helper {
+    display: block;
+    text-align: center;
+    line-height: 1.5;
+    font-size: 10px !important;
+  }
+
+  /* ── BED & ISA OPTIMISATION PLAN — card layout on mobile ─────── */
+  /* Desktop is a 6-column grid (Ticker / Action / Units / Gain / Proceeds /
+     CGT Cost) which overflows below 768px. On mobile we hide the thead and
+     stack each holding row into a card with the ticker prominent at the top
+     and three labelled value pairs at the bottom. */
+  .bedisa-thead {
+    display: none !important;
+  }
+  .bedisa-row {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      "ticker  units"
+      "action  action"
+      "metrics metrics" !important;
+    gap: 4px 12px !important;
+    padding: 14px 12px !important;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--card);
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+  .bedisa-ticker {
+    grid-area: ticker;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--white) !important;
+    letter-spacing: -0.3px;
+  }
+  .bedisa-action {
+    grid-area: action;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+    margin-top: 2px;
+  }
+  .bedisa-units {
+    grid-area: units;
+    text-align: right !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+  }
+  .bedisa-units::before {
+    content: 'Units';
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  /* Bottom strip — three labelled values (Gain / Proceeds / CGT Cost) */
+  .bedisa-row .bedisa-gain,
+  .bedisa-row .bedisa-proceeds,
+  .bedisa-row .bedisa-cgt {
+    text-align: left !important;
+    font-size: 14px !important;
+    padding-top: 10px;
+    margin-top: 4px;
+    border-top: 0.5px solid var(--border);
+  }
+  .bedisa-row .bedisa-gain { grid-column: 1 / 2; grid-row: 3; }
+  .bedisa-row .bedisa-proceeds { grid-column: 2 / 3; grid-row: 3; text-align: right !important; border-top: 0.5px solid var(--border); }
+  .bedisa-row .bedisa-cgt {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    text-align: right !important;
+    padding-top: 6px;
+    margin-top: 0;
+    border-top: none;
+    font-size: 11px !important;
+    color: var(--muted) !important;
+  }
+  .bedisa-row [data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  /* CGT Cost row reads inline (label · value) instead of stacked */
+  .bedisa-row .bedisa-cgt::before {
+    display: inline !important;
+    margin-right: 6px;
+    margin-bottom: 0;
+  }
+  /* Units cell label is rendered by the ::before above; no data-label attr  */
+  .bedisa-row .bedisa-units[data-label]::before {
+    content: 'Units';
+  }
+  /* TOTALS row — same card-style layout with a TOTALS heading */
+  .bedisa-totals {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px 12px !important;
+    padding: 14px 12px !important;
+    border-top: 1px solid var(--blue) !important;
+    background: rgba(10,132,255,0.06);
+    border-radius: 12px;
+    margin-top: 8px;
+  }
+  .bedisa-totals > div:nth-child(1) { display: none; }
+  .bedisa-totals > div:nth-child(2) {
+    grid-column: 1 / -1;
+    font-size: 11px !important;
+    color: var(--gold) !important;
+    margin-bottom: 4px;
+  }
+  .bedisa-totals > div:nth-child(3) { display: none; }
+  .bedisa-totals > div:nth-child(4) {
+    grid-column: 1 / 2;
+    text-align: left !important;
+  }
+  .bedisa-totals > div:nth-child(5) {
+    grid-column: 2 / 3;
+    text-align: right !important;
+  }
+  .bedisa-totals > div:nth-child(6) {
+    grid-column: 1 / -1;
+    text-align: right !important;
+    font-size: 11px !important;
+    padding-top: 4px;
+    border-top: 0.5px solid rgba(255,255,255,0.05);
+  }
+  .bedisa-totals [data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .bedisa-totals > div:nth-child(6)[data-label]::before {
+    display: inline !important;
+    margin-right: 6px;
+    margin-bottom: 0;
+  }
+
+  /* ── HISTORY CONTROLS ROW — Clear All inline with sub-tabs on mobile ─ */
+  /* Desktop has plenty of room; on mobile the .sub-tabs flex-wraps and pushes
+     Clear All onto its own row. Force everything onto a single row by
+     compacting the sub-tab padding and shrinking the container. */
+  #history-controls-row {
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+  #history-controls-row .sub-tabs {
+    flex: 1 1 auto !important;
+    flex-wrap: nowrap !important;
+    margin-bottom: 0 !important;
+    gap: 6px !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #history-controls-row .sub-tabs::-webkit-scrollbar { display: none; }
+  #history-controls-row .sub-tab {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    flex-shrink: 0;
+  }
+  #history-controls-row > .btn-danger {
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
   /* ── DATA CONTROLS FOOTER — bigger taps on mobile ─────────── */
   /* Make Undo / Export / Import in the footer at least 40px tall and readable.
      They're built with .btn-ghost.btn-sm and 9px font on desktop. */
@@ -1712,6 +1929,29 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     padding: 10px 16px !important;
     min-height: 40px;
     opacity: 0.85 !important;
+  }
+
+  /* Layout: three buttons in an equal-width row with consistent gaps and
+     padding pulled in from the screen edges. Hides the desktop vertical
+     divider between Undo and Export (which created uneven spacing). */
+  .data-controls-footer > div[style*="display:flex"] {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    gap: 8px !important;
+  }
+  .data-controls-footer > div[style*="display:flex"] > div[style*="width:1px"] {
+    display: none !important;  /* drop the divider on mobile */
+  }
+  .data-controls-footer > div[style*="display:flex"] > #undoBtn,
+  .data-controls-footer > div[style*="display:flex"] > .btn-ghost.btn-sm,
+  .data-controls-footer > div[style*="display:flex"] > label.btn-ghost.btn-sm {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    white-space: nowrap;
   }
 
   /* ── CALCULATOR — Active Account selector stacks vertically ── */
@@ -1819,29 +2059,37 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     padding: 8px !important;
   }
   #bgt-main-table .bgt-table,
-  #bgt-history-view .bgt-table {
+  #bgt-history-view .bgt-table,
+  #bgt-ytd-panel .bgt-table {
     display: block;
     min-width: 0;
     width: 100%;
   }
   /* Hide the original thead — we use ::before pseudo-labels instead */
   #bgt-main-table .bgt-thead,
-  #bgt-history-view .bgt-thead {
+  #bgt-history-view .bgt-thead,
+  #bgt-ytd-panel .bgt-thead {
     display: none;
   }
   #bgt-main-table .bgt-table tbody,
-  #bgt-history-view .bgt-table tbody {
+  #bgt-history-view .bgt-table tbody,
+  #bgt-ytd-panel .bgt-table tbody {
     display: block;
     width: 100%;
   }
-  /* Each row becomes a card */
+  /* Each row becomes a card with two grid rows:
+       Row 1: the label cell spans all 3 columns
+       Row 2: planned / actual / difference each take one column
+
+     We use auto-flow + grid-column: span instead of grid-template-areas
+     because area-based templates have proven flaky on iOS Safari when
+     the grid container is a <tr> derived from a <table> with display:
+     block. Auto-flow with explicit span counts is rock-solid. */
   #bgt-main-table .bgt-row,
-  #bgt-history-view .bgt-row {
+  #bgt-history-view .bgt-row,
+  #bgt-ytd-panel .bgt-row {
     display: grid !important;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-areas:
-      "label  label  label"
-      "plan   act    diff";
+    grid-template-columns: 1fr 1fr 1fr !important;
     column-gap: 8px;
     row-gap: 6px;
     padding: 12px 10px !important;
@@ -1865,7 +2113,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   /* Cells: position them via grid-area */
   #bgt-main-table .bgt-row td,
-  #bgt-history-view .bgt-row td {
+  #bgt-history-view .bgt-row td,
+  #bgt-ytd-panel .bgt-row td {
     display: block;
     border-bottom: none !important;
     padding: 0 !important;
@@ -1874,30 +2123,45 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     font-size: 13px;
   }
   #bgt-main-table .bgt-row td:nth-child(1),
-  #bgt-history-view .bgt-row td:nth-child(1) {
-    grid-area: label;
+  #bgt-history-view .bgt-row td:nth-child(1),
+  #bgt-ytd-panel .bgt-row td:nth-child(1) {
+    grid-column: 1 / -1 !important;  /* span all 3 columns of row 1 */
     color: var(--white) !important;
     font-weight: 600;
     font-size: 13px !important;
     text-align: left !important;
   }
+  /* cells 2/3/4 auto-flow into row 2, one per column */
   #bgt-main-table .bgt-row td:nth-child(2),
-  #bgt-history-view .bgt-row td:nth-child(2) {
-    grid-area: plan;
+  #bgt-history-view .bgt-row td:nth-child(2),
+  #bgt-ytd-panel .bgt-row td:nth-child(2) {
+    grid-column: 1 / 2 !important;
   }
   #bgt-main-table .bgt-row td:nth-child(3),
-  #bgt-history-view .bgt-row td:nth-child(3) {
-    grid-area: act;
+  #bgt-history-view .bgt-row td:nth-child(3),
+  #bgt-ytd-panel .bgt-row td:nth-child(3) {
+    grid-column: 2 / 3 !important;
   }
   #bgt-main-table .bgt-row td:nth-child(4),
-  #bgt-history-view .bgt-row td:nth-child(4) {
-    grid-area: diff;
+  #bgt-history-view .bgt-row td:nth-child(4),
+  #bgt-ytd-panel .bgt-row td:nth-child(4) {
+    grid-column: 3 / 4 !important;
     text-align: right !important;
-    align-self: end;
+    align-self: start;
+    /* Match the inputs' visual baseline. The bgt-planned-input and
+       bgt-actual-input each have `padding: 4px 4px` plus a 0.5px
+       border-bottom; the diff cell is plain text so without this
+       padding its value sits visibly higher than the input values. */
+    padding: 4px 4px !important;
+    border-bottom: 0.5px solid transparent;  /* invisible spacer to match input height */
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.2;
   }
   /* Add small column labels above each numeric cell so users know what they're looking at */
   #bgt-main-table .bgt-row td:nth-child(2)::before,
-  #bgt-history-view .bgt-row td:nth-child(2)::before {
+  #bgt-history-view .bgt-row td:nth-child(2)::before,
+  #bgt-ytd-panel .bgt-row td:nth-child(2)::before {
     content: 'Planned';
     display: block;
     font-size: 9px;
@@ -1906,9 +2170,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     letter-spacing: 0.5px;
     margin-bottom: 3px;
     font-weight: 500;
+    text-align: center;
   }
   #bgt-main-table .bgt-row td:nth-child(3)::before,
-  #bgt-history-view .bgt-row td:nth-child(3)::before {
+  #bgt-history-view .bgt-row td:nth-child(3)::before,
+  #bgt-ytd-panel .bgt-row td:nth-child(3)::before {
     content: 'Actual';
     display: block;
     font-size: 9px;
@@ -1917,9 +2183,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     letter-spacing: 0.5px;
     margin-bottom: 3px;
     font-weight: 500;
+    text-align: center;
   }
   #bgt-main-table .bgt-row td:nth-child(4)::before,
-  #bgt-history-view .bgt-row td:nth-child(4)::before {
+  #bgt-history-view .bgt-row td:nth-child(4)::before,
+  #bgt-ytd-panel .bgt-row td:nth-child(4)::before {
     content: 'Difference';
     display: block;
     font-size: 9px;
@@ -1930,30 +2198,62 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     font-weight: 500;
     text-align: right;
   }
-  /* Inputs need full width of their grid cell */
+  /* Centre content of Planned and Actual cells (both inputs in data rows
+     AND plain-text values in Total rows) so columns align cleanly under
+     their PLANNED / ACTUAL labels.
+
+     Why flex instead of just text-align: center: the cell contains a
+     ::before pseudo (the label) followed by either an <input> (data row)
+     or plain text (Total row). text-align: center works for plain text
+     but inputs inherit text-align onto the input, not the wrapper, so
+     the input's outer box still aligns to the start of the cell. Using
+     flex column with align-items:center centres both the pseudo-label
+     AND whatever follows it (input or text node) within the grid track,
+     producing identical column alignment across all row types. */
+  #bgt-main-table .bgt-row td:nth-child(2),
+  #bgt-history-view .bgt-row td:nth-child(2),
+  #bgt-ytd-panel .bgt-row td:nth-child(2),
+  #bgt-main-table .bgt-row td:nth-child(3),
+  #bgt-history-view .bgt-row td:nth-child(3),
+  #bgt-ytd-panel .bgt-row td:nth-child(3) {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center !important;
+  }
+  /* Inputs need full width of their grid cell, with text centred under the
+     PLANNED / ACTUAL column labels for visual rhythm. Left alignment was
+     awkward because the small uppercase label sits centred above a wide
+     input, and the value drifted to the far left. */
   #bgt-main-table .bgt-planned-input,
   #bgt-main-table .bgt-actual-input,
   #bgt-history-view .bgt-planned-input,
   #bgt-history-view .bgt-actual-input {
     width: 100% !important;
     min-height: 36px;
-    text-align: left !important;
+    text-align: center !important;
     font-size: 14px !important;
     padding: 4px 0 !important;
   }
   /* Section subtotal rows ("Total Income", "Total Tax Provision" etc.)
      get a slightly different visual treatment to mark them out. */
   #bgt-main-table .bgt-row.bgt-total,
-  #bgt-history-view .bgt-row.bgt-total {
+  #bgt-history-view .bgt-row.bgt-total,
+  #bgt-ytd-panel .bgt-row.bgt-total {
     background: rgba(255,255,255,0.02);
     border-top: 1px solid var(--border2);
   }
   /* Net Position row — hero treatment redesigned for mobile.
      Stack each metric vertically (Planned / Actual / Difference) in three
      rows below the title so values never get cramped. Each row shows the
-     label on the left in muted text, the value on the right in white. */
+     label on the left in muted text, the value on the right in white.
+     SPECIFICITY NOTE: must match the parent-scoped specificity of the
+     generic `#bgt-main-table .bgt-row { display: grid !important }` rule
+     above — otherwise the grid layout wins and the rows overlay. */
   #bgt-main-table .bgt-row.bgt-net,
-  #bgt-history-view .bgt-row.bgt-net {
+  #bgt-history-view .bgt-row.bgt-net,
+  #bgt-ytd-panel .bgt-row.bgt-net {
     background: rgba(10,132,255,0.10);
     border-top: 1px solid var(--blue);
     border-bottom: 1px solid var(--blue);
@@ -1965,8 +2265,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   /* Title cell sits on its own line at the top */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(1),
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(1) {
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(1),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(1) {
     display: block !important;
+    grid-column: auto !important;
     font-size: 14px !important;
     color: var(--gold) !important;
     font-weight: 700 !important;
@@ -1983,10 +2285,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(2),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(3),
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(4) {
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(4),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(2),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(3),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(4) {
     display: flex !important;
     justify-content: space-between !important;
     align-items: baseline !important;
+    grid-column: auto !important;
     padding: 8px 0 !important;
     font-size: 16px !important;
     font-weight: 700 !important;
@@ -1998,7 +2304,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   /* Last row — no bottom border */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(4) {
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(4),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(4) {
     border-bottom: none !important;
     padding-bottom: 0 !important;
   }
@@ -2010,7 +2317,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #bgt-main-table .bgt-row.bgt-net td:nth-child(4)::before,
   #bgt-history-view .bgt-row.bgt-net td:nth-child(2)::before,
   #bgt-history-view .bgt-row.bgt-net td:nth-child(3)::before,
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(4)::before {
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(4)::before,
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(2)::before,
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(3)::before,
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(4)::before {
     display: inline-block !important;
     margin-bottom: 0 !important;
     text-align: left !important;
@@ -2022,10 +2332,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     opacity: 1 !important;
   }
   /* Variable expense rows have an inline progress bar inside the Actual cell —
-     make sure it stays visible and sized correctly in the new grid layout. */
+     make sure it stays visible and sized correctly in the new grid layout.
+     Centre alignment matches the column-wide centring applied to the
+     parent <td> so the input + progress bar sit under the ACTUAL label. */
   #bgt-main-table .bgt-cell-actual,
   #bgt-history-view .bgt-cell-actual {
-    align-items: flex-start !important;
+    align-items: center !important;
+    width: 100%;
   }
 
   /* ── BUDGET — Saved This Month tile aligns LEFT on mobile ──── */
@@ -2604,7 +2917,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
   </div>
 
-  <div class="flex-between mb16">
+  <div class="flex-between mb16" id="history-controls-row">
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="switchHistoryTab('all',this)">All</button>
       <button class="sub-tab" onclick="switchHistoryTab('personal',this)">Personal</button>
@@ -3011,7 +3324,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="stat-sub mb24">Your complete financial picture. Investment portfolio values pull automatically from Total Portfolio. All other figures are updated manually.</div>
 
   <!-- Input sections -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+  <div id="nw-inputs-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
 
     <!-- Property -->
     <div class="card-gold">
@@ -3734,7 +4047,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
     <div id="bedISASaveSection" style="display:none;margin-top:4px;margin-bottom:16px;padding:14px 18px;background:var(--dark);border-radius:10px;border-left:2px solid rgba(10,132,255,0.4)">
       <button class="btn-gold" onclick="saveSellPlanToHistory()" style="margin-right:12px">✓ Sell &amp; Save to History</button>
-      <span style="font-size:9px;color:var(--muted)">Records the sale in Monthly History, removes units from your GIA, and updates CGT used this year</span>
+      <span class="bedisa-save-helper" style="font-size:9px;color:var(--muted)">Records the sale in Monthly History, removes units from your GIA, and updates CGT used this year</span>
     </div>
   </div>
 
@@ -5374,23 +5687,52 @@ function toast(msg='Saved') {
 }
 
 // ════════════════════════════════════════════════════════
-// MOBILE NAV — collapsing pill in sticky header (1 May 2026)
+// MOBILE NAV — collapsing pill in sticky header (1 May 2026, refined v13)
 // On viewports <=768px the desktop nav grid is hidden via CSS
 // and replaced by a pill that toggles the grid open/closed.
+// The expanded grid is position:fixed and anchored under the
+// sticky header — works regardless of scroll position.
 // ════════════════════════════════════════════════════════
+function _setMobileNavTopVar() {
+  // Read the real bottom edge of the sticky header so the expanded grid
+  // sits flush beneath it. The header's bottom changes with safe-area-inset
+  // (notch padding) so we can't hardcode a number.
+  const header = document.querySelector('.vc-header');
+  if (!header) return;
+  const bottom = header.getBoundingClientRect().bottom;
+  document.documentElement.style.setProperty('--vc-mobile-nav-top', `${Math.max(0, Math.round(bottom))}px`);
+}
+
 function toggleMobileNav() {
   const pill = document.getElementById('mobile-nav-pill');
   const grid = document.querySelector('.nav-tabs');
   if (!pill || !grid) return;
+  // Update the CSS variable BEFORE toggling so the menu appears in the
+  // right place on its very first paint (no flicker).
+  _setMobileNavTopVar();
   const isOpen = grid.classList.toggle('mobile-nav-open');
   pill.classList.toggle('open', isOpen);
 }
+
 function _closeMobileNav() {
   const pill = document.getElementById('mobile-nav-pill');
   const grid = document.querySelector('.nav-tabs');
   if (pill) pill.classList.remove('open');
   if (grid) grid.classList.remove('mobile-nav-open');
 }
+
+// Dismiss the open mobile nav when the user taps anywhere outside the pill
+// or the expanded grid. Ignored on desktop (the grid is always shown there).
+document.addEventListener('click', function(e) {
+  if (window.innerWidth > 768) return;
+  const grid = document.querySelector('.nav-tabs');
+  if (!grid || !grid.classList.contains('mobile-nav-open')) return;
+  const pill = document.getElementById('mobile-nav-pill');
+  if (pill && pill.contains(e.target)) return;        // pill itself toggles
+  if (grid.contains(e.target)) return;                 // tapping a nav-tab is handled by switchTab
+  _closeMobileNav();
+}, true);
+
 function _updateMobileNavPill() {
   const activeTab = document.querySelector('.nav-tab.active');
   if (!activeTab) return;
@@ -12215,7 +12557,7 @@ function renderBedISA() {
   }
 
   document.getElementById('bedISAPlan').innerHTML =
-    `<div class="sell-plan-thead" style="grid-template-columns:70px 1fr 70px 100px 120px 90px">
+    `<div class="sell-plan-thead bedisa-thead" style="grid-template-columns:70px 1fr 70px 100px 120px 90px">
       <div class="col-h left">Ticker</div>
       <div class="col-h left">Action</div>
       <div class="col-h right">Units</div>
@@ -12223,21 +12565,21 @@ function renderBedISA() {
       <div class="col-h right">Proceeds → ISA</div>
       <div class="col-h right">CGT Cost</div>
     </div>
-    ${plan.map(p => `<div class="sell-plan-row" style="grid-template-columns:70px 1fr 70px 100px 120px 90px">
-      <div class="col-ticker">${p.ticker}</div>
-      <div style="font-size:10px;color:var(--muted);line-height:1.6">Sell @ £${fmtNum(p.currentPrice,2)}<br><span style="color:var(--muted2)">Cost £${fmtNum(p.avgCost,2)}/unit</span></div>
-      <div style="text-align:right;font-size:17px;font-weight:700;color:var(--white)">${p.unitsSell}</div>
-      <div style="text-align:right;font-weight:600;color:${p.gainRealised>=0?'var(--green)':'var(--red)'}">
+    ${plan.map(p => `<div class="sell-plan-row bedisa-row" style="grid-template-columns:70px 1fr 70px 100px 120px 90px">
+      <div class="col-ticker bedisa-ticker">${p.ticker}</div>
+      <div class="bedisa-action" style="font-size:10px;color:var(--muted);line-height:1.6">Sell @ £${fmtNum(p.currentPrice,2)}<br><span style="color:var(--muted2)">Cost £${fmtNum(p.avgCost,2)}/unit</span></div>
+      <div class="bedisa-units" style="text-align:right;font-size:17px;font-weight:700;color:var(--white)" data-label="Units">${p.unitsSell}</div>
+      <div class="bedisa-gain" style="text-align:right;font-weight:600;color:${p.gainRealised>=0?'var(--green)':'var(--red)'}" data-label="Gain Realised">
         ${p.gainRealised>=0?'+':''}£${fmtNum(Math.round(Math.abs(p.gainRealised)),0)}</div>
-      <div style="text-align:right;font-weight:700;color:var(--gold)">£${fmtNum(Math.round(p.proceeds),0)}</div>
-      <div style="text-align:right;color:var(--green)">£0</div>
+      <div class="bedisa-proceeds" style="text-align:right;font-weight:700;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(p.proceeds),0)}</div>
+      <div class="bedisa-cgt" style="text-align:right;color:var(--green)" data-label="CGT Cost">£0</div>
     </div>`).join('')}
-    <div style="display:grid;grid-template-columns:70px 1fr 70px 100px 120px 90px;gap:8px;padding:12px 0;border-top:1px solid var(--border);margin-top:4px">
+    <div class="bedisa-totals" style="display:grid;grid-template-columns:70px 1fr 70px 100px 120px 90px;gap:8px;padding:12px 0;border-top:1px solid var(--border);margin-top:4px">
       <div></div><div style="font-size:10px;font-weight:700;color:var(--white);letter-spacing:1px">TOTALS</div><div></div>
-      <div style="text-align:right;font-weight:700;color:${totalGain>=0?'var(--green)':'var(--red)'}">
+      <div style="text-align:right;font-weight:700;color:${totalGain>=0?'var(--green)':'var(--red)'}" data-label="Gain Realised">
         ${totalGain>=0?'+':''}£${fmtNum(Math.round(Math.abs(totalGain)),0)}</div>
-      <div style="text-align:right;font-weight:700;color:var(--gold)">£${fmtNum(Math.round(totalProceeds),0)}</div>
-      <div style="text-align:right;font-weight:700;color:var(--green)">£0</div>
+      <div style="text-align:right;font-weight:700;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(totalProceeds),0)}</div>
+      <div style="text-align:right;font-weight:700;color:var(--green)" data-label="CGT Cost">£0</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
       <div style="padding:10px 14px;background:var(--dark);border-radius:10px;border-left:3px solid ${unusedCGT<10?'var(--green)':'var(--amber)'}">
@@ -13454,9 +13796,8 @@ function renderAnalyseNetWorth() {
           <div style="font-size:24px;font-weight:700;color:var(--amber)">\u00a3${fmtNum(Math.round(taxableAssets),0)}</div>
           <div class="stat-sub">${nwGIABarNote}</div>
         </div>
-        <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:14px 0 6px;display:flex">
-          <div style="height:100%;width:${Math.min(100,taxFreePct).toFixed(1)}%;background:var(--green);transition:width 0.5s"></div>
-          <div style="height:100%;flex:1;background:var(--amber);transition:width 0.5s"></div>
+        <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:14px 0 6px;font-size:0;white-space:nowrap;line-height:0">
+          <div style="display:inline-block;height:10px;width:${Math.min(100,taxFreePct).toFixed(2)}%;background:var(--green);vertical-align:top;transition:width 0.5s"></div><div style="display:inline-block;height:10px;width:${Math.max(0,100-taxFreePct).toFixed(2)}%;background:var(--amber);vertical-align:top;transition:width 0.5s"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:10px">
           <span style="color:var(--green)">\u25a0 Tax-free (${taxFreePct.toFixed(0)}%)</span>
