@@ -1175,6 +1175,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   .holding-row .btn-danger { display: none; }
   .holding-row .holding-ticker { font-size: 13px; }
   .holding-row .holding-name { font-size: 10px; }
+  /* Hide the column header row entirely. It has 7 cells (Calc /
+     Holdings / Value / % of section / etc.) which reflow chaotically
+     when the row drops to 2 columns on mobile, leaving "CALC" alone
+     on one side and the other labels bunched on the other. The data
+     rows below are self-explanatory at this width. */
+  .holding-row[style*="pointer-events:none"] {
+    display: none !important;
+  }
 
   /* ── PORTFOLIO CHART ──────────────────────────────────────── */
   .portfolio-chart-wrap > div:first-child {
@@ -1751,6 +1759,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #analyse-nw-breakdown > div > div > div:first-child > span {
     line-height: 1.4 !important;
   }
+  /* Force the TAX-FREE / CGT APPLIES pill (the 3rd span) onto its own
+     line so it sits underneath the label text consistently, regardless
+     of how long the label or note happens to be. Without this, short
+     labels (e.g. ISA) keep the pill inline while longer ones (SIPP,
+     GIA) push it onto a wrap — looks inconsistent across rows. */
+  #analyse-nw-breakdown > div > div > div:first-child > span:nth-child(3) {
+    flex-basis: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 4px !important;
+    width: fit-content !important;
+  }
 
   /* ── ANALYSE — Net Worth Overview stacks vertically on mobile ── */
   /* Desktop has Asset Breakdown + Tax Exposure side-by-side. On mobile
@@ -1807,6 +1826,20 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   input[type="date"]#ret-dob:not(:valid)::-webkit-datetime-edit {
     color: var(--muted2);
     opacity: 0.6;
+  }
+
+  /* ── CONVERT TO LEGACY ROW ────────────────────────────────── */
+  /* The convert button + its explanation sit side-by-side on desktop.
+     On mobile, stack the explanation above and let the button take
+     full width so it's a comfortable tap target. */
+  #portfolio .holding-row + div[id^="portfolioEdit_"] > div:last-child:not(:only-child) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  #portfolio .holding-row + div[id^="portfolioEdit_"] > div:last-child:not(:only-child) > button {
+    width: 100% !important;
+    min-height: 44px;
+    font-size: 13px;
   }
 }
 
@@ -7293,9 +7326,14 @@ function syncPortfolioFromHistory() {
     .forEach(entry => {
       const entryWrapper = entry.wrapper || (entry.type === 'employer' ? 'SIPP' : 'GIA');
       const entryType = entry.type || 'personal';
+      // excludedFunds: per-entry array of tickers that have been converted
+      // to legacy holdings. Sync skips them so they don't resurrect the
+      // fromHistory entry the user explicitly retired.
+      const excluded = Array.isArray(entry.excludedFunds) ? entry.excludedFunds : [];
 
       entry.funds.forEach(f => {
         if (!f.ticker || !f.held || f.held <= 0) return;
+        if (excluded.includes(f.ticker)) return;
         const key = `${f.ticker}__${entryWrapper}`;
 
         if (!latestHeld[key]) {
@@ -7322,8 +7360,10 @@ function syncPortfolioFromHistory() {
     .sort((a, b) => a.timestamp - b.timestamp)
     .forEach(entry => {
       const entryWrapper = entry.wrapper || 'GIA';
+      const excluded = Array.isArray(entry.excludedFunds) ? entry.excludedFunds : [];
       (entry.funds || []).forEach(f => {
         if (!f.ticker) return;
+        if (excluded.includes(f.ticker)) return;
         const unitsSold = Math.abs(f.held || 0);
         const key = `${f.ticker}__${entryWrapper}`;
         if (latestHeld[key]) {
@@ -7577,6 +7617,152 @@ function savePortfolioEdit(id) {
   toast(`${h.ticker} updated`);
 }
 
+// Convert a fromHistory holding into a permanent legacy seeded entry.
+// Adds units + cost basis on top of any existing legacy holding for the
+// same ticker+wrapper using a weighted-average cost merge. Marks the
+// contributing history entries with excludedFunds so syncPortfolioFromHistory
+// stops resurrecting the converted ticker. The original fromHistory entry
+// is removed from LS.PORTFOLIO. Multi-ticker history entries are preserved
+// for their other tickers (only the converted ticker is excluded per entry).
+function convertToLegacyHolding(id) {
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  const h = portfolio.find(p => String(p.id) === String(id));
+  if (!h) return;
+  if (!h.fromHistory || h.seeded) {
+    toast('Only New Holdings can be converted');
+    return;
+  }
+  if (!(h.shares > 0)) {
+    toast('Nothing to convert');
+    return;
+  }
+
+  const ticker = h.ticker;
+  const wrapper = h.wrapper || (h.type === 'employer' ? 'SIPP' : 'GIA');
+
+  // Compute cost basis from contributing history entries. Sum (units × price)
+  // for buy entries, subtract (units × price) for sold entries, restricted to
+  // matching ticker+wrapper and ignoring entries already excluded.
+  const history = lsGet(LS.HISTORY, []);
+  let costBasis = 0;
+  let unitsAccum = 0;
+
+  history.forEach(entry => {
+    const entryWrapper = entry.wrapper || (entry.type === 'employer' ? 'SIPP' : 'GIA');
+    if (entryWrapper !== wrapper) return;
+    const excluded = Array.isArray(entry.excludedFunds) ? entry.excludedFunds : [];
+    if (excluded.includes(ticker)) return;
+    (entry.funds || []).forEach(f => {
+      if (f.ticker !== ticker) return;
+      if (!f.held) return;
+      const units = Math.abs(f.held);
+      const price = f.price > 0 ? f.price : (h.price || 0);
+      if (entry.type === 'sold') {
+        const sellUnits = Math.min(units, unitsAccum);
+        if (unitsAccum > 0) {
+          const avgSoFar = costBasis / unitsAccum;
+          costBasis -= avgSoFar * sellUnits;
+          unitsAccum -= sellUnits;
+        }
+      } else {
+        costBasis += units * price;
+        unitsAccum += units;
+      }
+    });
+  });
+
+  // Fall back to current holding price if history is incomplete
+  if (unitsAccum <= 0 || costBasis <= 0) {
+    unitsAccum = h.shares;
+    costBasis = h.shares * (h.price || 0);
+  }
+  const convertedAvgCost = unitsAccum > 0 ? costBasis / unitsAccum : 0;
+  const convertedUnits = h.shares;
+  const convertedCostBasis = convertedUnits * convertedAvgCost;
+
+  // Confirmation
+  const existingLegacy = portfolio.find(p =>
+    p.seeded && !p.fromHistory && p.ticker === ticker && p.wrapper === wrapper
+  );
+  const mergeMsg = existingLegacy
+    ? `\n\nThis will MERGE with your existing legacy ${ticker} holding in ${wrapper} (${existingLegacy.shares} units). The cost basis will be weighted-averaged across both.`
+    : `\n\nThis will create a NEW legacy ${ticker} holding in ${wrapper}.`;
+  const confirmMsg =
+    `Convert ${convertedUnits} units of ${ticker} (${wrapper}) to a legacy holding?` +
+    `\n\nAvg cost: £${convertedAvgCost.toFixed(3)} per unit` +
+    `\nCost basis: £${fmtNum(Math.round(convertedCostBasis), 0)}` +
+    mergeMsg +
+    `\n\nThis is one-way. The contributing history entries will keep ${ticker} but stop driving New Holdings.`;
+  if (!confirm(confirmMsg)) return;
+
+  snapshotState(`Convert ${ticker} to legacy`);
+
+  // Re-read state after snapshot to be safe
+  const portfolio2 = lsGet(LS.PORTFOLIO, []);
+  const history2 = lsGet(LS.HISTORY, []);
+
+  // Build or merge the legacy entry
+  const legacyIdx = portfolio2.findIndex(p =>
+    p.seeded && !p.fromHistory && p.ticker === ticker && p.wrapper === wrapper
+  );
+  if (legacyIdx >= 0) {
+    const ex = portfolio2[legacyIdx];
+    const exUnits = ex.shares || 0;
+    const exTotalCost = (ex.totalCost && ex.totalCost > 0)
+      ? ex.totalCost
+      : exUnits * (ex.price || 0);
+    const totalUnits = exUnits + convertedUnits;
+    const totalCost = exTotalCost + convertedCostBasis;
+    const newAvg = totalUnits > 0 ? totalCost / totalUnits : 0;
+    portfolio2[legacyIdx] = {
+      ...ex,
+      shares: totalUnits,
+      price: ex.price || convertedAvgCost,  // keep existing market price
+      totalCost: totalCost,
+      avgCost: newAvg,
+    };
+  } else {
+    portfolio2.push({
+      id: `legacy_${ticker}_${wrapper}_${Date.now()}`,
+      ticker: ticker,
+      wrapper: wrapper,
+      type: h.type || (wrapper === 'SIPP' ? 'employer' : 'personal'),
+      shares: convertedUnits,
+      price: h.price || convertedAvgCost,
+      avgCost: convertedAvgCost,
+      totalCost: convertedCostBasis,
+      colour: h.colour || '#888',
+      seeded: true,
+      fromHistory: false,
+      includeInCalc: false,
+    });
+  }
+
+  // Remove the original fromHistory entry
+  const filtered = portfolio2.filter(p => String(p.id) !== String(id));
+
+  // Mark contributing history entries with excludedFunds for this ticker
+  history2.forEach(entry => {
+    const entryWrapper = entry.wrapper || (entry.type === 'employer' ? 'SIPP' : 'GIA');
+    if (entryWrapper !== wrapper) return;
+    const hasTicker = (entry.funds || []).some(f => f.ticker === ticker);
+    if (!hasTicker) return;
+    const existingExcluded = Array.isArray(entry.excludedFunds) ? entry.excludedFunds : [];
+    if (!existingExcluded.includes(ticker)) {
+      entry.excludedFunds = [...existingExcluded, ticker];
+    }
+  });
+
+  lsSet(LS.PORTFOLIO, filtered);
+  lsSet(LS.HISTORY, history2);
+  syncPortfolioFromHistory();
+  renderPortfolio(getPortfolioFilter());
+  buildPriceUpdater();
+  renderGrowthChart(getActiveGrowthTab());
+  if (document.getElementById('tab-tax')?.classList.contains('active')) renderTaxTab();
+  toast(`${ticker} converted to legacy`);
+}
+
 function getActiveGrowthTab() {
   const btn = document.querySelector('#tab-portfolio .sub-tabs:last-of-type .sub-tab.active');
   return btn?.textContent?.toLowerCase()?.trim() === 'yearly' ? 'yearly' : 'monthly';
@@ -7728,6 +7914,13 @@ function renderPortfolio(filter='all') {
           <button class="btn-ghost btn-sm" onclick="togglePortfolioEdit('${h.id}')">Cancel</button>
         </div>
       </div>
+      ${(h.fromHistory && !h.seeded) ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between">
+        <div style="font-size:11px;color:var(--muted);max-width:540px;line-height:1.5">
+          <span style="color:#f0b840;font-weight:600">Convert to Legacy</span> moves these units onto your existing legacy ${h.ticker} holding (or creates one) using a weighted-average cost. Removes from New Holdings. One-way.
+        </div>
+        <button class="btn-sm" style="background:rgba(240,184,64,0.12);color:#f0b840;border:1px solid rgba(240,184,64,0.4);font-weight:600" onclick="convertToLegacyHolding('${h.id}')">Convert to Legacy Holding</button>
+      </div>` : ''}
     </div>`;
   };
 
@@ -7739,8 +7932,9 @@ function renderPortfolio(filter='all') {
 
   // Column header row
   const colHeader = `<div class="holding-row" style="pointer-events:none;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 0;margin-bottom:2px;color:var(--muted);font-weight:700">
-    <div style="font-size:9px;color:var(--muted);font-weight:700" title="Tick = include in calculator drift calculations">Calc</div>
-    <div></div><div></div>
+    <div style="font-size:9px;color:var(--muted);font-weight:700" title="Tick = include in calculator drift calculations">On</div>
+    <div></div>
+    <div style="font-size:9px;color:var(--muted);font-weight:700">Ticker</div>
     <div style="font-size:9px;color:var(--muted);font-weight:700">Holdings</div>
     <div style="font-size:9px;color:var(--muted);font-weight:700;text-align:right">Value</div>
     <div style="font-size:9px;color:var(--muted);font-weight:700;text-align:right">% of section</div>
