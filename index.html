@@ -3858,10 +3858,12 @@ function applyPriceUpdates() {
     };
   });
 
-  // Did anything actually change? If not, give the user a clear note instead
-  // of a silent snapshot + no-op.
+  // Did anything actually change? If not, still stamp the timestamp so the
+  // user has a "I checked at 10:04am" record, and show a clear toast so the
+  // outcome is visible whether the card is collapsed or open.
   const actuallyChanged = Object.values(changeMap).filter(c => c.changed);
   if (actuallyChanged.length === 0) {
+    _setPriceUpdateTimestamp();
     const note = document.getElementById('priceUpdateNote');
     if (note) {
       note.style.display = 'block';
@@ -3869,6 +3871,7 @@ function applyPriceUpdates() {
       note.textContent = 'No price changes to apply — values match what is already stored.';
       setTimeout(() => { note.style.display = 'none'; note.style.color = 'var(--green)'; }, 3000);
     }
+    toast('No price changes — already up to date');
     return;
   }
 
