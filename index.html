@@ -1920,7 +1920,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      gracefully if the CDN can't be reached (e.g. on aeroplane). -->
 <script type="module">
   try {
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm');
     const SUPABASE_URL = 'https://jnjpwzkksciygfzmfmrg.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_v3qlfHWf6Vfj3a5_tjef9w_Bt_uBdHx';
     window._vossSupabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3788,7 +3788,7 @@ function lsSet(key, val) {
 //   disabled   — Supabase client failed to load, sync permanently off
 const VOSS_SYNC_UUID  = '809603ac-ea4f-4fe4-8a8a-a67a16d83178';
 const VOSS_SYNC_TABLE = 'voss_state';
-const VOSS_SYNC_PULL_INTERVAL_MS = 30 * 1000; // 30 seconds
+const VOSS_SYNC_PULL_INTERVAL_MS = 10 * 1000; // 10 seconds
 const VOSS_SYNC_PUSH_DEBOUNCE_MS = 1500;       // 1.5 second debounce
 
 // Per-device flag: holds the last seen remote `updated_at` so we know
