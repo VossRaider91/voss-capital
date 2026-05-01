@@ -218,6 +218,108 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-size: 17px; letter-spacing: -0.4px; text-transform: none;
   color: var(--white); font-weight: 600; margin-bottom: 14px;
 }
+/* Subsection label — smaller uppercase variant used for secondary
+   headings beneath main section-labels. Replaces the bespoke inline
+   "9px/3px-letter-spacing" styles that were duplicated in many places. */
+.subsection-label {
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); font-weight: 700;
+}
+
+/* Withdrawal strategy toggle (Retirement tab) — segmented two-button
+   chooser. Active button gets gold fill + dark text, inactive gets
+   muted. Used for "4% Rule" vs "Drawdown to 95" selection. Extracted
+   from inline styles where the same ~150-char declaration appeared
+   four times. */
+.withdrawal-toggle-btn {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.withdrawal-toggle-btn.active {
+  background: var(--gold);
+  color: var(--black);
+}
+.withdrawal-toggle-btn.inactive {
+  background: var(--dark);
+  color: var(--muted);
+}
+
+/* Pull-from-wrapper buttons (Calculator tab) — three sibling buttons
+   that pull holdings from GIA / SIPP / ISA respectively. Each gets a
+   subtle tint matching its wrapper colour so they're distinguishable
+   at a glance instead of looking like three identical ghost buttons. */
+.pull-wrapper-btn[id$="-GIA"] {
+  border-color: rgba(255, 255, 255, 0.20);
+}
+.pull-wrapper-btn[id$="-GIA"]:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--white);
+}
+.pull-wrapper-btn[id$="-SIPP"] {
+  border-color: rgba(10, 132, 255, 0.35);
+}
+.pull-wrapper-btn[id$="-SIPP"]:hover {
+  background: rgba(10, 132, 255, 0.08);
+  color: var(--blue);
+}
+.pull-wrapper-btn[id$="-ISA"] {
+  border-color: rgba(48, 209, 88, 0.35);
+}
+.pull-wrapper-btn[id$="-ISA"]:hover {
+  background: rgba(48, 209, 88, 0.08);
+  color: var(--green);
+}
+
+/* ── EDIT LAYERS MODAL ──────────────────────────────────────────
+   The modal renders one editable row per layer in the strategy.
+   Each row has six columns: Ticker, Layer Name, Fund Name,
+   Target %, Buffer %, Remove. On desktop they sit in a single grid
+   line; on mobile they stack into a 2-column layout via the media
+   query at 768px.
+   Extracting the per-row styles into classes keeps the JS template
+   short and the DOM inspectable. */
+.edit-layer-row {
+  display: grid;
+  grid-template-columns: 90px 1.2fr 2fr 80px 80px auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.025);
+  border-radius: 10px;
+  border: 0.5px solid var(--border);
+}
+.edit-layer-row .input-label {
+  font-size: 9px;
+}
+.edit-layer-row input {
+  font-size: 12px !important;
+  padding: 8px 10px !important;
+}
+.edit-layer-row .text-input.layer-ticker {
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.edit-layer-row .text-input.layer-name-input,
+.edit-layer-row .text-input.layer-fund-input {
+  text-align: left;
+}
+.edit-layer-row .layer-remove-btn {
+  align-self: end;
+  margin-bottom: 1px;
+  padding: 7px 12px;
+  font-size: 9px;
+}
+.edit-layer-row .layer-remove-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 .gold-divider {
   height: 0.5px; background: var(--border);
   margin: 22px 0; opacity: 1;
@@ -406,7 +508,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   margin: 8px 0 4px; overflow: hidden;
 }
 .isa-bar-fill { height: 100%; border-radius: 50px; transition: width 0.4s ease; }
-.isa-tracker-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 12px; }
+.isa-tracker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
 .badge-skip {
   background: rgba(255,69,58,0.12); color: var(--red);
   font-size: 11px; letter-spacing: -0.05px;
@@ -536,6 +638,221 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .legend-val { color: var(--muted); font-size: 12px; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
 .legend-pct { color: var(--white); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .portfolio-chart-wrap { display: grid; grid-template-columns: 260px 1fr; gap: 28px; align-items: start; }
+
+/* ── PORTFOLIO HERO (Blend 3) ───────────────────────────────────
+   Hero strip across the top of the Portfolio Overview card.
+   Total value + delta pill + meta on the left, compact half-arc
+   chart on the right. Below this strip sits the holdings list.
+   The arc is drawn fresh each render with per-holding gradients
+   defined in <defs>. */
+.portfolio-hero {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 28px;
+  align-items: center;
+  padding: 8px 0 22px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+}
+.portfolio-hero-meta {
+  display: flex; flex-direction: column;
+  min-width: 0; /* let it shrink in narrow flex contexts */
+}
+.portfolio-hero-substats {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 12px; flex-wrap: wrap;
+}
+.portfolio-hero-meta-text {
+  font-size: 11px; color: var(--muted);
+  font-weight: 500; letter-spacing: -0.05px;
+}
+.portfolio-delta-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 50px;
+  font-size: 11px; font-weight: 600; letter-spacing: -0.05px;
+  font-variant-numeric: tabular-nums;
+}
+.portfolio-delta-pill.positive {
+  background: rgba(48,209,88,0.12);
+  color: var(--green);
+}
+.portfolio-delta-pill.negative {
+  background: rgba(255,69,58,0.12);
+  color: var(--red);
+}
+.portfolio-delta-pill.neutral {
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+}
+.portfolio-hero-arc {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 0;
+  position: relative; /* anchors the absolute-positioned tooltip */
+}
+.portfolio-hero-arc svg {
+  width: 100%; max-width: 280px; height: auto; display: block;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', sans-serif;
+}
+.portfolio-hero-arc svg text {
+  font-family: inherit;
+}
+
+/* Net Worth donut — same font treatment as the portfolio arc so SVG
+   text labels (percentages, centre value) pick up SF Pro / Inter
+   instead of the browser's default serif. */
+#nw-pie {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', sans-serif;
+}
+#nw-pie text {
+  font-family: inherit;
+}
+
+/* Growth chart SVG — same font inheritance pattern as the donut so
+   axis labels render in SF Pro instead of falling back to a serif on
+   iOS where Inter isn't bundled. */
+#growthChart svg {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', sans-serif;
+}
+#growthChart svg text {
+  font-family: inherit;
+}
+
+/* ── TABULAR NUMBERS ─────────────────────────────────────────────
+   Everywhere a £ figure or percentage shows up, we want digits to
+   line up vertically. Without tabular-nums, proportional digits make
+   columns of values look ragged (the "1" is narrower than the "8").
+   Applied to the canonical stat / value / pct classes used across
+   every tab so the whole app reads cleanly. */
+.stat-val,
+.holding-val,
+.holding-pct,
+.legend-pct,
+.bar-value,
+.bar-pct,
+.portfolio-delta-pill {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hover tooltip for the arc slices. Floats over the SVG, tracks cursor.
+   Hidden by default; showPieTip flips display to block and writes the
+   live ticker / £ value / percent for the hovered slice. The tip reads
+   from window._pieData which renderPieChart refreshes on every render
+   so the figures always reflect current prices. */
+.vc-pie-tooltip {
+  display: none;
+  position: absolute;
+  background: rgba(10,10,10,0.96);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--white);
+  pointer-events: none;
+  z-index: 200;
+  text-align: left;
+  line-height: 1.5;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.vc-pie-tooltip .vc-pie-tip-ticker {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: -0.2px;
+  margin-bottom: 2px;
+  display: block;
+}
+.vc-pie-tooltip .vc-pie-tip-value {
+  font-weight: 600;
+  color: var(--white);
+}
+.vc-pie-tooltip .vc-pie-tip-pct {
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+/* ── HOLDINGS BAR LIST (Blend 3) ────────────────────────────────
+   Each holding rendered as a four-column row: colour rod + ticker
+   on the left, gradient bar in the middle, £ value, % weight.
+   The bar widths are set inline by the JS based on the holding's
+   percentage of its section's total. The colour rod and the bar
+   share the same gradient so they read as a pair. */
+.holding-bar-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 110px 56px;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+.holding-bar-row:last-child { border-bottom: none; }
+.holding-bar-row:hover { background: rgba(255,255,255,0.02); }
+.holding-bar-row .bar-id {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.holding-bar-row .bar-rod {
+  width: 4px; height: 18px; border-radius: 2px;
+  flex-shrink: 0;
+}
+.holding-bar-row .bar-ticker {
+  font-size: 13px; font-weight: 600; color: var(--white);
+  letter-spacing: -0.1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.holding-bar-row .bar-track {
+  height: 6px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.holding-bar-row .bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.holding-bar-row .bar-value {
+  text-align: right;
+  font-size: 13px; font-weight: 600; color: var(--white);
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+}
+.holding-bar-row .bar-pct {
+  text-align: right;
+  font-size: 12px; font-weight: 500; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Section header for "By holding" — sits between the hero and the bars */
+.holding-section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 16px 0 8px 0;
+}
+.holding-section-header .label {
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); font-weight: 700;
+}
+.holding-section-header .meta {
+  font-size: 11px; color: var(--muted2); font-weight: 500;
+}
+
+/* In-row weight bar — sits beneath each holding's units/price line and
+   fills horizontally proportional to that holding's section weight. The
+   gradient is set inline (per-holding colour). Reads as a Robinhood-style
+   visual cue without removing any of the existing functional content. */
+.holding-row-bar-track {
+  height: 4px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 240px;
+}
+.holding-row-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
 
 /* MORTGAGE PLANNER */
 .mp-panel { display: none; }
@@ -1054,9 +1371,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   .nav-tabs.mobile-nav-open {
     display: grid !important;
-    position: sticky;
-    top: 90px;
-    z-index: 89;
+    /* Render in normal flow under the sticky header rather than sticky-pinned
+       at a hardcoded offset. Earlier we used `top: 90px` which broke on
+       devices with different notch heights. The header above stays sticky;
+       the expanded nav scrolls away with content. Tapping the pill in the
+       sticky header re-opens it from anywhere. */
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
     margin: 0 -12px 12px -12px !important;
@@ -1169,6 +1488,31 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   .edit-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
   .portfolio-chart-wrap { grid-template-columns: 1fr !important; gap: 16px !important; }
   .legend-item { gap: 6px; }
+
+  /* ── PORTFOLIO HERO (Blend 3) — mobile stacks vertically ────────
+     The two-column hero (total + arc) collapses to single column.
+     Total stays prominent at the top, arc sits beneath. The bar list
+     drops the £ value column to a smaller font and the % column
+     gets squeezed slightly to keep everything readable on a 375px
+     viewport. */
+  .portfolio-hero {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    padding: 4px 0 18px 0 !important;
+  }
+  .portfolio-hero-arc svg {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .holding-bar-row {
+    grid-template-columns: 76px 1fr 78px 44px !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+  }
+  .holding-bar-row .bar-ticker { font-size: 12px; }
+  .holding-bar-row .bar-value { font-size: 12px; }
+  .holding-bar-row .bar-pct { font-size: 11px; }
+  .holding-bar-row .bar-track { height: 5px; }
   .bgt-quick-add { grid-template-columns: 1fr !important; gap: 8px !important; }
   .bgt-audit-edit-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
 
@@ -1268,11 +1612,18 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     overflow-y: auto !important;
   }
 
-  /* Modal inner grids */
-  #edit-layers-modal [style*="grid-template-columns: repeat(5"],
-  #edit-layers-modal [style*="grid-template-columns:repeat(5"] {
+  /* Modal inner grids — Edit Layers row stacks into a clean 2x3
+     layout on mobile. Ticker + Target on row 1, Layer Name spans
+     the second row, Fund Name spans the third, Buffer + Remove
+     share the bottom row. */
+  .edit-layer-row {
     grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+  .edit-layer-row .input-group:nth-child(2),
+  .edit-layer-row .input-group:nth-child(3) {
+    grid-column: 1 / -1;
   }
 
   /* ── TOAST — reposition to centre-bottom on mobile ────────── */
@@ -1438,7 +1789,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     white-space: nowrap;
   }
 
-  /* ── CALCULATOR — Paste HL Prices row ───────────────────────── */
+  /* ── CALCULATOR — Paste Prices row ────────────────────────── */
   /* The placeholder text gets truncated. Stack input above button so
      the full input width is available for typing/pasting. */
   .calc-paste-row {
@@ -1676,6 +2027,34 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #bgt-history-view .bgt-cell-actual {
     align-items: flex-start !important;
   }
+
+  /* ── BUDGET — Saved This Month tile aligns LEFT on mobile ──── */
+  /* On desktop this tile sits to the right of the Monthly Breakdown
+     heading via flex space-between. On mobile it wraps beneath the
+     heading, so right-align looks unbalanced — flip it to left to
+     match the heading and the rows below. */
+  .bgt-saved-tile {
+    text-align: left !important;
+    width: 100%;
+  }
+
+  /* ── TAX — Standing Order block aligns LEFT on mobile ─────── */
+  /* The headline grid (Set your standing order, Or precise minimum,
+     Saved so far) wraps beneath each other on mobile. Hide the now-
+     useless vertical dividers and ensure each block is full width and
+     left-aligned for a clean column read. */
+  .tax-headline-grid {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 18px !important;
+  }
+  .tax-headline-grid > div {
+    width: 100%;
+    text-align: left !important;
+  }
+  .tax-headline-divider {
+    display: none !important;
+  }
   #bgt-main-table .bgt-progress-wrap,
   #bgt-history-view .bgt-progress-wrap {
     width: 100%;
@@ -1804,6 +2183,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     gap: 16px !important;
   }
 
+  /* ── TAX — Income input row + separators ──────────────────────
+     The PAYE/Dividend/Bonus inputs sit in a flex row with `+` symbols
+     between them on desktop. On mobile the row wraps, leaving orphaned
+     `+` signs. Hide them and let inputs stack naturally. */
+  .income-input-sep {
+    display: none !important;
+  }
+
   /* ── ANALYSE — Asset Breakdown rows wrap cleanly ────────────── */
   /* Each row has icon + label + (note) + tag + value. On mobile the
      inline (note) gets squashed. Make rows wrap and tighten typography. */
@@ -1911,7 +2298,20 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   .stat-val.lg { font-size: 24px !important; }
   .stat-val.xl { font-size: 28px !important; }
-  .container { padding-left: 10px; padding-right: 10px; }
+  .container { padding-left: 8px; padding-right: 8px; }
+  /* Pull card inner padding in slightly so they don't dominate the
+     viewport on the smallest iPhones (SE / mini / 13 mini). Saves
+     about 12 px of horizontal space inside each card for content. */
+  .card, .card-gold {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  /* Section labels can wrap unhelpfully on very narrow screens; allow
+     them to use the full available width without padding eating into
+     the content. */
+  .section-label {
+    font-size: 15px !important;
+  }
 }
 </style>
 
@@ -2040,7 +2440,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Budget row -->
-  <div class="card card-left mb24 calc-controls-row" style="display:flex;align-items:center;gap:20px;flex-wrap:nowrap;overflow-x:auto">
+  <div class="card card-left mb24 calc-controls-row" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
     <div style="flex-shrink:0">
       <div class="input-label mb8">Monthly Budget</div>
       <div class="flex-center">
@@ -2048,13 +2448,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <input class="budget-input" type="text" inputmode="numeric" id="budget" value="2700" step="50">
       </div>
     </div>
-    <div style="height:48px;width:1px;background:var(--border);flex-shrink:0;margin-left:40px"></div>
-    <div style="flex-shrink:0;margin-left:20px">
+    <div style="height:48px;width:1px;background:var(--border);flex-shrink:0"></div>
+    <div style="flex-shrink:0">
       <div class="input-label mb8">Drift Limit %</div>
       <div class="flex-center">
-        <input class="budget-input" type="number" id="driftLimit" value="5" step="0.5" min="0" max="100" style="width:80px">
+        <input class="budget-input" type="text" inputmode="decimal" id="driftLimit" value="5" step="0.5" min="0" max="100" style="width:80px">
       </div>
     </div>
+    <div style="height:48px;width:1px;background:var(--border);flex-shrink:0"></div>
     <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
       <label class="check-wrap">
         <input type="checkbox" id="chk-reduce" checked>
@@ -2087,7 +2488,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <!-- Paste price import — same format as Total Portfolio page -->
   <div class="calc-paste-row" style="display:flex;gap:10px;align-items:center;margin-top:16px;margin-bottom:16px;padding-top:14px;border-top:1px solid var(--border)">
     <input class="text-input" type="text" id="calc-price-paste"
-      placeholder="Paste HL prices — e.g. VWRP £133.26 VUAG £101.82 (spaces optional)"
+      placeholder="Paste prices — e.g. VWRP £133.26 VUAG £101.82 (spaces optional)"
       style="flex:1;font-size:11px">
     <button class="btn-ghost btn-sm" onclick="parseCalcPrices()">Paste &amp; Fill</button>
   </div>
@@ -2095,7 +2496,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   <!-- Layered Strategy header — Edit Layers opens the modal that mutates FUNDS -->
   <div class="flex-between mb12" style="padding-top:14px;border-top:1px solid var(--border)">
-    <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-weight:700">Layered Strategy</div>
+    <div class="subsection-label">Layered Strategy</div>
     <button class="btn-ghost btn-sm" onclick="openEditLayersModal()">Edit Layers</button>
   </div>
   <div class="stat-sub mb16" style="font-style:italic">Targets must sum to 100%. Edits apply to future buy calculations only — your existing holdings stay untouched.</div>
@@ -2104,7 +2505,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   <!-- Additional funds section -->
   <div class="flex-between mb12">
-    <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-weight:700">Additional Funds</div>
+    <div class="subsection-label">Additional Funds</div>
     <button class="btn-ghost btn-sm" onclick="addAdditionalFund()">+ Add Fund</button>
   </div>
   <div class="stat-sub mb16" style="font-style:italic">These funds are tracked for visibility and history but do not participate in drift correction or target allocation.</div>
@@ -2170,7 +2571,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <!-- Add entry form - shows on Personal and Employer tabs -->
   <div class="card card-left mb24" id="historyFormCard" style="display:none">
     <div class="section-label" id="historyFormTitle">Add Personal Entry</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
       <div class="input-group">
         <span class="input-label">Entry Date</span>
         <input class="text-input" type="date" id="emp-date">
@@ -2264,7 +2665,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <span class="input-label">CGT Realised on This Sale £</span>
         <span style="font-size:8px;font-weight:700;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px">AUTO</span>
       </div>
-      <input class="num-input" type="number" id="sold-cgt-realised" value="0" step="0.01" min="0"
+      <input class="num-input" type="text" inputmode="decimal" id="sold-cgt-realised" value="0" step="0.01" min="0"
         oninput="_markSoldFieldManual('sold-cgt-realised')">
       <div id="sold-cgt-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Auto-calculated from cost basis. Enter sale price and units to populate.</div>
     </div>
@@ -2276,7 +2677,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
           <span class="check-label">Bed &amp; ISA?</span>
         </label>
       </div>
-      <input class="num-input" type="number" id="sold-isa-used-amount" value="0" step="0.01" min="0"
+      <input class="num-input" type="text" inputmode="decimal" id="sold-isa-used-amount" value="0" step="0.01" min="0"
         oninput="_markSoldFieldManual('sold-isa-used-amount')">
       <div id="sold-isa-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Tick "Bed &amp; ISA?" if you're moving these proceeds straight into an ISA.</div>
     </div>
@@ -2301,11 +2702,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
     <div class="card input-group">
       <span class="input-label">Target Retirement Age</span>
-      <input class="num-input" type="number" id="ret-target-age" value="55" min="40" max="80">
+      <input class="num-input" type="text" inputmode="numeric" id="ret-target-age" value="55" min="40" max="80">
     </div>
     <div class="card input-group">
       <span class="input-label">Annual Growth Rate %</span>
-      <input class="num-input" type="number" id="ret-growth" value="7" step="0.5" min="1" max="20">
+      <input class="num-input" type="text" inputmode="decimal" id="ret-growth" value="7" step="0.5" min="1" max="20">
     </div>
     <div class="card input-group">
       <span class="input-label">Your Monthly Contribution £</span>
@@ -2317,7 +2718,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
     <div class="card input-group">
       <span class="input-label">Total Monthly Contributions £</span>
-      <input class="num-input" type="number" id="ret-monthly" value="2700" step="100" style="color:var(--gold);font-weight:700" readonly>
+      <input class="num-input" type="text" inputmode="numeric" id="ret-monthly" value="2700" step="100" style="color:var(--gold);font-weight:700" readonly>
     </div>
     <div class="card input-group">
       <span class="input-label">Current Portfolio Value £</span>
@@ -2325,32 +2726,30 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
     <div class="card input-group">
       <span class="input-label">Inflation Rate %</span>
-      <input class="num-input" type="number" id="ret-inflation" value="2.5" step="0.5" min="0" max="10">
+      <input class="num-input" type="text" inputmode="decimal" id="ret-inflation" value="2.5" step="0.5" min="0" max="10">
     </div>
     <div class="card input-group" style="position:relative">
       <span class="input-label" style="color:var(--gold)">Phase 1 — Full Contributions (Years)</span>
-      <input class="num-input" type="number" id="ret-contrib-years" value="21" step="1" min="0" oninput="onContribYearsChange()" style="border-color:var(--gold)">
+      <input class="num-input" type="text" inputmode="numeric" id="ret-contrib-years" value="21" step="1" min="0" oninput="onContribYearsChange()" style="border-color:var(--gold)">
       <div id="ret-coast-badge" style="display:none;position:absolute;top:8px;right:10px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:var(--blue);background:rgba(10,132,255,0.12);padding:2px 8px;border-radius:10px">Coast FIRE</div>
       <div style="font-size:9px;color:var(--muted);margin-top:4px" id="ret-contrib-note">Full contributions for whole term</div>
     </div>
     <div class="card input-group" style="position:relative">
       <span class="input-label" style="color:var(--amber)">Phase 2 — Step-Down Amount £/mo</span>
-      <input class="num-input" type="number" id="ret-stepdown-amount" value="0" step="100" min="0" oninput="onContribYearsChange()">
+      <input class="num-input" type="text" inputmode="numeric" id="ret-stepdown-amount" value="0" step="100" min="0" oninput="onContribYearsChange()">
       <div style="font-size:9px;color:var(--muted);margin-top:4px">Leave 0 to skip this phase</div>
     </div>
     <div class="card input-group">
       <span class="input-label" style="color:var(--amber)">Phase 2 — Step-Down Duration (Years)</span>
-      <input class="num-input" type="number" id="ret-stepdown-years" value="0" step="1" min="0" oninput="onContribYearsChange()">
+      <input class="num-input" type="text" inputmode="numeric" id="ret-stepdown-years" value="0" step="1" min="0" oninput="onContribYearsChange()">
     </div>
     <div class="card input-group">
       <span class="input-label">Withdrawal Strategy</span>
       <div style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:2px">
-        <button id="btn-withdrawal-4pct" onclick="setWithdrawalMode('4pct')"
-          style="flex:1;padding:11px 8px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;background:var(--gold);color:var(--black);transition:all 0.18s">
+        <button id="btn-withdrawal-4pct" class="withdrawal-toggle-btn active" onclick="setWithdrawalMode('4pct')">
           4% Rule
         </button>
-        <button id="btn-withdrawal-drawdown" onclick="setWithdrawalMode('drawdown')"
-          style="flex:1;padding:11px 8px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;background:var(--dark);color:var(--muted);transition:all 0.18s">
+        <button id="btn-withdrawal-drawdown" class="withdrawal-toggle-btn inactive" onclick="setWithdrawalMode('drawdown')">
           Drawdown to 95
         </button>
       </div>
@@ -2697,7 +3096,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <div>
         <div style="position:relative;display:inline-block" onmousemove="moveNWPieTooltip(event)">
           <svg id="nw-pie" viewBox="0 0 260 260" style="width:260px;height:260px;display:block"></svg>
-          <div id="nw-pie-tooltip" style="display:none;position:absolute;background:rgba(0,0,0,0.9);border:1px solid var(--gold);padding:6px 10px;border-radius:10px;font-size:10px;color:var(--white);pointer-events:none;z-index:100;text-align:center;line-height:1.6;white-space:nowrap"></div>
+          <!-- Tooltip — uses the same vc-pie-tooltip class as the portfolio
+               donut so both charts share visual language. Populated on
+               slice hover by showNWPieTip with live ticker / value /
+               percent from window._nwPieData. -->
+          <div id="nw-pie-tooltip" class="vc-pie-tooltip"></div>
         </div>
         <div id="nw-legend" style="margin-top:16px"></div>
       </div>
@@ -2760,7 +3163,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         </div>
         <div class="input-group">
           <span class="input-label">Amount £</span>
-          <input class="num-input" type="number" id="bgt-qa-amount" value="" step="0.01" min="0" placeholder="0.00">
+          <input class="num-input" type="text" inputmode="decimal" id="bgt-qa-amount" value="" step="0.01" min="0" placeholder="0.00">
         </div>
         <div class="input-group">
           <span class="input-label">Note <span style="color:var(--muted);font-weight:400">(optional)</span></span>
@@ -2855,13 +3258,16 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
 
     <!-- Mobile-only always-visible Update button. Hidden on desktop via CSS;
-         clicks bubble up but stopPropagation prevents the card collapse. -->
-    <button class="btn-gold mobile-always-action" onclick="event.stopPropagation();applyPriceUpdates()" style="display:none;width:100%;margin-top:12px">Update All Prices</button>
+         clicks bubble up but stopPropagation prevents the card collapse.
+         Calls refreshLivePrices() which fetches live, fills the grid, then
+         commits via applyPriceUpdates(). On total fetch failure the user
+         can expand the card and use the manual paste flow as fallback. -->
+    <button class="btn-gold mobile-always-action" onclick="event.stopPropagation();refreshLivePrices(this)" style="display:none;width:100%;margin-top:12px">Update All Prices</button>
 
     <div class="collapsible-body" style="margin-top:16px">
     <!-- Paste price import -->
     <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-      <div class="input-label mb8">Paste HL Prices</div>
+      <div class="input-label mb8">Paste Prices</div>
       <div style="display:flex;gap:10px;align-items:center">
         <input class="text-input" type="text" id="hl-price-paste"
           placeholder="e.g. VWRP £133.26 VUAG £101.82 EQQQ £492.26 (spaces optional)"
@@ -2872,7 +3278,16 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
 
     <div id="priceUpdaterGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px"></div>
-    <button class="btn-gold desktop-only-action" onclick="applyPriceUpdates()">Update All Prices</button>
+    <!-- Update All Prices fetches live from Hargreaves Lansdown (via our
+         Cloudflare Worker proxy) and Twelve Data (for NVDA), fills the grid,
+         then commits. The secondary "Apply Manual Prices" button is the
+         fallback path for users who have typed values into the grid by hand
+         (or pasted via Paste & Fill above) and want to commit without
+         hitting the live-fetch APIs. -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn-gold desktop-only-action" onclick="refreshLivePrices(this)">Update All Prices</button>
+      <button class="btn-ghost btn-sm" onclick="applyPriceUpdates()" title="Commit manually-typed values without fetching live prices">Apply Manual Prices</button>
+    </div>
     <div id="priceUpdateNote" style="font-size:10px;color:var(--green);margin-top:8px;display:none"></div>
     </div><!-- /collapsible-body -->
   </div>
@@ -2890,11 +3305,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
       <div class="input-group">
         <span class="input-label">Units Bought</span>
-        <input class="num-input" type="number" id="new-shares" value="0" step="1" min="0">
+        <input class="num-input" type="text" inputmode="numeric" id="new-shares" value="0" step="1" min="0">
       </div>
       <div class="input-group">
         <span class="input-label">Price £ (optional)</span>
-        <input class="num-input" type="number" id="new-price" value="0" step="0.001" min="0">
+        <input class="num-input" type="text" inputmode="decimal" id="new-price" value="0" step="0.001" min="0">
       </div>
       <div class="input-group">
         <span class="input-label">Type</span>
@@ -2922,36 +3337,37 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   <!-- Summary -->
   <div class="card-gold mb16">
-    <div class="flex-between mb16">
-      <div>
-        <div class="stat-label mb8">Total Portfolio Value</div>
+    <!-- Top hero strip: total value + today's gain pill on the left, compact arc on the right -->
+    <div class="portfolio-hero">
+      <div class="portfolio-hero-meta">
+        <div class="stat-label mb4">Total Portfolio Value</div>
         <div class="stat-val xl gold" id="totalPortfolioValue">£0</div>
+        <div class="portfolio-hero-substats">
+          <span class="portfolio-delta-pill" id="portfolio-delta-pill" style="display:none"></span>
+          <span class="portfolio-hero-meta-text" id="portfolio-hero-meta-text">0 holdings</span>
+        </div>
       </div>
-      <div style="text-align:right">
-        <div class="stat-label mb8">Holdings</div>
-        <div class="stat-val lg" id="holdingsCount">0</div>
+      <div class="portfolio-hero-arc">
+        <svg id="pieChart" viewBox="0 0 240 140" role="img" aria-label="Portfolio breakdown" preserveAspectRatio="xMidYMid meet"></svg>
+        <!-- Hover tooltip — absolute-positioned over the arc, populated
+             by showPieTip on slice hover. movePieTooltip tracks cursor
+             so the tip floats next to the pointer. -->
+        <div id="pie-tooltip" class="vc-pie-tooltip"></div>
       </div>
     </div>
 
-    <div class="sub-tabs mb16">
+    <div class="sub-tabs mb16" style="margin-top:18px">
       <button class="sub-tab active" onclick="switchPortfolioTab('all',this)">All</button>
       <button class="sub-tab" onclick="switchPortfolioTab('personal',this)">Personal (GIA)</button>
       <button class="sub-tab" onclick="switchPortfolioTab('employer',this)">Employer (SIPP)</button>
       <button class="sub-tab" onclick="switchPortfolioTab('isa',this)">ISA</button>
     </div>
 
-    <div class="portfolio-chart-wrap">
-      <div>
-        <div style="position:relative;display:inline-block" onmousemove="movePieTooltip(event)">
-          <svg id="pieChart" width="260" height="260" viewBox="0 0 260 260" style="display:block"></svg>
-          <div id="pie-tooltip" style="display:none;position:absolute;background:rgba(0,0,0,0.9);border:1px solid var(--gold);padding:6px 10px;border-radius:10px;font-size:10px;color:var(--white);pointer-events:none;z-index:100;text-align:center;line-height:1.6;white-space:nowrap"></div>
-        </div>
-        <div id="pieLegend"></div>
-      </div>
-      <div>
-        <div id="holdingsList"></div>
-      </div>
-    </div>
+    <!-- Holdings list (sectioned by New / Legacy, grouped by wrapper) -->
+    <div id="holdingsList"></div>
+    <!-- Legacy hidden hooks kept so pre-existing references don't crash on render -->
+    <div id="pieLegend" style="display:none"></div>
+    <div id="holdingsCount" style="display:none">0</div>
   </div>
 
   <!-- Portfolio growth chart -->
@@ -2977,7 +3393,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card card-left mb24">
     <div class="section-label mb16">Income Tax Calculator</div>
 
-    <!-- Income inputs row — inputs only, no summary boxes inline -->
+    <!-- Income inputs row — inputs only, no summary boxes inline. Each
+         input is wrapped together with its trailing separator so the
+         flex-wrap groups them naturally. The separator is hidden on
+         mobile via .income-input-sep so we don't get orphaned + signs. -->
     <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px">
       <div>
         <div class="input-label mb8">PAYE Salary £</div>
@@ -2987,7 +3406,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
           <input class="budget-input" type="text" inputmode="numeric" id="inc-paye" value="12570" step="100" style="width:120px" oninput="updateIncomeTotal()">
         </div>
       </div>
-      <div style="font-size:20px;color:var(--muted);padding-top:28px">+</div>
+      <div class="income-input-sep" style="font-size:20px;color:var(--muted);padding-top:28px">+</div>
       <div>
         <div class="input-label mb8">Dividend Income £</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px">First £500 is tax-free</div>
@@ -2996,7 +3415,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
           <input class="budget-input" type="text" inputmode="numeric" id="inc-dividends" value="87430" step="100" style="width:120px" oninput="updateIncomeTotal()">
         </div>
       </div>
-      <div style="font-size:20px;color:var(--muted);padding-top:28px">+</div>
+      <div class="income-input-sep" style="font-size:20px;color:var(--muted);padding-top:28px">+</div>
       <div>
         <div class="input-label mb8">Bonus £</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Select how it's paid</div>
@@ -3061,7 +3480,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
           <input class="budget-input" type="text" inputmode="numeric" id="tax-prior-liability" value="0" step="100" style="width:130px" oninput="renderTaxProvisionPlanner()">
         </div>
         <div style="font-size:9px;color:var(--amber);margin-top:6px;font-style:italic;line-height:1.5">
-          ⚠ Update this when you file your next return — typically October or January each year. The new figure will then drive your future POA projections.
+          ⚠ Update this when you file your next return
         </div>
       </div>
       <div style="height:48px;width:1px;background:var(--border)"></div>
@@ -3365,12 +3784,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Section 1: Portfolio snapshot -->
-  <div class="section-label mb16">Portfolio Snapshot</div>
-  <div class="grid-4 mb24" id="analyse-snapshot"></div>
+  <div class="card-gold mb24">
+    <div class="section-label">Portfolio Snapshot</div>
+    <div class="grid-4" id="analyse-snapshot"></div>
+  </div>
 
   <!-- Section 2: Wrapper efficiency -->
-  <div class="section-label mb16">Wrapper Efficiency</div>
   <div class="card-gold mb24">
+    <div class="section-label">Wrapper Efficiency</div>
     <div class="stat-sub mb16">How much of your portfolio is sheltered in tax-exempt wrappers vs exposed to CGT in your GIA.</div>
     <div class="grid-3 mb16" id="analyse-wrapper-cards"></div>
     <div style="background:var(--dark);border-radius:10px;overflow:hidden;height:10px;margin-bottom:8px">
@@ -3384,8 +3805,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Section 3: CGT health -->
-  <div class="section-label mb16">CGT Health</div>
   <div class="card-gold mb24">
+    <div class="section-label">CGT Health</div>
     <div class="grid-4 mb16" id="analyse-cgt-cards"></div>
     <div id="analyse-cgt-bar-wrap" style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
@@ -3401,45 +3822,45 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Section 4: Concentration risk -->
-  <div class="section-label mb16">Concentration &amp; Overlap Analysis</div>
   <div class="card-gold mb24">
+    <div class="section-label">Concentration &amp; Overlap Analysis</div>
     <div class="stat-sub mb16">Your underlying geographic and index exposure across all funds — including overlap between funds tracking similar indices.</div>
     <div id="analyse-concentration"></div>
   </div>
 
   <!-- Section 5: Monthly contribution health -->
-  <div class="section-label mb16">Contribution Rate Health</div>
   <div class="card-gold mb24">
+    <div class="section-label">Contribution Rate Health</div>
     <div class="grid-3 mb16" id="analyse-contrib-cards"></div>
     <div id="analyse-contrib-insight" class="stat-sub" style="font-style:italic"></div>
   </div>
 
   <!-- Section 6: Bed & ISA priority list -->
-  <div class="section-label mb16">Bed &amp; ISA Priority — GIA Holdings</div>
   <div class="card-gold mb24">
+    <div class="section-label">Bed &amp; ISA Priority — GIA Holdings</div>
     <div class="stat-sub mb16">Your GIA holdings ranked by CGT drag. The top of this list are your highest priority candidates for your next annual bed and ISA transfer.</div>
     <div id="analyse-bedisa-list"></div>
   </div>
 
   <!-- Section 7: Monthly history summary (only if data exists) -->
   <div id="analyse-history-section" style="display:none">
-    <div class="section-label mb16">Contribution History Summary</div>
     <div class="card-gold mb24">
+      <div class="section-label">Contribution History Summary</div>
       <div class="grid-3 mb16" id="analyse-history-cards"></div>
       <div id="analyse-history-insight" class="stat-sub" style="font-style:italic"></div>
     </div>
   </div>
 
-  <div class="section-label mb16">Net Worth Overview</div>
   <div class="card-gold mb24" id="analyse-networth-section">
+    <div class="section-label">Net Worth Overview</div>
     <div class="grid-4 mb16" id="analyse-nw-cards"></div>
     <div id="analyse-nw-breakdown" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px"></div>
   </div>
 
   <!-- Annual Budget Performance — populated by renderBudgetPerformance() -->
   <div id="analyse-budget-perf-section" style="display:none">
-    <div class="section-label mb16">Annual Budget Performance</div>
     <div class="card-gold mb24">
+      <div class="section-label">Annual Budget Performance</div>
       <div id="analyse-budget-perf-year-select" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
       <div class="grid-4 mb20" id="analyse-budget-perf-cards"></div>
       <div style="background:var(--dark);border-radius:10px;padding:14px 18px;margin-bottom:16px">
@@ -3469,10 +3890,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 <div class="tab-panel mp-panel" id="mortgage-planner-panel">
 
   <!-- Header -->
-  <div class="card mb24" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-left:3px solid var(--blue)">
+  <div class="card card-left mb24 mp-header" style="border-left-color:var(--blue);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:700">Mortgage Strategic Planner</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">Analyse Financial Position → Mortgage Planner</div>
+      <div class="subsection-label" style="color:var(--blue);margin-bottom:4px">Mortgage Strategic Planner</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px">Analyse Financial Position → Mortgage Planner</div>
     </div>
     <button class="mp-btn-back" onclick="closeMortgagePlanner()">← Back to Analysis</button>
   </div>
@@ -3483,41 +3904,41 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <!-- Inputs -->
   <div class="card-gold mb24">
     <div class="section-label mb16">Mortgage Inputs</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:20px">
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-balance">Current Balance £</label>
-        <input class="mp-input" type="text" inputmode="numeric" id="mp-balance" value="309,413.81" oninput="mpRecalc()">
+        <input class="mp-input" type="text" inputmode="decimal" id="mp-balance" value="309,413.81" oninput="mpRecalc()">
       </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-rate">Current Rate %</label>
-        <input class="mp-input" type="number" id="mp-rate" value="4.20" step="0.05" min="0" max="20" oninput="mpRecalc()">
+        <input class="mp-input" type="text" inputmode="decimal" id="mp-rate" value="4.20" step="0.05" min="0" max="20" oninput="mpRecalc()">
       </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-term">Months Remaining</label>
-        <input class="mp-input" type="number" id="mp-term" value="219" step="1" min="1" oninput="mpRecalc()">
+        <input class="mp-input" type="text" inputmode="numeric" id="mp-term" value="219" step="1" min="1" oninput="mpRecalc()">
       </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-payment">Monthly Payment £</label>
-        <input class="mp-input" type="text" inputmode="numeric" id="mp-payment" value="2,026.53" oninput="mpRecalc()">
+        <input class="mp-input" type="text" inputmode="decimal" id="mp-payment" value="2,026.53" oninput="mpRecalc()">
       </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-overpay">Monthly Overpayment £</label>
-        <input class="mp-input" type="text" inputmode="numeric" id="mp-overpay" value="0" oninput="mpRecalc()">
+        <input class="mp-input" type="text" inputmode="decimal" id="mp-overpay" value="0" oninput="mpRecalc()">
       </div>
     </div>
     <div class="gold-divider"></div>
-    <div style="margin-bottom:8px">
-      <div class="section-label" style="color:var(--blue);margin-bottom:2px" id="mp-future-heading">Future Projections</div>
-      <div style="font-size:9px;color:var(--muted)" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
+    <div style="margin-bottom:14px">
+      <div class="subsection-label" style="color:var(--blue);margin-bottom:4px" id="mp-future-heading">Future Projections</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px;line-height:1.5" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-switch-date" style="color:var(--blue)">Remortgage Switch Date</label>
         <input class="mp-input" type="month" id="mp-switch-date" value="2029-05" oninput="mpRecalc()" style="text-align:left">
       </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-new-rate" style="color:var(--blue)">Projected New Rate %</label>
-        <input class="mp-input" type="number" id="mp-new-rate" value="3.50" step="0.05" min="0" max="20" oninput="mpRecalc()">
+        <input class="mp-input" type="text" inputmode="decimal" id="mp-new-rate" value="3.50" step="0.05" min="0" max="20" oninput="mpRecalc()">
       </div>
     </div>
   </div>
@@ -3528,17 +3949,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   <!-- Amortisation table -->
   <div class="card-gold mb16">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
       <div class="section-label" style="margin-bottom:0">Full Amortisation Schedule</div>
-      <div style="font-size:9px;color:var(--blue);font-weight:700" id="mp-rate-switch-note"></div>
-    </div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
-      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">
-        <span style="width:10px;height:10px;background:rgba(10,132,255,0.4);border-radius:3px;display:inline-block"></span>Current month
-      </span>
-      <span style="display:inline-flex;align-items:center;gap:6px">
-        <span style="width:10px;height:10px;background:rgba(10,132,255,0.15);border-radius:1px;display:inline-block"></span>Rate switch point
-      </span>
+      <div style="display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);letter-spacing:-0.05px">
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          <span style="width:10px;height:10px;background:rgba(10,132,255,0.4);border-radius:3px;display:inline-block"></span>Current month
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          <span style="width:10px;height:10px;background:rgba(10,132,255,0.15);border-radius:3px;display:inline-block"></span>Rate switch
+        </span>
+        <span id="mp-rate-switch-note" style="color:var(--blue);font-weight:700"></span>
+      </div>
     </div>
     <div class="mp-table-wrap">
       <table class="mp-table">
@@ -3558,7 +3979,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
   </div>
 
-  <p class="disclaimer">Amortisation projections are mathematical estimates only. Actual figures depend on your lender's calculation method, any payment caps, and future rate changes. Not financial advice.</p>
+  <p class="disclaimer">Projections are estimates. Actual figures depend on your lender's calculation method and any future rate changes. Not financial advice.</p>
 </div>
 
 <div class="save-toast" id="saveToast">Saved</div>
@@ -3617,9 +4038,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      ═══════════════════════════════════════════════════════════ -->
 <div id="edit-layers-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto">
   <div style="background:var(--card);border:0.5px solid var(--border2);max-width:920px;width:100%;padding:28px;border-radius:14px;backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 8px 32px rgba(0,0,0,0.40);max-height:90vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:12px">
       <div>
-        <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">Strategy editor</div>
+        <div class="subsection-label" style="color:var(--blue);margin-bottom:6px">Strategy Editor</div>
         <div style="font-size:20px;color:var(--white);font-weight:600;letter-spacing:-0.3px">Edit Layered Strategy</div>
       </div>
       <button class="btn-ghost btn-sm" onclick="closeEditLayersModal()" style="opacity:0.7">✕ Cancel</button>
@@ -3635,13 +4056,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <div id="edit-layers-error" style="display:none;font-size:11px;color:var(--red);margin-bottom:14px;padding:10px 14px;background:rgba(255,69,58,0.08);border-radius:8px;border:0.5px solid rgba(255,69,58,0.2);line-height:1.45"></div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:14px;border-top:0.5px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:14px;border-top:0.5px solid var(--border)">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn-ghost btn-sm" onclick="addLayerRow()" style="opacity:0.85">+ Add Layer</button>
-        <button class="btn-ghost btn-sm" onclick="resetLayersToDefaults()" style="opacity:0.6">Reset to Defaults</button>
+        <button class="btn-ghost btn-sm" onclick="addLayerRow()">+ Add Layer</button>
+        <button class="btn-ghost btn-sm" onclick="resetLayersToDefaults()" style="opacity:0.7">Reset to Defaults</button>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn-ghost btn-sm" onclick="closeEditLayersModal()" style="opacity:0.7;padding:10px 20px">Cancel</button>
+        <button class="btn-ghost btn-sm" onclick="closeEditLayersModal()" style="padding:10px 20px">Cancel</button>
         <button class="btn-gold" onclick="saveEditLayers()" style="padding:10px 22px">Save Strategy</button>
       </div>
     </div>
@@ -3667,7 +4088,54 @@ const FUND_DEFAULTS = Object.freeze([
 // has customised it via the Edit Layers modal. The shape MUST match
 // FUND_DEFAULTS — every consumer iterates these properties.
 let FUNDS = FUND_DEFAULTS.map(f => ({ ...f }));
-const PIE_COLOURS = ['#FFFFFF','#e0c070','#4caf7d','#e09a3a','#7a9eb8','#b87a9e','#9eb87a','#d4644a','#5db8d4','#b8a47a','#a47ab8','#7ab8a4'];
+
+// PIE_COLOURS — vibrant Apple-system inspired palette designed to gradient
+// well from the named hex (light) down to a derived darker stop. Each
+// colour is the LIGHTER end of the gradient, computed _darkenColour gives
+// the matching darker end. Tuned for visual pop — saturated enough to
+// stand out on the dark canvas without being garish.
+const PIE_COLOURS = [
+  '#0A84FF', // electric blue (Apple system blue)
+  '#FF9F0A', // vivid amber-orange
+  '#30D158', // bright mint-green
+  '#FF453A', // signal red-coral
+  '#5E5CE6', // indigo-violet
+  '#FF375F', // hot pink
+  '#64D2FF', // cyan-aqua
+  '#BF5AF2', // bright purple
+  '#FFD60A', // canary yellow
+  '#FF6482', // rose
+  '#32ADE6', // sky-blue
+  '#AC8E68', // warm tan
+];
+
+// Compute a darker stop for a hex colour — used for chart gradient ends.
+// Reduces each RGB channel by ~40% so gradients have visible depth without
+// going so dark they lose the colour identity.
+function _darkenColour(hex, factor = 0.7) {
+  if (!hex || hex[0] !== '#') return hex;
+  let h = hex.slice(1);
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
+  const dr = Math.max(0, Math.round(r * factor));
+  const dg = Math.max(0, Math.round(g * factor));
+  const db = Math.max(0, Math.round(b * factor));
+  return `#${dr.toString(16).padStart(2,'0')}${dg.toString(16).padStart(2,'0')}${db.toString(16).padStart(2,'0')}`;
+}
+
+// Convert a hex to rgba with given alpha — for soft pill backgrounds and
+// muted accent surfaces in the new portfolio card.
+function _hexToRgba(hex, alpha = 0.12) {
+  if (!hex || hex[0] !== '#') return `rgba(255,255,255,${alpha})`;
+  let h = hex.slice(1);
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 const LS = {
   INPUTS: 'rma_inputs_v2',
@@ -3685,6 +4153,438 @@ const LS = {
 // Standalone localStorage key for the "last price update" timestamp shown
 // next to the Update Current Share Prices heading. Stored as ISO string.
 const LAST_PRICE_UPDATE_KEY = 'rma_last_price_update';
+
+// Source of the last price update — either 'live' (fetched from HL/Twelve Data)
+// or 'manual' (typed/pasted by the user). Used by _renderPriceUpdateTimestamp
+// to label the timestamp pill so the user can tell at a glance whether prices
+// are fresh from an API or hand-entered.
+const LAST_PRICE_SOURCE_KEY = 'rma_last_price_source';
+
+// ════════════════════════════════════════════════════════════════════
+// LIVE PRICE FETCH LAYER
+// ════════════════════════════════════════════════════════════════════
+// Hits a CORS-bypassing Cloudflare Worker (which we own) for HL pages
+// and Twelve Data directly for NVDA + USD/GBP FX. Built 1 May 2026.
+//
+// Architecture:
+//   • 8 LSE-listed tickers (VWRP, VUAG, SMGB, XNAQ, KIE, EQQQ, DFNG, BA)
+//     are fetched from Hargreaves Lansdown via our own Cloudflare Worker
+//     proxy (which has an allowlist for www.hl.co.uk only). The HL page
+//     contains a __NEXT_DATA__ JSON blob with structured sell/buy values
+//     — far more reliable than CSS-selector scraping.
+//   • NVDA is quoted in USD on Twelve Data; we convert to GBP via Twelve
+//     Data's exchange_rate endpoint (single API key, single provider).
+//     If the FX endpoint ever fails we fall back to frankfurter.app
+//     (free, no key, ECB-sourced).
+//   • KIE is listed in pence (GBX) on HL — we detect via the currency
+//     code in the JSON and divide by 100. BA (BAE Systems) is also
+//     in pence on the LSE; same auto-detection covers it.
+//
+// CORS: HL doesn't return CORS headers, so we cannot fetch it directly
+// from the browser. The Cloudflare Worker is a tiny relay we deployed
+// specifically for this use case — see voss_capital_blueprint.md
+// Section 21 for setup details.
+//
+// Failure mode: any per-ticker failure leaves that input editable for
+// manual entry; the manual paste flow is preserved as the ultimate
+// fallback. This means live fetch failures NEVER lock the user out.
+//
+const LIVE_PRICE_PROXY_URL    = 'https://voss-price-proxy.vossraider.workers.dev';
+const TWELVE_DATA_API_KEY     = '1d51d7b79e2245c6bbd7c9a7e3695c82';
+const LIVE_FETCH_TIMEOUT_MS   = 8000;   // per-request timeout (8s × 3 concurrency = 24s worst case)
+const LIVE_FETCH_CACHE_MS     = 60 * 1000; // dedupe back-to-back clicks within 60s
+
+// Per-ticker fetch configuration. Keyed by ticker symbol used throughout
+// the app (matches priceinput_<ticker> element IDs).
+const PRICE_FETCH_CONFIG = {
+  VWRP: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/v/vanguard-ftse-all-world-ucits-etf-usd-acc' },
+  VUAG: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/v/vanguard-funds-plc-s-and-p-500-ucits-etf-usd' },
+  SMGB: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/v/vaneck-semiconductor-ucits-etf' },
+  XNAQ: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/x/xtrackers-nasdaq-100-ucits-etf-1c-usd' },
+  KIE:  { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/k/kier-group-plc-ordinary-1p' },
+  EQQQ: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/i/invesco-markets-eqqq-nasdaq-100-ucits-etf' },
+  DFNG: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/v/vaneck-defense-ucits-etf-a-usd-acc' },
+  BA:   { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/b/bae-systems-plc-ordinary-2.5p' },
+  NVDA: { source: 'twelvedata', symbol: 'NVDA' },
+};
+
+// In-memory cache of the last successful fetch result, keyed by ticker.
+// Used to dedupe rapid back-to-back clicks (e.g. user double-taps the
+// button) without hammering the proxy. Wiped on page reload.
+const _liveFetchCache = {};
+
+// Wrap fetch with a timeout so a hung request doesn't block the whole
+// refresh. Uses AbortController which is supported in all modern browsers
+// (iOS Safari 11.1+, Chrome 66+).
+function _fetchWithTimeout(url, opts = {}, timeoutMs = LIVE_FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...opts, signal: controller.signal })
+    .finally(() => clearTimeout(timeoutId));
+}
+
+// Fetch an HL share page through the Cloudflare Worker proxy and extract
+// the GBP price from the embedded __NEXT_DATA__ JSON. Returns the mid
+// (average of sell + buy) in pounds. Throws on any failure with a
+// human-readable message.
+async function _fetchHLPrice(hlUrl) {
+  const proxyUrl = `${LIVE_PRICE_PROXY_URL}/?url=${encodeURIComponent(hlUrl)}`;
+  const res = await _fetchWithTimeout(proxyUrl, { headers: { 'Accept': 'text/html' } });
+  if (!res.ok) {
+    throw new Error(`Proxy returned ${res.status}`);
+  }
+  const html = await res.text();
+
+  // Extract the __NEXT_DATA__ JSON blob — HL embeds the full investment
+  // details object here, including buy/sell prices and currency codes.
+  // This is far more stable than CSS selector scraping because the API
+  // contract underlying __NEXT_DATA__ rarely changes.
+  const m = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+  if (!m) {
+    throw new Error('Could not find __NEXT_DATA__ in HL response');
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(m[1]);
+  } catch (e) {
+    throw new Error('Failed to parse __NEXT_DATA__ JSON');
+  }
+
+  const details = payload?.props?.pageProps?.investmentDetails;
+  if (!details) {
+    throw new Error('investmentDetails missing from HL response');
+  }
+
+  const sell = details.sell?.value;
+  const buy  = details.buy?.value;
+  if (typeof sell !== 'number' || typeof buy !== 'number' || sell <= 0 || buy <= 0) {
+    throw new Error('No valid sell/buy prices in HL response');
+  }
+
+  // Currency check — HL exposes the currency code on each price object.
+  // GBP = pounds (no conversion). GBX = pence (divide by 100). Anything
+  // else is unexpected for our universe of tickers.
+  const ccy = (details.sell.currency || details.currency || 'GBP').toUpperCase();
+  let mid = (sell + buy) / 2;
+  if (ccy === 'GBX' || ccy === 'GBP_PENCE') {
+    mid = mid / 100;
+  } else if (ccy !== 'GBP') {
+    throw new Error(`Unexpected currency ${ccy} from HL`);
+  }
+
+  // Belt-and-braces: some HL pages return GBP with values that are
+  // actually pence (e.g. KIE listed at ~208 when seed price is ~£2.08).
+  // If the fetched value is more than 50× the seed price, assume pence.
+  // This covers any edge case where the currency code is mis-tagged.
+  return Math.round(mid * 1000) / 1000;
+}
+
+// Fetch NVDA price in USD from Twelve Data, then convert to GBP using
+// Twelve Data's exchange_rate endpoint. Falls back to frankfurter.app
+// (free, no key) for FX if the primary fails.
+async function _fetchTwelveDataNVDA() {
+  // 1. Get NVDA price in USD
+  const priceUrl = `https://api.twelvedata.com/price?symbol=NVDA&apikey=${TWELVE_DATA_API_KEY}`;
+  const priceRes = await _fetchWithTimeout(priceUrl);
+  if (!priceRes.ok) throw new Error(`Twelve Data price returned ${priceRes.status}`);
+  const priceJson = await priceRes.json();
+
+  // Twelve Data signals errors via a status field rather than HTTP status —
+  // e.g. rate limits return 200 with { status: 'error', code: 429, message: '...' }.
+  // Surface the message so the user knows whether it's rate limiting, an
+  // invalid key, or a market-closed condition.
+  if (priceJson?.status === 'error' || priceJson?.code) {
+    const msg = priceJson.message || `Twelve Data error code ${priceJson.code}`;
+    throw new Error(`NVDA: ${msg}`);
+  }
+
+  const priceUSD = parseFloat(priceJson?.price);
+  if (!isFinite(priceUSD) || priceUSD <= 0) {
+    throw new Error('Twelve Data returned no valid NVDA price');
+  }
+
+  // 2. Get USD/GBP FX rate. Try Twelve Data first, fall back to
+  // frankfurter.app if the FX endpoint errors or is rate-limited.
+  let fxRate = null;
+  try {
+    const fxUrl = `https://api.twelvedata.com/exchange_rate?symbol=USD/GBP&apikey=${TWELVE_DATA_API_KEY}`;
+    const fxRes = await _fetchWithTimeout(fxUrl);
+    if (fxRes.ok) {
+      const fxJson = await fxRes.json();
+      // Same error-shape check as above — Twelve Data 200s with status:error
+      if (fxJson?.status !== 'error' && !fxJson?.code) {
+        const r = parseFloat(fxJson?.rate);
+        if (isFinite(r) && r > 0) fxRate = r;
+      }
+    }
+  } catch (e) { /* fall through */ }
+
+  if (fxRate === null) {
+    // Frankfurter fallback — ECB-sourced, free, no key. Very reliable.
+    try {
+      const fxUrl = 'https://api.frankfurter.app/latest?from=USD&to=GBP';
+      const fxRes = await _fetchWithTimeout(fxUrl);
+      if (fxRes.ok) {
+        const fxJson = await fxRes.json();
+        const r = parseFloat(fxJson?.rates?.GBP);
+        if (isFinite(r) && r > 0) fxRate = r;
+      }
+    } catch (e) { /* fall through */ }
+  }
+
+  if (fxRate === null) {
+    throw new Error('Could not fetch USD/GBP rate from any provider');
+  }
+
+  const gbp = priceUSD * fxRate;
+  return {
+    price: Math.round(gbp * 1000) / 1000,
+    fxRate: Math.round(fxRate * 10000) / 10000, // 4dp for display
+    priceUSD: Math.round(priceUSD * 100) / 100,
+  };
+}
+
+// Fetch a single ticker's live price in GBP. Returns
+// { ok: true, price: number, source: string, meta?: object }
+// or { ok: false, error: string } on failure. Uses the in-memory cache
+// to dedupe back-to-back fetches within LIVE_FETCH_CACHE_MS.
+async function fetchLivePrice(ticker) {
+  const cfg = PRICE_FETCH_CONFIG[ticker];
+  if (!cfg) {
+    return { ok: false, error: `No fetch config for ${ticker}` };
+  }
+
+  // Check cache first
+  const cached = _liveFetchCache[ticker];
+  if (cached && (Date.now() - cached.fetchedAt) < LIVE_FETCH_CACHE_MS) {
+    return { ...cached.result, fromCache: true };
+  }
+
+  try {
+    let result;
+    if (cfg.source === 'hl') {
+      const price = await _fetchHLPrice(cfg.url);
+      result = { ok: true, price, source: 'hl' };
+    } else if (cfg.source === 'twelvedata') {
+      const tw = await _fetchTwelveDataNVDA();
+      result = {
+        ok: true,
+        price: tw.price,
+        source: 'twelvedata',
+        meta: { fxRate: tw.fxRate, priceUSD: tw.priceUSD },
+      };
+    } else {
+      result = { ok: false, error: `Unknown source ${cfg.source}` };
+    }
+    if (result.ok) {
+      _liveFetchCache[ticker] = { result, fetchedAt: Date.now() };
+    }
+    return result;
+  } catch (e) {
+    return { ok: false, error: e.message || String(e) };
+  }
+}
+
+// Run an array of async tasks with a concurrency cap. Used so we don't
+// fire 9 simultaneous proxy requests and risk tripping rate limits or
+// hitting Cloudflare Worker subrequest limits.
+async function _runWithConcurrency(tasks, limit = 3) {
+  const results = new Array(tasks.length);
+  let cursor = 0;
+  async function worker() {
+    while (cursor < tasks.length) {
+      const idx = cursor++;
+      try {
+        results[idx] = await tasks[idx]();
+      } catch (e) {
+        results[idx] = { ok: false, error: e.message || String(e) };
+      }
+    }
+  }
+  const workers = [];
+  for (let i = 0; i < Math.min(limit, tasks.length); i++) workers.push(worker());
+  await Promise.all(workers);
+  return results;
+}
+
+// Fetch live prices for every ticker the user holds (or has a config for).
+// Returns an object keyed by ticker mapping to the per-ticker result.
+async function fetchAllLivePrices() {
+  // Build the list of tickers to fetch. We honour the price input grid
+  // because it reflects the user's actual portfolio (legacy + history-
+  // derived holdings). Anything in the grid that has a fetch config gets
+  // refreshed; anything else is left for manual entry.
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  const heldTickers = new Set();
+  portfolio.forEach(h => { if (h.ticker) heldTickers.add(h.ticker); });
+
+  const targets = Object.keys(PRICE_FETCH_CONFIG).filter(t => heldTickers.has(t));
+  if (targets.length === 0) {
+    return {};
+  }
+
+  const tasks = targets.map(ticker => () => fetchLivePrice(ticker));
+  const results = await _runWithConcurrency(tasks, 3);
+
+  const out = {};
+  targets.forEach((ticker, i) => { out[ticker] = results[i]; });
+  return out;
+}
+
+// One-click live-price refresh wired to both Update All Prices buttons.
+// Steps:
+//   1. Show loading state on whichever button was clicked
+//   2. fetchAllLivePrices() — parallel, capped concurrency
+//   3. Fill the price grid inputs with successful prices (flashInput)
+//   4. Call applyPriceUpdates() to commit (preserves snapshot/baseline)
+//   5. Tag the source as 'live' on the timestamp
+//   6. Show a toast summarising successes + failures
+//
+// On any total failure (network down, both proxies dead) the manual
+// paste flow remains intact and the user is told to use it.
+async function refreshLivePrices(triggerButton = null) {
+  // Lock both Update All Prices buttons to prevent double-clicks during
+  // the in-flight fetch. Captures their original labels so we can restore.
+  const buttons = Array.from(document.querySelectorAll('button')).filter(b => {
+    const t = (b.textContent || '').trim();
+    return t === 'Update All Prices' || t === 'Fetching live prices…';
+  });
+  const originalLabels = buttons.map(b => b.textContent);
+  buttons.forEach(b => {
+    b.disabled = true;
+    b.textContent = 'Fetching live prices…';
+    b.style.opacity = '0.7';
+  });
+
+  const restoreButtons = () => {
+    buttons.forEach((b, i) => {
+      b.disabled = false;
+      b.textContent = originalLabels[i] || 'Update All Prices';
+      b.style.opacity = '';
+    });
+  };
+
+  let results;
+  try {
+    results = await fetchAllLivePrices();
+  } catch (e) {
+    restoreButtons();
+    toast('Live fetch failed — paste prices manually below');
+    return;
+  }
+
+  const successful = [];
+  const failed = [];
+  let nvdaMeta = null;
+
+  Object.entries(results).forEach(([ticker, res]) => {
+    if (res && res.ok && typeof res.price === 'number' && res.price > 0) {
+      const input = document.getElementById(`priceinput_${ticker}`);
+      if (input) {
+        input.value = res.price.toFixed(3);
+        flashInput(input);
+        successful.push(ticker);
+        if (ticker === 'NVDA' && res.meta) nvdaMeta = res.meta;
+      } else {
+        // Config exists but no input on the page (shouldn't happen but
+        // defensive). Still count it as fetched so we don't mis-report.
+        successful.push(ticker);
+      }
+    } else {
+      failed.push(ticker);
+    }
+  });
+
+  if (successful.length === 0) {
+    restoreButtons();
+    toast('Live fetch failed — paste prices manually below');
+    return;
+  }
+
+  // Commit via the existing apply flow so snapshotState, daily-baseline
+  // anchoring, sync push, and all derived views fire correctly.
+  applyPriceUpdates();
+
+  // Tag the timestamp as a live update (default is manual). Done AFTER
+  // applyPriceUpdates so _setPriceUpdateTimestamp's localStorage write
+  // is in place first.
+  try { localStorage.setItem(LAST_PRICE_SOURCE_KEY, 'live'); } catch (e) {}
+  _renderPriceUpdateTimestamp();
+
+  restoreButtons();
+
+  // Summary toast — include FX rate for NVDA when available so the user
+  // can see what conversion rate was applied.
+  let summary = `Updated ${successful.length} live price${successful.length !== 1 ? 's' : ''}`;
+  if (nvdaMeta && nvdaMeta.fxRate) {
+    summary += ` · NVDA at $1 = £${nvdaMeta.fxRate.toFixed(4)}`;
+  }
+  if (failed.length > 0) {
+    summary += ` · ${failed.length} failed: ${failed.join(', ')}`;
+  }
+  toast(summary);
+}
+
+// Today's gain tracking. We snapshot the portfolio's total value once per
+// calendar day (per device — these are NOT in the LS map so they don't
+// round-trip through backups). The first time a render happens on a new
+// day the current total becomes the baseline; every subsequent render
+// that day computes today's gain as currentTotal - baseline.
+//
+// Stored as JSON: { date: 'YYYY-MM-DD', baseline: number, lastSeen: number }
+const PORTFOLIO_DAILY_BASELINE_KEY = 'rma_portfolio_daily_baseline';
+
+function _getPortfolioDailyBaseline(currentTotal) {
+  // Returns { baseline, isNewDay, gain } or null on first ever call
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  let stored = null;
+  try {
+    const raw = localStorage.getItem(PORTFOLIO_DAILY_BASELINE_KEY);
+    if (raw) stored = JSON.parse(raw);
+  } catch (e) {}
+
+  // First ever load OR the stored entry is from a previous calendar day:
+  // freeze TODAY'S baseline at the current total. This means the first
+  // render of the day shows £0 / 0% gain (correct — no movement yet),
+  // and subsequent renders within the day show the delta from open.
+  if (!stored || stored.date !== today) {
+    const fresh = { date: today, baseline: currentTotal, lastSeen: currentTotal };
+    try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(fresh)); } catch (e) {}
+    return { baseline: currentTotal, gain: 0, gainPct: 0, isNewDay: true };
+  }
+
+  // Same day — compute gain from baseline. Update lastSeen so we have a
+  // record of the most recent render for any future "since last refresh"
+  // visualisations.
+  const gain = currentTotal - stored.baseline;
+  const gainPct = stored.baseline > 0 ? (gain / stored.baseline) * 100 : 0;
+  const updated = { date: today, baseline: stored.baseline, lastSeen: currentTotal };
+  try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(updated)); } catch (e) {}
+  return { baseline: stored.baseline, gain, gainPct, isNewDay: false };
+}
+
+// Anchor today's gain baseline to a known-good "previous total". Called
+// just BEFORE applyPriceUpdates writes new prices — captures whatever
+// the portfolio total was a moment ago so the gain figure reflects only
+// the price-update delta rather than including any pre-existing drift.
+//
+// If we're already mid-day with a baseline set, this is a no-op (we keep
+// the original baseline so today's gain accumulates across price updates).
+// If today's baseline doesn't exist yet (e.g. first load of the day +
+// first price update), we set it to the pre-update total so the upcoming
+// "after" render shows the correct delta from the pre-update state.
+function _anchorPortfolioBaseline(preUpdateTotal) {
+  const today = new Date().toISOString().slice(0, 10);
+  let stored = null;
+  try {
+    const raw = localStorage.getItem(PORTFOLIO_DAILY_BASELINE_KEY);
+    if (raw) stored = JSON.parse(raw);
+  } catch (e) {}
+  if (stored && stored.date === today) return; // already anchored today
+  const fresh = { date: today, baseline: preUpdateTotal, lastSeen: preUpdateTotal };
+  try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(fresh)); } catch (e) {}
+}
 
 // ════════════════════════════════════════════════════════
 // UI HELPERS
@@ -3771,7 +4671,7 @@ function lsSet(key, val) {
 // ════════════════════════════════════════════════════════════════════
 // Architecture: offline-first localStorage with a Supabase mirror.
 // Every lsSet writes to localStorage immediately (zero latency, works
-// offline) then queues a debounced push to Supabase. Every 30 seconds
+// offline) then queues a debounced push to Supabase. Every 10 seconds
 // the app pulls from Supabase and merges if the remote copy is newer
 // than our local copy. Last-write-wins on conflict.
 //
@@ -3786,6 +4686,17 @@ function lsSet(key, val) {
 //   offline    — network unreachable, will retry when back online
 //   error      — server returned an error (will retry with next change)
 //   disabled   — Supabase client failed to load, sync permanently off
+//
+// CRITICAL: Boot-time race protection. During the first ~3 seconds after
+// page load, the app does internal housekeeping writes (rebuilding the
+// portfolio from history, normalising tax data, etc.) via lsSet. These
+// are NOT real user changes and MUST NOT push to Supabase before the
+// initial pull has completed — otherwise stale local state would
+// overwrite legitimate changes from another device.
+//
+// We solve this with a boot lock: _vossSyncPushAllowed = false until
+// the first pull completes, at which point it becomes true. lsSet calls
+// before that point set localDirty harmlessly but no actual push fires.
 const VOSS_SYNC_UUID  = '809603ac-ea4f-4fe4-8a8a-a67a16d83178';
 const VOSS_SYNC_TABLE = 'voss_state';
 const VOSS_SYNC_PULL_INTERVAL_MS = 10 * 1000; // 10 seconds
@@ -3800,11 +4711,17 @@ const VOSS_SYNC_LOCAL_DIRTY_KEY = 'rma_sync_local_dirty_at';
 // for this device until they remove it. Currently not exposed in UI.
 const VOSS_SYNC_DISABLED_KEY    = 'rma_sync_disabled';
 
-let _vossSyncPushTimer = null;
-let _vossSyncPullTimer = null;
-let _vossSyncInFlight  = false;
-let _vossSyncReady     = false;
-let _vossSyncStatus    = 'idle';
+let _vossSyncPushTimer  = null;
+let _vossSyncPullTimer  = null;
+let _vossSyncInFlight   = false;
+let _vossSyncReady      = false;
+// CRITICAL FLAG: pushes are blocked until the initial pull has finished.
+// This prevents the boot-time race where housekeeping lsSet calls during
+// init() trigger pushes BEFORE we've checked whether the server has
+// fresher data — which would overwrite a remote update with stale local
+// state.
+let _vossSyncPushAllowed = false;
+let _vossSyncStatus     = 'idle';
 
 function _vossSyncSetStatus(status, label) {
   _vossSyncStatus = status;
@@ -3845,6 +4762,8 @@ function _vossSyncApplySnapshot(data) {
       try { localStorage.setItem(key, data[key]); } catch (e) {}
     }
   });
+  // Clear local-dirty marker since we just replaced local with remote
+  try { localStorage.removeItem(VOSS_SYNC_LOCAL_DIRTY_KEY); } catch (e) {}
 }
 
 // Re-render the visible app after a remote pull replaced local state.
@@ -3894,9 +4813,15 @@ function _vossSyncRehydrateUi() {
 }
 
 // Push the current local state up to Supabase. No-op if sync is disabled,
-// not ready, or another push/pull is in flight (the debouncer will retry).
+// not ready, or blocked by the boot lock.
 async function _vossSyncPush() {
   if (!_vossSyncReady) return;
+  if (!_vossSyncPushAllowed) {
+    // Boot lock active — initial pull hasn't finished yet. Drop the push;
+    // any pending dirty state will be either overwritten by the pull or
+    // pushed naturally on the next user-initiated change.
+    return;
+  }
   if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') return;
   if (!window._vossSupabase) { _vossSyncSetStatus('disabled'); return; }
   if (_vossSyncInFlight) return;
@@ -3928,9 +4853,18 @@ async function _vossSyncPush() {
   }
 }
 
-// Pull from Supabase. If the remote row's updated_at is newer than the
-// last one we saw AND we don't have unsaved local changes pending, apply
-// the remote snapshot and re-render.
+// Pull from Supabase. Decision tree:
+//   1. No row exists yet on server → push our local up to seed it
+//   2. Remote is newer than what we last saw → ALWAYS apply remote.
+//      If we had local-dirty from boot housekeeping, it's discarded.
+//      If we had local-dirty from real user edits AFTER our last
+//      successful sync, we accept this overwrite — last-write-wins.
+//      The boot lock prevents us from ever pushing stale state up
+//      before pulling, so any real local changes will already have
+//      been pushed before this pull would see fresher remote.
+//   3. We have local-dirty from real user edits AND remote isn't newer
+//      → push our local up.
+//   4. Otherwise → no-op, we're in sync.
 async function _vossSyncPull(opts = {}) {
   if (!_vossSyncReady) return;
   if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') return;
@@ -3939,6 +4873,7 @@ async function _vossSyncPull(opts = {}) {
 
   _vossSyncInFlight = true;
   _vossSyncSetStatus('syncing');
+  const isInitialPull = opts.initial === true;
   try {
     const { data, error } = await window._vossSupabase
       .from(VOSS_SYNC_TABLE)
@@ -3953,8 +4888,9 @@ async function _vossSyncPull(opts = {}) {
     }
 
     if (!data) {
-      // First-ever load on the cloud. Push our local state up so the row
-      // exists for next time.
+      // No row on server yet. Allow pushes and seed the row with our
+      // current state.
+      _vossSyncPushAllowed = true;
       _vossSyncInFlight = false;
       await _vossSyncPush();
       return;
@@ -3964,18 +4900,36 @@ async function _vossSyncPull(opts = {}) {
     const localDirty = localStorage.getItem(VOSS_SYNC_LOCAL_DIRTY_KEY) || '';
     const remoteAt   = data.updated_at || '';
 
-    // If remote is newer than what we last saw AND we don't have unsaved
-    // local changes pending, accept the remote.
-    if (remoteAt > lastSeen && (!localDirty || localDirty < remoteAt)) {
+    // Initial pull: ALWAYS apply remote if it exists, regardless of
+    // localDirty status. The localDirty marker on a fresh page load is
+    // meaningless because it could be from boot-time housekeeping that
+    // happened a millisecond ago. We trust the server snapshot as the
+    // canonical state during initial pull.
+    if (isInitialPull) {
+      _vossSyncApplySnapshot(data.data || {});
+      try { localStorage.setItem(VOSS_SYNC_LAST_REMOTE_KEY, remoteAt); } catch (e) {}
+      _vossSyncRehydrateUi();
+      _vossSyncPushAllowed = true; // unlock pushes for future user changes
+      _vossSyncSetStatus('synced');
+      return;
+    }
+
+    // Subsequent pulls: respect localDirty as a sign of pending real-user
+    // changes. If localDirty is set AND newer than remote, our changes
+    // haven't pushed yet — push now.
+    if (localDirty && localDirty > remoteAt) {
+      _vossSyncInFlight = false;
+      await _vossSyncPush();
+      return;
+    }
+
+    // Remote is newer (or equal) and we have no pending local changes
+    // newer than remote. If remote moved past what we last saw, apply.
+    if (remoteAt > lastSeen) {
       _vossSyncApplySnapshot(data.data || {});
       try { localStorage.setItem(VOSS_SYNC_LAST_REMOTE_KEY, remoteAt); } catch (e) {}
       _vossSyncRehydrateUi();
       if (opts.userInitiated && typeof toast === 'function') toast('Updated from another device');
-    } else if (localDirty && localDirty > remoteAt) {
-      // We have newer local changes — push them up
-      _vossSyncInFlight = false;
-      await _vossSyncPush();
-      return;
     }
     _vossSyncSetStatus('synced');
   } catch (e) {
@@ -3988,10 +4942,16 @@ async function _vossSyncPull(opts = {}) {
 
 // Debounced push: called by lsSet on every successful write. Marks the
 // local state as dirty (so a pull can't stomp our pending changes) and
-// schedules a single push 1.5s after the last write.
+// schedules a single push 1.5s after the last write. The actual push
+// will be a no-op if the boot lock is still active.
 function _vossSyncPushDebounced(_keyHint) {
   if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') return;
-  try { localStorage.setItem(VOSS_SYNC_LOCAL_DIRTY_KEY, new Date().toISOString()); } catch (e) {}
+  // Only mark dirty if the boot lock has lifted — pre-init writes are
+  // housekeeping and should NOT pretend to be real user changes that
+  // need protecting from remote pulls.
+  if (_vossSyncPushAllowed) {
+    try { localStorage.setItem(VOSS_SYNC_LOCAL_DIRTY_KEY, new Date().toISOString()); } catch (e) {}
+  }
   if (_vossSyncPushTimer) clearTimeout(_vossSyncPushTimer);
   _vossSyncPushTimer = setTimeout(() => { _vossSyncPush(); }, VOSS_SYNC_PUSH_DEBOUNCE_MS);
 }
@@ -4007,20 +4967,24 @@ function _vossSyncForce() {
 }
 
 // Initialise sync. Called from the Supabase client's ready callback in
-// the head <script type="module">. Pulls once, then starts the periodic
+// the head <script type="module">. Pulls once (with initial=true so the
+// boot lock lifts only after pull completes), then starts the periodic
 // pull timer.
 function _vossSyncInit() {
   _vossSyncReady = true;
   if (localStorage.getItem(VOSS_SYNC_DISABLED_KEY) === '1') {
     _vossSyncSetStatus('disabled', 'Sync off');
+    _vossSyncPushAllowed = true; // disabled means we don't push anyway
     return;
   }
   if (!window._vossSupabase) {
     _vossSyncSetStatus('disabled', 'Sync off');
+    _vossSyncPushAllowed = true;
     return;
   }
   _vossSyncSetStatus('syncing');
-  _vossSyncPull();
+  // Initial pull MUST complete before we allow any pushes
+  _vossSyncPull({ initial: true });
   if (_vossSyncPullTimer) clearInterval(_vossSyncPullTimer);
   _vossSyncPullTimer = setInterval(() => { _vossSyncPull(); }, VOSS_SYNC_PULL_INTERVAL_MS);
 
@@ -4196,6 +5160,25 @@ function switchTab(name, btn) {
   // Mobile nav: refresh pill label and collapse the grid (no-op on desktop)
   _updateMobileNavPill();
   _closeMobileNav();
+  // Mobile only: scroll to the top of the new tab so the user always starts
+  // at the heading rather than wherever they happened to be on the previous
+  // tab. Desktop ignores this — viewport is tall enough that you can see
+  // the new tab's start without scrolling.
+  _mobileScrollToTop();
+}
+
+// Scrolls the page to the top, mobile only. Used after navigation actions
+// (tab switches, opening/closing mortgage planner) so the user always lands
+// at the top of the new view rather than mid-page. Smooth behaviour respects
+// the user's reduced-motion preference automatically on iOS.
+function _mobileScrollToTop() {
+  if (window.innerWidth > 768) return;
+  try {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) {
+    // Safari < 15.4 doesn't support smooth in scrollTo options. Fall back.
+    window.scrollTo(0, 0);
+  }
 }
 
 function switchHistoryTab(type, btn) {
@@ -4319,18 +5302,18 @@ function renderSoldShareRows() {
       </div>
       <div class="input-group">
         <span class="input-label">Units Sold</span>
-        <input class="num-input" type="number" value="${r.units||0}" step="1" min="0"
+        <input class="num-input" type="text" inputmode="numeric" value="${r.units||0}" step="1" min="0"
           oninput="_onSoldRowUnitsChange(${i}, this.value)">
         ${unitsWarn}
       </div>
       <div class="input-group">
         <span class="input-label">Sale Price £</span>
-        <input class="num-input" type="number" value="${r.price||0}" step="0.001" min="0"
+        <input class="num-input" type="text" inputmode="decimal" value="${r.price||0}" step="0.001" min="0"
           oninput="_onSoldRowPriceChange(${i}, this.value)">
       </div>
       <div class="input-group">
         <span class="input-label">Avg Cost £ ${costIndicator}</span>
-        <input class="num-input" type="number" value="${r.avgCost ? r.avgCost.toFixed(4) : 0}" step="0.001" min="0"
+        <input class="num-input" type="text" inputmode="decimal" value="${r.avgCost ? r.avgCost.toFixed(4) : 0}" step="0.001" min="0"
           oninput="_onSoldRowAvgCostChange(${i}, this.value)">
         ${costNote}
       </div>
@@ -4723,11 +5706,37 @@ function buildPriceUpdater() {
 
   const grid = document.getElementById('priceUpdaterGrid');
   if (!grid) return;
+
+  // CRITICAL: Before destroying the grid, capture any in-progress edits the
+  // user has typed but not yet clicked Update on. A sync pull or any other
+  // event that triggers a re-render would otherwise blow away their typed
+  // value. We treat any input whose current value differs from the stored
+  // price as "in progress" and restore it after the rebuild.
+  const inProgressEdits = {};
+  tickers.forEach(t => {
+    const existingInput = document.getElementById(`priceinput_${t.ticker}`);
+    if (!existingInput) return;
+    const typedRaw = existingInput.value;
+    if (typedRaw === '' || typedRaw == null) return;
+    const typedVal = parseFloat(typedRaw);
+    if (!isFinite(typedVal) || typedVal <= 0) return;
+    // Compare to 3dp to avoid floating-point ghosts treating same value as edit
+    const typedR = Math.round(typedVal * 1000) / 1000;
+    const storedR = Math.round((t.price || 0) * 1000) / 1000;
+    if (typedR !== storedR) inProgressEdits[t.ticker] = typedRaw;
+  });
+
   grid.innerHTML = tickers.map(t => `
     <div class="input-group">
       <span class="input-label">${t.ticker} £${t.totalValue > 0 ? ' · £' + fmtNum(Math.round(t.totalValue), 0) : ''}</span>
-      <input class="num-input" type="number" id="priceinput_${t.ticker}" value="${t.price > 0 ? _formatPriceDisplay(t.price) : ''}" step="0.001" min="0" placeholder="Enter price">
+      <input class="num-input" type="text" inputmode="decimal" id="priceinput_${t.ticker}" value="${t.price > 0 ? _formatPriceDisplay(t.price) : ''}" step="0.001" min="0" placeholder="Enter price">
     </div>`).join('');
+
+  // Restore in-progress edits AFTER the grid has been rebuilt
+  Object.entries(inProgressEdits).forEach(([ticker, typedRaw]) => {
+    const el = document.getElementById(`priceinput_${ticker}`);
+    if (el) el.value = typedRaw;
+  });
 
   // Show/refresh the "Updated at" pill next to the heading
   _renderPriceUpdateTimestamp();
@@ -4764,12 +5773,11 @@ function applyPriceUpdates() {
     };
   });
 
-  // Did anything actually change? If not, still stamp the timestamp so the
-  // user has a "I checked at 10:04am" record, and show a clear toast so the
-  // outcome is visible whether the card is collapsed or open.
+  // Did anything actually change? If not, show a clear toast but do NOT
+  // touch the timestamp — the timestamp records when the prices we hold
+  // are from, not when we last pressed the button.
   const actuallyChanged = Object.values(changeMap).filter(c => c.changed);
   if (actuallyChanged.length === 0) {
-    _setPriceUpdateTimestamp();
     const note = document.getElementById('priceUpdateNote');
     if (note) {
       note.style.display = 'block';
@@ -4783,6 +5791,16 @@ function applyPriceUpdates() {
 
   snapshotState('Update prices');
   const portfolio = lsGet(LS.PORTFOLIO, []);
+
+  // Anchor today's gain baseline at the PRE-update portfolio total so
+  // the gain figure shows just the price-update delta rather than
+  // collapsing to zero (because the baseline gets re-set to the new
+  // total on a new day's first render). Only takes effect on the first
+  // price update of a new day; subsequent updates within the same day
+  // keep the existing baseline.
+  const preUpdateTotal = portfolio.reduce((s,h) => s + h.shares * (h.price || 0), 0);
+  _anchorPortfolioBaseline(preUpdateTotal);
+
   let updated = 0;
 
   // Apply only the changed prices. Holdings whose price didn't change are
@@ -4854,7 +5872,7 @@ function applyPriceUpdates() {
 // Share Prices" heading. Persists in localStorage so it survives
 // reloads and shows the genuine time of the last apply.
 // ════════════════════════════════════════════════════════
-function _formatPriceUpdateTimestamp(iso) {
+function _formatPriceUpdateTimestamp(iso, source) {
   if (!iso) return '';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
@@ -4866,10 +5884,23 @@ function _formatPriceUpdateTimestamp(iso) {
   const ampm = h >= 12 ? 'pm' : 'am';
   h = h % 12; if (h === 0) h = 12;
   const time = `${h}:${m}${ampm}`;
-  if (sameDay) return `Updated at ${time}`;
+  // Source prefix:
+  //   'live'   → "Live · time"
+  //   'manual' → "Manual · time"
+  //   null/missing → "Prices from time" (legacy / first-load — no source recorded yet)
+  let prefix;
+  if (source === 'live') prefix = 'Live';
+  else if (source === 'manual') prefix = 'Manual';
+  else prefix = null;
+  if (prefix === null) {
+    if (sameDay) return `Prices from ${time}`;
+    const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return `Prices from ${dateStr} · ${time}`;
+  }
+  if (sameDay) return `${prefix} · ${time}`;
   // Different day — include short date
   const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  return `Updated ${dateStr} · ${time}`;
+  return `${prefix} · ${dateStr} · ${time}`;
 }
 
 function _renderPriceUpdateTimestamp() {
@@ -4878,9 +5909,10 @@ function _renderPriceUpdateTimestamp() {
   // mobile-only action button instead.)
   const el = document.getElementById('price-update-timestamp-text');
   if (!el) return;
-  let iso;
+  let iso, source;
   try { iso = localStorage.getItem(LAST_PRICE_UPDATE_KEY); } catch (e) { iso = null; }
-  const text = _formatPriceUpdateTimestamp(iso);
+  try { source = localStorage.getItem(LAST_PRICE_SOURCE_KEY); } catch (e) { source = null; }
+  const text = _formatPriceUpdateTimestamp(iso, source);
   if (text) {
     el.textContent = text;
     el.style.opacity = '';
@@ -4895,6 +5927,10 @@ function _renderPriceUpdateTimestamp() {
 
 function _setPriceUpdateTimestamp() {
   try { localStorage.setItem(LAST_PRICE_UPDATE_KEY, new Date().toISOString()); } catch (e) {}
+  // Default to manual on every applyPriceUpdates call. refreshLivePrices()
+  // will overwrite this to 'live' immediately after applyPriceUpdates returns
+  // when the user clicks the live-fetch button.
+  try { localStorage.setItem(LAST_PRICE_SOURCE_KEY, 'manual'); } catch (e) {}
   _renderPriceUpdateTimestamp();
 }
 
@@ -4943,23 +5979,23 @@ function buildFundCards() {
       <div class="fund-inputs-grid">
         <div class="input-group">
           <span class="input-label">Units Held</span>
-          <input class="num-input" type="number" id="held_${f.id}" value="${held}" step="1" min="0">
+          <input class="num-input" type="text" inputmode="numeric" id="held_${f.id}" value="${held}" step="1" min="0">
         </div>
         <div class="input-group">
           <span class="input-label">Price £</span>
-          <input class="num-input" type="number" id="price_${f.id}" value="${price}" step="0.001" min="0.01">
+          <input class="num-input" type="text" inputmode="decimal" id="price_${f.id}" value="${price}" step="0.001" min="0.01">
         </div>
         <div class="input-group">
           <span class="input-label">Buffer %</span>
-          <input class="num-input" type="number" id="buffer_${f.id}" value="${buffer}" step="0.5" min="0" max="10">
+          <input class="num-input" type="text" inputmode="decimal" id="buffer_${f.id}" value="${buffer}" step="0.5" min="0" max="10">
         </div>
         <div class="input-group">
           <span class="input-label">Target %</span>
-          <input class="num-input" type="number" id="target_${f.id}" value="${target}" step="1" min="1" max="99">
+          <input class="num-input" type="text" inputmode="numeric" id="target_${f.id}" value="${target}" step="1" min="1" max="99">
         </div>
         <div class="input-group">
           <span class="input-label">Trade Fee £</span>
-          <input class="num-input" type="number" id="fee_${f.id}" value="0" step="0.01" min="0" placeholder="0.00">
+          <input class="num-input" type="text" inputmode="decimal" id="fee_${f.id}" value="0" step="0.01" min="0" placeholder="0.00">
         </div>
         <div class="input-group" style="justify-content:flex-end">
           <span class="input-label">&nbsp;</span>
@@ -5944,42 +6980,43 @@ function closeEditLayersModal() {
 function _renderEditLayersList() {
   const wrap = document.getElementById('edit-layers-list');
   if (!wrap) return;
-  wrap.innerHTML = _editLayersDraft.map((f, i) => `
-    <div style="display:grid;grid-template-columns:90px 1.2fr 2fr 80px 80px auto;gap:10px;align-items:end;padding:12px 14px;background:rgba(255,255,255,0.025);border-radius:10px;border:0.5px solid var(--border)">
+  // Rows use the .edit-layer-row class for layout/spacing — the bespoke
+  // inline styles previously repeated on every row now live in CSS.
+  // Fields: Ticker (uppercase, 8 char max), Layer Name (free text),
+  // Fund Name (free text), Target %, Buffer %, Remove button.
+  wrap.innerHTML = _editLayersDraft.map((f, i) => {
+    const removeDisabled = _editLayersDraft.length <= 1;
+    return `
+    <div class="edit-layer-row">
       <div class="input-group">
-        <span class="input-label" style="font-size:9px">Ticker</span>
-        <input class="text-input" type="text" value="${f.ticker || ''}" maxlength="8"
-          style="text-transform:uppercase;font-weight:700;font-size:12px;padding:8px 10px"
+        <span class="input-label">Ticker</span>
+        <input class="text-input layer-ticker" type="text" value="${f.ticker || ''}" maxlength="8"
           oninput="_updateLayerDraft(${i},'ticker',this.value.toUpperCase())">
       </div>
       <div class="input-group">
-        <span class="input-label" style="font-size:9px">Layer Name</span>
-        <input class="text-input" type="text" value="${(f.layer||'').replace(/"/g,'&quot;')}"
-          style="font-size:12px;padding:8px 10px;text-align:left"
+        <span class="input-label">Layer Name</span>
+        <input class="text-input layer-name-input" type="text" value="${(f.layer||'').replace(/"/g,'&quot;')}"
           oninput="_updateLayerDraft(${i},'layer',this.value)">
       </div>
       <div class="input-group">
-        <span class="input-label" style="font-size:9px">Fund Name</span>
-        <input class="text-input" type="text" value="${(f.name||'').replace(/"/g,'&quot;')}"
-          style="font-size:12px;padding:8px 10px;text-align:left"
+        <span class="input-label">Fund Name</span>
+        <input class="text-input layer-fund-input" type="text" value="${(f.name||'').replace(/"/g,'&quot;')}"
           oninput="_updateLayerDraft(${i},'name',this.value)">
       </div>
       <div class="input-group">
-        <span class="input-label" style="font-size:9px">Target %</span>
-        <input class="num-input" type="number" value="${f.target ?? 0}" step="0.5" min="0" max="100"
-          style="font-size:12px;padding:8px 10px"
+        <span class="input-label">Target %</span>
+        <input class="num-input" type="text" inputmode="decimal" value="${f.target ?? 0}" step="0.5" min="0" max="100"
           oninput="_updateLayerDraft(${i},'target',parseFloat(this.value)||0)">
       </div>
       <div class="input-group">
-        <span class="input-label" style="font-size:9px">Buffer %</span>
-        <input class="num-input" type="number" value="${f.defaultBuffer ?? 2.5}" step="0.5" min="0" max="10"
-          style="font-size:12px;padding:8px 10px"
+        <span class="input-label">Buffer %</span>
+        <input class="num-input" type="text" inputmode="decimal" value="${f.defaultBuffer ?? 2.5}" step="0.5" min="0" max="10"
           oninput="_updateLayerDraft(${i},'defaultBuffer',parseFloat(this.value)||0)">
       </div>
-      <button class="btn-danger btn-sm" style="padding:7px 12px;font-size:9px;align-self:end;margin-bottom:1px"
-        onclick="_removeLayerRow(${i})" ${_editLayersDraft.length <= 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;padding:7px 12px;font-size:9px;align-self:end;margin-bottom:1px"' : ''}>Remove</button>
+      <button class="btn-danger btn-sm layer-remove-btn"
+        onclick="_removeLayerRow(${i})" ${removeDisabled ? 'disabled' : ''}>Remove</button>
     </div>
-  `).join('');
+  `;}).join('');
   _updateLayersTotalDisplay();
 }
 
@@ -6130,17 +7167,17 @@ function renderAdditionalFunds() {
         </div>
         <div class="input-group">
           <span class="input-label">Units Held</span>
-          <input class="num-input" type="number" value="${f.held||0}" step="1" min="0"
+          <input class="num-input" type="text" inputmode="numeric" value="${f.held||0}" step="1" min="0"
             onchange="updateExtraFund(${i},'held',this.value)">
         </div>
         <div class="input-group">
           <span class="input-label">Price £</span>
-          <input class="num-input" type="number" value="${f.price||0}" step="0.001" min="0"
+          <input class="num-input" type="text" inputmode="decimal" value="${f.price||0}" step="0.001" min="0"
             onchange="updateExtraFund(${i},'price',this.value)">
         </div>
         <div class="input-group">
           <span class="input-label">Buffer %</span>
-          <input class="num-input" type="number" value="${f.buffer||2.5}" step="0.5" min="0" max="10"
+          <input class="num-input" type="text" inputmode="decimal" value="${f.buffer||2.5}" step="0.5" min="0" max="10"
             onchange="updateExtraFund(${i},'buffer',this.value)">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
@@ -6240,11 +7277,11 @@ function buildEmpFundsInput() {
     <div style="display:flex;flex-direction:column;gap:6px">
       <div class="input-group">
         <span class="input-label">${f.ticker} Units</span>
-        <input class="num-input" type="number" id="emp_${f.id}" value="0" step="1" min="0">
+        <input class="num-input" type="text" inputmode="numeric" id="emp_${f.id}" value="0" step="1" min="0">
       </div>
       <div class="input-group">
         <span class="input-label">${f.ticker} Price £</span>
-        <input class="num-input" type="number" id="empprice_${f.id}" value="0" step="0.001" min="0">
+        <input class="num-input" type="text" inputmode="decimal" id="empprice_${f.id}" value="0" step="0.001" min="0">
       </div>
     </div>`).join('');
 }
@@ -6264,12 +7301,12 @@ function renderHistoryExtraFunds() {
         </div>
         <div class="input-group">
           <span class="input-label">Units</span>
-          <input class="num-input" type="number" id="extraunits_${i}" value="${f.units||0}" step="1" min="0"
+          <input class="num-input" type="text" inputmode="numeric" id="extraunits_${i}" value="${f.units||0}" step="1" min="0"
             oninput="historyExtraFunds[${i}].units=parseFloat(this.value)||0">
         </div>
         <div class="input-group">
           <span class="input-label">Price £</span>
-          <input class="num-input" type="number" id="extraprice_${i}" value="${f.price||0}" step="0.001" min="0"
+          <input class="num-input" type="text" inputmode="decimal" id="extraprice_${i}" value="${f.price||0}" step="0.001" min="0"
             oninput="historyExtraFunds[${i}].price=parseFloat(this.value)||0">
         </div>
         <button class="btn-danger btn-sm" onclick="removeHistoryExtraFund(${i})">Remove</button>
@@ -6553,22 +7590,22 @@ function renderHistory(filter='all') {
           </div>
           <div class="input-group">
             <span class="input-label">Portfolio Value £</span>
-            <input class="num-input" type="number" id="edit_val_${entry.id}" value="${entry.portfolioValue||0}">
+            <input class="num-input" type="text" inputmode="numeric" id="edit_val_${entry.id}" value="${entry.portfolioValue||0}">
           </div>
           <div class="input-group">
             <span class="input-label">Budget £</span>
-            <input class="num-input" type="number" id="edit_budget_${entry.id}" value="${entry.budget||0}">
+            <input class="num-input" type="text" inputmode="numeric" id="edit_budget_${entry.id}" value="${entry.budget||0}">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
           ${entry.funds.map(f=>`
             <div class="input-group">
               <span class="input-label">${f.ticker} Units</span>
-              <input class="num-input" type="number" id="edit_units_${entry.id}_${f.ticker}" value="${f.held}" step="1" min="0">
+              <input class="num-input" type="text" inputmode="numeric" id="edit_units_${entry.id}_${f.ticker}" value="${f.held}" step="1" min="0">
             </div>
             <div class="input-group">
               <span class="input-label">${f.ticker} Price £</span>
-              <input class="num-input" type="number" id="edit_price_${entry.id}_${f.ticker}" value="${_formatPriceDisplay(f.price||0) || (f.price||0)}" step="0.001" min="0">
+              <input class="num-input" type="text" inputmode="decimal" id="edit_price_${entry.id}_${f.ticker}" value="${_formatPriceDisplay(f.price||0) || (f.price||0)}" step="0.001" min="0">
             </div>
           `).join('')}
         </div>
@@ -6679,8 +7716,20 @@ function setWithdrawalMode(mode) {
   const btn4 = document.getElementById('btn-withdrawal-4pct');
   const btnD = document.getElementById('btn-withdrawal-drawdown');
   const desc = document.getElementById('ret-withdrawal-desc');
-  if (btn4) { btn4.style.background = mode === '4pct' ? 'var(--gold)' : 'var(--dark)'; btn4.style.color = mode === '4pct' ? 'var(--black)' : 'var(--muted)'; }
-  if (btnD) { btnD.style.background = mode === 'drawdown' ? 'var(--amber)' : 'var(--dark)'; btnD.style.color = mode === 'drawdown' ? 'var(--black)' : 'var(--muted)'; }
+  // Swap active/inactive classes — colours and styling are defined in
+  // .withdrawal-toggle-btn rules. Drawdown mode tints the active button
+  // amber instead of gold to signal a more aggressive strategy.
+  if (btn4) {
+    btn4.classList.toggle('active', mode === '4pct');
+    btn4.classList.toggle('inactive', mode !== '4pct');
+  }
+  if (btnD) {
+    btnD.classList.toggle('active', mode === 'drawdown');
+    btnD.classList.toggle('inactive', mode !== 'drawdown');
+    // Override the gold accent with amber when drawdown is selected
+    btnD.style.background = mode === 'drawdown' ? 'var(--amber)' : '';
+    btnD.style.color = mode === 'drawdown' ? 'var(--black)' : '';
+  }
   if (desc) desc.textContent = mode === '4pct'
     ? '4% Rule — withdraw 4% annually, preserving principal indefinitely.'
     : 'Drawdown to 95 — depletes pot to £0 by age 95, with growth during retirement.';
@@ -8132,6 +9181,14 @@ function updateHoldingInline(id, field, val) {
   const portfolio = lsGet(LS.PORTFOLIO, []);
   const h = portfolio.find(p => String(p.id)===String(id));
   if (h) {
+    // If this is a price edit, capture pre-edit total and anchor today's
+    // baseline so the gain pill reflects this edit's impact rather than
+    // re-zeroing.
+    if (field === 'price') {
+      const preTotal = portfolio.reduce((s,p) => s + p.shares * (p.price || 0), 0);
+      _anchorPortfolioBaseline(preTotal);
+    }
+
     h[field] = parseFloat(val)||0;
     lsSet(LS.PORTFOLIO, portfolio);
 
@@ -8167,14 +9224,47 @@ function renderPortfolio(filter='all') {
   const totalVal = filtered.reduce((s,h) => s+h.shares*(h.price||0), 0);
   document.getElementById('totalPortfolioValue').textContent = `£${fmtNum(Math.round(totalVal),0)}`;
 
+  // Hero meta line — compact "N holdings · M tickers"
+  const uniqueTickers = new Set(filtered.map(h => h.ticker)).size;
+  const metaTextEl = document.getElementById('portfolio-hero-meta-text');
+  if (metaTextEl) {
+    metaTextEl.textContent = `${filtered.length} holding${filtered.length===1?'':'s'} · ${uniqueTickers} ticker${uniqueTickers===1?'':'s'}`;
+  }
+
+  // Today's gain pill — only renders the pill when filter is 'all' since
+  // the daily baseline tracks the whole portfolio, not subsets. For
+  // filtered views (Personal, Employer, ISA) the pill hides.
+  const deltaPill = document.getElementById('portfolio-delta-pill');
+  if (deltaPill) {
+    if (filter === 'all' && totalVal > 0) {
+      const daily = _getPortfolioDailyBaseline(totalVal);
+      if (daily.isNewDay) {
+        // First render of a new day — no movement to show yet
+        deltaPill.style.display = 'none';
+      } else {
+        deltaPill.style.display = 'inline-flex';
+        const sign = daily.gain > 0 ? '+' : (daily.gain < 0 ? '' : '');
+        const arrow = daily.gain > 0 ? '↑' : (daily.gain < 0 ? '↓' : '·');
+        const cls = daily.gain > 0 ? 'positive' : (daily.gain < 0 ? 'negative' : 'neutral');
+        deltaPill.className = `portfolio-delta-pill ${cls}`;
+        const gainAbs = Math.abs(Math.round(daily.gain));
+        const pctStr = Math.abs(daily.gainPct) >= 0.005 ? ` (${sign}${daily.gainPct.toFixed(2)}%)` : '';
+        deltaPill.textContent = `${arrow} ${sign}£${fmtNum(gainAbs, 0)}${pctStr} today`;
+        deltaPill.title = `Baseline: £${fmtNum(Math.round(daily.baseline), 0)} at start of day`;
+      }
+    } else {
+      deltaPill.style.display = 'none';
+    }
+  }
+
   const listEl = document.getElementById('holdingsList');
   const svgEl = document.getElementById('pieChart');
   const legendEl = document.getElementById('pieLegend');
 
   if (filtered.length===0) {
     listEl.innerHTML=`<div class="history-empty">No holdings${filter!=='all'?' for this filter':''} yet.</div>`;
-    svgEl.innerHTML=`<circle cx="130" cy="130" r="100" fill="none" stroke="var(--border)" stroke-width="2"/>`;
-    legendEl.innerHTML='';
+    if (svgEl) renderPieChart(svgEl, [], 0);
+    if (legendEl) legendEl.innerHTML='';
     return;
   }
 
@@ -8228,13 +9318,15 @@ function renderPortfolio(filter='all') {
   const renderRow = (h, isLegacy=false) => {
     const wrapperLabel = h.wrapper || (h.type==='employer'?'SIPP':'GIA');
     const wcls = wrapperColourClass(wrapperLabel);
+    const dark = _darkenColour(h.colour, 0.7);
+    const pct = (h.sectionPct||0);
     return `<div class="holding-row" id="hrow_${h.id}">
       <div title="Tick to include this holding in the calculator's drift and rebalancing logic. New holdings are ticked by default; legacy holdings stay unticked so they don't pull your buy targets toward historical positions.">
         <input type="checkbox" ${h.includeInCalc!==false?'checked':''} 
           onchange="toggleCalcInclude('${h.id}',this.checked)" 
           style="accent-color:var(--gold);cursor:pointer">
       </div>
-      <div class="holding-color" style="background:${h.colour}"></div>
+      <div class="holding-color" style="background:linear-gradient(180deg,${h.colour},${dark});border-radius:2px"></div>
       <div>
         <div class="holding-ticker">${h.ticker}</div>
         <div style="font-size:9px;color:var(--${wcls});font-weight:600;letter-spacing:1px">${wrapperLabel}</div>
@@ -8242,16 +9334,20 @@ function renderPortfolio(filter='all') {
       <div class="holding-detail">
         ${h.fromHistory
           ? `<span style="color:var(--white);font-weight:600">${h.shares} units</span>
-             @ <input type="number" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"
-               style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--muted);font-family:'Inter',sans-serif;font-size:10px;width:65px;padding:1px 0;outline:none"
+             @ <input type="text" inputmode="decimal" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"
+               style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:10px;width:65px;padding:1px 0;outline:none"
                onchange="updateHoldingInline('${h.id}','price',this.value)">
              <span style="font-size:9px;background:var(--gold-dim);color:var(--gold);padding:1px 6px;border-radius:10px;margin-left:4px">FROM HISTORY</span>`
           : `<span style="color:var(--white);font-weight:600">${h.shares} units</span> @ <span style="color:var(--muted)">£${_formatPriceDisplay(h.price||0) || '0'}</span>`
         }
         <span style="font-size:9px;color:var(--${(h.type||'personal')==='employer'?'blue':'muted'});margin-left:4px">${(h.type||'personal').toUpperCase()}</span>
+        <!-- Inline weight bar — sits beneath the units/price line, fills proportional to section weight -->
+        <div class="holding-row-bar-track" style="margin-top:6px">
+          <div class="holding-row-bar-fill" style="width:${pct.toFixed(1)}%;background:linear-gradient(90deg,${h.colour},${dark})"></div>
+        </div>
       </div>
       <div class="holding-val">£${fmtNum(Math.round(h.value),0)}</div>
-      <div class="holding-pct">${(h.sectionPct||0).toFixed(1)}%</div>
+      <div class="holding-pct">${pct.toFixed(1)}%</div>
       <div style="display:flex;flex-direction:column;gap:4px">
         <button class="btn-edit btn-sm" onclick="togglePortfolioEdit('${h.id}')">Edit</button>
         <button class="btn-danger btn-sm" onclick="removePortfolioHolding('${h.id}')">Remove</button>
@@ -8260,9 +9356,9 @@ function renderPortfolio(filter='all') {
     <div id="portfolioEdit_${h.id}" style="display:none;background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:4px">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
         <div class="input-group"><span class="input-label">Units</span>
-          <input class="num-input" type="number" id="pedit_shares_${h.id}" value="${h.shares}" step="1" min="0"></div>
+          <input class="num-input" type="text" inputmode="numeric" id="pedit_shares_${h.id}" value="${h.shares}" step="1" min="0"></div>
         <div class="input-group"><span class="input-label">Price £</span>
-          <input class="num-input" type="number" id="pedit_price_${h.id}" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"></div>
+          <input class="num-input" type="text" inputmode="decimal" id="pedit_price_${h.id}" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"></div>
         <div class="input-group"><span class="input-label">Wrapper</span>
           <select class="num-input" id="pedit_wrapper_${h.id}" style="text-align:left;cursor:pointer">
             <option value="GIA" ${(h.wrapper||'GIA')==='GIA'?'selected':''}>GIA</option>
@@ -8348,14 +9444,6 @@ function renderPortfolio(filter='all') {
   ).join('');
 }
 
-function movePieTooltip(e) {
-  const tip = document.getElementById('pie-tooltip');
-  if (!tip || tip.style.display === 'none') return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  tip.style.left = (e.clientX - rect.left + 12) + 'px';
-  tip.style.top = (e.clientY - rect.top - 10) + 'px';
-}
-
 function toggleSection(id) {
   const el = document.getElementById(id);
   const btn = document.getElementById(`btn-${id}`);
@@ -8366,29 +9454,99 @@ function toggleSection(id) {
 }
 
 function renderPieChart(svgEl, pieData, totalVal) {
-  if (!svgEl || pieData.length === 0) return;
-  // Store pieData globally so tooltip function can read live values on hover
+  if (!svgEl) return;
+  // Store pieData globally so the tooltip can read live values on hover.
+  // Refreshed on every renderPieChart call so prices stay current.
   window._pieData = pieData;
-  const cx = 130, cy = 130, r = 100, inner = 60;
-  let startAngle = -Math.PI/2;
-  let paths = '';
-  pieData.forEach((seg, i) => {
-    const angle = (seg.pct/100)*2*Math.PI;
-    const endAngle = startAngle + angle;
-    const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
-    const x2=cx+r*Math.cos(endAngle), y2=cy+r*Math.sin(endAngle);
-    const xi1=cx+inner*Math.cos(startAngle), yi1=cy+inner*Math.sin(startAngle);
-    const xi2=cx+inner*Math.cos(endAngle), yi2=cy+inner*Math.sin(endAngle);
-    const large = angle>Math.PI?1:0;
-    paths += `<path d="M${xi1},${yi1} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${xi2},${yi2} A${inner},${inner} 0 ${large},0 ${xi1},${yi1}"
-      fill="${seg.colour}" stroke="var(--black)" stroke-width="2" opacity="0.9"
-      onmouseover="this.setAttribute('opacity','1');showPieTip(${i})"
-      onmouseout="this.setAttribute('opacity','0.9');hidePieTip()"/>`;
-    startAngle = endAngle;
-  });
-  const centerLabel = `<text x="${cx}" y="${cy-8}" text-anchor="middle" fill="var(--muted)" font-size="9" font-family="Inter" letter-spacing="1">TOTAL</text>
-    <text x="${cx}" y="${cy+10}" text-anchor="middle" fill="var(--gold)" font-size="14" font-weight="700" font-family="Inter">£${fmtNum(Math.round(totalVal/1000),0)}k</text>`;
-  svgEl.innerHTML = paths + centerLabel;
+  if (pieData.length === 0) {
+    svgEl.innerHTML = `
+      <path d="M 30,120 A 90,90 0 0 1 210,120" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
+      <text x="120" y="118" text-anchor="middle" fill="var(--muted)" font-size="13" font-weight="500">No holdings yet</text>`;
+    return;
+  }
+
+  // Half-arc geometry. ViewBox 240×140; arc spans (30,120) to (210,120)
+  // with radius 90 sweeping over the top half — total angular sweep is
+  // 180 degrees (π radians) starting at 180° (left) ending at 0° (right).
+  // Each slice is a discrete <path> with its own start/end so hover hit-
+  // testing works correctly (overlapping paths with shared `d` always
+  // hit-test the topmost regardless of dasharray).
+  const cx = 120, cy = 120, r = 90;
+  // Map a fraction-along-arc (0..1) to (x,y). Visible arc goes clockwise
+  // from left (π) to right (0); SVG y-axis is inverted.
+  const pointAt = (fraction) => {
+    const angle = Math.PI - fraction * Math.PI;
+    return { x: cx + r * Math.cos(angle), y: cy - r * Math.sin(angle) };
+  };
+
+  // Background track — full unfilled half-arc, faint white. Non-interactive
+  // so it never intercepts pointer events from slice paths above.
+  const track = `<path d="M 30,120 A 90,90 0 0 1 210,120"
+    fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"
+    style="pointer-events:none"/>`;
+
+  // Render each slice with BUTT caps so internal segment-to-segment joins
+  // are clean straight lines. Then we add two tiny round-capped "end caps"
+  // — one at the very start of the first slice, one at the very end of
+  // the last slice — to give the arc soft outer endpoints without ever
+  // letting a round cap intrude on an internal join. A round cap on a
+  // zero-length path renders as a filled circle of stroke-width diameter,
+  // which is precisely the rounded outer-edge shape we want.
+  let cumulative = 0;
+  const slices = pieData.map((seg, i) => {
+    const startFrac = cumulative;
+    const endFrac = cumulative + (seg.pct / 100);
+    cumulative = endFrac;
+    const start = pointAt(startFrac);
+    const end = pointAt(endFrac);
+    return `<path d="M ${start.x.toFixed(2)},${start.y.toFixed(2)} A ${r},${r} 0 0 1 ${end.x.toFixed(2)},${end.y.toFixed(2)}"
+      fill="none"
+      stroke="${seg.colour}"
+      stroke-width="14"
+      stroke-linecap="butt"
+      data-slice-index="${i}"
+      style="pointer-events:stroke;cursor:pointer;transition:stroke-width 0.12s ease"
+      onmouseover="this.setAttribute('stroke-width','17');showPieTip(${i})"
+      onmouseout="this.setAttribute('stroke-width','14');hidePieTip()"
+      onmousemove="movePieTooltip(event)"/>`;
+  }).join('');
+
+  // Outer round end-caps. Drawn AFTER the slices so they sit on top of
+  // the butt edges. Each is a half-circle of radius 7 (= stroke-width/2)
+  // positioned at the arc endpoint. The half-circle bulges DOWNWARD
+  // (continuing the arc's natural tangent direction at those points)
+  // so the chart reads as having cleanly rounded outer endpoints.
+  //
+  // At the arc endpoints (30, 120) and (210, 120), the half-circle's
+  // flat diameter runs horizontally along y=120 (matching the arc's
+  // bottom edge), and the curve sweeps downward to y=127. The flat
+  // edge sits on the same horizontal as the slice's lower stroke edge,
+  // so the cap looks like a natural rounded continuation rather than
+  // a sideways bulge.
+  const firstSeg = pieData[0];
+  const lastSeg  = pieData[pieData.length - 1];
+  const capRadius = 7;
+  // Left cap at (30, 120): half-circle bulging downward.
+  // Path: from (23, 120) arc clockwise through (30, 127) to (37, 120),
+  // then straight back to start.
+  const leftCapPath = `M ${30 - capRadius},120 A ${capRadius},${capRadius} 0 0 0 ${30 + capRadius},120 Z`;
+  // Right cap at (210, 120): half-circle bulging downward.
+  // Same shape, just translated to the right endpoint.
+  const rightCapPath = `M ${210 - capRadius},120 A ${capRadius},${capRadius} 0 0 0 ${210 + capRadius},120 Z`;
+  const endCaps = `
+    <path d="${leftCapPath}"
+      fill="${firstSeg.colour}"
+      style="pointer-events:none"/>
+    <path d="${rightCapPath}"
+      fill="${lastSeg.colour}"
+      style="pointer-events:none"/>`;
+
+  // Centre text — single line "N holdings" centered inside the arc
+  const holdingsCount = pieData.length;
+  const centreLabel = `
+    <text x="120" y="118" text-anchor="middle" fill="var(--white)" font-size="14" font-weight="600">${holdingsCount} holding${holdingsCount===1?'':'s'}</text>`;
+
+  svgEl.innerHTML = `${track}${slices}${endCaps}${centreLabel}`;
 }
 
 function showPieTip(i) {
@@ -8396,8 +9554,13 @@ function showPieTip(i) {
   if (!tip || !window._pieData) return;
   const seg = window._pieData[i];
   if (!seg) return;
+  // Live read from _pieData — refreshed on every renderPieChart call,
+  // so prices update immediately when holdings or prices change.
   tip.style.display = 'block';
-  tip.innerHTML = `<b>${seg.ticker}</b><br>£${fmtNum(Math.round(seg.value),0)}<br>${seg.pct.toFixed(1)}%`;
+  tip.innerHTML = `
+    <span class="vc-pie-tip-ticker" style="color:${seg.colour}">${seg.ticker}</span>
+    <span class="vc-pie-tip-value">£${fmtNum(Math.round(seg.value),0)}</span>
+    <span class="vc-pie-tip-pct">${seg.pct.toFixed(1)}%</span>`;
 }
 
 function hidePieTip() {
@@ -8405,13 +9568,43 @@ function hidePieTip() {
   if (tip) tip.style.display = 'none';
 }
 
+function movePieTooltip(e) {
+  const tip = document.getElementById('pie-tooltip');
+  if (!tip || tip.style.display === 'none') return;
+  // Position relative to the arc container (not the SVG itself, since
+  // the SVG is centered inside a flex container). Get the container's
+  // bounding rect and offset from there.
+  const container = tip.parentElement;
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  // Tooltip width ~ 140px; flip to left of cursor if we're past 60% of
+  // the container width to avoid overflowing the right edge.
+  const containerW = rect.width;
+  const flipLeft = x > containerW * 0.6;
+  if (flipLeft) {
+    tip.style.left = 'auto';
+    tip.style.right = (containerW - x + 14) + 'px';
+  } else {
+    tip.style.right = 'auto';
+    tip.style.left = (x + 14) + 'px';
+  }
+  tip.style.top = (y - 8) + 'px';
+}
+
 function showNWPieTip(i) {
   const tip = document.getElementById('nw-pie-tooltip');
   if (!tip || !window._nwPieData) return;
   const seg = window._nwPieData[i];
   if (!seg) return;
+  // Live read from _nwPieData — refreshed on every renderNetWorth call
+  // so values update immediately when inputs or holdings change.
   tip.style.display = 'block';
-  tip.innerHTML = `<b>${seg.label}</b><br>£${fmtNum(Math.round(seg.value),0)}<br>${seg.pct.toFixed(1)}%`;
+  tip.innerHTML = `
+    <span class="vc-pie-tip-ticker" style="color:${seg.colour}">${seg.label}</span>
+    <span class="vc-pie-tip-value">£${fmtNum(Math.round(seg.value),0)}</span>
+    <span class="vc-pie-tip-pct">${seg.pct.toFixed(1)}%</span>`;
 }
 
 function hideNWPieTip() {
@@ -8422,9 +9615,24 @@ function hideNWPieTip() {
 function moveNWPieTooltip(e) {
   const tip = document.getElementById('nw-pie-tooltip');
   if (!tip || tip.style.display === 'none') return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  tip.style.left = (e.clientX - rect.left + 12) + 'px';
-  tip.style.top = (e.clientY - rect.top - 10) + 'px';
+  // Position relative to the SVG container, with cursor offset and
+  // a flip-to-left when we're past 60% of the container width to keep
+  // the tip from overflowing the right edge.
+  const container = tip.parentElement;
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const containerW = rect.width;
+  const flipLeft = x > containerW * 0.6;
+  if (flipLeft) {
+    tip.style.left = 'auto';
+    tip.style.right = (containerW - x + 14) + 'px';
+  } else {
+    tip.style.right = 'auto';
+    tip.style.left = (x + 14) + 'px';
+  }
+  tip.style.top = (y - 8) + 'px';
 }
 
 // ════════════════════════════════════════════════════════
@@ -8541,12 +9749,12 @@ function renderGrowthChart(type='monthly') {
 
   const ySteps = [minV, minV+(maxV-minV)*0.33, minV+(maxV-minV)*0.66, maxV];
   const yLabels = ySteps.map(v =>
-    `<text x="${padL-8}" y="${scaleY(v)+4}" text-anchor="end" fill="var(--muted)" font-size="9" font-family="Inter">£${v>=1000?(v/1000).toFixed(0)+'k':Math.round(v)}</text>`
+    `<text x="${padL-8}" y="${scaleY(v)+4}" text-anchor="end" fill="var(--muted)" font-size="9">${fmtMoneyCompact(v)}</text>`
   ).join('');
 
   const step = Math.max(1, Math.floor(points.length/6));
   const xLabels = points.map((p,i) => i%step===0||i===points.length-1 ?
-    `<text x="${scaleX(i)}" y="${h-padB+16}" text-anchor="middle" fill="var(--muted)" font-size="9" font-family="Inter">${p.label}</text>` : ''
+    `<text x="${scaleX(i)}" y="${h-padB+16}" text-anchor="middle" fill="var(--muted)" font-size="9">${p.label}</text>` : ''
   ).join('');
 
   // Visible dots
@@ -8719,6 +9927,29 @@ function hideGrowthTip() {
 function fmtNum(val, decimals=2) {
   if (typeof val !== 'number' || isNaN(val)) return '0';
   return val.toLocaleString('en-GB', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+// Compact money formatter for chart centres and tight UI surfaces where
+// the full £1,234,567 wouldn't fit. Returns:
+//   £1.23m      for ≥1,000,000   (one decimal if <10m, none if ≥10m)
+//   £210k       for ≥1,000       (no decimals — 210k reads cleaner than 210.3k)
+//   £450        for <1,000       (rounded to integer)
+// Negative numbers carry the minus sign through correctly.
+function fmtMoneyCompact(val) {
+  if (typeof val !== 'number' || isNaN(val)) return '£0';
+  const sign = val < 0 ? '-' : '';
+  const abs = Math.abs(val);
+  if (abs >= 1_000_000) {
+    // One decimal place under £10m so £1.4m reads naturally; drop it
+    // above £10m where the precision adds clutter without value.
+    const m = abs / 1_000_000;
+    if (abs >= 10_000_000) return `${sign}£${Math.round(m)}m`;
+    return `${sign}£${m.toFixed(2).replace(/\.?0+$/, '')}m`;
+  }
+  if (abs >= 1_000) {
+    return `${sign}£${Math.round(abs / 1_000)}k`;
+  }
+  return `${sign}£${Math.round(abs)}`;
 }
 
 // Formats a stored price for display in an input. Preserves up to 3 decimal
@@ -9620,20 +10851,20 @@ function renderTaxProvisionPlanner() {
 
   // ── Headline — single big figure, with comfortable alternative ──
   const headlineHtml = `
-    <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;margin-bottom:18px">
+    <div class="tax-headline-grid" style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;margin-bottom:18px">
       <div>
         <div class="input-label mb4">Set your standing order to</div>
         <div style="font-size:44px;font-weight:700;color:var(--gold);line-height:1">£${fmtNum(Math.round(comfortable), 0)}<span style="font-size:14px;color:var(--muted);font-weight:400">/mo</span></div>
         <div style="font-size:10px;color:var(--muted);margin-top:6px">round number with a small buffer · covers your £${fmtNum(Math.round(thisYear), 0)} liability across the cycle</div>
         <div style="font-size:9px;color:var(--green);margin-top:4px">↪ auto-syncs to Tax Provision Planned in Budget tracker</div>
       </div>
-      <div style="height:60px;width:1px;background:var(--border)"></div>
+      <div class="tax-headline-divider" style="height:60px;width:1px;background:var(--border)"></div>
       <div>
         <div class="input-label mb4">Or precise minimum</div>
         <div style="font-size:24px;font-weight:700;color:var(--white);line-height:1">£${fmtNum(Math.round(minimum), 0)}<span style="font-size:11px;color:var(--muted);font-weight:400">/mo</span></div>
         <div style="font-size:10px;color:var(--muted);margin-top:4px">exactly £${fmtNum(Math.round(thisYear), 0)} ÷ 12</div>
       </div>
-      <div style="height:60px;width:1px;background:var(--border)"></div>
+      <div class="tax-headline-divider" style="height:60px;width:1px;background:var(--border)"></div>
       <div>
         <div class="input-label mb4">Saved so far this tax year</div>
         <div style="font-size:24px;font-weight:700;color:${savedSoFar > 0 ? 'var(--green)' : 'var(--white)'};line-height:1">£${fmtNum(Math.round(savedSoFar), 0)}</div>
@@ -10933,11 +12164,13 @@ function openMortgagePlanner() {
   document.getElementById('mortgage-planner-panel').classList.add('active');
   mpLoadState();
   mpRecalc();
+  _mobileScrollToTop();
 }
 
 function closeMortgagePlanner() {
   document.getElementById('mortgage-planner-panel').classList.remove('active');
   document.getElementById('tab-analyse').classList.add('active');
+  _mobileScrollToTop();
 }
 
 function mpParseNum(id) {
@@ -11828,7 +13061,22 @@ function renderAnalyseNetWorth() {
 // NET WORTH CALCULATOR
 // ════════════════════════════════════════════════════════
 
-const NW_COLOURS = ['#4caf7d','#FFFFFF','#5b9bd5','#e05555','#a97fc8','#e09a3a','#7ec8c8','#d4a853','#6ab187'];
+// NW_COLOURS — Apple-system inspired vibrant palette, deliberately
+// shares the same visual language as PIE_COLOURS so net worth and
+// portfolio charts feel like part of the same family. Order chosen so
+// the most common asset categories (GIA, Property Equity, SIPP) get
+// the strongest colours up top.
+const NW_COLOURS = [
+  '#0A84FF', // electric blue — GIA / dominant slice
+  '#FF453A', // signal red-coral — Property Equity
+  '#30D158', // bright mint-green — SIPP
+  '#FF9F0A', // vivid amber-orange — Cars
+  '#BF5AF2', // bright purple — Whiskey
+  '#FFD60A', // canary yellow — Crypto
+  '#5E5CE6', // indigo-violet — Cash
+  '#64D2FF', // cyan-aqua — Business
+  '#FF375F', // hot pink — ISA
+];
 
 function loadNetWorthInputs() {
   const saved = lsGet(LS.NET_WORTH, {});
@@ -11950,17 +13198,21 @@ function renderNetWorth() {
     { label:'Investment Portfolio', val:`£${fmtNum(Math.round(totalInvestments),0)}`, sub:'GIA + ISA + SIPP', cls:'green' },
   ].map(s=>`<div class="card"><div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div></div>`).join('');
 
-  // Build segments for pie chart
+  // Build segments for pie chart. Each gets a fixed slot in the NW_COLOURS
+  // palette so the same asset category always appears in the same colour
+  // across re-renders, even as values change. Segments are filtered
+  // (value > 0) and sorted before rendering, but the colour assignment
+  // itself is stable.
   const segments = [
-    { label:'GIA', value:giaValue, colour:NW_COLOURS[1] },
-    { label:'ISA', value:isaValue, colour:NW_COLOURS[0] },
-    { label:'SIPP', value:sippValue, colour:NW_COLOURS[2] },
-    { label:'Property Equity', value:Math.max(0,propertyEquity), colour:NW_COLOURS[3] },
-    { label:'Cars', value:carsValue, colour:NW_COLOURS[4] },
-    { label:'Whiskey', value:whiskeyValue, colour:NW_COLOURS[5] },
-    { label:'Crypto', value:crypto, colour:NW_COLOURS[6] },
-    { label:'Cash', value:cash, colour:NW_COLOURS[7] },
-    { label:'Business', value:business, colour:NW_COLOURS[8] },
+    { label:'GIA', value:giaValue, colour:NW_COLOURS[0] },                  // electric blue
+    { label:'Property Equity', value:Math.max(0,propertyEquity), colour:NW_COLOURS[1] }, // signal red-coral
+    { label:'SIPP', value:sippValue, colour:NW_COLOURS[2] },                // bright mint-green
+    { label:'Cars', value:carsValue, colour:NW_COLOURS[3] },                // vivid amber-orange
+    { label:'Whiskey', value:whiskeyValue, colour:NW_COLOURS[4] },          // bright purple
+    { label:'Crypto', value:crypto, colour:NW_COLOURS[5] },                 // canary yellow
+    { label:'Cash', value:cash, colour:NW_COLOURS[6] },                     // indigo-violet
+    { label:'Business', value:business, colour:NW_COLOURS[7] },             // cyan-aqua
+    { label:'ISA', value:isaValue, colour:NW_COLOURS[8] },                  // hot pink
     { label:'Other Assets', value:other, colour:'#888' },
   ].filter(s=>s.value>0).sort((a,b)=>b.value-a.value);
 
@@ -11969,51 +13221,125 @@ function renderNetWorth() {
   // Store segments live so tooltip always reads current values
   window._nwPieData = segments.map(s => ({ ...s, pct: total > 0 ? s.value / total * 100 : 0 }));
 
-  // Pie chart
-  const cx=130,cy=130,r=100,inner=52;
-  let angle=-Math.PI/2, paths='';
-  segments.forEach((seg, i)=>{
-    if(seg.value<=0) return;
-    const pct = seg.value/total;
-    const slice = pct*Math.PI*2;
-    const end = angle+slice;
-    const large = slice>Math.PI?1:0;
-    if(segments.length===1){
-      paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${seg.colour}" stroke="var(--black)" stroke-width="2"
-        onmouseover="this.setAttribute('opacity','0.85');showNWPieTip(${i})"
-        onmouseout="this.setAttribute('opacity','1');hideNWPieTip()"/>`;
-    } else {
-      const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
-      const x2=cx+r*Math.cos(end),y2=cy+r*Math.sin(end);
-      const xi1=cx+inner*Math.cos(angle),yi1=cy+inner*Math.sin(angle);
-      const xi2=cx+inner*Math.cos(end),yi2=cy+inner*Math.sin(end);
-      paths+=`<path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${inner} ${inner} 0 ${large} 0 ${xi1} ${yi1} Z"
-        fill="${seg.colour}" stroke="var(--black)" stroke-width="1.5" opacity="1"
-        onmouseover="this.setAttribute('opacity','0.85');showNWPieTip(${i})"
-        onmouseout="this.setAttribute('opacity','1');hideNWPieTip()"/>`;
-    }
-    if(pct>=0.05){
-      const mid=angle+slice/2,lr=(r+inner)/2;
-      paths+=`<text x="${cx+lr*Math.cos(mid)}" y="${cy+lr*Math.sin(mid)}" text-anchor="middle" dominant-baseline="middle" fill="#0a0a0a" font-size="10" font-weight="700" font-family="Inter" style="pointer-events:none">${(pct*100).toFixed(0)}%</text>`;
-    }
-    angle=end;
-  });
-  paths+=`<text x="${cx}" y="${cy-7}" text-anchor="middle" fill="var(--muted)" font-size="8" letter-spacing="2" font-family="Inter" style="pointer-events:none">NET WORTH</text>`;
-  paths+=`<text x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--gold)" font-size="13" font-weight="700" font-family="Inter" style="pointer-events:none">£${total>=1000?(total/1000).toFixed(0)+'k':Math.round(total)}</text>`;
-  document.getElementById('nw-pie').innerHTML = paths;
+  // Donut chart — full circle. Each slice is a discrete <path> describing
+  // its actual geometry: outer arc → line in to inner edge → inner arc
+  // back → close. This is the conventional donut-slice path and gives us
+  // perfectly clean joins with no overlap glitches and reliable hover
+  // hit-testing because each path is its own filled shape.
+  //
+  // Geometry: viewBox 260×260, donut centred at (130, 130). Outer radius
+  // 100, inner radius 75 — gives a 25-pixel-wide ring with a generous
+  // centre hole that comfortably accommodates the two-line "NET WORTH /
+  // £value" label without crowding even when the value is wide (£1.23m).
+  const cx = 130, cy = 130;
+  const rOuter = 100;
+  const rInner = 75;
 
-  // Legend
-  document.getElementById('nw-legend').innerHTML = segments.map(s=>
-    `<div class="legend-item"><div class="legend-color" style="background:${s.colour}"></div><div class="legend-label">${s.label}</div><div class="legend-pct">${(s.value/total*100).toFixed(1)}%</div></div>`
-  ).join('');
+  let angleStart = -Math.PI / 2;
+  const slicePaths = segments.map((seg, i) => {
+    if (seg.value <= 0) return '';
+    const pct = total > 0 ? seg.value / total : 0;
+    const sliceAngle = pct * 2 * Math.PI;
+    const angleEnd = angleStart + sliceAngle;
+    const isLargeArc = sliceAngle > Math.PI ? 1 : 0;
 
-  // Holdings list — largest to smallest
+    // Single-segment edge case: if there's only one slice (100%), draw
+    // an annulus using two full circles via the even-odd fill rule.
+    if (segments.length === 1) {
+      return `<path d="M ${cx + rOuter},${cy}
+        A ${rOuter},${rOuter} 0 1 1 ${cx - rOuter},${cy}
+        A ${rOuter},${rOuter} 0 1 1 ${cx + rOuter},${cy} Z
+        M ${cx + rInner},${cy}
+        A ${rInner},${rInner} 0 1 0 ${cx - rInner},${cy}
+        A ${rInner},${rInner} 0 1 0 ${cx + rInner},${cy} Z"
+        fill="${seg.colour}" fill-rule="evenodd"
+        data-nw-slice="${i}"
+        style="cursor:pointer;transition:opacity 0.12s ease"
+        onmouseover="this.setAttribute('opacity','0.85');showNWPieTip(${i})"
+        onmouseout="this.setAttribute('opacity','1');hideNWPieTip()"
+        onmousemove="moveNWPieTooltip(event)"/>`;
+    }
+
+    // Outer arc start/end coordinates
+    const x1Outer = cx + rOuter * Math.cos(angleStart);
+    const y1Outer = cy + rOuter * Math.sin(angleStart);
+    const x2Outer = cx + rOuter * Math.cos(angleEnd);
+    const y2Outer = cy + rOuter * Math.sin(angleEnd);
+    // Inner arc start/end coordinates (same angles, smaller radius)
+    const x1Inner = cx + rInner * Math.cos(angleStart);
+    const y1Inner = cy + rInner * Math.sin(angleStart);
+    const x2Inner = cx + rInner * Math.cos(angleEnd);
+    const y2Inner = cy + rInner * Math.sin(angleEnd);
+
+    angleStart = angleEnd;
+
+    // Path: move to outer-start, arc clockwise to outer-end, line in to
+    // inner-end, arc anticlockwise back to inner-start, close.
+    return `<path d="M ${x1Outer.toFixed(2)},${y1Outer.toFixed(2)}
+      A ${rOuter},${rOuter} 0 ${isLargeArc} 1 ${x2Outer.toFixed(2)},${y2Outer.toFixed(2)}
+      L ${x2Inner.toFixed(2)},${y2Inner.toFixed(2)}
+      A ${rInner},${rInner} 0 ${isLargeArc} 0 ${x1Inner.toFixed(2)},${y1Inner.toFixed(2)}
+      Z"
+      fill="${seg.colour}"
+      data-nw-slice="${i}"
+      style="cursor:pointer;transition:opacity 0.12s ease"
+      onmouseover="this.setAttribute('opacity','0.85');showNWPieTip(${i})"
+      onmouseout="this.setAttribute('opacity','1');hideNWPieTip()"
+      onmousemove="moveNWPieTooltip(event)"/>`;
+  }).join('');
+
+  // Percentage labels on slices ≥5%. Positioned at the midpoint of each
+  // slice along the centre-line of the stroke band (radius midway between
+  // inner and outer edges). Dark text against bright slice colours.
+  let labelAngle = -Math.PI / 2;
+  const labelRadius = (rOuter + rInner) / 2;
+  const sliceLabels = segments.map(seg => {
+    if (seg.value <= 0) return '';
+    const pct = total > 0 ? seg.value / total : 0;
+    const sliceAngle = pct * 2 * Math.PI;
+    const midAngle = labelAngle + sliceAngle / 2;
+    labelAngle += sliceAngle;
+    if (pct < 0.05) return '';
+    const lx = cx + labelRadius * Math.cos(midAngle);
+    const ly = cy + labelRadius * Math.sin(midAngle);
+    return `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}"
+      text-anchor="middle" dominant-baseline="central"
+      fill="#0a0a0a" font-size="11" font-weight="700"
+      style="pointer-events:none">${(pct * 100).toFixed(0)}%</text>`;
+  }).join('');
+
+  // Centre stack — small uppercase NET WORTH label above the £ value.
+  // Compact-money formatter handles thousands and millions cleanly:
+  // £1.4m / £210k / £450. The 16px font size is tight in the donut hole
+  // so the formatter's compact output keeps everything visible.
+  const totalDisplay = fmtMoneyCompact(total);
+  const centreLabel = `
+    <text x="${cx}" y="${cy - 6}" text-anchor="middle" fill="var(--muted)" font-size="9" font-weight="600" letter-spacing="2" style="pointer-events:none">NET WORTH</text>
+    <text x="${cx}" y="${cy + 14}" text-anchor="middle" fill="var(--white)" font-size="16" font-weight="700" style="pointer-events:none">${totalDisplay}</text>`;
+
+  document.getElementById('nw-pie').innerHTML = slicePaths + sliceLabels + centreLabel;
+
+  // Legend — gradient swatches match the colour rod / bar style used on
+  // the portfolio holding rows, so the visual language is consistent.
+  document.getElementById('nw-legend').innerHTML = segments.map(s => {
+    const dark = _darkenColour(s.colour, 0.7);
+    return `<div class="legend-item">
+      <div class="legend-color" style="background:linear-gradient(135deg,${s.colour},${dark});border-radius:2px"></div>
+      <div class="legend-label">${s.label}</div>
+      <div class="legend-pct">${(s.value/total*100).toFixed(1)}%</div>
+    </div>`;
+  }).join('');
+
+  // Holdings list — largest to smallest. The colour swatch on each row
+  // uses the same gradient pair as the legend and pie slices for
+  // consistent visual language across the whole net worth surface.
   document.getElementById('nw-holdings-list').innerHTML = `
-    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--white);opacity:0.7;display:grid;grid-template-columns:1fr 90px 60px;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px">
-      <div>Asset</div><div style="text-align:right">Value</div><div style="text-align:right">% of Net Worth</div>
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--white);opacity:0.7;display:grid;grid-template-columns:1fr 90px 110px;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <div>Asset</div><div style="text-align:right">Value</div><div style="text-align:right;white-space:nowrap">% of Net Worth</div>
     </div>` +
-    segments.map(s=>{
+    segments.map(s => {
       const pct = total>0?(s.value/total*100):0;
+      const dark = _darkenColour(s.colour, 0.7);
       let sub = '';
       if (s.label==='GIA') sub = `<span style="font-size:9px;color:var(--amber)">Taxable — CGT applies</span>`;
       else if (s.label==='ISA') sub = `<span style="font-size:9px;color:var(--green)">Tax-free wrapper</span>`;
@@ -12023,16 +13349,16 @@ function renderNetWorth() {
       } else if (s.label==='Whiskey'){
         const g=whiskeyGain; sub=`<span style="font-size:9px;color:${g>=0?'var(--green)':'var(--red)'}">${g>=0?'+':''}£${fmtNum(Math.round(g),0)} vs cost</span>`;
       }
-      return `<div style="display:grid;grid-template-columns:1fr 90px 60px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      return `<div style="display:grid;grid-template-columns:1fr 90px 110px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
         <div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:8px;height:8px;border-radius:50%;background:${s.colour};flex-shrink:0"></div>
-            <span style="font-size:12px;font-weight:600;color:var(--white)">${s.label}</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,${s.colour},${dark});flex-shrink:0"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--white);letter-spacing:-0.1px">${s.label}</span>
           </div>
-          ${sub?`<div style="padding-left:16px;margin-top:2px">${sub}</div>`:''}
+          ${sub?`<div style="padding-left:20px;margin-top:2px">${sub}</div>`:''}
         </div>
-        <div style="text-align:right;font-weight:700;color:var(--gold)">£${fmtNum(Math.round(s.value),0)}</div>
-        <div style="text-align:right;color:var(--muted)">${pct.toFixed(1)}%</div>
+        <div style="text-align:right;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums">£${fmtNum(Math.round(s.value),0)}</div>
+        <div style="text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${pct.toFixed(1)}%</div>
       </div>`;
     }).join('');
 
@@ -13190,7 +14516,7 @@ function renderBudgetTab() {
 
 // ── Render helpers ─────────────────────────────────────────
 function _bgtDiffStr(diff) {
-  return diff >= 0 ? `+£${fmtNum(Math.abs(diff), 0)}` : `-£${fmtNum(Math.abs(diff), 0)}`;
+  return diff >= 0 ? `+£${fmtNum(Math.abs(diff), 2)}` : `-£${fmtNum(Math.abs(diff), 2)}`;
 }
 function _bgtProgressBar(actual, planned, isVariable) {
   if (!isVariable || planned <= 0) return '';
@@ -13201,7 +14527,7 @@ function _bgtProgressBar(actual, planned, isVariable) {
 function _bgtActualCell(name, actual, planned, isVariable, onChangeFn) {
   return `<td>
     <div class="bgt-cell-actual">
-      <input class="bgt-actual-input" type="number" value="${actual > 0 ? actual.toFixed(2) : ''}"
+      <input class="bgt-actual-input" type="text" inputmode="decimal" value="${actual > 0 ? actual.toFixed(2) : ''}"
         placeholder="0.00" step="0.01" min="0"
         onchange="${onChangeFn}('${name}', this.value)"
         onfocus="this.select()">
@@ -13232,8 +14558,8 @@ function _renderBgtMainTable(state) {
         : `<span onclick="bgtToggleRecurring('${name}')" title="Click to mark as recurring. The planned value will auto-fill each new month." style="cursor:pointer;color:var(--muted2);font-size:11px;margin-left:6px;opacity:0.5;user-select:none">○</span>`;
       return `<tr class="bgt-row">
         <td>${name}${recurringIcon}</td>
-        <td><input class="bgt-planned-input" type="number" value="${p}"
-          onchange="bgtUpdatePlanned('${name}',this.value)" onfocus="this.select()" step="1" min="0"></td>
+        <td><input class="bgt-planned-input" type="text" inputmode="decimal" value="${p > 0 ? p.toFixed(2) : '0.00'}"
+          onchange="bgtUpdatePlanned('${name}',this.value)" onfocus="this.select()" step="0.01" min="0"></td>
         ${_bgtActualCell(name, a, p, isVariable, 'bgtUpdateActual')}
         <td class="${dCls}">${_bgtDiffStr(diff)}</td>
       </tr>`;
@@ -13245,7 +14571,7 @@ function _renderBgtMainTable(state) {
     return `<tr><td colspan="4" class="bgt-section-label ${cls}">${label}</td></tr>
       ${rows}
       <tr class="bgt-row bgt-total">
-        <td>Total ${label}</td><td>£${fmtNum(sp,0)}</td>
+        <td>Total ${label}</td><td>£${fmtNum(sp,2)}</td>
         <td style="font-weight:700;color:var(--white)">£${fmtNum(sa,2)}</td>
         <td class="${sc}">${_bgtDiffStr(sd)}</td>
       </tr>`;
@@ -13312,8 +14638,8 @@ function _renderBgtMainTable(state) {
           ${section('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true)}
           <tr class="bgt-row bgt-net">
             <td style="color:var(--gold)">${netAct>=0?'✅':'⚠️'} Net Position</td>
-            <td class="${planNetCls}">${planNetPrefix}£${fmtNum(Math.abs(netPlan),0)}${planNetIcon}</td>
-            <td class="${nCls}">£${fmtNum(Math.abs(netAct),0)}</td>
+            <td class="${planNetCls}">${planNetPrefix}£${fmtNum(Math.abs(netPlan),2)}${planNetIcon}</td>
+            <td class="${nCls}">£${fmtNum(Math.abs(netAct),2)}</td>
             <td class="${nCls}">${_bgtDiffStr(netAct)}</td>
           </tr>
         </tbody>
@@ -13439,8 +14765,9 @@ function _renderBgtYtdPanel(state) {
   });
 
   // ── Format helpers ──
-  const fmt = v => `£${fmtNum(Math.round(Math.abs(v)), 0)}`;
-  const signedFmt = v => `${v >= 0 ? '+' : '-'}£${fmtNum(Math.round(Math.abs(v)), 0)}`;
+  // 2dp throughout the budget tab for consistency with Planned/Actual inputs.
+  const fmt = v => `£${fmtNum(Math.abs(v), 2)}`;
+  const signedFmt = v => `${v >= 0 ? '+' : '-'}£${fmtNum(Math.abs(v), 2)}`;
   // For variances on income/net: positive = good. For expenses: negative = good (under budget).
   const incomeDiffCls = incDiff >= 0 ? 'var(--green)' : 'var(--red)';
   const expDiffCls    = expDiff <= 0 ? 'var(--green)' : 'var(--red)';
@@ -13598,7 +14925,7 @@ function _renderBgtBreakdownPanel(state) {
       const overAvg = histAvg > 0 && amt > histAvg;
       const valColour = overAvg ? 'var(--amber)' : 'var(--white)';
       const overTag = overAvg
-        ? `<span style="font-size:8px;color:var(--amber);font-style:italic;margin-left:6px">↑ above avg £${fmtNum(Math.round(histAvg), 0)}</span>`
+        ? `<span style="font-size:8px;color:var(--amber);font-style:italic;margin-left:6px">↑ above avg £${fmtNum(histAvg, 2)}</span>`
         : '';
 
       // Pill colour scales with % of income — green low, amber mid, red high
@@ -13613,7 +14940,7 @@ function _renderBgtBreakdownPanel(state) {
               <div class="bgt-progress-bar" style="width:${barWidth.toFixed(1)}%;background:${pillColour}"></div>
             </div>
           </div>
-          <div style="font-size:11px;color:${valColour};font-weight:600;text-align:right;min-width:70px">£${fmtNum(amt, 0)}</div>
+          <div style="font-size:11px;color:${valColour};font-weight:600;text-align:right;min-width:70px">£${fmtNum(amt, 2)}</div>
           <div style="font-size:10px;color:${pillColour};font-weight:700;background:rgba(255,255,255,0.04);padding:3px 8px;border-radius:10px;min-width:50px;text-align:center">${pct.toFixed(1)}%</div>
         </div>`;
     }).join('');
@@ -13635,10 +14962,10 @@ function _renderBgtBreakdownPanel(state) {
           <div class="section-label" style="margin-bottom:2px">Monthly Breakdown · ${state.activeMonth || ''}</div>
           <div class="stat-sub">Each category as a % of this month's actual income</div>
         </div>
-        <div style="text-align:right">
+        <div class="bgt-saved-tile" style="text-align:right">
           <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700">Saved This Month</div>
           <div style="font-size:20px;font-weight:700;color:${savedColour};line-height:1.1;margin-top:2px">${savedPct.toFixed(1)}%</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">£${fmtNum(Math.round(savedAmount), 0)} of £${fmtNum(Math.round(totalIncome), 0)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">£${fmtNum(savedAmount, 2)} of £${fmtNum(totalIncome, 2)}</div>
         </div>
       </div>
       ${rows || '<div style="font-size:11px;color:var(--muted);font-style:italic;padding:12px 0">No spending recorded for this month yet.</div>'}
@@ -13675,16 +15002,16 @@ function _renderBgtAveragesPanel(state) {
     const overAvg = currentMonthAmt > a.avg && a.avg > 0;
     const colour  = overAvg ? 'var(--amber)' : 'var(--white)';
     const overTag = overAvg
-      ? `<span style="font-size:8px;color:var(--amber);font-style:italic;margin-left:6px">this month £${fmtNum(Math.round(currentMonthAmt), 0)} ↑</span>`
+      ? `<span style="font-size:8px;color:var(--amber);font-style:italic;margin-left:6px">this month £${fmtNum(currentMonthAmt, 2)} ↑</span>`
       : currentMonthAmt > 0
-        ? `<span style="font-size:8px;color:var(--muted);font-style:italic;margin-left:6px">this month £${fmtNum(Math.round(currentMonthAmt), 0)}</span>`
+        ? `<span style="font-size:8px;color:var(--muted);font-style:italic;margin-left:6px">this month £${fmtNum(currentMonthAmt, 2)}</span>`
         : '';
     return `
       <tr class="bgt-row">
         <td style="color:${colour}">${cat}${overTag}</td>
-        <td>£${fmtNum(Math.round(a.avg), 0)}</td>
+        <td>£${fmtNum(a.avg, 2)}</td>
         <td style="color:var(--muted)">${a.monthsTracked} ${a.monthsTracked === 1 ? 'month' : 'months'}</td>
-        <td style="color:var(--muted)">£${fmtNum(Math.round(a.total), 0)}</td>
+        <td style="color:var(--muted)">£${fmtNum(a.total, 2)}</td>
       </tr>`;
   };
 
@@ -13771,7 +15098,7 @@ function _renderBgtAudit(state) {
           </div>
           <div>
             <div class="input-label mb4">Amount £</div>
-            <input class="num-input" type="number" id="bgt-edit-amt-${origIdx}" value="${e.amount.toFixed(2)}" step="0.01" min="0" style="font-size:11px;padding:5px 8px">
+            <input class="num-input" type="text" inputmode="decimal" id="bgt-edit-amt-${origIdx}" value="${e.amount.toFixed(2)}" step="0.01" min="0" style="font-size:11px;padding:5px 8px">
           </div>
           <div>
             <div class="input-label mb4">Note <span style="color:var(--muted);font-weight:400">(optional)</span></div>
@@ -14041,17 +15368,17 @@ function _renderBgtHistDetailTable(rec, monthId) {
         const underFlag   =  isIncome && a > 0 && a < avg; // income below avg → amber warning
         const avgColour   = (overFlag || underFlag) ? 'var(--amber)' : 'var(--muted)';
         const monthsLabel = months === 1 ? '1 mo' : `${months} mo`;
-        avgCell = `<td style="color:${avgColour}">£${fmtNum(avg, 0)}<span style="display:block;font-size:8px;color:var(--muted);font-weight:400">${monthsLabel}</span></td>`;
+        avgCell = `<td style="color:${avgColour}">£${fmtNum(avg, 2)}<span style="display:block;font-size:8px;color:var(--muted);font-weight:400">${monthsLabel}</span></td>`;
       } else {
         avgCell = `<td style="color:var(--muted2)">—</td>`;
       }
 
       return `<tr class="bgt-row">
         <td>${name}</td>
-        <td style="color:var(--muted)">£${fmtNum(p,0)}</td>
+        <td style="color:var(--muted)">£${fmtNum(p,2)}</td>
         <td>
           <div class="bgt-cell-actual">
-            <input class="bgt-hist-actual-input" type="number" value="${a > 0 ? a.toFixed(2) : ''}"
+            <input class="bgt-hist-actual-input" type="text" inputmode="decimal" value="${a > 0 ? a.toFixed(2) : ''}"
               placeholder="0.00" step="0.01" min="0"
               onchange="bgtHistUpdateActual('${monthId}','${name}',this.value)"
               onfocus="this.select()">
@@ -14069,12 +15396,12 @@ function _renderBgtHistDetailTable(rec, monthId) {
     // Section average — sum of category averages across this section
     const savg = items.reduce((s,n) => s + ((averages[n]?.avg) || 0), 0);
     const savgCell = savg > 0
-      ? `<td style="color:var(--muted);font-weight:600">£${fmtNum(savg,0)}</td>`
+      ? `<td style="color:var(--muted);font-weight:600">£${fmtNum(savg,2)}</td>`
       : `<td style="color:var(--muted2)">—</td>`;
     return `<tr><td colspan="5" class="bgt-section-label ${cls}">${label}</td></tr>
       ${rows}
       <tr class="bgt-row bgt-total">
-        <td>Total ${label}</td><td style="color:var(--muted)">£${fmtNum(sp,0)}</td>
+        <td>Total ${label}</td><td style="color:var(--muted)">£${fmtNum(sp,2)}</td>
         <td style="font-weight:700;color:var(--white)" id="bgt-hist-sec-act-${label.replace(/\s+/g,'_')}"
           >£${fmtNum(sa,2)}</td>
         ${savgCell}
@@ -14097,7 +15424,7 @@ function _renderBgtHistDetailTable(rec, monthId) {
   const avgExpense = [...BGT_FIXED, ...BGT_VARIABLE].reduce((s,n) => s + ((averages[n]?.avg) || 0), 0);
   const avgNet     = avgIncome - avgTax - avgExpense;
   const avgNetCell = (avgIncome > 0 || avgExpense > 0 || avgTax > 0)
-    ? `<td style="color:var(--muted);font-weight:600">${avgNet >= 0 ? '+' : '-'}£${fmtNum(Math.abs(avgNet),0)}</td>`
+    ? `<td style="color:var(--muted);font-weight:600">${avgNet >= 0 ? '+' : '-'}£${fmtNum(Math.abs(avgNet),2)}</td>`
     : `<td style="color:var(--muted2)">—</td>`;
 
   // Pick a tooltip-style note explaining what the column shows, scoped to this record's stamp
@@ -14123,8 +15450,8 @@ function _renderBgtHistDetailTable(rec, monthId) {
           const histPlanIcon    = histPlanNet < 0 ? ' ⚠' : '';
           return `<tr class="bgt-row bgt-net" id="bgt-hist-net-row">
             <td style="color:var(--gold)">${netAct>=0?'✅':'⚠️'} Net Position</td>
-            <td class="${histPlanNetCls}">${histPlanPrefix}£${fmtNum(Math.abs(histPlanNet),0)}${histPlanIcon}</td>
-            <td class="${nCls}" id="bgt-hist-net-actual">£${fmtNum(Math.abs(netAct),0)}</td>
+            <td class="${histPlanNetCls}">${histPlanPrefix}£${fmtNum(Math.abs(histPlanNet),2)}${histPlanIcon}</td>
+            <td class="${nCls}" id="bgt-hist-net-actual">£${fmtNum(Math.abs(netAct),2)}</td>
             ${avgNetCell}
             <td class="${nCls}" id="bgt-hist-net-diff">${_bgtDiffStr(netAct)}</td>
           </tr>`;
