@@ -1153,6 +1153,26 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   /* Inline-styled grids (filter bars, sold shares grids etc.) */
   #history-filter-bar { grid-template-columns: 1fr !important; gap: 8px !important; }
+  /* Force history date and search inputs to fit inside the viewport.
+     iOS Safari gives type="month" inputs an intrinsic width that overflows
+     when the column is full-width. Clamp them with explicit width 100%
+     and box-sizing so they live inside the screen. */
+  #history-filter-bar .input-group {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #history-filter-bar .text-input,
+  #history-filter-bar input[type="month"],
+  #history-filter-bar input[type="date"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    min-height: 44px !important;
+    font-size: 14px !important;
+  }
   #soldSharesGrid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   #empFundsInput { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
 
@@ -1556,7 +1576,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     background: rgba(255,255,255,0.02);
     border-top: 1px solid var(--border2);
   }
-  /* Net Position row — hero treatment */
+  /* Net Position row — hero treatment redesigned for mobile.
+     Stack each metric vertically (Planned / Actual / Difference) in three
+     rows below the title so values never get cramped. Each row shows the
+     label on the left in muted text, the value on the right in white. */
   #bgt-main-table .bgt-row.bgt-net,
   #bgt-history-view .bgt-row.bgt-net {
     background: rgba(10,132,255,0.10);
@@ -1564,51 +1587,64 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     border-bottom: 1px solid var(--blue);
     margin-top: 8px;
     padding: 16px 14px !important;
-    grid-template-areas:
-      "label  label  label"
-      "plan   act    diff" !important;
-    row-gap: 12px !important;
+    display: block !important;
+    grid-template-areas: none !important;
+    grid-template-columns: none !important;
   }
-  /* Title cell: bigger gold heading, full width on its own row */
+  /* Title cell sits on its own line at the top */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(1),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(1) {
+    display: block !important;
     font-size: 14px !important;
     color: var(--gold) !important;
     font-weight: 700 !important;
     letter-spacing: 0.3px !important;
-    padding-bottom: 4px !important;
+    padding: 0 0 10px 0 !important;
+    margin-bottom: 8px !important;
     border-bottom: 0.5px solid rgba(10,132,255,0.25);
+    text-align: left !important;
   }
-  /* All three value cells get the same treatment — left align, smaller
-     than the original 16px so they fit cleanly across three columns. */
+  /* Each value cell becomes its own row with label on left, value on right */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(2),
   #bgt-main-table .bgt-row.bgt-net td:nth-child(3),
   #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(2),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(3),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(4) {
-    font-size: 15px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    padding: 8px 0 !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
     letter-spacing: -0.3px !important;
-    text-align: left !important;
-    align-self: start !important;
+    text-align: right !important;
+    border-bottom: 0.5px solid rgba(255,255,255,0.04);
   }
-  /* The Difference cell sits in column 3 — left-align too for consistency
-     with Planned and Actual, rather than right-aligned like other rows. */
+  /* Last row — no bottom border */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(4) {
-    text-align: left !important;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
   }
-  /* Tighten the Net Position label pseudos to match */
+  /* Replace the ::before pseudo-labels with row-level labels.
+     For Net Position, the pseudo-labels are the actual visible labels —
+     they appear on the LEFT of each row, not above the value. */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(2)::before,
   #bgt-main-table .bgt-row.bgt-net td:nth-child(3)::before,
   #bgt-main-table .bgt-row.bgt-net td:nth-child(4)::before,
   #bgt-history-view .bgt-row.bgt-net td:nth-child(2)::before,
   #bgt-history-view .bgt-row.bgt-net td:nth-child(3)::before,
   #bgt-history-view .bgt-row.bgt-net td:nth-child(4)::before {
+    display: inline-block !important;
+    margin-bottom: 0 !important;
     text-align: left !important;
+    font-size: 11px !important;
     color: var(--muted) !important;
-    opacity: 0.85;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    opacity: 1 !important;
   }
   /* Variable expense rows have an inline progress bar inside the Actual cell —
      make sure it stays visible and sized correctly in the new grid layout. */
@@ -7869,7 +7905,7 @@ function renderPortfolio(filter='all') {
     const wrapperLabel = h.wrapper || (h.type==='employer'?'SIPP':'GIA');
     const wcls = wrapperColourClass(wrapperLabel);
     return `<div class="holding-row" id="hrow_${h.id}">
-      <div title="Tick to include this holding in the calculator's drift and allocation calculations">
+      <div title="Tick to include this holding in the calculator's drift and rebalancing logic. New holdings are ticked by default; legacy holdings stay unticked so they don't pull your buy targets toward historical positions.">
         <input type="checkbox" ${h.includeInCalc!==false?'checked':''} 
           onchange="toggleCalcInclude('${h.id}',this.checked)" 
           style="accent-color:var(--gold);cursor:pointer">
@@ -7932,7 +7968,7 @@ function renderPortfolio(filter='all') {
 
   // Column header row
   const colHeader = `<div class="holding-row" style="pointer-events:none;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 0;margin-bottom:2px;color:var(--muted);font-weight:700">
-    <div style="font-size:9px;color:var(--muted);font-weight:700" title="Tick = include in calculator drift calculations">On</div>
+    <div style="font-size:9px;color:var(--muted);font-weight:700" title="Tick to include this holding in the calculator's drift and rebalancing logic. New holdings are ticked by default. Legacy holdings are unticked so they don't pull the calculator's targets toward your historical positions.">On</div>
     <div></div>
     <div style="font-size:9px;color:var(--muted);font-weight:700">Ticker</div>
     <div style="font-size:9px;color:var(--muted);font-weight:700">Holdings</div>
@@ -7951,7 +7987,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:700">New Holdings</div>
-          <div style="font-size:9px;color:var(--muted)">From monthly history — % shown relative to new holdings only · Total: £${fmtNum(Math.round(newTotal),0)}</div>
+          <div style="font-size:9px;color:var(--muted)">From monthly history — ticked by default so they feed the calculator's drift and rebalancing · % shown relative to new holdings only · Total: £${fmtNum(Math.round(newTotal),0)}</div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${newSectionId}')" id="btn-${newSectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
       </div>
@@ -7965,7 +8001,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:700;color:var(--muted)">Legacy Holdings</div>
-          <div style="font-size:9px;color:var(--muted2)">Pre-calculator holdings — unticked by default · % shown relative to legacy holdings only · Total: £${fmtNum(Math.round(legacyTotal),0)}</div>
+          <div style="font-size:9px;color:var(--muted2)">Pre-calculator holdings — unticked by default so the calculator doesn't try to rebalance against your historical positions · % shown relative to legacy holdings only · Total: £${fmtNum(Math.round(legacyTotal),0)}</div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${legacySectionId}')" id="btn-${legacySectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
       </div>
@@ -11447,8 +11483,9 @@ function renderAnalyseNetWorth() {
           <div style="font-size:24px;font-weight:700;color:var(--amber)">\u00a3${fmtNum(Math.round(taxableAssets),0)}</div>
           <div class="stat-sub">${nwGIABarNote}</div>
         </div>
-        <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:14px 0 6px">
-          <div style="height:100%;width:${Math.min(100,taxFreePct).toFixed(0)}%;background:linear-gradient(90deg,var(--green),#30D158);border-radius:4px;transition:width 0.5s"></div>
+        <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:14px 0 6px;display:flex">
+          <div style="height:100%;width:${Math.min(100,taxFreePct).toFixed(1)}%;background:var(--green);transition:width 0.5s"></div>
+          <div style="height:100%;flex:1;background:var(--amber);transition:width 0.5s"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:10px">
           <span style="color:var(--green)">\u25a0 Tax-free (${taxFreePct.toFixed(0)}%)</span>
@@ -12386,10 +12423,15 @@ function _bgtSeedRecurringActuals(state) {
   const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'short' })
     + ' ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
 
-  // For income categories, "recurring" means "carry the actual forward" because
-  // planned is often £0 for variable income like dividends. We look up the most
-  // recent archived month's actualSnapshot for that category. For expense
-  // categories, recurring continues to use the planned value as before.
+  // When a category is flagged recurring, carry forward the last archived actual
+  // value for that category. This applies to BOTH income and expenses — if the
+  // user marked Mortgage as recurring last month and entered £1,200 actual, the
+  // new month seeds £1,200 actual automatically. Same logic for PAYE, dividends,
+  // utilities, anything.
+  // Fallback hierarchy when no last-actual exists (first time recurring is on):
+  //   1. Last archived actual snapshot for this category
+  //   2. Current planned value
+  //   3. Skip if both are zero/empty
   const history = state.monthHistory || [];
   const lastArchived = history.length > 0 ? history[history.length - 1] : null;
   const lastActuals  = lastArchived ? (lastArchived.actualSnapshot || {}) : {};
@@ -12397,22 +12439,20 @@ function _bgtSeedRecurringActuals(state) {
   let seededCount = 0;
   BGT_ALL.forEach(cat => {
     if (!recurring[cat]) return;
-    const isIncome = BGT_INCOME.includes(cat);
-    let amt;
-    if (isIncome) {
-      // Income: prefer the last actual, fall back to planned if no history yet
-      amt = parseFloat(lastActuals[cat]) || parseFloat(planned[cat]) || 0;
-    } else {
-      // Expenses: planned value (the existing behaviour)
-      amt = parseFloat(planned[cat]) || 0;
-    }
-    if (amt <= 0) return;
+    // Prefer last actual, fall back to planned if no history exists
+    const lastActualAmt = parseFloat(lastActuals[cat]);
+    const plannedAmt    = parseFloat(planned[cat]);
+    const amt = (lastActualAmt > 0 ? lastActualAmt : 0)
+             || (plannedAmt    > 0 ? plannedAmt    : 0);
+    if (!amt || amt <= 0) return;
     state.actual[cat] = amt;
     state.audit.push({
       category:      cat,
       amount:        amt,
       date:          dateStr,
-      note:          isIncome ? 'Recurring · carried from last month' : 'Recurring · auto-filled at month start',
+      note:          (lastActualAmt > 0)
+                       ? 'Recurring · carried from last month'
+                       : 'Recurring · auto-filled from plan',
       autoRecurring: true,
     });
     seededCount++;
