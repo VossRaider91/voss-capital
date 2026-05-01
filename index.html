@@ -4568,12 +4568,15 @@ async function refreshLivePrices(triggerButton = null, opts = {}) {
 // is in flight. Used by both manual and auto refreshes so the user always
 // has a visual cue that something is happening, regardless of whether the
 // button itself is showing a loading state. Prefix matches the new pill
-// convention — "Market Open" during market hours, "Market Closed" outside.
+// convention — green "Market Open" during market hours, red "Market Closed"
+// outside.
 function _setTimestampRefreshing() {
   const el = document.getElementById('price-update-timestamp-text');
   if (!el) return;
   const open = (typeof _isLseMarketOpen === 'function' && _isLseMarketOpen());
-  el.textContent = open ? 'Market Open · refreshing…' : 'Market Closed · refreshing…';
+  el.innerHTML = open
+    ? '<span style="color:var(--green);font-weight:600">Market Open</span> · refreshing…'
+    : '<span style="color:var(--red);font-weight:600">Market Closed</span> · refreshing…';
   el.style.opacity = '';
 }
 
@@ -4815,7 +4818,7 @@ function _renderAutoRefreshCountdown() {
   const pauseUntil = _getManualOverrideUntil();
   if (pauseUntil > 0) {
     const remaining = pauseUntil - Date.now();
-    els.forEach(el => { el.textContent = `Manual prices · auto-refresh in ${_formatCountdown(remaining)}`; });
+    els.forEach(el => { el.textContent = `Manual prices · Auto-Refresh In ${_formatCountdown(remaining)}`; });
     return;
   }
 
@@ -4830,16 +4833,16 @@ function _renderAutoRefreshCountdown() {
   // 60s aligned to whenever polling started (or last fired). If we don't
   // have a last-poll timestamp yet, show "any moment" rather than a number.
   if (_lastPollAt === null) {
-    els.forEach(el => { el.textContent = 'Auto-refresh starting…'; });
+    els.forEach(el => { el.textContent = 'Auto-Refresh Starting…'; });
     return;
   }
   const elapsed = Date.now() - _lastPollAt;
   const remaining = POLL_INTERVAL_MS - elapsed;
   if (remaining <= 0) {
-    els.forEach(el => { el.textContent = 'Auto-refresh due any moment…'; });
+    els.forEach(el => { el.textContent = 'Auto-Refresh Due Any Moment…'; });
     return;
   }
-  els.forEach(el => { el.textContent = `Auto-refresh in ${_formatCountdown(remaining)}`; });
+  els.forEach(el => { el.textContent = `Auto-Refresh In ${_formatCountdown(remaining)}`; });
 }
 
 // 1Hz ticker that re-renders the countdown text. Idempotent — clears any
@@ -6253,9 +6256,12 @@ function applyPriceUpdates(opts = {}) {
 // reloads and shows the genuine time of the last apply.
 // ════════════════════════════════════════════════════════
 function _formatPriceUpdateTimestamp(iso, source) {
-  if (!iso) return '';
+  // Returns { html: boolean, text: string }. When html=true, the text contains
+  // safe inline markup (only our own coloured prefix span) and should be
+  // rendered via innerHTML. When html=false, render via textContent.
+  if (!iso) return { html: false, text: '' };
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
+  if (isNaN(d.getTime())) return { html: false, text: '' };
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
   // 12-hour with leading zero stripped, lowercase am/pm
@@ -6280,22 +6286,32 @@ function _formatPriceUpdateTimestamp(iso, source) {
   // time via _isLseMarketOpen so the pill reads correctly regardless of
   // where the user physically is.
   let prefix;
+  let prefixHtml; // null if plain-text, populated string if coloured
   if (source === 'live') {
-    prefix = (typeof _isLseMarketOpen === 'function' && _isLseMarketOpen())
-      ? 'Market Open'
-      : 'Market Closed';
+    const open = (typeof _isLseMarketOpen === 'function' && _isLseMarketOpen());
+    prefix = open ? 'Market Open' : 'Market Closed';
+    // Colour the market-state prefix: green when open, red when closed.
+    // Wrapped in a span so only the prefix is coloured — time stays muted.
+    prefixHtml = open
+      ? '<span style="color:var(--green);font-weight:600">Market Open</span>'
+      : '<span style="color:var(--red);font-weight:600">Market Closed</span>';
   }
-  else if (source === 'manual') prefix = 'Manual';
-  else prefix = null;
+  else if (source === 'manual') { prefix = 'Manual'; prefixHtml = null; }
+  else { prefix = null; prefixHtml = null; }
   if (prefix === null) {
-    if (sameDay) return `Prices from ${time}`;
+    if (sameDay) return { html: false, text: `Prices from ${time}` };
     const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    return `Prices from ${dateStr} · ${time}`;
+    return { html: false, text: `Prices from ${dateStr} · ${time}` };
   }
-  if (sameDay) return `${prefix} · ${time}`;
+  if (prefixHtml) {
+    if (sameDay) return { html: true, text: `${prefixHtml} · ${time}` };
+    const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return { html: true, text: `${prefixHtml} · ${dateStr} · ${time}` };
+  }
+  if (sameDay) return { html: false, text: `${prefix} · ${time}` };
   // Different day — include short date
   const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  return `${prefix} · ${dateStr} · ${time}`;
+  return { html: false, text: `${prefix} · ${dateStr} · ${time}` };
 }
 
 function _renderPriceUpdateTimestamp() {
@@ -6307,9 +6323,12 @@ function _renderPriceUpdateTimestamp() {
   let iso, source;
   try { iso = localStorage.getItem(LAST_PRICE_UPDATE_KEY); } catch (e) { iso = null; }
   try { source = localStorage.getItem(LAST_PRICE_SOURCE_KEY); } catch (e) { source = null; }
-  const text = _formatPriceUpdateTimestamp(iso, source);
-  if (text) {
-    el.textContent = text;
+  const result = _formatPriceUpdateTimestamp(iso, source);
+  if (result && result.text) {
+    // result.html = true means the string contains a coloured prefix span
+    // (Market Open green / Market Closed red). Otherwise it's plain text.
+    if (result.html) el.innerHTML = result.text;
+    else el.textContent = result.text;
     el.style.opacity = '';
   } else {
     // No timestamp recorded on this device yet — show a placeholder so the
