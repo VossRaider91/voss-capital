@@ -15199,10 +15199,16 @@ function bgtToggleRecurring(category) {
 
 // ── Seed recurring actuals on month rollover ──────────────────────
 // Called from inside _bgtExecuteComplete after state.actual is reset to {}.
-// For every category flagged as recurring with a non-zero planned value,
-// pre-populates the actual and pushes a corresponding audit log entry so
-// the ledger tells the full story without manual typing. User can edit or
-// delete any of these in the budget tracker if reality differs from the plan.
+// For categories flagged as fully recurring (green ↻ in the UI), this
+// pre-populates the actual from either the previous month's actual (preferred)
+// or the planned amount (fallback) and pushes a matching audit log entry.
+//
+// Categories NOT flagged as fully recurring (orange ↻ — the default) are
+// untouched here. Their planned value still carries forward implicitly
+// because state.planned is preserved across rollovers; only state.actual
+// was reset by the caller. So orange categories show planned £X / actual £0
+// at the start of each new month, which is what we want for variable
+// income and expenses.
 function _bgtSeedRecurringActuals(state) {
   const recurring = state.recurring || {};
   const planned   = state.planned   || {};
@@ -15213,11 +15219,7 @@ function _bgtSeedRecurringActuals(state) {
   const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'short' })
     + ' ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
 
-  // When a category is flagged recurring, carry forward the last archived actual
-  // value for that category. This applies to BOTH income and expenses — if the
-  // user marked Mortgage as recurring last month and entered £1,200 actual, the
-  // new month seeds £1,200 actual automatically. Same logic for PAYE, dividends,
-  // utilities, anything.
+  // Carry forward last archived actual for green-flagged categories.
   // Fallback hierarchy when no last-actual exists (first time recurring is on):
   //   1. Last archived actual snapshot for this category
   //   2. Current planned value
@@ -15241,8 +15243,8 @@ function _bgtSeedRecurringActuals(state) {
       amount:        amt,
       date:          dateStr,
       note:          (lastActualAmt > 0)
-                       ? 'Recurring · carried from last month'
-                       : 'Recurring · auto-filled from plan',
+                       ? 'Fully recurring · carried from last month'
+                       : 'Fully recurring · auto-filled from plan',
       autoRecurring: true,
     });
     seededCount++;
@@ -15686,12 +15688,21 @@ function _renderBgtMainTable(state) {
       const diff = isIncome ? (a - p) : (p - a);
       const dCls = diff > 0.005 ? 'bgt-diff-pos' : diff < -0.005 ? 'bgt-diff-neg' : 'bgt-diff-neutral';
       const isRecurring = !!recurring[name];
-      // Recurring toggle — small icon next to the category name. Click to flip.
-      // When on, shows a green ↻ with a tooltip explaining the auto-copy.
-      // When off, shows a muted dot the user can click to enable.
+      // Two-state recurring icon. Both states use the same ↻ glyph so the
+      // user sees a clean toggle of meaning rather than swapping symbols:
+      //   • Orange (default) — planned figure carries forward each month
+      //     while actual resets to 0 (typical for variable-actual income
+      //     and expenses where the budget stays the same but the actual
+      //     spend needs to be entered fresh).
+      //   • Green — both planned AND actual are seeded from the previous
+      //     month, treating the category as a fully recurring payment
+      //     (mortgage, council tax, gym etc. — fixed direct debits).
+      // Click to flip between the two states. There is no "off" state any
+      // more — every category at minimum carries planned forward, which
+      // matches how real budgeting works.
       const recurringIcon = isRecurring
-        ? `<span onclick="bgtToggleRecurring('${name}')" title="Recurring — auto-fills each new month from planned £${fmtNum(p,0)}. Click to disable." style="cursor:pointer;color:var(--green);font-weight:700;margin-left:6px;font-size:11px;user-select:none">↻</span>`
-        : `<span onclick="bgtToggleRecurring('${name}')" title="Click to mark as recurring. The planned value will auto-fill each new month." style="cursor:pointer;color:var(--muted2);font-size:11px;margin-left:6px;opacity:0.5;user-select:none">○</span>`;
+        ? `<span onclick="bgtToggleRecurring('${name}')" title="Fully recurring — planned and actual both auto-fill each new month from £${fmtNum(p,0)}. Click to make planned-only (orange)." style="cursor:pointer;color:var(--green);font-weight:700;margin-left:6px;font-size:11px;user-select:none">↻</span>`
+        : `<span onclick="bgtToggleRecurring('${name}')" title="Planned-only — the planned figure carries forward each new month, but actual resets to 0 so you can enter the real spend. Click to mark as fully recurring (green)." style="cursor:pointer;color:var(--amber);font-weight:700;margin-left:6px;font-size:11px;user-select:none">↻</span>`;
       return `<tr class="bgt-row">
         <td>${name}${recurringIcon}</td>
         <td><input class="bgt-planned-input" type="text" inputmode="decimal" value="${p > 0 ? p.toFixed(2) : '0.00'}"
