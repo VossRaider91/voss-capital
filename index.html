@@ -1781,6 +1781,41 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     display: none !important;
   }
 
+  /* ── RETIREMENT SETTINGS — Collapsible wrapper ────────────────
+     The retirement card is a fire-and-forget area: once DOB, target
+     age, contributions and growth rate are set, the user rarely
+     edits them again. Collapse by default on mobile so the more
+     useful Retirement Projection panels below sit higher on the
+     screen.
+     Desktop is unchanged — `.collapsible-chevron { display: none }`
+     and `.collapsible-header { cursor: default }` from the desktop
+     base CSS keep the heading inert.
+     The wrapper itself has no card chrome on desktop (matches the
+     pre-collapsible look — bare section-label above a grid). On
+     mobile we add a subtle dark surface to the header so it reads
+     as a tappable container, especially when collapsed. */
+  .ret-settings-collapsible .collapsible-header {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+  }
+  .ret-settings-collapsible .collapsible-header .section-label {
+    font-size: 16px !important;
+  }
+  /* When expanded on mobile, soften the bottom corners so the body
+     visually flows out of the header. */
+  .ret-settings-collapsible:not(.collapsed) .collapsible-header {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+  }
+  /* The body sits flush under the expanded header */
+  .ret-settings-collapsible:not(.collapsed) .collapsible-body {
+    margin-top: 0 !important;
+    padding-top: 14px;
+  }
+
   /* ── NET WORTH INPUTS GRID — single column on mobile ─────────── */
   /* Desktop fits 4 input cards (Property / Cash & Other / Cars / Whiskey)
      in a 2-column grid. On mobile two side-by-side cards are too crushed —
@@ -2116,6 +2151,124 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   .calc-controls-row .check-wrap {
     font-size: 13px !important;
+  }
+
+  /* ── TAX & SELL CALCULATOR TABS — Apply the same pill styling
+        as the calculator. The tax and sell tabs use identical
+        `.flex-center` + `.budget-input` markup for their £ inputs
+        (PAYE Salary, Dividend Income, Bonus, Last Filed Return
+        Liability, CGT Allowance, CGT Used, ISA Used This Year, plus
+        Sell tab's CGT Allowance, CGT Used, ISA Allowance, ISA Used).
+        On desktop they render inline with the £ icon next to a
+        separate dark field. On mobile we want the calculator's
+        unified pill: £ icon nested inside a single rounded wrapper
+        with a transparent borderless input. Scope strictly to
+        #tab-tax and #tab-sell so we don't disturb other tabs that
+        may use the same classes. */
+  #tab-tax .flex-center,
+  #tab-sell .flex-center {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    background: var(--recess);
+    border: 0.5px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 0 14px !important;
+    height: 52px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #tab-tax .flex-center > span,
+  #tab-sell .flex-center > span {
+    flex-shrink: 0;
+    line-height: 1;
+    font-size: 22px !important;
+  }
+  #tab-tax .flex-center .budget-input,
+  #tab-sell .flex-center .budget-input {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 0 0 8px !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 22px !important;
+    box-shadow: none !important;
+  }
+  #tab-tax .flex-center .budget-input:focus,
+  #tab-sell .flex-center .budget-input:focus {
+    outline: none;
+    box-shadow: none !important;
+  }
+  /* Focus state lives on the wrapper, not the input */
+  #tab-tax .flex-center:focus-within,
+  #tab-sell .flex-center:focus-within {
+    border-color: var(--blue);
+    background: rgba(10,132,255,0.04);
+    box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+  }
+  /* The Income Tax Calculator's three inputs sit in a flex row on
+     desktop with "+" separators between them. On mobile, stack as
+     a 1-col grid with the separators hidden so we don't get orphaned
+     plus signs. Each input block fills the row width. Only target
+     rows that actually contain a .flex-center pill so we don't
+     restyle section-header rows that share the flex-wrap pattern. */
+  #tab-tax .income-input-sep {
+    display: none !important;
+  }
+  #tab-tax .card.card-left > div[style*="display:flex"][style*="flex-wrap:wrap"]:has(.flex-center),
+  #tab-sell .card.card-left > div[style*="display:flex"][style*="flex-wrap:wrap"]:has(.flex-center),
+  #tab-sell .sell-allowance-row {
+    flex-direction: column !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+  /* Each input wrapper inside that row takes full width */
+  #tab-tax .card.card-left > div[style*="display:flex"][style*="flex-wrap:wrap"]:has(.flex-center) > div,
+  #tab-sell .card.card-left > div[style*="display:flex"][style*="flex-wrap:wrap"]:has(.flex-center) > div,
+  #tab-sell .sell-allowance-row > div {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  /* Vertical dividers (height:48px;width:1px) become invisible on mobile */
+  #tab-tax div[style*="height:48px"][style*="width:1px"],
+  #tab-sell div[style*="height:48px"][style*="width:1px"] {
+    display: none !important;
+  }
+  /* The inputs themselves had inline style="width:110px/120px/130px"
+     — these need to fill the pill on mobile. */
+  #tab-tax .flex-center .budget-input[style*="width:"],
+  #tab-sell .flex-center .budget-input[style*="width:"] {
+    width: 100% !important;
+  }
+  /* The transparent placeholder div (the "—" used to align rows where
+     no helper text exists) takes vertical space we don't want when
+     stacked on mobile. */
+  #tab-tax div[style*="color:transparent"][style*="user-select:none"],
+  #tab-sell div[style*="color:transparent"][style*="user-select:none"] {
+    display: none !important;
+  }
+  /* Total Income / Estimated Tax Code summary boxes — desktop is 2-col
+     grid, mobile becomes single column for readability. */
+  #tab-tax div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* ISA tracker's "Used This Year" pill — nested inside .stat which
+     itself sits in .isa-tracker-grid. The pill needs to stay full
+     width but allow the surrounding .stat-label and .stat-sub copy
+     to render naturally above and below. */
+  #tab-tax #isa-tracker-card .flex-center {
+    margin-top: 4px;
+  }
+  /* Sell tab — the right-hand "remaining CGT/ISA allowance" stat
+     blocks that sit inline with the inputs on desktop need to
+     left-align below the stacked inputs on mobile. The
+     `.margin-left-auto-mobile-reset` class is referenced elsewhere
+     for similar resets; apply it generously here. */
+  #tab-sell .margin-left-auto-mobile-reset {
+    margin-left: 0 !important;
+    text-align: left !important;
+    width: 100%;
   }
 
   /* ── CALCULATOR — Fund Holdings & Prices header row ────────── */
@@ -3122,7 +3275,15 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      RETIREMENT TRACKER TAB
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-retirement">
-  <div class="section-label">Retirement Settings</div>
+  <div data-collapsible="retirement" class="ret-settings-collapsible mb16">
+    <div class="collapsible-header" onclick="toggleMobileCollapse('retirement')" style="cursor:pointer">
+      <div class="flex-between" style="margin-bottom:0">
+        <div class="section-label" style="margin-bottom:0">Retirement Settings</div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+      </div>
+      <div id="ret-settings-summary" style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:500;letter-spacing:-0.05px"></div>
+    </div>
+    <div class="collapsible-body" style="margin-top:16px">
   <div class="grid-3 mb16">
     <div class="card input-group">
       <span class="input-label">Date of Birth</span>
@@ -3187,6 +3348,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <div class="stat-sub" id="ret-withdrawal-desc" style="margin-top:6px;font-size:9px;line-height:1.35">4% Rule — withdraw 4% annually, preserving principal indefinitely.</div>
     </div>
   </div>
+    </div><!-- /collapsible-body -->
+  </div><!-- /data-collapsible="retirement" -->
 
   <div class="grid-3 mb16" style="display:none" id="ret-phase-hint">
     <div class="card full" style="grid-column:1/-1">
@@ -5895,8 +6058,15 @@ function _applyMobileCollapseState() {
   // Read saved state. If nothing saved, default both to collapsed (mobile first-run).
   let state = _readCollapseState();
   if (!state) {
-    state = { prices: true, holding: true };
+    state = { prices: true, holding: true, retirement: true };
     _writeCollapseState(state);
+  } else {
+    // Backfill: if user upgraded from a build before retirement was collapsible,
+    // their saved state won't have a retirement key. Default it to collapsed too.
+    if (state.retirement === undefined) {
+      state.retirement = true;
+      _writeCollapseState(state);
+    }
   }
   document.querySelectorAll('[data-collapsible]').forEach(card => {
     const name = card.getAttribute('data-collapsible');
@@ -8645,6 +8815,34 @@ function updateRetTotal() {
   saveRetirementInputs();
 }
 
+// Builds the "X y/o · retire at Y · £Z/mo · A% growth" line that sits under
+// the Retirement Settings header. Visible on mobile when the card is
+// collapsed so the user can see their key settings without expanding. Also
+// rendered on desktop just below the section-label for symmetry — the
+// chevron stays hidden via the desktop CSS, so there's no toggle UI.
+function _updateRetSettingsSummary() {
+  const el = document.getElementById('ret-settings-summary');
+  if (!el) return;
+  const age      = parseInt(document.getElementById('ret-age')?.value) || 0;
+  const targetAge = parseInt(document.getElementById('ret-target-age')?.value) || 0;
+  const growth   = parseFloat(document.getElementById('ret-growth')?.value) || 0;
+  const personal = parseFloat((document.getElementById('ret-personal')?.value||'').replace(/,/g,''))||0;
+  const employer = parseFloat((document.getElementById('ret-employer')?.value||'').replace(/,/g,''))||0;
+  const monthly  = personal + employer;
+
+  // If nothing meaningful has been set yet (DOB not entered), nudge the user.
+  if (!age) {
+    el.textContent = 'Tap to set your date of birth and contributions';
+    return;
+  }
+  const parts = [];
+  parts.push(`${age} y/o`);
+  if (targetAge) parts.push(`retire at ${targetAge}`);
+  if (monthly > 0) parts.push(`£${fmtNum(monthly,0)}/mo`);
+  if (growth > 0) parts.push(`${growth}% growth`);
+  el.textContent = parts.join(' · ');
+}
+
 // ── Date of Birth → derived age ─────────────────────────────
 // Stored canonically as ISO 'YYYY-MM-DD' in LS.RETIREMENT.dob. The retirement
 // engine still consumes a whole-number `age` in years — we compute that on
@@ -8812,6 +9010,11 @@ function loadRetirementInputs() {
       calculateRetirement();
     });
   });
+
+  // Populate the collapsed-state summary line so it's visible on first paint
+  // (the card may be collapsed by default on mobile before any user input
+  // has triggered calculateRetirement()).
+  _updateRetSettingsSummary();
 }
 
 // ════════════════════════════════════════════════════════
@@ -8908,6 +9111,9 @@ function calculateGlobalRetirement() {
 }
 
 function calculateRetirement() {
+  // Update the collapsed-state summary line so the retirement settings card
+  // shows current values at a glance even when collapsed on mobile.
+  _updateRetSettingsSummary();
   const currentAge    = parseInt(document.getElementById('ret-age').value)||34;
   const targetAge     = parseInt(document.getElementById('ret-target-age').value)||55;
   const annualGrowth  = parseFloat(document.getElementById('ret-growth').value)/100||0.07;
