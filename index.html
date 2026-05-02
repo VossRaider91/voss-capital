@@ -1507,6 +1507,57 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      etc.) hold 4 small cards. On mobile a single column wastes screen
      width; a 2x2 grid keeps the stats compact and scannable. */
   .grid-4 { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+
+  /* ── GRID-3 STAT CARDS — horizontal row layout on mobile ─────────
+     When .stat cards live inside .grid-3 (Wrapper Efficiency, CGT
+     Health subset, Contribution Rate Health, Tax Summary), each card
+     spans the full row on mobile. Stacking them vertically wastes
+     space — the label and big value live on the same horizontal line
+     with the sub text underneath the label. Same vertical rhythm as
+     the Net Position row in the budget tracker. */
+  .grid-3 > .stat,
+  .grid-3 > .card > .stat {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    row-gap: 2px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--dark);
+    border-radius: 10px;
+    border: 0.5px solid var(--border);
+  }
+  .grid-3 > .card:has(> .stat) { padding: 0 !important; background: transparent !important; border: none !important; }
+  .grid-3 > .stat > .stat-label,
+  .grid-3 > .card > .stat > .stat-label {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .grid-3 > .stat > .stat-val,
+  .grid-3 > .card > .stat > .stat-val {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    align-self: center;
+    justify-self: end;
+    font-size: 22px !important;
+    line-height: 1.1;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .grid-3 > .stat > .stat-sub,
+  .grid-3 > .card > .stat > .stat-sub {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    font-size: 10px !important;
+    color: var(--muted);
+    line-height: 1.3;
+  }
   .isa-tracker-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
   .fund-inputs-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .stat-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
@@ -2296,92 +2347,106 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     background: rgba(255,255,255,0.02);
     border-top: 1px solid var(--border2);
   }
-  /* Net Position row — hero treatment redesigned for mobile.
-     Stack each metric vertically (Planned / Actual / Difference) in three
-     rows below the title so values never get cramped. Each row shows the
-     label on the left in muted text, the value on the right in white.
-     SPECIFICITY NOTE: must match the parent-scoped specificity of the
-     generic `#bgt-main-table .bgt-row { display: grid !important }` rule
-     above — otherwise the grid layout wins and the rows overlay. */
+  /* ── NET POSITION ROW — single pill matching YTD stat-pill style ─
+     Mobile only. Replaces the previous stacked Plan/Actual/Diff treatment
+     with a clean two-column pill: label at top-left, planned/diff sub
+     line at bottom-left, big actual value spanning both rows on the
+     right. Mirrors the visual rhythm of the .grid-3 .stat pills used in
+     the Annual Year-to-Date headline strip directly below.
+
+     Implementation: data-* attributes on <tr> (data-label, data-planned,
+     data-diff) carry the text. Cell 1 hosts the label via ::before
+     (read from data-label) and the sub line via ::after (composed from
+     data-planned and data-diff). Cell 2 (planned) and cell 4 (diff) are
+     hidden — their data is now surfaced through the pseudo-elements.
+     Cell 3 (actual) remains as the big value on the right. */
   #bgt-main-table .bgt-row.bgt-net,
   #bgt-history-view .bgt-row.bgt-net,
   #bgt-ytd-panel .bgt-row.bgt-net {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    align-items: center;
     background: rgba(10,132,255,0.10);
-    border-top: 1px solid var(--blue);
-    border-bottom: 1px solid var(--blue);
-    margin-top: 8px;
-    padding: 16px 14px !important;
-    display: block !important;
-    grid-template-areas: none !important;
-    grid-template-columns: none !important;
+    border: 0.5px solid var(--blue) !important;
+    border-radius: 12px;
+    margin-top: 10px;
+    padding: 14px 16px !important;
   }
-  /* Title cell sits on its own line at the top */
+  /* Cell 1 = the label cell. Hide its DOM text content (we use a pseudo
+     to render the upper-cased clean label), then inject the sub-line via
+     ::after with the planned + diff data. */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(1),
   #bgt-history-view .bgt-row.bgt-net td:nth-child(1),
   #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(1) {
-    display: block !important;
-    grid-column: auto !important;
-    font-size: 14px !important;
-    color: var(--gold) !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.3px !important;
-    padding: 0 0 6px 0 !important;
-    margin-bottom: 6px !important;
-    text-align: left !important;
-    border-top: none !important;
-    background: transparent !important;
-  }
-  /* Each value cell becomes its own row with label on left, value on right */
-  #bgt-main-table .bgt-row.bgt-net td:nth-child(2),
-  #bgt-main-table .bgt-row.bgt-net td:nth-child(3),
-  #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(2),
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(3),
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(4),
-  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(2),
-  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(3),
-  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(4) {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 3 !important;
     display: flex !important;
-    justify-content: space-between !important;
-    align-items: baseline !important;
-    grid-column: auto !important;
-    padding: 8px 0 !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.3px !important;
-    text-align: right !important;
-    border-top: none !important;
-    border-bottom: 0.5px solid rgba(255,255,255,0.04);
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 !important;
     background: transparent !important;
+    border: none !important;
+    color: transparent !important;  /* hide the existing emoji+text */
+    font-size: 0 !important;
+    line-height: 0 !important;
   }
-  /* Last row — no bottom border */
-  #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(4),
-  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(4) {
-    border-bottom: none !important;
-    padding-bottom: 0 !important;
-  }
-  /* Replace the ::before pseudo-labels with row-level labels.
-     For Net Position, the pseudo-labels are the actual visible labels —
-     they appear on the LEFT of each row, not above the value. */
-  #bgt-main-table .bgt-row.bgt-net td:nth-child(2)::before,
-  #bgt-main-table .bgt-row.bgt-net td:nth-child(3)::before,
-  #bgt-main-table .bgt-row.bgt-net td:nth-child(4)::before,
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(2)::before,
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(3)::before,
-  #bgt-history-view .bgt-row.bgt-net td:nth-child(4)::before,
-  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(2)::before,
-  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(3)::before,
-  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(4)::before {
-    display: inline-block !important;
-    margin-bottom: 0 !important;
-    text-align: left !important;
+  /* Replace cell 1's hidden content with a clean uppercase label */
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(1)::before,
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(1)::before,
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(1)::before {
+    content: attr(data-row-label);
+    display: block;
     font-size: 11px !important;
     color: var(--muted) !important;
-    font-weight: 600 !important;
-    letter-spacing: 1px !important;
-    text-transform: uppercase !important;
-    opacity: 1 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    line-height: 1.2 !important;
+  }
+  /* Sub-line composed from data-planned and data-diff on the parent <tr>.
+     Rendered via ::after on cell 1 reading attributes from the row. */
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(1)::after,
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(1)::after,
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(1)::after {
+    content: 'planned ' attr(data-row-planned) ' · ' attr(data-row-diff) ' vs plan';
+    display: block;
+    font-size: 10px !important;
+    color: var(--muted) !important;
+    line-height: 1.3 !important;
+    font-weight: 500;
+  }
+  /* Cell 2 (planned text) and cell 4 (diff text) are hidden — their data
+     now lives in the data-* attrs surfaced via the pseudo above. */
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(2),
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(4),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(2),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(4),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(2),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(4) {
+    display: none !important;
+  }
+  /* Cell 3 = the headline actual value on the right, spanning both rows */
+  #bgt-main-table .bgt-row.bgt-net td:nth-child(3),
+  #bgt-history-view .bgt-row.bgt-net td:nth-child(3),
+  #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(3) {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 3 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+    line-height: 1.1 !important;
+    text-align: right !important;
+    white-space: nowrap;
   }
   /* Variable expense rows have an inline progress bar inside the Actual cell —
      make sure it stays visible and sized correctly in the new grid layout.
@@ -15444,10 +15509,10 @@ function _renderBgtMainTable(state) {
           ${section('Fixed Expenses','bgt-section-fixed',BGT_FIXED,false,false)}
           ${section('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true)}
           <tr class="bgt-row bgt-net">
-            <td style="color:var(--gold)">${netAct>=0?'✅':'⚠️'} Net Position</td>
+            <td style="color:var(--gold)" data-row-label="Monthly Net Position" data-row-planned="${planNetPrefix}£${fmtNum(Math.abs(netPlan),2)}" data-row-diff="${_bgtDiffStr(netDiff)}" data-row-actual="${_bgtDiffStr(netAct)}">${netAct>=0?'✅':'⚠️'} Net Position</td>
             <td class="${planNetCls}">${planNetPrefix}£${fmtNum(Math.abs(netPlan),2)}${planNetIcon}</td>
-            <td class="${nCls}">£${fmtNum(Math.abs(netAct),2)}</td>
-            <td class="${nCls}">${_bgtDiffStr(netAct)}</td>
+            <td class="${nCls}" style="color:${netAct>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netAct)}</td>
+            <td class="${nCls}" style="color:${netDiff>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netDiff)}</td>
           </tr>
         </tbody>
       </table>
@@ -15651,7 +15716,7 @@ function _renderBgtYtdPanel(state) {
             <td style="color:${expDiffCls}">${signedFmt(expDiff)}</td>
           </tr>
           <tr class="bgt-row bgt-net">
-            <td style="color:var(--gold)">Net Position</td>
+            <td style="color:var(--gold)" data-row-label="Annual Net Position" data-row-planned="${signedFmt(netPlanned)}" data-row-diff="${signedFmt(netDiff)}">Net Position</td>
             <td style="color:var(--gold)">${signedFmt(netPlanned)}</td>
             <td style="color:${netDiffCls}">${signedFmt(netActual)}</td>
             <td style="color:${netDiffCls}">${signedFmt(netDiff)}</td>
