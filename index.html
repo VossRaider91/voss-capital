@@ -2004,15 +2004,56 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     overflow-x: visible !important;
     gap: 14px !important;
   }
-  /* Hide the desktop vertical divider that sits between Budget and
-     Drift Limit — it doesn't make sense in a stacked layout. */
+  /* Hide the desktop vertical dividers between Budget / Drift / Checkboxes —
+     they don't make sense in a stacked layout. */
   .calc-controls-row > div[style*="height:48px"][style*="width:1px"] {
     display: none !important;
   }
-  /* Inputs side: put Monthly Budget + Drift Limit side-by-side (they're
-     small enough to share a row), then the checkboxes stack underneath. */
-  .calc-controls-row > div:not([style*="display:flex"]):not([style*="margin-left:auto"]) {
+  /* Each input block (Monthly Budget, Drift Limit) becomes full-width.
+     The currency / percent symbol sits inside a single rounded pill
+     wrapper alongside the input so they read as one element. */
+  .calc-controls-row > div[style*="flex-shrink:0"]:not([style*="flex-direction:column"]) {
+    width: 100% !important;
     margin-left: 0 !important;
+  }
+  .calc-controls-row .flex-center {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    background: var(--recess);
+    border: 0.5px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 0 14px !important;
+    height: 52px;
+  }
+  .calc-controls-row .flex-center > span {
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .calc-controls-row .budget-input {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 0 0 8px !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 22px !important;
+    box-shadow: none !important;
+  }
+  .calc-controls-row .budget-input:focus {
+    outline: none;
+    box-shadow: none !important;
+  }
+  /* The wrapper itself (not the input) shows focus state */
+  .calc-controls-row .flex-center:focus-within {
+    border-color: var(--blue);
+    background: rgba(10,132,255,0.04);
+    box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+  }
+  /* Drift Limit input had `style="width:80px"` inline for desktop;
+     override so it spans the full pill on mobile. */
+  .calc-controls-row #driftLimit {
+    width: 100% !important;
   }
   /* Checkboxes block fills full width */
   .calc-controls-row > div[style*="flex-direction:column"] {
@@ -2042,21 +2083,15 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     white-space: nowrap;
   }
 
-  /* ── CALCULATOR — Paste Prices row ────────────────────────── */
-  /* The placeholder text gets truncated. Stack input above button so
-     the full input width is available for typing/pasting. */
-  .calc-paste-row {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-  }
-  .calc-paste-row input {
-    width: 100% !important;
-    min-height: 44px;
-  }
-  .calc-paste-row button {
-    align-self: flex-start;
-    min-height: 38px;
+  /* ── CALCULATOR — Paste Prices row hidden on mobile ─────────── */
+  /* The calculator tab has its own Paste & Fill row that mirrors the
+     Portfolio Overview's price entry. On mobile the user pastes prices
+     from the Portfolio Overview tab, never here. Hide both the input
+     row and the result feedback div to reclaim the space. The
+     auto-refresh countdown below stays visible since it's useful info. */
+  .calc-paste-row,
+  #calcPasteResult {
+    display: none !important;
   }
 
   /* ── BUDGET TRACKER table — full stacked layout on mobile ──── */
