@@ -2237,13 +2237,15 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     color: var(--muted);
   }
   /* Calculator fund cards stay compact — explicitly opt out. */
-  .fund-inputs-grid .pound-wrap > .num-input {
+  .fund-inputs-grid .pound-wrap > .num-input,
+  #priceUpdaterGrid .pound-wrap > .num-input {
     padding-left: 14px !important;
     height: auto !important;
     font-size: 14px !important;
     font-weight: 500 !important;
   }
-  .fund-inputs-grid .pound-wrap::before {
+  .fund-inputs-grid .pound-wrap::before,
+  #priceUpdaterGrid .pound-wrap::before {
     display: none;
   }
 
@@ -3423,9 +3425,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <div id="ret-coast-badge" style="display:none;position:absolute;top:8px;right:10px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:var(--blue);background:rgba(10,132,255,0.12);padding:2px 8px;border-radius:10px">Coast FIRE</div>
       <div style="font-size:9px;color:var(--muted);margin-top:4px" id="ret-contrib-note">Full contributions for whole term</div>
     </div>
-    <div class="card input-group" style="position:relative">
+    <div class="card input-group" style="position:relative" data-pound>
       <span class="input-label" style="color:var(--amber)">Phase 2 — Step-Down Amount £/mo</span>
-      <input class="num-input" type="text" inputmode="numeric" id="ret-stepdown-amount" value="0" step="100" min="0" oninput="onContribYearsChange()">
+      <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-stepdown-amount" value="0" step="100" min="0" oninput="onContribYearsChange()"></div>
       <div style="font-size:9px;color:var(--muted);margin-top:4px">Leave 0 to skip this phase</div>
     </div>
     <div class="card input-group">
@@ -3995,9 +3997,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <span class="input-label">Units Bought</span>
         <input class="num-input" type="text" inputmode="numeric" id="new-shares" value="0" step="1" min="0">
       </div>
-      <div class="input-group">
+      <div class="input-group" data-pound>
         <span class="input-label">Price £ (optional)</span>
-        <input class="num-input" type="text" inputmode="decimal" id="new-price" value="0" step="0.001" min="0">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="new-price" value="0" step="0.001" min="0"></div>
       </div>
       <div class="input-group">
         <span class="input-label">Type</span>
@@ -6368,10 +6370,10 @@ function renderSoldShareRows() {
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${r.price||0}" step="0.001" min="0"
           oninput="_onSoldRowPriceChange(${i}, this.value)"></div>
       </div>
-      <div class="input-group">
+      <div class="input-group" data-pound>
         <span class="input-label">Avg Cost £ ${costIndicator}</span>
-        <input class="num-input" type="text" inputmode="decimal" value="${r.avgCost ? r.avgCost.toFixed(4) : 0}" step="0.001" min="0"
-          oninput="_onSoldRowAvgCostChange(${i}, this.value)">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${r.avgCost ? r.avgCost.toFixed(4) : 0}" step="0.001" min="0"
+          oninput="_onSoldRowAvgCostChange(${i}, this.value)"></div>
         ${costNote}
       </div>
       ${soldShareRows.length > 1 ? `<button class="btn-danger btn-sm" onclick="soldShareRows.splice(${i},1);renderSoldShareRows();recomputeSoldFormAuto()">Remove</button>` : ''}
