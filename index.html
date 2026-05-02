@@ -6838,8 +6838,9 @@ function _setTimestampRefreshing() {
 // initial Supabase pull completes (so the user sees the most recent
 // cross-device prices first, then this device's auto-fetch updates them
 // to the current market). Silent — no button state changes, no verbose
-// toast. Wrapped in a 1.5s delay so the page settles before the fetch
-// starts.
+// toast. Wrapped in a brief 250ms delay so the page settles before the
+// fetch starts, but quick enough that the user sees fresh prices almost
+// immediately on opening the app.
 function _autoFetchOnLoad() {
   // Skip if sync is disabled — implies a deliberate offline-only setup.
   // Skip if no portfolio yet — first-time users have nothing to refresh.
@@ -6852,10 +6853,14 @@ function _autoFetchOnLoad() {
     // Re-check the pause inside the timer too (in case sync just landed
     // a pause from the other device while we were waiting).
     if (_getManualOverrideUntil() > 0) return;
+    // Anchor the countdown clock so the timer reads "Auto-Refresh In 1:00"
+    // from the moment the load fetch begins, instead of waiting 60 seconds
+    // for the first setInterval tick to update _lastPollAt.
+    _lastPollAt = Date.now();
     try { refreshLivePrices(null, { silent: true }); } catch (e) {
       console.warn('[Voss] auto-fetch on load failed:', e);
     }
-  }, 1500);
+  }, 250);
 }
 
 // Track when the tab was last visible/focused so we can decide whether to
@@ -6996,6 +7001,11 @@ function _livePricePollTick() {
 
 // Start the polling interval. Idempotent — clears any existing timer first
 // so re-calling doesn't stack timers. Called once at end of init().
+//
+// The countdown anchor (_lastPollAt) is seeded by _autoFetchOnLoad when
+// the page-load fetch fires at ~250ms. By the time setInterval's first
+// tick fires at +60s, _lastPollAt is already set, so the countdown
+// shows "Auto-Refresh In 1:00" from app open instead of "Starting…".
 function _startLivePricePolling() {
   if (_pollTimer) clearInterval(_pollTimer);
   _pollTimer = setInterval(_livePricePollTick, POLL_INTERVAL_MS);
