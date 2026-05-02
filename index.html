@@ -632,6 +632,197 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .holding-detail { font-size: 12px; color: var(--muted); line-height: 1.6; letter-spacing: -0.05px; }
 .holding-val { font-size: 13px; font-weight: 500; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
 .holding-pct { font-size: 14px; font-weight: 600; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── HOLDING CARDS — option B layout ─────────────────────────
+   Each holding renders as a self-contained rounded card with three
+   internal rows: header (tick + swatch + ticker + total value), pill
+   row (units pill + price pill), progress bar, and footer (% +
+   Edit/Remove buttons). Replaces the old grid-row layout where every
+   holding shared a single horizontal flex grid.
+*/
+.hcard {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+.hcard-top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.hcard-top-left {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.hcard-check {
+  width: 18px; height: 18px;
+  accent-color: var(--gold);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+.hcard-swatch {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.hcard-ticker-block {
+  min-width: 0;
+}
+.hcard-ticker {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+.hcard-meta {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.hcard-meta-amber { color: var(--amber); }
+.hcard-meta-blue  { color: var(--blue); }
+.hcard-meta-green { color: var(--green); }
+.hcard-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hcard-pills {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.hcard-units-pill,
+.hcard-price-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 50px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--white);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+.hcard-price-pound {
+  color: var(--blue);
+  font-weight: 700;
+  margin-right: 1px;
+}
+.hcard-price-pill.editable {
+  padding: 3px 10px;
+}
+.hcard-price-input {
+  background: transparent;
+  border: none;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  width: 60px;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+  padding: 2px 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.hcard-price-input:focus {
+  color: var(--blue);
+}
+.hcard-progress {
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.hcard-progress-bar {
+  height: 100%;
+  border-radius: 50px;
+  transition: width 0.3s ease;
+}
+.hcard-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+}
+.hcard-pct {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: -0.05px;
+}
+.hcard-actions {
+  display: flex; gap: 6px;
+  flex-shrink: 0;
+}
+.hcard-edit-btn,
+.hcard-remove-btn {
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 50px;
+  border: 0.5px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--white);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.hcard-edit-btn:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.16);
+}
+.hcard-remove-btn {
+  color: var(--red);
+  border-color: rgba(255, 69, 58, 0.25);
+  background: rgba(255, 69, 58, 0.08);
+}
+.hcard-remove-btn:hover {
+  background: rgba(255, 69, 58, 0.15);
+  border-color: rgba(255, 69, 58, 0.4);
+}
+
+/* Wrapper group section pill — replaces the old uppercase + border-bottom */
+.hcard-section-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 50px;
+  padding: 3px 12px;
+  margin: 6px 0 10px;
+  border: 0.5px solid;
+}
+.hcard-section-amber {
+  color: var(--amber);
+  background: rgba(255,159,10,0.10);
+  border-color: rgba(255,159,10,0.22);
+}
+.hcard-section-blue {
+  color: var(--blue);
+  background: rgba(10,132,255,0.10);
+  border-color: rgba(10,132,255,0.22);
+}
+.hcard-section-green {
+  color: var(--green);
+  background: rgba(48,209,88,0.10);
+  border-color: rgba(48,209,88,0.22);
+}
+
 .legend-item { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 8px; align-items: center; padding: 4px 0; }
 .legend-color { width: 12px; height: 12px; border-radius: 4px; }
 .legend-label { color: var(--white); font-size: 12px; font-weight: 500; letter-spacing: -0.05px; }
@@ -1384,6 +1575,179 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    around line 1062). Don't add a separate underline-style override here. */
 
 /* TAX TAB */
+
+/* ── Tax Provision Planner — pill cards for headline figures ─────────
+   Each headline figure (This Year's Projected Liability, Set Your
+   Standing Order, Or Precise Minimum, Saved So Far) renders as its
+   own rounded card. The middle card — Set Your Standing Order — gets
+   the highlighted blue accent because it's the action the user
+   actually takes. The other cards stay neutral so the eye settles on
+   the action card naturally. */
+.tax-headline-card {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.tax-headline-card-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: -0.05px;
+  margin-bottom: 4px;
+}
+.tax-headline-card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+.tax-headline-card-suffix {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 2px;
+}
+.tax-headline-card-sub {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+.tax-headline-card-sync {
+  font-size: 10px;
+  color: var(--green);
+  margin-top: 6px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* Highlighted action card — Set Your Standing Order */
+.tax-headline-card.tax-headline-action {
+  background: rgba(10,132,255,0.12);
+  border: 0.5px solid rgba(10,132,255,0.32);
+  border-left: 3px solid var(--blue);
+  padding: 16px 16px 16px 18px;
+}
+.tax-headline-card.tax-headline-action .tax-headline-card-label {
+  color: #a8d4ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.tax-headline-card.tax-headline-action .tax-headline-card-value {
+  color: var(--white);
+}
+.tax-headline-card.tax-headline-action .tax-headline-card-sub {
+  color: rgba(199,226,255,0.7);
+}
+
+/* ── Upcoming HMRC Payments — payment cards ────────────────────
+   Each scheduled HMRC payment renders as its own pill card. Top
+   row pairs the formatted due date (left, white, bold) with a
+   small countdown pill on the right ("in 89 days" or "settled").
+   Bottom row pairs the payment type label (left, muted) with the
+   gold £ amount on the right. Clean two-line read on any width.
+   Total card at the end uses a soft gold accent to mark it as
+   the headline takeaway. */
+.hmrc-pmt-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.hmrc-pmt-card {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.hmrc-pmt-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.hmrc-pmt-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.05px;
+}
+.hmrc-pmt-time {
+  font-size: 10px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.05);
+  padding: 3px 10px;
+  border-radius: 50px;
+  border: 0.5px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
+}
+.hmrc-pmt-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hmrc-pmt-type {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.hmrc-pmt-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+}
+/* Paid card — strikethrough + dimmed */
+.hmrc-pmt-card.hmrc-pmt-paid {
+  opacity: 0.55;
+}
+.hmrc-pmt-card.hmrc-pmt-paid .hmrc-pmt-date,
+.hmrc-pmt-card.hmrc-pmt-paid .hmrc-pmt-type,
+.hmrc-pmt-card.hmrc-pmt-paid .hmrc-pmt-amount {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,255,255,0.4);
+  text-decoration-thickness: 1px;
+}
+.hmrc-pmt-card.hmrc-pmt-paid .tr-paid-badge {
+  text-decoration: none;
+}
+
+/* Total card — soft gold tint to mark as headline takeaway */
+.hmrc-pmt-total {
+  background: rgba(255,214,10,0.08);
+  border: 0.5px solid rgba(255,214,10,0.22);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hmrc-pmt-total-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.2px;
+  flex: 1;
+  line-height: 1.3;
+}
+.hmrc-pmt-total-amt {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .tax-table { width: 100%; }
 .tax-thead {
   display: grid; grid-template-columns: 65px 70px 90px 90px 100px 90px 90px;
@@ -2909,23 +3273,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     width: 100%;
   }
 
-  /* ── TAX — Standing Order block aligns LEFT on mobile ─────── */
-  /* The headline grid (Set your standing order, Or precise minimum,
-     Saved so far) wraps beneath each other on mobile. Hide the now-
-     useless vertical dividers and ensure each block is full width and
-     left-aligned for a clean column read. */
-  .tax-headline-grid {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 18px !important;
-  }
-  .tax-headline-grid > div {
-    width: 100%;
-    text-align: left !important;
-  }
-  .tax-headline-divider {
-    display: none !important;
-  }
+  /* Stretch progress bars in budget tracker rows on mobile so they
+     span the full cell width rather than the fixed 72px desktop size. */
   #bgt-main-table .bgt-progress-wrap,
   #bgt-history-view .bgt-progress-wrap {
     width: 100%;
@@ -3865,36 +4214,36 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <div class="gold-divider"></div>
 
-    <!-- Headline trio — all anchored to freedom day -->
-    <div class="grid-3 mb16">
-      <div class="stat">
-        <div class="stat-label" id="ret-fn-future-label">Freedom Number (At Retirement)</div>
-        <div class="stat-val lg gold" id="ret-fn-future">—</div>
-        <div class="stat-sub" id="ret-fn-future-sub">the pot you'd need on the day you stop</div>
+    <!-- Headline trio — Freedom Number is the takeaway, gets primary card treatment -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <div class="tax-headline-card tax-headline-action">
+        <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px" id="ret-fn-future-label">Freedom Number (At Retirement)</div>
+        <div class="tax-headline-card-value" style="font-size:32px;color:var(--gold)" id="ret-fn-future">—</div>
+        <div class="tax-headline-card-sub" id="ret-fn-future-sub">the pot you'd need on the day you stop</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Monthly Income on Freedom Day</div>
-        <div class="stat-val lg green" id="ret-fn-income">—</div>
-        <div class="stat-sub" id="ret-fn-income-sub">what your pot pays you each month</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Monthly Income on Freedom Day</div>
+        <div class="tax-headline-card-value" style="color:var(--green)" id="ret-fn-income">—</div>
+        <div class="tax-headline-card-sub" id="ret-fn-income-sub">what your pot pays you each month</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Real Spending Power</div>
-        <div class="stat-val lg amber" id="ret-fn-real">—</div>
-        <div class="stat-sub" id="ret-fn-real-sub">the same income in today's money</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Real Spending Power</div>
+        <div class="tax-headline-card-value" style="color:var(--amber)" id="ret-fn-real">—</div>
+        <div class="tax-headline-card-sub" id="ret-fn-real-sub">the same income in today's money</div>
       </div>
     </div>
 
-    <!-- Supporting detail -->
-    <div class="grid-2 mb16">
-      <div class="stat">
-        <div class="stat-label">Progress Today</div>
-        <div class="stat-val sm" id="ret-fn-progress">—</div>
-        <div class="stat-sub" id="ret-fn-progress-sub">—</div>
+    <!-- Supporting pair — Progress Today + Years to Freedom as neutral pill cards -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Progress Today</div>
+        <div class="tax-headline-card-value" id="ret-fn-progress">—</div>
+        <div class="tax-headline-card-sub" id="ret-fn-progress-sub">—</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Years to Freedom</div>
-        <div class="stat-val sm gold" id="ret-fn-years">—</div>
-        <div class="stat-sub" id="ret-fn-years-sub">at current contribution rate</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Years to Freedom</div>
+        <div class="tax-headline-card-value" style="color:var(--gold)" id="ret-fn-years">—</div>
+        <div class="tax-headline-card-sub" id="ret-fn-years-sub">at current contribution rate</div>
       </div>
     </div>
 
@@ -4363,10 +4712,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
     </div>
 
-    <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-bottom:18px">
-      <div style="flex:1;min-width:260px">
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px">
+      <div>
         <div class="input-label mb8">Last Filed Return — Total Liability £ <span id="tax-prior-year-label" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(2024/25)</span></div>
-        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">From the most recent return you've filed · drives this year's POAs</div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:8px">From the most recent return you've filed · drives this year's POAs</div>
         <div class="flex-center" style="gap:8px">
           <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
           <input class="budget-input" type="text" inputmode="numeric" id="tax-prior-liability" value="0" step="100" style="width:130px" oninput="renderTaxProvisionPlanner()">
@@ -4375,11 +4724,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
           ⚠ Update this when you file your next return
         </div>
       </div>
-      <div style="height:48px;width:1px;background:var(--border)"></div>
-      <div style="flex:1;min-width:200px">
-        <div class="input-label mb8">This Year's Projected Liability <span id="tax-this-year-label" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(2026/27)</span></div>
-        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Auto-computed from your dividend tax above · self-assessment portion only</div>
-        <div id="tax-this-year-liability" style="font-size:22px;font-weight:700;color:var(--white);height:34px;display:flex;align-items:center">£0</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">This Year's Projected Liability <span id="tax-this-year-label" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">(2026/27)</span></div>
+        <div class="tax-headline-card-sub" style="margin-top:4px;margin-bottom:6px">Auto-computed from your dividend tax above · self-assessment portion only</div>
+        <div id="tax-this-year-liability" class="tax-headline-card-value">£0</div>
       </div>
     </div>
 
@@ -10707,37 +11055,46 @@ function renderPortfolio(filter='all') {
     const wcls = wrapperColourClass(wrapperLabel);
     const dark = _darkenColour(h.colour, 0.7);
     const pct = (h.sectionPct||0);
-    return `<div class="holding-row" id="hrow_${h.id}">
-      <div title="Tick to include this holding in the calculator's drift and rebalancing logic. New holdings are ticked by default; legacy holdings stay unticked so they don't pull your buy targets toward historical positions.">
-        <input type="checkbox" ${h.includeInCalc!==false?'checked':''} 
-          onchange="toggleCalcInclude('${h.id}',this.checked)" 
-          style="accent-color:var(--gold);cursor:pointer">
-      </div>
-      <div class="holding-color" style="background:linear-gradient(180deg,${h.colour},${dark});border-radius:2px"></div>
-      <div>
-        <div class="holding-ticker">${h.ticker}</div>
-        <div style="font-size:9px;color:var(--${wcls});font-weight:600;letter-spacing:1px">${wrapperLabel}</div>
-      </div>
-      <div class="holding-detail">
-        ${h.fromHistory
-          ? `<span style="color:var(--white);font-weight:600">${h.shares} units</span>
-             @ <input type="text" inputmode="decimal" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"
-               style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:10px;width:65px;padding:1px 0;outline:none"
-               onchange="updateHoldingInline('${h.id}','price',this.value)">
-             <span style="font-size:9px;background:var(--gold-dim);color:var(--gold);padding:1px 6px;border-radius:10px;margin-left:4px">FROM HISTORY</span>`
-          : `<span style="color:var(--white);font-weight:600">${h.shares} units</span> @ <span style="color:var(--muted)">£${_formatPriceDisplay(h.price||0) || '0'}</span>`
-        }
-        <span style="font-size:9px;color:var(--${(h.type||'personal')==='employer'?'blue':'muted'});margin-left:4px">${(h.type||'personal').toUpperCase()}</span>
-        <!-- Inline weight bar — sits beneath the units/price line, fills proportional to section weight -->
-        <div class="holding-row-bar-track" style="margin-top:6px">
-          <div class="holding-row-bar-fill" style="width:${pct.toFixed(1)}%;background:linear-gradient(90deg,${h.colour},${dark})"></div>
+    // Type sub-pill text — shows whether this came from monthly history,
+    // is an employer-wrapped legacy fund, or is a personal direct holding.
+    const typeLabel = (h.type||'personal').toUpperCase();
+    const wrapperMeta = h.fromHistory
+      ? `${wrapperLabel} · FROM HISTORY`
+      : `${wrapperLabel} · ${typeLabel}`;
+    // Price renders as either a static pill (legacy) or an editable
+    // £-prefixed pill input (fromHistory). Both share the price-pill
+    // shell so the visual rhythm stays consistent across the list.
+    const pricePillContent = h.fromHistory
+      ? `<span class="hcard-price-pound">£</span><input type="text" inputmode="decimal" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"
+           class="hcard-price-input"
+           onchange="updateHoldingInline('${h.id}','price',this.value)">`
+      : `<span class="hcard-price-pound">£</span>${_formatPriceDisplay(h.price||0) || '0'}`;
+
+    return `<div class="hcard" id="hrow_${h.id}">
+      <div class="hcard-top">
+        <div class="hcard-top-left">
+          <input type="checkbox" class="hcard-check" ${h.includeInCalc!==false?'checked':''}
+            onchange="toggleCalcInclude('${h.id}',this.checked)"
+            title="Tick to include this holding in the calculator's drift and rebalancing logic">
+          <div class="hcard-swatch" style="background:linear-gradient(180deg,${h.colour},${dark})"></div>
         </div>
+        <div class="hcard-ticker-block">
+          <div class="hcard-ticker">${h.ticker}</div>
+          <div class="hcard-meta hcard-meta-${wcls}">${wrapperMeta}</div>
+        </div>
+        <div class="hcard-total">£${fmtNum(Math.round(h.value),0)}</div>
       </div>
-      <div class="holding-val">£${fmtNum(Math.round(h.value),0)}</div>
-      <div class="holding-pct">${pct.toFixed(1)}%</div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <button class="btn-edit btn-sm" onclick="togglePortfolioEdit('${h.id}')">Edit</button>
-        <button class="btn-danger btn-sm" onclick="removePortfolioHolding('${h.id}')">Remove</button>
+      <div class="hcard-pills">
+        <div class="hcard-units-pill">${h.shares} units</div>
+        <div class="hcard-price-pill ${h.fromHistory ? 'editable' : ''}">${pricePillContent}</div>
+      </div>
+      <div class="hcard-progress"><div class="hcard-progress-bar" style="width:${pct.toFixed(1)}%;background:linear-gradient(90deg,${h.colour},${dark})"></div></div>
+      <div class="hcard-bottom">
+        <div class="hcard-pct">${pct.toFixed(1)}% of ${isLegacy ? 'legacy' : 'new'} holdings</div>
+        <div class="hcard-actions">
+          <button class="btn-edit btn-sm hcard-edit-btn" onclick="togglePortfolioEdit('${h.id}')">Edit</button>
+          ${!isLegacy ? `<button class="btn-danger btn-sm hcard-remove-btn" onclick="removePortfolioHolding('${h.id}')">Remove</button>` : ''}
+        </div>
       </div>
     </div>
     <div id="portfolioEdit_${h.id}" style="display:none;background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:4px">
@@ -10768,21 +11125,17 @@ function renderPortfolio(filter='all') {
   };
 
   const renderWrapperGroup = (group, isLegacy) =>
-    `<div style="margin-bottom:8px">
-      <div style="font-size:9px;letter-spacing:2px;color:var(--${wrapperColourClass(group.wrapper)});text-transform:uppercase;font-weight:700;padding:6px 0 4px;border-bottom:1px solid var(--border);margin-bottom:4px">${group.wrapper}</div>
+    `<div style="margin-bottom:14px">
+      <div class="hcard-section-pill hcard-section-${wrapperColourClass(group.wrapper)}">${group.wrapper}</div>
       ${group.items.map(h=>renderRow(h,isLegacy)).join('')}
     </div>`;
 
-  // Column header row
-  const colHeader = `<div class="holding-row" style="pointer-events:none;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 0;margin-bottom:2px;color:var(--muted);font-weight:700">
-    <div style="font-size:9px;color:var(--muted);font-weight:700" title="Tick to include this holding in the calculator's drift and rebalancing logic. New holdings are ticked by default. Legacy holdings are unticked so they don't pull the calculator's targets toward your historical positions.">On</div>
-    <div></div>
-    <div style="font-size:9px;color:var(--muted);font-weight:700">Ticker</div>
-    <div style="font-size:9px;color:var(--muted);font-weight:700">Holdings</div>
-    <div style="font-size:9px;color:var(--muted);font-weight:700;text-align:right">Value</div>
-    <div style="font-size:9px;color:var(--muted);font-weight:700;text-align:right">% of section</div>
-    <div></div>
-  </div>`;
+  // Column header was relevant when holdings rendered as a single grid
+  // row with cells for each value. With the new card layout each holding
+  // is self-contained and labels are intrinsic, so the column header is
+  // gone — kept the constant defined but empty so the downstream
+  // concatenation continues to work without conditional re-wiring.
+  const colHeader = '';
 
   const newSectionId = 'section-new-holdings';
   const legacySectionId = 'section-legacy-holdings';
@@ -12759,70 +13112,64 @@ function renderTaxProvisionPlanner() {
     // Cascade is best-effort — silently no-op if budget data isn't ready
   }
 
-  // Build the cash flow projection — for each payment date, show what the
-  // pot looks like assuming user saves "minimum" rate from today. This
-  // lets the user see exactly when (if ever) they'll be short.
+  // Build the HMRC payment schedule for the next 12 months. Payments
+  // include any combination of: balancing payment for the prior year
+  // (31 January, on top of the POA), 1st POA (31 January), 2nd POA
+  // (31 July). Only payments within the next 12 months are listed.
   const { payments, totalNext12Mo } = _buildHMRCPaymentSchedule(prior, thisYear);
-  const today = new Date();
 
-  const flowRows = payments.map(p => {
-    const monthsFromNow = (p.date.getTime() - today.getTime()) / (30.44 * 24 * 60 * 60 * 1000);
-    const accumulated = savedSoFar + (minimum * Math.max(0, monthsFromNow));
-    // Sum prior payments already netted off
-    const priorPayments = payments
-      .filter(q => q.date.getTime() < p.date.getTime())
-      .reduce((s, q) => s + q.amount, 0);
-    const potBefore = accumulated - priorPayments;
-    const potAfter  = potBefore - p.amount;
-    return { p, potBefore, potAfter };
-  });
-
-  const anyShortfall = flowRows.some(r => r.potAfter < -50); // tolerate rounding noise
-
-  // ── Headline — single big figure, with comfortable alternative ──
+  // ── Headline — three pill cards stacked vertically. The middle card
+  // (Set Your Standing Order) gets the highlighted blue accent treatment
+  // because it's the action the user actually takes — the £/mo figure
+  // they enter into their bank's standing order screen. The other two
+  // cards (precise minimum, saved so far) stay neutral so the eye
+  // settles on the blue card naturally without competing colour cues.
   const headlineHtml = `
-    <div class="tax-headline-grid" style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;margin-bottom:18px">
-      <div>
-        <div class="input-label mb4">Set your standing order to</div>
-        <div style="font-size:44px;font-weight:700;color:var(--gold);line-height:1">£${fmtNum(Math.round(comfortable), 0)}<span style="font-size:14px;color:var(--muted);font-weight:400">/mo</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:6px">round number with a small buffer · covers your £${fmtNum(Math.round(thisYear), 0)} liability across the cycle</div>
-        <div style="font-size:9px;color:var(--green);margin-top:4px">↪ auto-syncs to Tax Provision Planned in Budget tracker</div>
+    <div class="tax-headline-stack" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+      <div class="tax-headline-card tax-headline-action">
+        <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Set your standing order to</div>
+        <div class="tax-headline-card-value" style="font-size:32px">£${fmtNum(Math.round(comfortable), 0)}<span class="tax-headline-card-suffix">/mo</span></div>
+        <div class="tax-headline-card-sub">round number with a small buffer · covers your £${fmtNum(Math.round(thisYear), 0)} liability across the cycle</div>
+        <div class="tax-headline-card-sync">↪ auto-syncs to Tax Provision Planned in Budget tracker</div>
       </div>
-      <div class="tax-headline-divider" style="height:60px;width:1px;background:var(--border)"></div>
-      <div>
-        <div class="input-label mb4">Or precise minimum</div>
-        <div style="font-size:24px;font-weight:700;color:var(--white);line-height:1">£${fmtNum(Math.round(minimum), 0)}<span style="font-size:11px;color:var(--muted);font-weight:400">/mo</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px">exactly £${fmtNum(Math.round(thisYear), 0)} ÷ 12</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Or precise minimum</div>
+        <div class="tax-headline-card-value">£${fmtNum(Math.round(minimum), 0)}<span class="tax-headline-card-suffix">/mo</span></div>
+        <div class="tax-headline-card-sub">exactly £${fmtNum(Math.round(thisYear), 0)} ÷ 12</div>
       </div>
-      <div class="tax-headline-divider" style="height:60px;width:1px;background:var(--border)"></div>
-      <div>
-        <div class="input-label mb4">Saved so far this tax year</div>
-        <div style="font-size:24px;font-weight:700;color:${savedSoFar > 0 ? 'var(--green)' : 'var(--white)'};line-height:1">£${fmtNum(Math.round(savedSoFar), 0)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px">from Tax Provision actuals since 6 April</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Saved so far this tax year</div>
+        <div class="tax-headline-card-value" style="color:${savedSoFar > 0 ? 'var(--green)' : 'var(--white)'}">£${fmtNum(Math.round(savedSoFar), 0)}</div>
+        <div class="tax-headline-card-sub">from Tax Provision actuals since 6 April</div>
       </div>
     </div>`;
 
   // Schedule table — facts only, no inflated figures
   let scheduleHtml = '';
   if (payments.length > 0) {
-    // Read paid markers so we can flag rows in this table. The dismissal
+    // Read paid markers so we can flag cards in this list. The dismissal
     // store includes both Got it acknowledgements and Paid markers; we
     // only care about the latter for visual decoration.
     const paidStore = (typeof _taxReminderLoadDismissals === 'function')
       ? _taxReminderLoadDismissals() : {};
-    const rows = payments.map(p => {
+    const cards = payments.map(p => {
       const dateStr = p.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const daysAway = Math.round((p.date.getTime() - Date.now()) / (24*60*60*1000));
       const key = (typeof _taxReminderKey === 'function') ? _taxReminderKey(p) : null;
       const isPaid = key && paidStore[key] && paidStore[key].action === 'paid';
       const paidBadge = isPaid ? `<span class="tr-paid-badge">PAID</span>` : '';
-      const rowClass = isPaid ? 'bgt-row tr-paid-row' : 'bgt-row';
-      return `<tr class="${rowClass}">
-        <td>${dateStr}</td>
-        <td style="color:var(--muted);font-size:10px">${isPaid ? 'settled' : `in ${daysAway} day${daysAway === 1 ? '' : 's'}`}</td>
-        <td>${p.label}${paidBadge}</td>
-        <td style="font-weight:700;color:var(--gold);text-align:right">£${fmtNum(Math.round(p.amount), 0)}</td>
-      </tr>`;
+      const cardClass = isPaid ? 'hmrc-pmt-card hmrc-pmt-paid' : 'hmrc-pmt-card';
+      const timeLabel = isPaid ? 'settled' : `in ${daysAway} day${daysAway === 1 ? '' : 's'}`;
+      return `<div class="${cardClass}">
+        <div class="hmrc-pmt-top">
+          <div class="hmrc-pmt-date">${dateStr}</div>
+          <div class="hmrc-pmt-time">${timeLabel}</div>
+        </div>
+        <div class="hmrc-pmt-bottom">
+          <div class="hmrc-pmt-type">${p.label}${paidBadge}</div>
+          <div class="hmrc-pmt-amount">£${fmtNum(Math.round(p.amount), 0)}</div>
+        </div>
+      </div>`;
     }).join('');
     // The 12-month total only counts unpaid liabilities — the user already
     // settled paid ones, so they're no longer "cash leaving"
@@ -12832,99 +13179,17 @@ function renderTaxProvisionPlanner() {
       return s + (isPaid ? 0 : p.amount);
     }, 0);
     scheduleHtml = `
-      <div class="section-label" style="margin-bottom:8px">Upcoming HMRC Payments (next 12 months)</div>
-      <table class="bgt-table" style="margin-bottom:14px">
-        <thead class="bgt-thead"><tr>
-          <th style="text-align:left">Due Date</th>
-          <th style="text-align:left">Time Away</th>
-          <th style="text-align:left">Type</th>
-          <th style="text-align:right">Amount</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-        <tfoot><tr class="bgt-row bgt-total">
-          <td colspan="3" style="color:var(--gold);font-weight:700">Total cash leaving over next 12 months</td>
-          <td style="color:var(--gold);font-weight:700;text-align:right">£${fmtNum(Math.round(unpaidTotal), 0)}</td>
-        </tr></tfoot>
-      </table>`;
+      <div class="section-label" style="margin-bottom:10px">Upcoming HMRC Payments (next 12 months)</div>
+      <div class="hmrc-pmt-stack">
+        ${cards}
+        <div class="hmrc-pmt-total">
+          <div class="hmrc-pmt-total-lbl">Total cash leaving over next 12 months</div>
+          <div class="hmrc-pmt-total-amt">£${fmtNum(Math.round(unpaidTotal), 0)}</div>
+        </div>
+      </div>`;
   }
 
-  // Cash flow projection — shows the pot at each payment date.
-  // Paid deadlines stay visible with a strikethrough so you can see
-  // what's already settled, but they're EXCLUDED from the pot
-  // arithmetic — once paid, the cash already left, so it shouldn't
-  // continue to subtract from your projected tax pot.
-  let projectionHtml = '';
-  if (flowRows.length > 0) {
-    const paidStore = (typeof _taxReminderLoadDismissals === 'function')
-      ? _taxReminderLoadDismissals() : {};
-
-    // Recompute pot trajectory excluding paid payments. The original
-    // flowRows assume every payment subtracts; we replace that with
-    // running totals that skip paid entries.
-    let runningPot = savedSoFar;
-    const adjustedRows = flowRows.map(r => {
-      const monthsFromNow = (r.p.date.getTime() - Date.now()) / (30.44 * 24 * 60 * 60 * 1000);
-      const accumulated = savedSoFar + (minimum * Math.max(0, monthsFromNow));
-      const key = (typeof _taxReminderKey === 'function') ? _taxReminderKey(r.p) : null;
-      const isPaid = key && paidStore[key] && paidStore[key].action === 'paid';
-
-      // Sum prior UNPAID payments only — paid ones don't reduce the projected pot
-      const priorUnpaidPayments = flowRows
-        .filter(q => q.p.date.getTime() < r.p.date.getTime())
-        .filter(q => {
-          const qKey = (typeof _taxReminderKey === 'function') ? _taxReminderKey(q.p) : null;
-          return !(qKey && paidStore[qKey] && paidStore[qKey].action === 'paid');
-        })
-        .reduce((s, q) => s + q.p.amount, 0);
-
-      const potBefore = accumulated - priorUnpaidPayments;
-      const potAfter  = isPaid ? potBefore : potBefore - r.p.amount;
-
-      return { ...r, isPaid, potBefore, potAfter };
-    });
-
-    const projRows = adjustedRows.map(r => {
-      const dateStr = r.p.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-      const beforeColour = r.potBefore >= r.p.amount ? 'var(--green)' : 'var(--amber)';
-      const afterColour  = r.potAfter >= 0 ? 'var(--white)' : 'var(--red)';
-      const paidBadge = r.isPaid ? `<span class="tr-paid-badge">PAID</span>` : '';
-      const rowClass = r.isPaid ? 'bgt-row tr-paid-row' : 'bgt-row';
-      return `<tr class="${rowClass}">
-        <td>${dateStr}</td>
-        <td>${r.p.label}${paidBadge}</td>
-        <td style="text-align:right;color:${beforeColour};font-weight:600">£${fmtNum(Math.round(r.potBefore), 0)}</td>
-        <td style="text-align:right;color:var(--gold)">£${fmtNum(Math.round(r.p.amount), 0)}</td>
-        <td style="text-align:right;color:${afterColour};font-weight:600">£${fmtNum(Math.round(r.potAfter), 0)}</td>
-      </tr>`;
-    }).join('');
-
-    // Recompute shortfall flag against the adjusted (paid-excluding) rows
-    const adjustedShortfall = adjustedRows.some(r => !r.isPaid && r.potAfter < -50);
-
-    const projNote = adjustedShortfall
-      ? `If you save £${fmtNum(Math.round(minimum), 0)}/mo from today, you'll be slightly short at one or more payment dates (figures in red). The £${fmtNum(Math.round(comfortable), 0)}/mo recommendation above includes a buffer to avoid this.`
-      : `Saving £${fmtNum(Math.round(minimum), 0)}/mo from today covers every HMRC payment in the cycle. The £${fmtNum(Math.round(comfortable), 0)}/mo recommendation just gives a small buffer.`;
-    projectionHtml = `
-      <div class="section-label" style="margin-bottom:8px">Cash Flow Projection — at £${fmtNum(Math.round(minimum), 0)}/mo</div>
-      <table class="bgt-table" style="margin-bottom:8px">
-        <thead class="bgt-thead"><tr>
-          <th style="text-align:left">Date</th>
-          <th style="text-align:left">Event</th>
-          <th style="text-align:right">Pot Before</th>
-          <th style="text-align:right">Payment</th>
-          <th style="text-align:right">Pot After</th>
-        </tr></thead>
-        <tbody>${projRows}</tbody>
-      </table>
-      <div style="font-size:9px;color:var(--muted);font-style:italic;line-height:1.5;margin-bottom:8px">${projNote}</div>`;
-  } else if (thisYear > 0) {
-    // No payments in next 12 months but liability exists — first-year-over-threshold case
-    projectionHtml = `<div style="font-size:10px;color:var(--muted);font-style:italic;line-height:1.6;margin-bottom:8px">
-      No HMRC payments due in the next 12 months. Saving £${fmtNum(Math.round(minimum), 0)}/mo will build up £${fmtNum(Math.round(thisYear), 0)} by next April — ready for your first balancing payment.
-    </div>`;
-  }
-
-  out.innerHTML = headlineHtml + scheduleHtml + projectionHtml;
+  out.innerHTML = headlineHtml + scheduleHtml;
 }
 
 function calculateCGTRate(income, gain, allowance) {
@@ -13877,12 +14142,35 @@ function renderSellCalculator() {
   const totalGIAGain = holdings.reduce((s, h) => s + h.totalGain, 0);
   const totalGIACost = holdings.reduce((s, h) => s + h.totalCost, 0);
 
-  document.getElementById('sellSummaryCards').innerHTML = [
-    { label: 'Total GIA Value', val: `£${fmtNum(Math.round(totalGIAValue), 0)}`, cls: 'gold', sub: 'current market value' },
-    { label: 'Total Unrealised Gain', val: `${totalGIAGain >= 0 ? '+' : ''}£${fmtNum(Math.round(Math.abs(totalGIAGain)), 0)}`, cls: totalGIAGain >= 0 ? 'green' : 'red', sub: 'if sold today' },
-    { label: 'Remaining Allowance', val: `£${fmtNum(Math.round(remainingAllowance), 0)}`, cls: 'gold', sub: `of £${fmtNum(allowance, 0)} available` },
-    { label: 'Est. Tax Saved', val: `£${fmtNum(Math.round(Math.min(remainingAllowance, Math.max(0, totalGIAGain)) * rate / 100), 0)}`, cls: 'green', sub: `at ${rate}% by using allowance` },
-  ].map(s => `<div class="card"><div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div></div>`).join('');
+  // Pill-card stack — Remaining Allowance is the primary takeaway
+  // (it's the lever the user actually pulls when deciding what to sell),
+  // so it gets the blue accent treatment. The other three are neutral
+  // supporting context.
+  const cardCfgs = [
+    { label: 'Remaining Allowance',    val: `£${fmtNum(Math.round(remainingAllowance), 0)}`, cls: 'gold',  sub: `of £${fmtNum(allowance, 0)} available`, primary: true },
+    { label: 'Total GIA Value',        val: `£${fmtNum(Math.round(totalGIAValue), 0)}`,      cls: 'gold',  sub: 'current market value' },
+    { label: 'Total Unrealised Gain',  val: `${totalGIAGain >= 0 ? '+' : ''}£${fmtNum(Math.round(Math.abs(totalGIAGain)), 0)}`, cls: totalGIAGain >= 0 ? 'green' : 'red', sub: 'if sold today' },
+    { label: 'Est. Tax Saved',         val: `£${fmtNum(Math.round(Math.min(remainingAllowance, Math.max(0, totalGIAGain)) * rate / 100), 0)}`, cls: 'green', sub: `at ${rate}% by using allowance` },
+  ];
+  const colourFor = (cls) => ({
+    gold:  'var(--gold)',
+    green: 'var(--green)',
+    red:   'var(--red)',
+    amber: 'var(--amber)',
+  })[cls] || 'var(--white)';
+  document.getElementById('sellSummaryCards').innerHTML =
+    `<div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1" class="full">` +
+    cardCfgs.map(s => {
+      const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
+      const valStyle  = s.primary ? `font-size:32px;color:${colourFor(s.cls)}` : `color:${colourFor(s.cls)}`;
+      const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
+      return `<div class="${cardClass}">
+        <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
+        <div class="tax-headline-card-value" style="${valStyle}">${s.val}</div>
+        <div class="tax-headline-card-sub">${s.sub}</div>
+      </div>`;
+    }).join('') +
+    `</div>`;
 
   // ── Per-holding breakdown table ──
   document.getElementById('sellHoldingsTable').innerHTML = `
@@ -14394,15 +14682,29 @@ function mpRecalc() {
         { k:'Rate drop saves', v:`${fmt3(intStandard - intProjected)} extra`, cls:'muted' },
       ],
     },
-  ].map(s => `
-    <div class="card" style="border-left:3px solid ${s.colour};padding:16px 18px">
+  ].map(s => {
+    // Promote "Your Savings (Overpayments)" to the action-card style —
+    // it's the takeaway: what your specific overpayment behaviour actually
+    // delivers vs the same rate path without overpayments. Gold accent
+    // because that's the existing colour identity for savings.
+    const isAction = s.label.startsWith('Your Savings');
+    const baseClass = isAction ? 'tax-headline-card' : 'tax-headline-card';
+    const extraStyle = isAction
+      ? `background:rgba(255,214,10,0.08);border-color:rgba(255,214,10,0.22);border-left:3px solid var(--gold);padding:16px 16px 16px 18px`
+      : `border-left:3px solid ${s.colour};padding:16px 16px 16px 18px`;
+    return `
+    <div class="${baseClass}" style="${extraStyle}">
       <div class="section-label" style="margin-bottom:4px;color:${s.colour}">${s.label}</div>
-      <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.5">${s.sub}</div>
-      ${s.items.map(i => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
-        <span style="font-size:10px;color:var(--muted)">${i.k}</span>
-        <span style="font-size:10px;font-weight:600;color:${i.cls==='green'?'var(--green)':i.cls==='red'?'var(--red)':i.cls==='amber'?'var(--amber)':i.cls==='muted'?'var(--muted)':i.cls==='gold'?'var(--gold)':'var(--white)'}">${i.v}</span>
-      </div>`).join('')}
-    </div>`).join('');
+      <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.5">${s.sub}</div>
+      ${s.items.map((i, idx) => {
+        const isLast = idx === s.items.length - 1;
+        return `<div style="display:flex;justify-content:space-between;padding:6px 0;${isLast ? '' : 'border-bottom:0.5px solid rgba(255,255,255,0.06)'}">
+          <span style="font-size:10px;color:var(--muted)">${i.k}</span>
+          <span style="font-size:11px;font-weight:600;color:${i.cls==='green'?'var(--green)':i.cls==='red'?'var(--red)':i.cls==='amber'?'var(--amber)':i.cls==='muted'?'var(--muted)':i.cls==='gold'?'var(--gold)':'var(--white)'}">${i.v}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
 
   // ── Rate switch note ──
   const noteEl = document.getElementById('mp-rate-switch-note');
@@ -15012,15 +15314,17 @@ function renderAnalyseNetWorth() {
       </div>
       <div style="background:var(--dark);border-radius:10px;padding:14px">
         <div class="stat-label mb12">Tax Exposure</div>
-        <div style="margin-bottom:14px">
-          <div style="font-size:9px;color:var(--muted);margin-bottom:3px;letter-spacing:1px;text-transform:uppercase;font-weight:700">Tax-free assets</div>
-          <div style="font-size:24px;font-weight:700;color:var(--green)">£${fmtNum(Math.round(taxFreeAssets),0)}</div>
-          <div class="stat-sub">Property, ISA, SIPP, cash, cars, whiskey — ${taxFreePct.toFixed(1)}% of gross assets</div>
-        </div>
-        <div style="margin-bottom:14px">
-          <div style="font-size:9px;color:var(--muted);margin-bottom:3px;letter-spacing:1px;text-transform:uppercase;font-weight:700">GIA portfolio (CGT on gains)</div>
-          <div style="font-size:24px;font-weight:700;color:var(--amber)">\u00a3${fmtNum(Math.round(taxableAssets),0)}</div>
-          <div class="stat-sub">${nwGIABarNote}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          <div class="tax-headline-card tax-headline-action">
+            <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Tax-Free Assets</div>
+            <div class="tax-headline-card-value" style="font-size:32px;color:var(--green)">£${fmtNum(Math.round(taxFreeAssets),0)}</div>
+            <div class="tax-headline-card-sub">Property, ISA, SIPP, cash, cars, whiskey · ${taxFreePct.toFixed(1)}% of gross assets</div>
+          </div>
+          <div class="tax-headline-card">
+            <div class="tax-headline-card-label">GIA Portfolio <span style="font-weight:400;color:var(--muted2);font-size:11px">(CGT on gains)</span></div>
+            <div class="tax-headline-card-value" style="color:var(--amber)">£${fmtNum(Math.round(taxableAssets),0)}</div>
+            <div class="tax-headline-card-sub">${nwGIABarNote}</div>
+          </div>
         </div>
         <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:14px 0 6px;font-size:0;white-space:nowrap;line-height:0">
           <div style="display:inline-block;height:10px;width:${Math.min(100,taxFreePct).toFixed(2)}%;background:var(--green);vertical-align:top;transition:width 0.5s"></div><div style="display:inline-block;height:10px;width:${Math.max(0,100-taxFreePct).toFixed(2)}%;background:var(--amber);vertical-align:top;transition:width 0.5s"></div>
@@ -16790,30 +17094,30 @@ function _renderBgtYtdPanel(state) {
         </div>
       </div>
 
-      <!-- Headline summary cards -->
-      <div class="grid-3 mb16">
-        <div class="stat">
-          <div class="stat-label">Annual Net Position</div>
-          <div class="stat-val sm" style="color:${netDiffCls}">${signedFmt(netActual)}</div>
-          <div class="stat-sub">${(()=>{
+      <!-- Headline summary cards — pill-card stack matching Tax Provision Planner aesthetic -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <div class="tax-headline-card tax-headline-action">
+          <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Annual Net Position</div>
+          <div class="tax-headline-card-value" style="font-size:32px;color:${netDiffCls}">${signedFmt(netActual)}</div>
+          <div class="tax-headline-card-sub">${(()=>{
             if (Math.abs(netDiff) < 0.005) return 'on plan';
             const sign = netDiff >= 0 ? 'better' : 'worse';
             return `£${fmtNum(Math.abs(netDiff),2)} ${sign} than plan`;
           })()}</div>
         </div>
-        <div class="stat">
-          <div class="stat-label">Total Invested</div>
-          <div class="stat-val sm" style="color:${invDiffCls}">${fmt(invActual)}</div>
-          <div class="stat-sub">${(()=>{
+        <div class="tax-headline-card">
+          <div class="tax-headline-card-label">Total Invested</div>
+          <div class="tax-headline-card-value" style="color:${invDiffCls}">${fmt(invActual)}</div>
+          <div class="tax-headline-card-sub">${(()=>{
             if (Math.abs(invDiff) < 0.005) return 'on plan';
             const sign = invDiff >= 0 ? 'ahead' : 'behind';
             return `£${fmtNum(Math.abs(invDiff),2)} ${sign} of plan`;
           })()}</div>
         </div>
-        <div class="stat">
-          <div class="stat-label">Avg Monthly Saved</div>
-          <div class="stat-val sm" style="color:${netActual>=0?'var(--green)':'var(--red)'}">${signedFmt(netActual / monthsCount)}</div>
-          <div class="stat-sub">across ${monthsLabel}</div>
+        <div class="tax-headline-card">
+          <div class="tax-headline-card-label">Avg Monthly Saved</div>
+          <div class="tax-headline-card-value" style="color:${netActual>=0?'var(--green)':'var(--red)'}">${signedFmt(netActual / monthsCount)}</div>
+          <div class="tax-headline-card-sub">across ${monthsLabel}</div>
         </div>
       </div>
 
