@@ -1076,6 +1076,46 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-size: 12px; letter-spacing: -0.05px; text-transform: none;
   font-weight: 600; padding: 14px 12px 6px;
 }
+/* Section labels render their text inside a coloured pill. The pill hugs
+   the text via display:inline-flex and inherits the section's colour from
+   the parent .bgt-section-* class. Background is the same colour at 12%
+   opacity for a subtle tint that matches the section's identity without
+   shouting. */
+.bgt-section-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  line-height: 1.4;
+  background: rgba(255,255,255,0.06);
+  border: 0.5px solid rgba(255,255,255,0.04);
+  /* color is inherited from the parent .bgt-section-* class, so the
+     INCOME pill is green text, TAX is red, FIXED is amber, VARIABLE is
+     blue. The background tint stays neutral so the colour pop comes
+     from the text itself. */
+  color: inherit;
+}
+/* Per-section pill backgrounds — soft tint matching the section's colour */
+.bgt-section-income .bgt-section-pill {
+  background: rgba(48,209,88,0.10);
+  border-color: rgba(48,209,88,0.18);
+}
+.bgt-section-tax .bgt-section-pill {
+  background: rgba(255,69,58,0.10);
+  border-color: rgba(255,69,58,0.18);
+}
+.bgt-section-fixed .bgt-section-pill {
+  background: rgba(255,159,10,0.10);
+  border-color: rgba(255,159,10,0.18);
+}
+.bgt-section-variable .bgt-section-pill {
+  background: rgba(10,132,255,0.10);
+  border-color: rgba(10,132,255,0.18);
+}
 .bgt-section-income { color: var(--green); }
 .bgt-section-tax { color: var(--red); }
 .bgt-section-fixed { color: var(--amber); }
@@ -2614,12 +2654,15 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     font-weight: 600;
     line-height: 1.2 !important;
   }
-  /* Sub-line composed from data-planned and data-diff on the parent <tr>.
-     Rendered via ::after on cell 1 reading attributes from the row. */
+  /* Sub-line composed in JS and surfaced via data-row-subline on cell 1.
+     The phrase reads "£X better than plan" / "£X worse than plan" / "on
+     plan" — built in JS at render time so we can express the conditional
+     wording that pure CSS can't (CSS attr() can only concatenate; no
+     branching). */
   #bgt-main-table .bgt-row.bgt-net td:nth-child(1)::after,
   #bgt-history-view .bgt-row.bgt-net td:nth-child(1)::after,
   #bgt-ytd-panel .bgt-row.bgt-net td:nth-child(1)::after {
-    content: 'planned ' attr(data-row-planned) ' · ' attr(data-row-diff) ' vs plan';
+    content: attr(data-row-subline);
     display: block;
     font-size: 10px !important;
     color: var(--muted) !important;
@@ -15715,7 +15758,7 @@ function _renderBgtMainTable(state) {
     const sa = items.reduce((s,n) => s+(parseFloat(actual[n]) ||0), 0);
     const sd = isIncome ? sa-sp : sp-sa;
     const sc = sd >= 0 ? 'bgt-diff-pos' : 'bgt-diff-neg';
-    return `<tr><td colspan="4" class="bgt-section-label ${cls}">${label}</td></tr>
+    return `<tr><td colspan="4" class="bgt-section-label ${cls}"><span class="bgt-section-pill">${label}</span></td></tr>
       ${rows}
       <tr class="bgt-row bgt-total">
         <td>Total ${label}</td><td>£${fmtNum(sp,2)}</td>
@@ -15784,7 +15827,11 @@ function _renderBgtMainTable(state) {
           ${section('Fixed Expenses','bgt-section-fixed',BGT_FIXED,false,false)}
           ${section('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true)}
           <tr class="bgt-row bgt-net">
-            <td style="color:var(--gold)" data-row-label="Monthly Net Position" data-row-planned="${planNetPrefix}£${fmtNum(Math.abs(netPlan),2)}" data-row-diff="${_bgtDiffStr(netDiff)}" data-row-actual="${_bgtDiffStr(netAct)}">${netAct>=0?'✅':'⚠️'} Net Position</td>
+            <td style="color:var(--gold)" data-row-label="Monthly Net Position" data-row-subline="${(()=>{
+              if (Math.abs(netDiff) < 0.005) return 'on plan';
+              const sign = netDiff >= 0 ? 'better' : 'worse';
+              return `£${fmtNum(Math.abs(netDiff),2)} ${sign} than plan`;
+            })()}" data-row-actual="${_bgtDiffStr(netAct)}">${netAct>=0?'✅':'⚠️'} Net Position</td>
             <td class="${planNetCls}">${planNetPrefix}£${fmtNum(Math.abs(netPlan),2)}${planNetIcon}</td>
             <td class="${nCls}" style="color:${netAct>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netAct)}</td>
             <td class="${nCls}" style="color:${netDiff>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netDiff)}</td>
@@ -15958,12 +16005,20 @@ function _renderBgtYtdPanel(state) {
         <div class="stat">
           <div class="stat-label">Annual Net Position</div>
           <div class="stat-val sm" style="color:${netDiffCls}">${signedFmt(netActual)}</div>
-          <div class="stat-sub">planned ${signedFmt(netPlanned)} · ${signedFmt(netDiff)} vs plan</div>
+          <div class="stat-sub">${(()=>{
+            if (Math.abs(netDiff) < 0.005) return 'on plan';
+            const sign = netDiff >= 0 ? 'better' : 'worse';
+            return `£${fmtNum(Math.abs(netDiff),2)} ${sign} than plan`;
+          })()}</div>
         </div>
         <div class="stat">
           <div class="stat-label">Total Invested</div>
           <div class="stat-val sm" style="color:${invDiffCls}">${fmt(invActual)}</div>
-          <div class="stat-sub">planned ${fmt(invPlanned)} · ${signedFmt(invDiff)} vs plan</div>
+          <div class="stat-sub">${(()=>{
+            if (Math.abs(invDiff) < 0.005) return 'on plan';
+            const sign = invDiff >= 0 ? 'ahead' : 'behind';
+            return `£${fmtNum(Math.abs(invDiff),2)} ${sign} of plan`;
+          })()}</div>
         </div>
         <div class="stat">
           <div class="stat-label">Avg Monthly Saved</div>
@@ -15991,7 +16046,11 @@ function _renderBgtYtdPanel(state) {
             <td style="color:${expDiffCls}">${signedFmt(expDiff)}</td>
           </tr>
           <tr class="bgt-row bgt-net">
-            <td style="color:var(--gold)" data-row-label="Annual Net Position" data-row-planned="${signedFmt(netPlanned)}" data-row-diff="${signedFmt(netDiff)}">Net Position</td>
+            <td style="color:var(--gold)" data-row-label="Annual Net Position" data-row-subline="${(()=>{
+              if (Math.abs(netDiff) < 0.005) return 'on plan';
+              const sign = netDiff >= 0 ? 'better' : 'worse';
+              return `£${fmtNum(Math.abs(netDiff),2)} ${sign} than plan`;
+            })()}">Net Position</td>
             <td style="color:var(--gold)">${signedFmt(netPlanned)}</td>
             <td style="color:${netDiffCls}">${signedFmt(netActual)}</td>
             <td style="color:${netDiffCls}">${signedFmt(netDiff)}</td>
@@ -16545,7 +16604,7 @@ function _renderBgtHistDetailTable(rec, monthId) {
     const savgCell = savg > 0
       ? `<td style="color:var(--muted);font-weight:600">£${fmtNum(savg,2)}</td>`
       : `<td style="color:var(--muted2)">—</td>`;
-    return `<tr><td colspan="5" class="bgt-section-label ${cls}">${label}</td></tr>
+    return `<tr><td colspan="5" class="bgt-section-label ${cls}"><span class="bgt-section-pill">${label}</span></td></tr>
       ${rows}
       <tr class="bgt-row bgt-total">
         <td>Total ${label}</td><td style="color:var(--muted)">£${fmtNum(sp,2)}</td>
