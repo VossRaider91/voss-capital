@@ -2656,17 +2656,19 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      The seg-toggle is `inline-flex` with `white-space: nowrap` which is
      fine on desktop but means a 4-option toggle (e.g. All / Personal
      (GIA) / Employer (SIPP) / ISA) can overflow the viewport on iPhone
-     widths. Switching to `flex` with `max-width: 100%` and `overflow-x:
-     auto` lets the toggle expand to fill the available width and scroll
-     horizontally if its content still doesn't fit. The scrollbar is
+     widths. Switching to `flex` with `width: 100%` so the toggle's
+     container border aligns with the surrounding card content (holdings
+     list, section pills) and `overflow-x: auto` lets the inner options
+     scroll horizontally if their content doesn't fit. The scrollbar is
      hidden via `::-webkit-scrollbar` so there's no visible chrome —
      just a smooth swipe. */
   .seg-toggle {
     display: flex;
-    max-width: 100%;
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    justify-content: flex-start;
   }
   .seg-toggle::-webkit-scrollbar {
     display: none;
