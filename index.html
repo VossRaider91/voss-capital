@@ -325,6 +325,47 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   margin: 22px 0; opacity: 1;
   border: none;
 }
+
+/* ── TAX TAB — zone divider ───────────────────────────────────────
+   Visual break between Zone 1 (income & tax owed) and Zone 2
+   (wrappers & capital gains). Reads like a chapter heading. */
+.tax-zone-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 24px;
+}
+.tax-zone-line {
+  flex: 1;
+  height: 0.5px;
+  background: rgba(255,214,10,0.22);
+}
+.tax-zone-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  white-space: nowrap;
+}
+
+/* ── TAX TAB — wrapper subsection styling ────────────────────────
+   Inside each wrapper card (GIA / ISA), subsections are visually
+   nested rather than presented as full-weight section labels.
+   The wrapper name (GIA / ISA) is the only section-label; everything
+   else inside uses subsection-label + tax-subsection-divider. */
+.tax-subsection {
+  background: rgba(255,255,255,0.025);
+  border: 0.5px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.tax-subsection-divider {
+  height: 0.5px;
+  background: rgba(255,255,255,0.08);
+  margin: 18px 0 14px;
+  border: none;
+}
 .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -610,7 +651,420 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .history-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .growth-pos { color: var(--green); font-size: 11px; margin-top: 3px; }
 .growth-neg { color: var(--red); font-size: 11px; margin-top: 3px; }
+
+/* ── CONTRIBUTION CARD — pill-styled enhancements ────────────────
+   Updates the existing .history-card layout with proper pill chips
+   for type/wrapper labels, a tinted vs-previous chip, mini-cards
+   for the per-holding sub-blocks, and pill-style action buttons.
+   Works in both mobile and desktop contexts since the .history-card
+   parent already adapts via existing media queries. */
+.cn-header {
+  display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap; margin-bottom: 8px;
+}
+.cn-pill {
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  padding: 3px 10px; border-radius: 50px;
+  border: 0.5px solid;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.cn-pill.cn-type-personal {
+  color: var(--gold);
+  background: rgba(255,214,10,0.10);
+  border-color: rgba(255,214,10,0.22);
+}
+.cn-pill.cn-type-employer {
+  color: var(--blue);
+  background: rgba(10,132,255,0.12);
+  border-color: rgba(10,132,255,0.28);
+}
+.cn-pill.cn-wrap-gia {
+  color: var(--amber);
+  background: rgba(255,159,10,0.10);
+  border-color: rgba(255,159,10,0.22);
+}
+.cn-pill.cn-wrap-sipp {
+  color: var(--blue);
+  background: rgba(10,132,255,0.10);
+  border-color: rgba(10,132,255,0.22);
+}
+.cn-pill.cn-wrap-isa {
+  color: var(--green);
+  background: rgba(48,209,88,0.10);
+  border-color: rgba(48,209,88,0.22);
+}
+/* vs-previous pill — green for gains, red for losses */
+.cn-vs-prev {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 10px; border-radius: 50px;
+  margin-top: 8px;
+  white-space: nowrap;
+  border: 0.5px solid;
+}
+.cn-vs-prev.pos {
+  color: var(--green);
+  background: rgba(48,209,88,0.10);
+  border-color: rgba(48,209,88,0.22);
+}
+.cn-vs-prev.neg {
+  color: var(--red);
+  background: rgba(255,69,58,0.10);
+  border-color: rgba(255,69,58,0.22);
+}
+/* Per-holding mini cards inside contribution entry — slightly lighter
+   chrome than the parent so they nest cleanly. */
+.cn-holding-mini {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.cn-holding-mini .ticker {
+  font-size: 12px; font-weight: 700; color: var(--white);
+  letter-spacing: -0.1px; margin-bottom: 4px;
+}
+.cn-holding-mini .units-line {
+  font-size: 10px; color: var(--muted);
+  margin-bottom: 2px;
+}
+.cn-holding-mini .val-line {
+  font-size: 11px; color: var(--white); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cn-holding-mini .val-line .pct {
+  color: var(--muted); font-weight: 400;
+  font-size: 10px;
+}
+.cn-holding-mini .price-line {
+  font-size: 10px; color: var(--muted2);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+/* Action buttons — pill-styled, matching the holdings card pattern */
+.cn-action-btn {
+  font-size: 11px;
+  padding: 5px 14px !important;
+  border-radius: 50px !important;
+  border: 0.5px solid rgba(255,255,255,0.10) !important;
+  background: rgba(255,255,255,0.04) !important;
+  color: rgba(255,255,255,0.7) !important;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cn-action-btn:hover {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+.cn-action-btn.cn-action-delete {
+  color: var(--red) !important;
+  background: rgba(255, 69, 58, 0.08) !important;
+  border-color: rgba(255, 69, 58, 0.25) !important;
+}
+.cn-action-btn.cn-action-delete:hover {
+  background: rgba(255, 69, 58, 0.15) !important;
+  border-color: rgba(255, 69, 58, 0.4) !important;
+}
 .history-empty { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 13px; line-height: 1.9; letter-spacing: -0.05px; }
+
+/* ── BED & ISA PRIORITY CARDS ────────────────────────────────────
+   Each holding renders as a self-contained pill card. Header row
+   pairs the ticker + units/cost on the left with a colour-tinted
+   priority pill on the right. Three-column metrics row below.
+   Universal CSS — works at every width. The 3-column metrics grid
+   stays compact on mobile because the figures are short text. */
+.bipri-card {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+.bipri-header {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.bipri-header-left {
+  flex: 1;
+  min-width: 0;
+}
+.bipri-ticker {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+.bipri-units {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+  letter-spacing: -0.05px;
+}
+.bipri-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.bipri-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.bipri-cell-lbl {
+  font-size: 9px;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+.bipri-cell-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+}
+.bipri-cell-val.gain { color: var(--green); }
+.bipri-cell-val.cgt  { color: var(--red); }
+
+/* Priority pill — colour-tinted by tier */
+.bipri-priority-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 3px 10px;
+  border-radius: 50px;
+  border: 0.5px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.bipri-priority-pill.highest {
+  color: #ff6961;
+  background: rgba(255,69,58,0.12);
+  border-color: rgba(255,69,58,0.32);
+}
+.bipri-priority-pill.high {
+  color: #ffb340;
+  background: rgba(255,159,10,0.12);
+  border-color: rgba(255,159,10,0.30);
+}
+.bipri-priority-pill.medium {
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.15);
+}
+.bipri-priority-pill.low {
+  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+}
+
+/* ── SEGMENTED PILL TOGGLE ────────────────────────────────────────
+   Custom radio-button replacement that renders as a side-by-side
+   segmented pill. The native radio inputs stay in the DOM (so all
+   existing JS that reads `:checked` keeps working) but are visually
+   hidden via opacity:0 + position:absolute so they don't render.
+   The label wrapping each radio becomes the visible pill segment;
+   :has(:checked) flips the styling to the active state. */
+.seg-toggle {
+  display: inline-flex;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 50px;
+  padding: 3px;
+  margin-top: 4px;
+  vertical-align: middle;
+}
+.seg-toggle .seg-option {
+  position: relative;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.seg-toggle .seg-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0; height: 0;
+  margin: 0;
+}
+.seg-toggle .seg-option > span {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  padding: 7px 18px;
+  border-radius: 50px;
+  border: 0.5px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.seg-toggle .seg-option:has(input:checked) > span {
+  color: #a8d4ff;
+  background: rgba(10,132,255,0.16);
+  border-color: rgba(10,132,255,0.32);
+}
+/* Button-mode support — for toggles driven by onclick handlers that
+   add an .active class, rather than radio inputs. Same visual result;
+   the rules below match the radio :checked variant. Native button
+   styling (background, border, padding, font) is overridden so the
+   button visually matches the label rendering. */
+.seg-toggle button.seg-option {
+  background: transparent;
+  border: 0.5px solid transparent;
+  padding: 0;
+  font-family: inherit;
+  outline: none;
+}
+.seg-toggle button.seg-option > span {
+  display: inline-flex;
+  align-items: center;
+}
+.seg-toggle button.seg-option.active > span {
+  color: #a8d4ff;
+  background: rgba(10,132,255,0.16);
+  border-color: rgba(10,132,255,0.32);
+}
+.seg-toggle button.seg-option:hover:not(.active) > span {
+  color: rgba(255,255,255,0.8);
+}
+.seg-toggle .seg-option:hover > span {
+  color: rgba(255,255,255,0.8);
+}
+.seg-toggle .seg-option:has(input:checked):hover > span {
+  color: #c5e0ff;
+}
+
+/* ── REMAINING ALLOWANCE CHIP ────────────────────────────────────
+   Compact pill chip that pairs a £ amount with a small descriptor
+   label. Used for ISA and CGT remaining allowance readouts. Two
+   colour variants — gold (CGT) and green (ISA) — plus a depleted
+   state that flips to red when the allowance hits zero. */
+.remaining-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  border: 0.5px solid;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.remaining-chip.cgt {
+  background: rgba(255,214,10,0.10);
+  border-color: rgba(255,214,10,0.22);
+}
+.remaining-chip.isa {
+  background: rgba(48,209,88,0.10);
+  border-color: rgba(48,209,88,0.22);
+}
+.remaining-chip.depleted {
+  background: rgba(255,69,58,0.10) !important;
+  border-color: rgba(255,69,58,0.30) !important;
+}
+.remaining-chip-amt {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.remaining-chip.cgt .remaining-chip-amt { color: var(--gold); }
+.remaining-chip.isa .remaining-chip-amt { color: var(--green); }
+.remaining-chip.depleted .remaining-chip-amt { color: var(--red) !important; }
+.remaining-chip-lbl {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
+}
+
+/* ── RETIREMENT PROGRESS STRIP ───────────────────────────────────
+   Pill-shaped container that wraps the projection's progress bar
+   and its caption beneath. Replaces a loose progress bar + footer
+   line that used to float in space. */
+.ret-progress-strip {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.ret-progress-strip .progress-wrap {
+  margin-bottom: 6px;
+}
+
+/* ── PORTFOLIO GROWTH CHART — chip-style legend ──────────────────
+   Each legend item renders as a small pill chip with its colour
+   indicator on the left. The "+£X overall" summary becomes its own
+   coloured chip pushed to the right. Wraps cleanly on narrow screens. */
+.growth-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.growth-legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 50px;
+  border: 0.5px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  font-size: 10px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.growth-legend-bar {
+  width: 14px;
+  height: 2px;
+  border-radius: 50px;
+}
+.growth-legend-bar.gold { background: var(--gold); }
+.growth-legend-bar.blue { background: var(--blue); }
+.growth-legend-area {
+  width: 10px;
+  height: 10px;
+  background: rgba(48,209,88,0.25);
+  border-radius: 4px;
+}
+.growth-overall-chip {
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  border: 0.5px solid;
+}
+.growth-overall-chip.pos {
+  background: rgba(48,209,88,0.10);
+  border-color: rgba(48,209,88,0.22);
+  color: var(--green);
+}
+.growth-overall-chip.neg {
+  background: rgba(255,69,58,0.10);
+  border-color: rgba(255,69,58,0.22);
+  color: var(--red);
+}
+
 .edit-form {
   background: var(--recess);
   border: 0.5px solid var(--border2);
@@ -619,6 +1073,63 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .edit-form.open { display: block; }
 .edit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+
+/* ── REFRESH ICON BUTTON ──────────────────────────────────────────
+   Compact circular button used in card headers as a backup manual
+   refresh trigger — auto-refresh handles the routine case. Sits next
+   to the chevron in the Update Share Prices card header on both
+   desktop and mobile. Subtle blue tint to nod at "action available"
+   without competing with the section title for attention. */
+.refresh-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(10,132,255,0.10);
+  border: 0.5px solid rgba(10,132,255,0.28);
+  color: var(--blue-bright, #0a84ff);
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.refresh-icon-btn:hover {
+  background: rgba(10,132,255,0.18);
+  border-color: rgba(10,132,255,0.40);
+}
+.refresh-icon-btn:active {
+  transform: scale(0.94);
+}
+.refresh-icon-btn:disabled {
+  cursor: default;
+}
+.refresh-icon-glyph {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+  display: inline-block;
+}
+/* Spinning state — applied by refreshLivePrices() while a fetch is
+   in-flight. Smooth 0.9s rotation gives tangible feedback. */
+.refresh-icon-btn.refresh-btn-spinning .refresh-icon-glyph {
+  animation: refreshIconSpin 0.9s linear infinite;
+}
+@keyframes refreshIconSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+/* Header controls cluster — refresh button + chevron, sits flush
+   right inside the collapsible card header. */
+.header-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 
 /* PORTFOLIO PAGE */
 .holding-row {
@@ -1220,6 +1731,49 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-row.bgt-total td {
   font-weight: 600; color: var(--blue);
   font-size: 14px;
+}
+/* ── DESKTOP — total row pill chips (matches mobile look) ──────────
+   On desktop the budget tracker is a real table with real rows. We
+   keep the table structure intact but style each value cell on the
+   total row as a chip-style pill — soft tinted background, 0.5px
+   border, rounded edges. The diff cell gets a colour-tinted variant
+   green for positive (better than plan), red for negative. This
+   matches the mobile aesthetic without breaking desktop's table flow.
+   Mobile rules in the @media block below take precedence at <=768px. */
+@media (min-width: 769px) {
+  .bgt-row.bgt-total td:nth-child(2),
+  .bgt-row.bgt-total td:nth-child(3),
+  .bgt-row.bgt-total td:nth-child(4),
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(5) {
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(255,255,255,0.10);
+    border-radius: 50px;
+    padding: 8px 16px;
+  }
+  .bgt-row.bgt-total td.bgt-diff-pos {
+    background: rgba(48, 209, 88, 0.10) !important;
+    border-color: rgba(48, 209, 88, 0.22) !important;
+  }
+  .bgt-row.bgt-total td.bgt-diff-neg {
+    background: rgba(255, 69, 58, 0.10) !important;
+    border-color: rgba(255, 69, 58, 0.24) !important;
+  }
+  /* Add a small horizontal gap so the cells render as distinct chips
+     rather than touching edge-to-edge. table-cell doesn't honour
+     margin, so we use border-spacing on the parent table. Scoped to
+     the total row only via the spacing-collapse trick on the row's
+     siblings. */
+  .bgt-row.bgt-total td {
+    /* nudge the chips visually apart from neighbours */
+  }
+  /* The total row's inherited border-bottom from .bgt-row td is now
+     visually weird against the rounded chips — kill it on totals to
+     keep each chip's edge clean. */
+  .bgt-row.bgt-total td {
+    border-bottom: none !important;
+  }
+  /* Hide the inherited border on the row above the total too, so the
+     pill sits cleanly without a stripe cutting underneath the row. */
 }
 .bgt-row.bgt-net td {
   font-weight: 700; font-size: 20px;
@@ -2724,6 +3278,167 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     display: none;
   }
 
+  /* ── TAX TAB — Section 104 Pool, ISA & SIPP holdings tables ────
+     The desktop 7-column grid (Section 104: Ticker / Units / Avg Cost /
+     Cost Base / Market Value / Unrealised Gain / Est. CGT) and the
+     simple 4-column grid (ISA & SIPP: Ticker / Units / Price / Value)
+     don't fit a 380px mobile screen — half the columns get cut off.
+     Restructure each row into a stacked card with the ticker + units
+     as a header, and the remaining numerical cells laid out in a
+     2-column grid below. Each cell gets a label via ::before so the
+     data stays readable without the desktop column header. The
+     thead row is hidden because the cell labels make it redundant. */
+
+  /* Hide table headers on mobile — replaced by per-cell labels */
+  .tax-thead, .tax-thead-simple {
+    display: none !important;
+  }
+
+  /* Each data row becomes a self-contained card with a soft pill style */
+  .tax-row, .tax-row-simple {
+    display: block !important;
+    padding: 14px 16px !important;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 0.5px solid rgba(255,255,255,0.10) !important;
+    border-radius: 14px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.10) !important;
+  }
+  .tax-row:last-child, .tax-row-simple:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Section 104 row — 7 cells: 1=ticker, 2=units, 3=avg cost, 4=cost base,
+     5=market value, 6=unrealised gain, 7=est. CGT.
+     Layout: header row pairs ticker (left) + units (right). Body
+     becomes a 2-col grid showing the 5 numerical cells. With 5 items
+     in a 2-col grid the last one (Est. CGT) spans the full width. */
+  .tax-row .col-ticker {
+    font-size: 16px !important;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0;
+    display: inline-block;
+    width: auto !important;
+  }
+  /* Units cell sits right beside the ticker, right-aligned, with a
+     soft underline divider beneath the header pair */
+  .tax-row > div:nth-child(2) {
+    float: right;
+    text-align: right !important;
+    font-size: 13px !important;
+    color: var(--muted) !important;
+    font-weight: 500 !important;
+    width: auto !important;
+  }
+  .tax-row > div:nth-child(2)::before {
+    content: '';
+  }
+  /* After the float clears, the rest of the cells live in a 2-col grid */
+  .tax-row > div:nth-child(3),
+  .tax-row > div:nth-child(4),
+  .tax-row > div:nth-child(5),
+  .tax-row > div:nth-child(6),
+  .tax-row > div:nth-child(7) {
+    display: block !important;
+    width: 50% !important;
+    float: left;
+    text-align: left !important;
+    padding-top: 12px;
+    margin-top: 12px;
+    box-sizing: border-box;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+  }
+  /* Top border divider above the metrics grid — only on the first
+     two metric cells so it spans the full row visually */
+  .tax-row > div:nth-child(3) {
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+    padding-right: 8px;
+  }
+  .tax-row > div:nth-child(4) {
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+    padding-left: 8px;
+  }
+  .tax-row > div:nth-child(5) { padding-right: 8px; padding-top: 10px; }
+  .tax-row > div:nth-child(6) { padding-left: 8px; padding-top: 10px; }
+  /* Est. CGT spans full width on its own row at the bottom */
+  .tax-row > div:nth-child(7) {
+    width: 100% !important;
+    padding-top: 10px;
+  }
+  /* Each metric cell gets a small label above its value */
+  .tax-row > div:nth-child(3)::before { content: 'Avg Cost'; }
+  .tax-row > div:nth-child(4)::before { content: 'Cost Base'; }
+  .tax-row > div:nth-child(5)::before { content: 'Market Value'; }
+  .tax-row > div:nth-child(6)::before { content: 'Unrealised Gain'; }
+  .tax-row > div:nth-child(7)::before { content: 'Est. CGT'; }
+  .tax-row > div:nth-child(n+3)::before {
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  /* Clearfix for the floats */
+  .tax-row::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+
+  /* Simple table (ISA / SIPP) — 4 cells: 1=ticker, 2=units, 3=price, 4=value.
+     Same header pattern (ticker + units), body shows price + value
+     in a 2-col grid below. */
+  .tax-row-simple .col-ticker {
+    font-size: 16px !important;
+    font-weight: 700;
+    color: var(--white);
+    display: inline-block;
+    width: auto !important;
+  }
+  .tax-row-simple > div:nth-child(2) {
+    float: right;
+    text-align: right !important;
+    font-size: 13px !important;
+    color: var(--muted) !important;
+    font-weight: 500 !important;
+    width: auto !important;
+  }
+  .tax-row-simple > div:nth-child(3),
+  .tax-row-simple > div:nth-child(4) {
+    display: block !important;
+    width: 50% !important;
+    float: left;
+    text-align: left !important;
+    padding-top: 12px;
+    margin-top: 12px;
+    box-sizing: border-box;
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+    font-size: 13px !important;
+    font-weight: 700 !important;
+  }
+  .tax-row-simple > div:nth-child(3) { padding-right: 8px; }
+  .tax-row-simple > div:nth-child(4) { padding-left: 8px; }
+  .tax-row-simple > div:nth-child(3)::before { content: 'Price'; }
+  .tax-row-simple > div:nth-child(4)::before { content: 'Value'; }
+  .tax-row-simple > div:nth-child(n+3)::before {
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .tax-row-simple::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+
   /* ── TAX & SELL CALCULATOR TABS — Apply the same pill styling
         as the calculator. The tax and sell tabs use identical
         `.flex-center` + `.budget-input` markup for their £ inputs
@@ -3296,94 +4011,20 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     min-width: 540px;
   }
 
-  /* ── ANALYSE — Bed & ISA Priority list as stacked cards on mobile ─ */
-  /* The desktop 6-column grid (Ticker / Position / Market Value /
-     Unrealised Gain / Est. CGT Cost / Priority) doesn't fit a 380px
-     screen. Restructure each row into a stacked card: ticker + priority
-     badge on top, position description on a row beneath, then the three
-     monetary figures laid out in a 3-column row at the bottom. Hide the
-     header row entirely since the layout becomes self-explanatory. */
-  #analyse-bedisa-list {
-    overflow-x: visible;
+  /* The Bed & ISA Priority list uses semantic .bipri-card classes
+     (defined in universal CSS) that already work at every width, so
+     no mobile-specific transformation is needed here. The previous
+     rules in this slot transformed an old grid-based markup; that
+     markup was replaced with proper card markup. Just a small mobile
+     tweak below for very narrow screens. */
+  .bipri-cell-val {
+    font-size: 12px;
   }
-  /* Hide the original header row (it's the first child of the container) */
-  #analyse-bedisa-list > div:first-child {
-    display: none !important;
+  .bipri-row {
+    gap: 8px;
   }
-  /* Each data row becomes a stacked block */
-  #analyse-bedisa-list > div:not(:first-child) {
-    display: block !important;
-    min-width: 0 !important;
-    padding: 12px 0 !important;
-    border-bottom: 1px solid var(--border);
-  }
-  /* Ticker on top — bigger, more prominent */
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(1) {
-    font-size: 16px !important;
-    font-weight: 700;
-    margin-bottom: 6px;
-    color: var(--white);
-  }
-  /* Position description gets full width, 2-line wrap allowed */
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(2) {
-    white-space: normal !important;
-    margin-bottom: 10px;
-    font-size: 11px !important;
-    color: var(--muted);
-    text-align: left !important;
-  }
-  /* Wrap the 4 numerical values in a flex row spread evenly across width.
-     Each gets a small label above its value via ::before pseudo-elements. */
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(3),
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(4),
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(5),
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(6) {
-    display: inline-block !important;
-    width: 24% !important;
-    text-align: left !important;
-    font-size: 13px !important;
-    margin-right: 0;
-  }
-  /* Add small descriptive labels above each value */
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(3)::before {
-    content: 'Market Value';
-    display: block;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-    font-weight: 500;
-  }
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(4)::before {
-    content: 'Gain';
-    display: block;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-    font-weight: 500;
-  }
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(5)::before {
-    content: 'Est. CGT';
-    display: block;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-    font-weight: 500;
-  }
-  #analyse-bedisa-list > div:not(:first-child) > div:nth-child(6)::before {
-    content: 'Priority';
-    display: block;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-    font-weight: 500;
+  .bipri-card {
+    padding: 12px 14px;
   }
 
   /* ── SELL CALCULATOR — CGT/ISA remaining-allowance figure ───── */
@@ -3499,11 +4140,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   /* The convert button + its explanation sit side-by-side on desktop.
      On mobile, stack the explanation above and let the button take
      full width so it's a comfortable tap target. */
-  #portfolio .holding-row + div[id^="portfolioEdit_"] > div:last-child:not(:only-child) {
+  #portfolio .hcard + div[id^="portfolioEdit_"] > div:last-child:not(:only-child) {
     flex-direction: column !important;
     align-items: stretch !important;
   }
-  #portfolio .holding-row + div[id^="portfolioEdit_"] > div:last-child:not(:only-child) > button {
+  #portfolio .hcard + div[id^="portfolioEdit_"] > div:last-child:not(:only-child) > button {
     width: 100% !important;
     min-height: 44px;
     font-size: 13px;
@@ -4019,24 +4660,29 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div id="retResults" style="display:none">
     <div class="card-gold mb16">
       <div class="section-label">Retirement Projection</div>
-      <div class="grid-3 mb16">
-        <div class="stat">
-          <div class="stat-label">Projected Value at Retirement</div>
-          <div class="stat-val xl gold" id="ret-final">—</div>
-          <div class="stat-sub" id="ret-final-sub"></div>
+      <!-- Headline pill stack — Projected Value at Retirement is the
+           takeaway (it's the answer to "how big does the pot get?").
+           Inflation-Adjusted and Years to Retirement are supporting
+           context. Years card preserves its precise-headline span
+           layout (years number + months) inside the value slot. -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <div class="tax-headline-card tax-headline-action">
+          <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Projected Value at Retirement</div>
+          <div class="tax-headline-card-value" style="font-size:32px;color:var(--gold)" id="ret-final">—</div>
+          <div class="tax-headline-card-sub" id="ret-final-sub"></div>
         </div>
-        <div class="stat">
-          <div class="stat-label">Inflation Adjusted (Today's Money)</div>
-          <div class="stat-val lg gold" id="ret-real">—</div>
-          <div class="stat-sub">real value at current inflation</div>
+        <div class="tax-headline-card">
+          <div class="tax-headline-card-label">Inflation Adjusted (Today's Money)</div>
+          <div class="tax-headline-card-value" style="color:var(--gold)" id="ret-real">—</div>
+          <div class="tax-headline-card-sub">real value at current inflation</div>
         </div>
-        <div class="stat">
-          <div class="stat-label" id="ret-years-label">Years to Retirement</div>
-          <div id="ret-years-precise-headline" style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;line-height:1">
-            <span class="stat-val lg" id="ret-years">—</span>
+        <div class="tax-headline-card">
+          <div class="tax-headline-card-label" id="ret-years-label">Years to Retirement</div>
+          <div class="tax-headline-card-value" id="ret-years-precise-headline" style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+            <span id="ret-years">—</span>
             <span id="ret-years-md" style="font-size:14px;font-weight:500;color:var(--muted);letter-spacing:-0.2px"></span>
           </div>
-          <div class="stat-sub" id="ret-years-sub" style="margin-top:6px"></div>
+          <div class="tax-headline-card-sub" id="ret-years-sub" style="margin-top:6px"></div>
         </div>
       </div>
 
@@ -4078,31 +4724,36 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         </div>
       </div>
 
-      <div class="grid-4 mb16">
-        <div class="stat">
-          <div class="stat-label">Total Contributed</div>
-          <div class="stat-val sm" id="ret-contributed">—</div>
-          <div class="stat-sub">your money in</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Investment Growth</div>
-          <div class="stat-val sm green" id="ret-growth-val">—</div>
-          <div class="stat-sub">market returns</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Progress to Goal</div>
-          <div class="stat-val sm" id="ret-progress-pct">—</div>
-          <div class="stat-sub">accumulated so far</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label" id="ret-income-label">Monthly Income (4% Rule)</div>
-          <div class="stat-val sm gold" id="ret-income">—</div>
-          <div class="stat-sub">
+      <!-- Pill-card stack — Monthly Income is the primary takeaway
+           (it's what you'll actually live on at retirement). The
+           other three are supporting context. Progress to Goal still
+           gets its progress bar via the existing #ret-progress-bar
+           rendered immediately below this stack. -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <div class="tax-headline-card tax-headline-action">
+          <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px" id="ret-income-label">Monthly Income (4% Rule)</div>
+          <div class="tax-headline-card-value" style="font-size:32px;color:var(--gold)" id="ret-income">—</div>
+          <div class="tax-headline-card-sub">
             <span id="ret-income-sub">sustainable withdrawal</span>
             <span id="ret-spending-wrap" style="display:none">
               Today's spending power: <strong id="ret-spending-power" style="color:var(--green)">—</strong>
             </span>
           </div>
+        </div>
+        <div class="tax-headline-card">
+          <div class="tax-headline-card-label">Total Contributed</div>
+          <div class="tax-headline-card-value" id="ret-contributed">—</div>
+          <div class="tax-headline-card-sub">your money in</div>
+        </div>
+        <div class="tax-headline-card">
+          <div class="tax-headline-card-label">Investment Growth</div>
+          <div class="tax-headline-card-value" style="color:var(--green)" id="ret-growth-val">—</div>
+          <div class="tax-headline-card-sub">market returns over the period</div>
+        </div>
+        <div class="tax-headline-card">
+          <div class="tax-headline-card-label">Progress to Goal</div>
+          <div class="tax-headline-card-value" id="ret-progress-pct">—</div>
+          <div class="tax-headline-card-sub">accumulated so far</div>
         </div>
       </div>
       <div class="progress-wrap"><div class="progress-bar" id="ret-progress-bar" style="width:0%"></div></div>
@@ -4125,52 +4776,57 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <div style="font-size:9px;color:var(--muted);font-style:italic" id="ret-cp-updated">Updated each time you save a month</div>
     </div>
 
-    <!-- Row 1: headline trio -->
-    <div class="grid-3 mb16">
-      <div class="stat">
-        <div class="stat-label">Portfolio Value Today</div>
-        <div class="stat-val lg gold" id="ret-cp-value">—</div>
-        <div class="stat-sub" id="ret-cp-value-sub">live from portfolio store</div>
+    <!-- Row 1: headline trio — Monthly Income from Current Pot is
+         the takeaway (it's what your existing pot alone gives you).
+         The other two are supporting context. -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div class="tax-headline-card tax-headline-action">
+        <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Monthly Income from Current Pot</div>
+        <div class="tax-headline-card-value" style="font-size:32px;color:var(--green)" id="ret-cp-income">—</div>
+        <div class="tax-headline-card-sub" id="ret-cp-income-sub">—</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Value at Retirement (no contributions)</div>
-        <div class="stat-val lg gold" id="ret-cp-projected">—</div>
-        <div class="stat-sub" id="ret-cp-projected-sub">—</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Portfolio Value Today</div>
+        <div class="tax-headline-card-value" style="color:var(--gold)" id="ret-cp-value">—</div>
+        <div class="tax-headline-card-sub" id="ret-cp-value-sub">live from portfolio store</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Monthly Income from Current Pot</div>
-        <div class="stat-val lg green" id="ret-cp-income">—</div>
-        <div class="stat-sub" id="ret-cp-income-sub">—</div>
-      </div>
-    </div>
-
-    <!-- Row 2: supporting detail -->
-    <div class="grid-4 mb16">
-      <div class="stat">
-        <div class="stat-label">Time Remaining</div>
-        <div class="stat-val sm" id="ret-cp-time">—</div>
-        <div class="stat-sub" id="ret-cp-time-sub">to target retirement age</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Inflation-Adjusted Value</div>
-        <div class="stat-val sm" id="ret-cp-real">—</div>
-        <div class="stat-sub">in today's money</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Growth Generated</div>
-        <div class="stat-val sm green" id="ret-cp-growth">—</div>
-        <div class="stat-sub">pure compounding, no inputs</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Your Contributions Add</div>
-        <div class="stat-val sm gold" id="ret-cp-progress">—</div>
-        <div class="stat-sub" id="ret-cp-progress-sub">on top of current pot</div>
+      <div class="tax-headline-card">
+        <div class="tax-headline-card-label">Value at Retirement (no contributions)</div>
+        <div class="tax-headline-card-value" style="color:var(--gold)" id="ret-cp-projected">—</div>
+        <div class="tax-headline-card-sub" id="ret-cp-projected-sub">—</div>
       </div>
     </div>
 
-    <!-- Progress bar -->
-    <div class="progress-wrap mb4"><div class="progress-bar" id="ret-cp-bar" style="width:0%"></div></div>
-    <div class="stat-sub" id="ret-cp-bar-note" style="margin-bottom:16px"></div>
+    <!-- Row 2: supporting detail — 2-column pill cards, compact 18px values
+         so they read as supporting context to the main projection above. -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px" class="ret-cp-grid">
+      <div class="tax-headline-card" style="padding:12px 14px">
+        <div class="tax-headline-card-label" style="font-size:11px">Time Remaining</div>
+        <div class="tax-headline-card-value" style="font-size:18px" id="ret-cp-time">—</div>
+        <div class="tax-headline-card-sub" id="ret-cp-time-sub">to target retirement age</div>
+      </div>
+      <div class="tax-headline-card" style="padding:12px 14px">
+        <div class="tax-headline-card-label" style="font-size:11px">Inflation-Adjusted Value</div>
+        <div class="tax-headline-card-value" style="font-size:18px" id="ret-cp-real">—</div>
+        <div class="tax-headline-card-sub">in today's money</div>
+      </div>
+      <div class="tax-headline-card" style="padding:12px 14px">
+        <div class="tax-headline-card-label" style="font-size:11px">Growth Generated</div>
+        <div class="tax-headline-card-value" style="font-size:18px;color:var(--green)" id="ret-cp-growth">—</div>
+        <div class="tax-headline-card-sub">pure compounding, no inputs</div>
+      </div>
+      <div class="tax-headline-card" style="padding:12px 14px">
+        <div class="tax-headline-card-label" style="font-size:11px">Your Contributions Add</div>
+        <div class="tax-headline-card-value" style="font-size:18px;color:var(--gold)" id="ret-cp-progress">—</div>
+        <div class="tax-headline-card-sub" id="ret-cp-progress-sub">on top of current pot</div>
+      </div>
+    </div>
+
+    <!-- Progress strip — pill-shaped container around the bar + caption -->
+    <div class="ret-progress-strip">
+      <div class="progress-wrap mb4"><div class="progress-bar" id="ret-cp-bar" style="width:0%"></div></div>
+      <div class="stat-sub" id="ret-cp-bar-note"></div>
+    </div>
 
     <!-- Narrative insight -->
     <div style="padding:12px 16px;background:var(--dark);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic" id="ret-cp-narrative"></div>
@@ -4336,7 +4992,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card-gold mb16">
     <div class="section-label mb16">Net Worth Breakdown</div>
     <!-- Summary cards sit above the chart -->
-    <div class="grid-4 mb20" id="nw-summary-cards"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="nw-summary-cards"></div>
     <div class="portfolio-chart-wrap">
       <div>
         <div style="position:relative;display:inline-block" onmousemove="moveNWPieTooltip(event)">
@@ -4496,18 +5152,20 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="collapsible-header" onclick="toggleMobileCollapse('prices')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
         <div class="section-label" style="margin-bottom:0">Update Current Share Prices</div>
-        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+        <div class="header-controls">
+          <button class="refresh-icon-btn"
+                  data-refresh-button
+                  onclick="event.stopPropagation();refreshLivePrices(this)"
+                  aria-label="Update prices now"
+                  title="Update prices now">
+            <span class="refresh-icon-glyph">↻</span>
+          </button>
+          <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+        </div>
       </div>
       <div id="price-update-timestamp-text" style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:500;letter-spacing:-0.05px"></div>
       <div id="auto-refresh-countdown" style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:500;letter-spacing:-0.05px;opacity:0.7"></div>
     </div>
-
-    <!-- Mobile-only always-visible Update button. Hidden on desktop via CSS;
-         clicks bubble up but stopPropagation prevents the card collapse.
-         Calls refreshLivePrices() which fetches live, fills the grid, then
-         commits via applyPriceUpdates(). On total fetch failure the user
-         can expand the card and use the manual paste flow as fallback. -->
-    <button class="btn-gold mobile-always-action" onclick="event.stopPropagation();refreshLivePrices(this)" style="display:none;width:100%;margin-top:12px">Update All Prices</button>
 
     <div class="collapsible-body" style="margin-top:16px">
     <!-- Paste price import -->
@@ -4523,12 +5181,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
 
     <div id="priceUpdaterGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px"></div>
-    <!-- Update All Prices fetches live from Hargreaves Lansdown (via our
-         Cloudflare Worker proxy) and Twelve Data (for NVDA), fills the grid,
-         then commits. Manual fallback is the Paste Prices field above —
-         Paste & Fill parses the string, fills the grid, and commits all in
-         one click. -->
-    <button class="btn-gold desktop-only-action" onclick="refreshLivePrices(this)">Update All Prices</button>
     <div id="priceUpdateNote" style="font-size:10px;color:var(--green);margin-top:8px;display:none"></div>
     </div><!-- /collapsible-body -->
   </div>
@@ -4614,9 +5266,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <!-- Portfolio growth chart -->
   <div class="card-gold">
     <div class="section-label">Portfolio Growth</div>
-    <div class="sub-tabs mb16">
-      <button class="sub-tab active" onclick="switchGrowthTab('monthly',this)">Monthly</button>
-      <button class="sub-tab" onclick="switchGrowthTab('yearly',this)">Yearly</button>
+    <div class="seg-toggle growth-toggle mb16">
+      <button class="seg-option active" onclick="switchGrowthTab('monthly',this)"><span>Monthly</span></button>
+      <button class="seg-option" onclick="switchGrowthTab('yearly',this)"><span>Yearly</span></button>
     </div>
     <div id="growthChartWrap" style="position:relative">
       <div id="growthChart"></div>
@@ -4630,7 +5282,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-tax">
 
-  <!-- Income & CGT Settings -->
+  <!-- ═══════════════════════════════════════════════════════════
+       ZONE 1 — INCOME & TAX OWED
+       Income tax inputs, breakdowns, bonus, and provision planner.
+       Answers "what do I owe HMRC and when?"
+  ═══════════════════════════════════════════════════════════ -->
+
+  <!-- Income Tax Calculator -->
   <div class="card card-left mb24">
     <div class="section-label mb16">Income Tax Calculator</div>
 
@@ -4691,20 +5349,25 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
     </div>
 
-    <!-- Bonus tax breakdown — only shown when bonus > 0 -->
-    <div id="bonusTaxSummary" style="background:rgba(10,132,255,0.07);border-left:3px solid var(--blue);border-radius:10px;padding:14px 18px;margin-bottom:12px;display:none">
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:10px;font-weight:700">Tax on Bonus</div>
-      <div id="bonusTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
-    </div>
-
     <!-- Dividend tax summary -->
-    <div id="divTaxSummary" style="background:var(--dark);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:none">
+    <div id="divTaxSummary" style="background:var(--dark);border-radius:10px;padding:14px 18px;margin-bottom:12px;display:none">
       <div id="divTaxSummaryLabel" style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:700">Tax Summary (<span class="tax-year-label">2026/27</span>)</div>
       <div id="divTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
     </div>
 
-    <!-- Tax Provision Planner — payment-on-account aware monthly provisioning -->
-    <div class="gold-divider"></div>
+    <!-- Bonus tax breakdown — only shown when bonus > 0. Now sits AFTER the
+         main breakdown above as a supplementary view, since it's
+         conditional and only relevant when a bonus is entered. -->
+    <div id="bonusTaxSummary" style="background:rgba(10,132,255,0.07);border-left:3px solid var(--blue);border-radius:10px;padding:14px 18px;margin-bottom:0;display:none">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:10px;font-weight:700">Tax on Bonus</div>
+      <div id="bonusTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
+    </div>
+  </div>
+
+  <!-- Tax Provision Planner — pulled out into its own card so it gets the
+       visual weight it deserves. It's the most actionable item in Zone 1
+       (it tells you what to set aside each month for HMRC). -->
+  <div class="card card-left mb24">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Tax Provision Planner</div>
@@ -4735,103 +5398,130 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div id="tax-provision-output"></div>
 
     <p class="disclaimer" style="margin-top:14px">Self-assessment payments on account apply when last year's liability exceeded £1,000. The first POA is due 31 January (alongside the balancing payment for the prior year), the second POA on 31 July. This planner assumes you've kept up with past payments on schedule.</p>
-
-    <!-- Divider -->
-    <div class="gold-divider"></div>
-    <div class="section-label mb16">Capital Gains Tax Calculator</div>
-
-    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:16px">
-      <div>
-        <div class="input-label mb8">CGT Annual Allowance</div>
-        <div class="flex-center">
-          <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
-          <input class="budget-input" type="text" inputmode="numeric" id="cgt-allowance" value="3000" step="100" style="width:110px">
-        </div>
-      </div>
-      <div style="height:48px;width:1px;background:var(--border)"></div>
-      <div>
-        <div class="input-label mb8">CGT Already Used This Year</div>
-        <div class="flex-center" style="gap:8px">
-          <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
-          <input class="budget-input" type="text" inputmode="numeric" id="cgt-used" value="0" step="100" style="width:110px">
-        </div>
-      </div>
-      <!-- Hidden field for backward compat — total income fed from inputs above -->
-      <input type="hidden" id="cgt-income" value="100000">
-    </div>
-    <div id="cgtRateDisplay" style="font-size:11px;color:var(--muted);line-height:1.8;padding-top:12px;border-top:1px solid var(--border)"></div>
   </div>
 
-  <!-- ISA Allowance Tracker -->
-  <div class="card card-left mb24" id="isa-tracker-card">
-    <div class="flex-between mb16">
-      <div class="section-label" style="margin-bottom:0">ISA Allowance Tracker</div>
-      <div style="font-size:9px;color:var(--muted);font-style:italic" id="isa-tracker-reset-note"></div>
-    </div>
-    <div class="isa-tracker-grid">
-      <div class="stat">
-        <div class="stat-label">Annual Allowance</div>
-        <div class="stat-val sm gold" id="isa-tracker-allowance">£20,000</div>
-        <div class="stat-sub"><span class="tax-year-label">2026/27</span> tax year</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Used This Year</div>
-        <div class="flex-center" style="gap:6px">
-          <span style="font-size:18px;font-weight:600;color:var(--blue)">£</span>
-          <input class="budget-input" type="text" inputmode="numeric" id="isa-tracker-used-input" value="0" style="width:110px;font-size:18px"
-                 oninput="onISAUsedEdit(this.value)">
-        </div>
-        <div class="stat-sub">via bed &amp; ISA transfers · editable</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Remaining</div>
-        <div class="stat-val sm green" id="isa-tracker-remaining">£20,000</div>
-        <div class="stat-sub" id="isa-tracker-days"></div>
-      </div>
-    </div>
-    <div class="isa-bar-wrap mt8">
-      <div class="isa-bar-fill" id="isa-tracker-bar" style="width:0%;background:var(--green)"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px">
-      <span>£0</span>
-      <span id="isa-tracker-pct-label">0% used</span>
-      <span id="isa-tracker-ceiling">£20,000</span>
-    </div>
-    <div style="font-size:9px;color:var(--muted);margin-top:10px;font-style:italic" id="isa-tracker-note"></div>
+  <!-- ═══════════════════════════════════════════════════════════
+       ZONE 2 — WRAPPERS & CAPITAL GAINS
+       Tax position summary, then GIA / ISA / SIPP wrappers. Answers
+       "where do I stand on each wrapper and what would I owe in CGT?"
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tax-zone-divider">
+    <div class="tax-zone-line"></div>
+    <div class="tax-zone-label">Wrappers &amp; Capital Gains</div>
+    <div class="tax-zone-line"></div>
   </div>
 
-  <!-- Wrapper summary cards -->
-  <div class="grid-3 mb24" id="taxSummaryCards"></div>
+  <!-- Tax Position Summary — the takeaway block. CGT Liability is the
+       primary action card (what you'd actually owe HMRC), GIA Unrealised
+       Gain is supporting context. Total Portfolio Value dropped — it's a
+       portfolio-tab metric, not a tax-tab metric. -->
+  <div class="card-gold mb24">
+    <div class="section-label">Tax Position Summary</div>
+    <div style="display:flex;flex-direction:column;gap:8px" id="taxSummaryCards"></div>
+  </div>
 
-  <!-- GIA detail -->
+  <!-- GIA — General Investment Account
+       Now contains: CGT settings (allowance + used) at the top, holdings
+       table (Section 104 Pool) in the middle, CGT calculation breakdown
+       at the bottom. Three subsections, one card. -->
   <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">GIA — General Investment Account</div>
       <span class="tax-status-pill tax-status-cgt">CGT Applies</span>
     </div>
 
+    <!-- Subsection 1: CGT Settings (inputs that drive everything below) -->
+    <div class="tax-subsection mb16">
+      <div class="subsection-label mb8">CGT Settings</div>
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:12px">
+        <div>
+          <div class="input-label mb8">CGT Annual Allowance</div>
+          <div class="flex-center">
+            <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
+            <input class="budget-input" type="text" inputmode="numeric" id="cgt-allowance" value="3000" step="100" style="width:110px">
+          </div>
+        </div>
+        <div>
+          <div class="input-label mb8">CGT Already Used This Year</div>
+          <div class="flex-center" style="gap:8px">
+            <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
+            <input class="budget-input" type="text" inputmode="numeric" id="cgt-used" value="0" step="100" style="width:110px">
+          </div>
+        </div>
+        <!-- Hidden field for backward compat — total income fed from inputs above -->
+        <input type="hidden" id="cgt-income" value="100000">
+      </div>
+      <div id="cgtRateDisplay" style="font-size:11px;color:var(--muted);line-height:1.8"></div>
+    </div>
+
+    <!-- Subsection 2: Wrapper summary metrics -->
     <div class="grid-4 mb16" id="giaSummary"></div>
 
-    <div class="gold-divider"></div>
-    <div class="section-label mb16">Section 104 Pool — Holdings &amp; Unrealised CGT</div>
-
+    <!-- Subsection 3: Section 104 Pool holdings -->
+    <div class="tax-subsection-divider"></div>
+    <div class="subsection-label mb12">Section 104 Pool · Holdings &amp; Unrealised CGT</div>
     <div id="giaTable"></div>
 
-    <div class="gold-divider"></div>
-    <div class="section-label mb8">CGT Calculation</div>
+    <!-- Subsection 4: CGT Calculation breakdown -->
+    <div class="tax-subsection-divider"></div>
+    <div class="subsection-label mb8">CGT Calculation</div>
     <div id="cgtBreakdown"></div>
   </div>
 
-  <!-- ISA detail -->
+  <!-- ISA — Individual Savings Account
+       Combined card: allowance tracker (allowance / used / remaining)
+       AT THE TOP, then holdings table below. One wrapper, one card. -->
   <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">ISA — Individual Savings Account</div>
       <span class="tax-status-pill tax-status-exempt">Tax Exempt</span>
     </div>
+
+    <!-- Subsection 1: Allowance tracker -->
+    <div class="tax-subsection mb16" id="isa-tracker-card">
+      <div class="flex-between mb12">
+        <div class="subsection-label" style="margin-bottom:0">Allowance Tracker</div>
+        <div style="font-size:9px;color:var(--muted);font-style:italic" id="isa-tracker-reset-note"></div>
+      </div>
+      <div class="isa-tracker-grid">
+        <div class="stat">
+          <div class="stat-label">Annual Allowance</div>
+          <div class="stat-val sm gold" id="isa-tracker-allowance">£20,000</div>
+          <div class="stat-sub"><span class="tax-year-label">2026/27</span> tax year</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Used This Year</div>
+          <div class="flex-center" style="gap:6px">
+            <span style="font-size:18px;font-weight:600;color:var(--blue)">£</span>
+            <input class="budget-input" type="text" inputmode="numeric" id="isa-tracker-used-input" value="0" style="width:110px;font-size:18px"
+                   oninput="onISAUsedEdit(this.value)">
+          </div>
+          <div class="stat-sub">via bed &amp; ISA transfers · editable</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Remaining</div>
+          <div class="stat-val sm green" id="isa-tracker-remaining">£20,000</div>
+          <div class="stat-sub" id="isa-tracker-days"></div>
+        </div>
+      </div>
+      <div class="isa-bar-wrap mt8">
+        <div class="isa-bar-fill" id="isa-tracker-bar" style="width:0%;background:var(--green)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px">
+        <span>£0</span>
+        <span id="isa-tracker-pct-label">0% used</span>
+        <span id="isa-tracker-ceiling">£20,000</span>
+      </div>
+      <div style="font-size:9px;color:var(--muted);margin-top:10px;font-style:italic" id="isa-tracker-note"></div>
+    </div>
+
+    <!-- Subsection 2: Holdings table -->
+    <div class="tax-subsection-divider"></div>
+    <div class="subsection-label mb12">Holdings</div>
     <div id="isaTable"></div>
   </div>
 
-  <!-- SIPP detail -->
+  <!-- SIPP — Self Invested Personal Pension -->
   <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">SIPP — Self Invested Personal Pension</div>
@@ -4902,24 +5592,25 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <input class="budget-input" type="text" inputmode="numeric" id="sell-used" value="0" step="100" style="width:110px">
       </div>
     </div>
-    <div style="height:48px;width:1px;background:var(--border)"></div>
     <div>
       <div class="input-label mb8">Tax Band</div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <label class="check-wrap">
-          <input type="radio" name="sell-rate" id="sell-basic" value="18" style="accent-color:var(--gold)">
-          <span class="check-label">Basic (18%)</span>
+      <div class="seg-toggle">
+        <label class="seg-option">
+          <input type="radio" name="sell-rate" id="sell-basic" value="18">
+          <span>Basic (18%)</span>
         </label>
-        <label class="check-wrap" style="margin-left:8px">
-          <input type="radio" name="sell-rate" id="sell-higher" value="24" checked style="accent-color:var(--gold)">
-          <span class="check-label">Higher (24%)</span>
+        <label class="seg-option">
+          <input type="radio" name="sell-rate" id="sell-higher" value="24" checked>
+          <span>Higher (24%)</span>
         </label>
       </div>
       <div id="sell-rate-note" style="font-size:9px;margin-top:6px;max-width:240px;line-height:1.5;color:var(--muted)"></div>
     </div>
-    <div class="margin-left-auto-mobile-reset" style="margin-left:auto;text-align:right">
-      <div class="stat-val gold" id="sell-remaining-allowance" style="font-size:22px">£3,000</div>
-      <div class="stat-sub">remaining CGT allowance</div>
+    <div class="margin-left-auto-mobile-reset" style="margin-left:auto">
+      <div class="remaining-chip cgt">
+        <span class="remaining-chip-amt" id="sell-remaining-allowance">£3,000</span>
+        <span class="remaining-chip-lbl">remaining CGT allowance</span>
+      </div>
     </div>
   </div>
   <div class="sell-allowance-row" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
@@ -4937,9 +5628,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <input class="budget-input" type="text" inputmode="numeric" id="sell-isa-used" value="0" step="100" style="width:120px">
       </div>
     </div>
-    <div class="margin-left-auto-mobile-reset" style="margin-left:auto;text-align:right">
-      <div class="stat-val" style="font-size:18px;color:var(--green)" id="sell-remaining-isa">£20,000</div>
-      <div class="stat-sub">remaining ISA allowance</div>
+    <div class="margin-left-auto-mobile-reset" style="margin-left:auto">
+      <div class="remaining-chip isa">
+        <span class="remaining-chip-amt" id="sell-remaining-isa">£20,000</span>
+        <span class="remaining-chip-lbl">remaining ISA allowance</span>
+      </div>
     </div>
   </div>
 
@@ -5023,17 +5716,49 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div style="font-size:10px;color:var(--muted)" id="analyse-last-updated">—</div>
   </div>
 
-  <!-- Section 1: Portfolio snapshot -->
-  <div class="card-gold mb24">
-    <div class="section-label">Portfolio Snapshot</div>
-    <div class="grid-4" id="analyse-snapshot"></div>
+  <!-- ═══════════════════════════════════════════════════════════
+       ZONE 1 — WHERE YOU STAND
+       The headline answer to "where do I stand financially?" Net
+       Worth Overview opens the page (the biggest figure should sit
+       at the top, not the bottom). Portfolio Snapshot follows as
+       the investment-portfolio-specific view.
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tax-zone-divider">
+    <div class="tax-zone-line"></div>
+    <div class="tax-zone-label">Where You Stand</div>
+    <div class="tax-zone-line"></div>
   </div>
 
-  <!-- Section 2: Wrapper efficiency -->
+  <!-- Net Worth Overview — promoted to top of the page -->
+  <div class="card-gold mb24" id="analyse-networth-section">
+    <div class="section-label">Net Worth Overview</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="analyse-nw-cards"></div>
+    <div id="analyse-nw-breakdown" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px"></div>
+  </div>
+
+  <!-- Portfolio Snapshot -->
+  <div class="card-gold mb24">
+    <div class="section-label">Portfolio Snapshot</div>
+    <div style="display:flex;flex-direction:column;gap:8px" id="analyse-snapshot"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ZONE 2 — TAX & WRAPPER HEALTH
+       The wrapper-tax story in three acts: how exposed are you
+       (wrapper efficiency), what's your headroom (CGT health),
+       what should you act on first (bed & ISA priority).
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tax-zone-divider">
+    <div class="tax-zone-line"></div>
+    <div class="tax-zone-label">Tax &amp; Wrapper Health</div>
+    <div class="tax-zone-line"></div>
+  </div>
+
+  <!-- Wrapper efficiency -->
   <div class="card-gold mb24">
     <div class="section-label">Wrapper Efficiency</div>
     <div class="stat-sub mb16">How much of your portfolio is sheltered in tax-exempt wrappers vs exposed to CGT in your GIA.</div>
-    <div class="grid-3 mb16" id="analyse-wrapper-cards"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="analyse-wrapper-cards"></div>
     <div style="background:var(--dark);border-radius:10px;overflow:hidden;height:10px;margin-bottom:8px">
       <div id="analyse-wrapper-bar" style="height:100%;background:linear-gradient(90deg,var(--green),var(--amber));transition:width 0.4s"></div>
     </div>
@@ -5044,10 +5769,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div id="analyse-wrapper-insight" class="stat-sub" style="margin-top:12px;font-style:italic"></div>
   </div>
 
-  <!-- Section 3: CGT health -->
+  <!-- CGT health -->
   <div class="card-gold mb24">
     <div class="section-label">CGT Health</div>
-    <div class="grid-4 mb16" id="analyse-cgt-cards"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="analyse-cgt-cards"></div>
     <div id="analyse-cgt-bar-wrap" style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
         <span style="font-size:9px;color:var(--muted)">CGT Allowance Remaining</span>
@@ -5061,40 +5786,23 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div id="analyse-tax-year-reset" style="margin-top:10px"></div>
   </div>
 
-  <!-- Section 4: Concentration risk -->
-  <div class="card-gold mb24">
-    <div class="section-label">Concentration &amp; Overlap Analysis</div>
-    <div class="stat-sub mb16">Your underlying geographic and index exposure across all funds — including overlap between funds tracking similar indices.</div>
-    <div id="analyse-concentration"></div>
-  </div>
-
-  <!-- Section 5: Monthly contribution health -->
-  <div class="card-gold mb24">
-    <div class="section-label">Contribution Rate Health</div>
-    <div class="grid-3 mb16" id="analyse-contrib-cards"></div>
-    <div id="analyse-contrib-insight" class="stat-sub" style="font-style:italic"></div>
-  </div>
-
-  <!-- Section 6: Bed & ISA priority list -->
+  <!-- Bed & ISA priority list — pulled forward to sit with the wrapper-tax story -->
   <div class="card-gold mb24">
     <div class="section-label">Bed &amp; ISA Priority — GIA Holdings</div>
     <div class="stat-sub mb16">Your GIA holdings ranked by CGT drag. The top of this list are your highest priority candidates for your next annual bed and ISA transfer.</div>
     <div id="analyse-bedisa-list"></div>
   </div>
 
-  <!-- Section 7: Monthly history summary (only if data exists) -->
-  <div id="analyse-history-section" style="display:none">
-    <div class="card-gold mb24">
-      <div class="section-label">Contribution History Summary</div>
-      <div class="grid-3 mb16" id="analyse-history-cards"></div>
-      <div id="analyse-history-insight" class="stat-sub" style="font-style:italic"></div>
-    </div>
-  </div>
-
-  <div class="card-gold mb24" id="analyse-networth-section">
-    <div class="section-label">Net Worth Overview</div>
-    <div class="grid-4 mb16" id="analyse-nw-cards"></div>
-    <div id="analyse-nw-breakdown" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px"></div>
+  <!-- ═══════════════════════════════════════════════════════════
+       ZONE 3 — HOW YOU'RE TRACKING
+       Backward-looking trend data. Budget Performance is the most
+       actionable (am I saving as planned?), Contribution History
+       provides the longer-arc view of months and growth.
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tax-zone-divider">
+    <div class="tax-zone-line"></div>
+    <div class="tax-zone-label">How You're Tracking</div>
+    <div class="tax-zone-line"></div>
   </div>
 
   <!-- Annual Budget Performance — populated by renderBudgetPerformance() -->
@@ -5102,7 +5810,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="card-gold mb24">
       <div class="section-label">Annual Budget Performance</div>
       <div id="analyse-budget-perf-year-select" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
-      <div class="grid-4 mb20" id="analyse-budget-perf-cards"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="analyse-budget-perf-cards"></div>
       <div style="background:var(--dark);border-radius:10px;padding:14px 18px;margin-bottom:16px">
         <div class="section-label mb12" style="color:var(--amber)">Income vs Expenses — Plan vs Actual</div>
         <div id="analyse-budget-perf-table"></div>
@@ -5114,10 +5822,50 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
   </div>
 
+  <!-- Contribution History Summary -->
+  <div id="analyse-history-section" style="display:none">
+    <div class="card-gold mb24">
+      <div class="section-label">Contribution History Summary</div>
+      <div class="grid-3 mb16" id="analyse-history-cards"></div>
+      <div id="analyse-history-insight" class="stat-sub" style="font-style:italic"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ZONE 4 — SPECIALISED ANALYSIS
+       Niche but valuable: geographic + index exposure across funds.
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tax-zone-divider">
+    <div class="tax-zone-line"></div>
+    <div class="tax-zone-label">Specialised Analysis</div>
+    <div class="tax-zone-line"></div>
+  </div>
+
+  <!-- Concentration risk -->
+  <div class="card-gold mb24">
+    <div class="section-label">Concentration &amp; Overlap Analysis</div>
+    <div class="stat-sub mb16">Your underlying geographic and index exposure across all funds — including overlap between funds tracking similar indices.</div>
+    <div id="analyse-concentration"></div>
+  </div>
+
   <p class="disclaimer">All analysis is based on current prices and available data. Not financial advice. Figures update automatically when prices are changed or new entries are saved.</p>
 
-  <!-- Mortgage Planner Toggle Button -->
-  <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+  <!-- ═══════════════════════════════════════════════════════════
+       STRATEGIC TOOLS
+       Major financial dimensions get their own card with a clear
+       label, a brief description, and a gold CTA. Currently houses
+       the mortgage planner; future tools (e.g. tax filing prep,
+       insurance review) would slot in here as peer cards.
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tax-zone-divider">
+    <div class="tax-zone-line"></div>
+    <div class="tax-zone-label">Strategic Tools</div>
+    <div class="tax-zone-line"></div>
+  </div>
+
+  <div class="card-gold mb16">
+    <div class="section-label">Mortgage Strategic Planner</div>
+    <div class="stat-sub mb16">Plan early-payment scenarios, compare interest costs against investing the difference, and model your remaining mortgage term.</div>
     <button class="btn-gold" onclick="openMortgagePlanner()" style="width:100%;padding:18px;font-size:16px;font-weight:600;letter-spacing:-0.2px">
       ⌂ Open Mortgage Strategic Planner
     </button>
@@ -5714,14 +6462,26 @@ async function refreshLivePrices(triggerButton = null, opts = {}) {
   // during the in-flight fetch. Captures their original labels so we can
   // restore them. Silent mode skips this — auto-fetches don't fight the user
   // for control of the buttons.
+  // We match buttons in two ways: (a) literal text content "Update All Prices"
+  // for the desktop full-text button, (b) data-refresh-button attribute for
+  // the compact mobile icon button (which has no text). Either selector
+  // should pick up every refresh trigger across the app.
   const buttons = silent ? [] : Array.from(document.querySelectorAll('button')).filter(b => {
+    if (b.hasAttribute('data-refresh-button')) return true;
     const t = (b.textContent || '').trim();
     return t === 'Update All Prices' || t === 'Fetching live prices…';
   });
   const originalLabels = buttons.map(b => b.textContent);
   buttons.forEach(b => {
     b.disabled = true;
-    b.textContent = 'Fetching live prices…';
+    // Don't overwrite textContent for icon buttons — they have no
+    // text to begin with; setting it would replace the icon SVG/glyph.
+    if (!b.hasAttribute('data-refresh-button')) {
+      b.textContent = 'Fetching live prices…';
+    } else {
+      // Add a spinning class instead so the icon can rotate via CSS
+      b.classList.add('refresh-btn-spinning');
+    }
     b.style.opacity = '0.7';
   });
 
@@ -5734,7 +6494,13 @@ async function refreshLivePrices(triggerButton = null, opts = {}) {
   const restoreButtons = () => {
     buttons.forEach((b, i) => {
       b.disabled = false;
-      b.textContent = originalLabels[i] || 'Update All Prices';
+      // For icon buttons, restore by removing the spinning class.
+      // textContent was never overwritten so there's nothing to put back.
+      if (b.hasAttribute('data-refresh-button')) {
+        b.classList.remove('refresh-btn-spinning');
+      } else {
+        b.textContent = originalLabels[i] || 'Update All Prices';
+      }
       b.style.opacity = '';
     });
   };
@@ -7644,8 +8410,11 @@ function switchPortfolioTab(type, btn) {
 
 
 function switchGrowthTab(type, btn) {
-  const parentTabs = btn.closest('.sub-tabs');
-  if (parentTabs) parentTabs.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  // Support both the legacy .sub-tabs/.sub-tab pattern and the new
+  // .seg-toggle/.seg-option segmented-pill pattern. Whichever container
+  // the button is inside, deactivate its siblings then activate this one.
+  const parentTabs = btn.closest('.sub-tabs, .seg-toggle');
+  if (parentTabs) parentTabs.querySelectorAll('.sub-tab, .seg-option').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   renderGrowthChart(type);
 }
@@ -9239,16 +10008,27 @@ function renderHistory(filter='all') {
     const prev = allFiltered[idx+1];
     const growthVal = prev&&entry.portfolioValue&&prev.portfolioValue ? entry.portfolioValue-prev.portfolioValue : null;
     const growthPct = growthVal!==null&&prev.portfolioValue>0 ? growthVal/prev.portfolioValue*100 : null;
-    const growthHtml = growthVal!==null ? `<div class="${growthVal>=0?'growth-pos':'growth-neg'}">${growthVal>=0?'+':''}£${fmtNum(growthVal,0)} (${growthPct>=0?'+':''}${growthPct?.toFixed(1)}%) vs previous</div>` : '';
+    const growthHtml = growthVal !== null
+      ? `<div class="cn-vs-prev ${growthVal>=0?'pos':'neg'}">${growthVal>=0?'↑ +':'↓ -'}£${fmtNum(Math.abs(growthVal),0)} (${growthPct>=0?'+':''}${growthPct?.toFixed(1)}%) vs previous</div>`
+      : '';
+    // Type pill — Personal (gold tint) or Employer (blue tint)
     const typeLabel = entry.type==='employer'
-      ? `<span style="background:rgba(10,132,255,0.15);color:var(--blue);font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px">EMPLOYER</span>`
-      : `<span style="background:var(--gold-dim);color:var(--gold);font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px">PERSONAL</span>`;
+      ? `<span class="cn-pill cn-type-employer">Employer</span>`
+      : `<span class="cn-pill cn-type-personal">Personal</span>`;
 
     const entryWrapper = entry.wrapper || (entry.type === 'employer' ? 'SIPP' : 'GIA');
-    const wrapperColour = entryWrapper === 'ISA' ? 'var(--green)' : entryWrapper === 'SIPP' ? 'var(--blue)' : 'var(--amber)';
-    const wrapperLabel = `<span style="background:rgba(255,255,255,0.05);color:${wrapperColour};font-size:9px;font-weight:700;padding:2px 10px;border-radius:10px;border:1px solid ${wrapperColour}">${entryWrapper}</span>`;
+    const wrapperClass = entryWrapper === 'ISA' ? 'cn-wrap-isa' : entryWrapper === 'SIPP' ? 'cn-wrap-sipp' : 'cn-wrap-gia';
+    const wrapperLabel = `<span class="cn-pill ${wrapperClass}">${entryWrapper}</span>`;
 
-    const fundsHtml = entry.funds.map(f => `<div class="history-fund"><strong>${f.ticker}</strong>${f.held} units<br>${f.price>0?`£${fmtNum(f.value,0)} (${f.pct}%)`:'No price'}<br>@ £${_formatPriceDisplay(parseFloat(f.price||0)) || parseFloat(f.price||0).toFixed(2)}</div>`).join('');
+    // Each holding becomes its own mini-card with ticker, units, value/pct, price.
+    // Mini-cards use a slightly lighter chrome than the parent so they read as
+    // nested rather than competing with the outer card.
+    const fundsHtml = entry.funds.map(f => `<div class="cn-holding-mini">
+      <div class="ticker">${f.ticker}</div>
+      <div class="units-line">${f.held} units</div>
+      <div class="val-line">${f.price>0 ? `£${fmtNum(f.value,0)} <span class="pct">(${f.pct}%)</span>` : '<span style="color:var(--muted2)">No price</span>'}</div>
+      <div class="price-line">@ £${_formatPriceDisplay(parseFloat(f.price||0)) || parseFloat(f.price||0).toFixed(2)}</div>
+    </div>`).join('');
 
     // Derive the contribution amount: prefer entry.budget, fall back to sum of fund values this month
     const contribAmt = entry.budget > 0
@@ -9257,8 +10037,8 @@ function renderHistory(filter='all') {
 
     return `<div class="history-card ${entry.type||'personal'}" id="hcard_${entry.id}">
       <div class="history-top">
-        <div>
-          <div class="flex-center mb8">${typeLabel}${wrapperLabel}<span class="history-date" style="margin-left:8px">${entry.date}</span></div>
+        <div style="flex:1;min-width:0">
+          <div class="cn-header">${typeLabel}${wrapperLabel}<span class="history-date" style="margin-left:4px">${entry.date}</span></div>
           ${contribAmt > 0
             ? `<div class="history-val">£${fmtNum(Math.round(contribAmt), 0)}</div>
                <div class="history-sub">contributed this entry</div>`
@@ -9270,8 +10050,8 @@ function renderHistory(filter='all') {
           ${growthHtml}
         </div>
         <div class="history-actions">
-          <button class="btn-edit btn-sm" onclick="toggleEditForm(${entry.id})">Edit</button>
-          <button class="btn-danger btn-sm" onclick="deleteHistoryEntry(${entry.id})">Delete</button>
+          <button class="btn-edit btn-sm cn-action-btn" onclick="toggleEditForm(${entry.id})">Edit</button>
+          <button class="btn-danger btn-sm cn-action-btn cn-action-delete" onclick="deleteHistoryEntry(${entry.id})">Delete</button>
         </div>
       </div>
       <div class="history-funds">${fundsHtml}</div>
@@ -11531,30 +12311,28 @@ function renderGrowthChart(type='monthly') {
   const totalChangePct = firstValue > 0 ? (totalChange/firstValue*100) : 0;
 
   el.innerHTML=`
-    <div class="grid-3 mb16">
-      <div class="stat">
-        <div class="stat-label">Current Portfolio Value</div>
-        <div class="stat-val sm gold">£${fmtNum(Math.round(latestValue),0)}</div>
-        <div class="stat-sub">at current prices across all wrappers</div>
+    <div class="grid-3 mb16 growth-stats-grid">
+      <div class="tax-headline-card" style="padding:12px 14px">
+        <div class="tax-headline-card-label" style="font-size:11px">Current Portfolio Value</div>
+        <div class="tax-headline-card-value" style="font-size:20px;color:var(--gold)">£${fmtNum(Math.round(latestValue),0)}</div>
+        <div class="tax-headline-card-sub">at current prices across all wrappers</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Total Contributed (Cost Base)</div>
-        <div class="stat-val sm" style="color:var(--blue)">£${fmtNum(Math.round(latestContrib),0)}</div>
-        <div class="stat-sub">from HL cost base</div>
+      <div class="tax-headline-card" style="padding:12px 14px">
+        <div class="tax-headline-card-label" style="font-size:11px">Total Contributed (Cost Base)</div>
+        <div class="tax-headline-card-value" style="font-size:20px;color:var(--blue)">£${fmtNum(Math.round(latestContrib),0)}</div>
+        <div class="tax-headline-card-sub">from HL cost base</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Market Growth</div>
-        <div class="stat-val sm" style="color:${marketGrowth>=0?'var(--green)':'var(--red)'}">${marketGrowth>=0?'+':''}£${fmtNum(Math.round(marketGrowth),0)} (${growthPct>=0?'+':''}${growthPct.toFixed(1)}%)</div>
-        <div class="stat-sub">unrealised gain across portfolio</div>
+      <div class="tax-headline-card" style="padding:12px 14px">
+        <div class="tax-headline-card-label" style="font-size:11px">Market Growth</div>
+        <div class="tax-headline-card-value" style="font-size:20px;color:${marketGrowth>=0?'var(--green)':'var(--red)'}">${marketGrowth>=0?'+':''}£${fmtNum(Math.round(marketGrowth),0)} (${growthPct>=0?'+':''}${growthPct.toFixed(1)}%)</div>
+        <div class="tax-headline-card-sub">unrealised gain across portfolio</div>
       </div>
     </div>
-    <div class="flex-between mb8">
-      <div style="display:flex;gap:16px;align-items:center">
-        <div style="display:flex;align-items:center;gap:6px"><div style="width:20px;height:2px;background:var(--gold)"></div><span style="font-size:9px;color:var(--muted)">Portfolio Value</span></div>
-        <div style="display:flex;align-items:center;gap:6px"><div style="width:20px;height:2px;background:var(--blue)"></div><span style="font-size:9px;color:var(--muted)">Contributions</span></div>
-        <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;background:rgba(48,209,88,0.25);border-radius:10px"></div><span style="font-size:9px;color:var(--muted)">Market Growth</span></div>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:${totalChange>=0?'var(--green)':'var(--red)'}">${totalChange>=0?'+':''}£${fmtNum(Math.round(totalChange),0)} (${totalChangePct>=0?'+':''}${totalChangePct.toFixed(1)}%) overall</div>
+    <div class="growth-legend-row">
+      <div class="growth-legend-chip"><div class="growth-legend-bar gold"></div>Portfolio Value</div>
+      <div class="growth-legend-chip"><div class="growth-legend-bar blue"></div>Contributions</div>
+      <div class="growth-legend-chip"><div class="growth-legend-area"></div>Market Growth</div>
+      <div class="growth-overall-chip ${totalChange>=0?'pos':'neg'}">${totalChange>=0?'+':''}£${fmtNum(Math.round(totalChange),0)} (${totalChangePct>=0?'+':''}${totalChangePct.toFixed(1)}%) overall</div>
     </div>
     <svg id="growthSVG" width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
       <defs>
@@ -13331,12 +14109,29 @@ function renderTaxTab() {
   // ── Full income-based CGT calculation ──
   const cgtCalc = calculateCGTRate(income, totalGIAGain, remainingAllowance);
 
-  // ── Summary cards ──
-  document.getElementById('taxSummaryCards').innerHTML = [
-    { label:'Total Portfolio Value', val:`£${fmtNum(Math.round(totalPortValue),0)}`, sub:'across all wrappers', cls:'gold' },
-    { label:'GIA Unrealised Gain', val: totalGIAGain >= 0 ? `+£${fmtNum(Math.round(totalGIAGain),0)}` : `-£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'if sold today', cls: totalGIAGain >= 0 ? 'green' : 'red' },
-    { label:'Estimated CGT Liability', val:`£${fmtNum(Math.round(cgtCalc.totalTax),0)}`, sub:`${cgtCalc.effectiveRate.toFixed(1)}% effective rate after £${fmtNum(remainingAllowance,0)} allowance`, cls:'red' },
-  ].map(s => `<div class="card"><div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div></div>`).join('');
+  // ── Summary cards — pill format. Estimated CGT Liability is the
+  // primary takeaway since it's what you'd actually owe HMRC. GIA
+  // Unrealised Gain is the supporting context that drives that figure.
+  // Total Portfolio Value was dropped here — it's a portfolio-tab
+  // metric, not a tax-tab metric.
+  const taxColourFor = (cls) => ({
+    gold: 'var(--gold)', green: 'var(--green)', red: 'var(--red)',
+    amber: 'var(--amber)', white: 'var(--white)',
+  })[cls] || 'var(--white)';
+  const taxCfgs = [
+    { label:'Estimated CGT Liability', val:`£${fmtNum(Math.round(cgtCalc.totalTax),0)}`, sub:`${cgtCalc.effectiveRate.toFixed(1)}% effective rate after £${fmtNum(remainingAllowance,0)} allowance`, cls: cgtCalc.totalTax > 0 ? 'red' : 'white', primary:true },
+    { label:'GIA Unrealised Gain', val: totalGIAGain >= 0 ? `+£${fmtNum(Math.round(totalGIAGain),0)}` : `-£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'if sold today across all GIA holdings', cls: totalGIAGain >= 0 ? 'green' : 'red' },
+  ];
+  document.getElementById('taxSummaryCards').innerHTML = taxCfgs.map(s => {
+    const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
+    const valStyle  = s.primary ? `font-size:32px;color:${taxColourFor(s.cls)}` : `color:${taxColourFor(s.cls)}`;
+    const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
+    return `<div class="${cardClass}">
+      <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
+      <div class="tax-headline-card-value" style="${valStyle}">${s.val}</div>
+      <div class="tax-headline-card-sub">${s.sub}</div>
+    </div>`;
+  }).join('');
 
   // ── GIA summary stats ──
   const giaWarning = cgtCalc.totalTax > 0
@@ -13925,13 +14720,26 @@ function updateSellRemainingAllowance() {
   const el = document.getElementById('sell-remaining-allowance');
   if (el) {
     el.textContent = `£${fmtNum(remaining, 0)}`;
-    el.className = `stat-val ${remaining === 0 ? 'red' : 'gold'}`;
+    // Toggle "depleted" state on the chip wrapper when allowance hits zero
+    // — flips the gold tint to red. Inner span keeps remaining-chip-amt
+    // class so styling stays consistent; only the parent chip gets the
+    // state modifier. parentNode is the .remaining-chip wrapper.
+    const chipWrap = el.closest('.remaining-chip');
+    if (chipWrap) {
+      chipWrap.classList.toggle('depleted', remaining === 0);
+    }
   }
   const isaAllowance = parseFloat((document.getElementById('sell-isa-allowance')?.value||'').replace(/,/g,'')) || 20000;
   const isaUsed = parseFloat((document.getElementById('sell-isa-used')?.value||'').replace(/,/g,'')) || 0;
   const isaRemaining = Math.max(0, isaAllowance - isaUsed);
   const isaEl = document.getElementById('sell-remaining-isa');
-  if (isaEl) isaEl.textContent = `£${fmtNum(isaRemaining, 0)}`;
+  if (isaEl) {
+    isaEl.textContent = `£${fmtNum(isaRemaining, 0)}`;
+    const chipWrap = isaEl.closest('.remaining-chip');
+    if (chipWrap) {
+      chipWrap.classList.toggle('depleted', isaRemaining === 0);
+    }
+  }
 }
 
 function showSellView(view) {
@@ -14841,20 +15649,43 @@ function renderAnalyse() {
 
   // ════ RENDER SECTIONS ════
 
-  // 1. Snapshot
-  document.getElementById('analyse-snapshot').innerHTML = [
-    { label:'Total Portfolio Value', val:`£${fmtNum(Math.round(totalValue),0)}`, sub:`${holdingCount} holdings across 3 wrappers`, cls:'gold' },
+  // 1. Snapshot — pill cards. Total Portfolio Value is the primary takeaway.
+  const snapColourFor = (cls) => ({
+    gold: 'var(--gold)', green: 'var(--green)', red: 'var(--red)',
+    amber: 'var(--amber)', white: 'var(--white)',
+  })[cls] || 'var(--white)';
+  const snapCfgs = [
+    { label:'Total Portfolio Value', val:`£${fmtNum(Math.round(totalValue),0)}`, sub:`${holdingCount} holdings across 3 wrappers`, cls:'gold', primary:true },
     { label:'Tax Exempt Coverage', val:`${taxExemptPct.toFixed(1)}%`, sub:`£${fmtNum(Math.round(taxExemptValue),0)} in ISA + SIPP`, cls: taxExemptPct > 40 ? 'green' : 'amber' },
     { label:'GIA Unrealised Gain', val:`${totalGIAGain>=0?'+':''}£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'if sold today', cls: totalGIAGain>=0 ? 'green' : 'red' },
     { label:'Years to Retirement', val:yearsLeft, sub:`Target age ${targetAge} in ${taxYearStart+yearsLeft}`, cls:'white' },
-  ].map(s => `<div class="card"><div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div></div>`).join('');
+  ];
+  document.getElementById('analyse-snapshot').innerHTML = snapCfgs.map(s => {
+    const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
+    const valStyle  = s.primary ? `font-size:32px;color:${snapColourFor(s.cls)}` : `color:${snapColourFor(s.cls)}`;
+    const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
+    return `<div class="${cardClass}">
+      <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
+      <div class="tax-headline-card-value" style="${valStyle}">${s.val}</div>
+      <div class="tax-headline-card-sub">${s.sub}</div>
+    </div>`;
+  }).join('');
 
-  // 2. Wrapper efficiency
+  // 2. Wrapper efficiency — pill cards. Three equal-weight wrapper
+  // buckets, no clear primary, so all neutral with their identity colours.
+  const wrapColourFor = (cls) => ({
+    gold: 'var(--gold)', green: 'var(--green)', red: 'var(--red)',
+    amber: 'var(--amber)', blue: 'var(--blue)', white: 'var(--white)',
+  })[cls] || 'var(--white)';
   document.getElementById('analyse-wrapper-cards').innerHTML = [
     { label:'GIA Value', val:`£${fmtNum(Math.round(giaValue),0)}`, sub:`${totalValue>0?(giaValue/totalValue*100).toFixed(1):0}% of portfolio`, cls:'amber' },
     { label:'ISA Value', val:`£${fmtNum(Math.round(isaValue),0)}`, sub:`${totalValue>0?(isaValue/totalValue*100).toFixed(1):0}% of portfolio`, cls:'green' },
     { label:'SIPP Value', val:`£${fmtNum(Math.round(sippValue),0)}`, sub:`${totalValue>0?(sippValue/totalValue*100).toFixed(1):0}% of portfolio`, cls:'blue' },
-  ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+  ].map(s => `<div class="tax-headline-card">
+    <div class="tax-headline-card-label">${s.label}</div>
+    <div class="tax-headline-card-value" style="color:${wrapColourFor(s.cls)}">${s.val}</div>
+    <div class="tax-headline-card-sub">${s.sub}</div>
+  </div>`).join('');
   document.getElementById('analyse-wrapper-bar').style.width = `${taxExemptPct.toFixed(0)}%`;
 
   const wrapperInsight = taxExemptPct < 25
@@ -14864,14 +15695,40 @@ function renderAnalyse() {
     : `${taxExemptPct.toFixed(1)}% of your portfolio is in tax-exempt wrappers. Your GIA CGT exposure is becoming more manageable.`;
   document.getElementById('analyse-wrapper-insight').textContent = wrapperInsight;
 
-  // 3. CGT health
+  // 3. CGT health — pill-card layout, CGT Allowance Remaining is the
+  // takeaway because it's the lever you act on (the cap on tax-free
+  // gains). Total Unrealised Gain is informational; Tax Liability and
+  // Tax Year Resets are supporting.
   const cgtAllowanceUsedPct = Math.min(100, totalGIAGain > 0 ? (Math.min(totalGIAGain, allowance)/allowance*100) : 0);
-  document.getElementById('analyse-cgt-cards').innerHTML = [
-    { label:'Total Unrealised Gain', val:`£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'GIA holdings only', cls: totalGIAGain>0?'green':'red' },
-    { label:'CGT Allowance', val:`£${fmtNum(remainingCGT,0)}`, sub:`of £${fmtNum(allowance,0)} remaining`, cls:'gold' },
-    { label:'Est. Tax Liability', val:`£${fmtNum(Math.round(cgtCalc.totalTax),0)}`, sub:`${cgtCalc.effectiveRate.toFixed(1)}% effective rate`, cls:'red' },
-    { label:'Tax Year Resets', val:`${daysToReset}d`, sub:`5 April ${taxYearStart+1}`, cls: daysToReset<60?'amber':'muted' },
-  ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+  const cgtCardsEl = document.getElementById('analyse-cgt-cards');
+  if (cgtCardsEl) {
+    const colourFor = (cls) => ({
+      gold:  'var(--gold)',
+      green: 'var(--green)',
+      red:   'var(--red)',
+      amber: 'var(--amber)',
+      muted: 'var(--muted)',
+      white: 'var(--white)',
+    })[cls] || 'var(--white)';
+    const cgtCfgs = [
+      { label:'CGT Allowance Remaining', val:`£${fmtNum(remainingCGT,0)}`, suffix:`of £${fmtNum(allowance,0)}`, sub:`resets 5 April ${taxYearStart+1} · ${daysToReset} days away`, cls:'white', primary:true },
+      { label:'Total Unrealised Gain', val:`£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'across GIA holdings only', cls: totalGIAGain>0?'green':'red' },
+      { label:'Estimated Tax Liability', val:`£${fmtNum(Math.round(cgtCalc.totalTax),0)}`, sub:`${cgtCalc.effectiveRate.toFixed(1)}% effective rate`, cls: cgtCalc.totalTax > 0 ? 'red' : 'white' },
+    ];
+    cgtCardsEl.innerHTML = cgtCfgs.map(s => {
+      const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
+      const valStyle  = s.primary
+        ? `font-size:32px;color:${colourFor(s.cls)}`
+        : `color:${colourFor(s.cls)}`;
+      const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
+      const suffixHtml = s.suffix ? `<span class="tax-headline-card-suffix">${s.suffix}</span>` : '';
+      return `<div class="${cardClass}">
+        <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
+        <div class="tax-headline-card-value" style="${valStyle}">${s.val}${suffixHtml}</div>
+        <div class="tax-headline-card-sub">${s.sub}</div>
+      </div>`;
+    }).join('');
+  }
 
   const remainingPct = Math.max(0, Math.min(100, remainingCGT/allowance*100));
   document.getElementById('analyse-cgt-bar').style.width = `${remainingPct.toFixed(0)}%`;
@@ -14953,67 +15810,51 @@ function renderAnalyse() {
       </div>
     </div>`;
 
-  // 5. Contribution health
-  // ── Contribution Rate Health — dynamic, three-phase-aware ──
-  const growthPctDisplay = (gr.annualGrowth * 100).toFixed(gr.annualGrowth * 100 % 1 === 0 ? 0 : 1);
-  const withdrawalLabel  = gr.withdrawalMode === 'drawdown' ? 'Full drawdown to 95' : '4% withdrawal rate';
+  // 5. Contribution Rate Health — REMOVED. The same figures (Monthly
+  // Contributions, Projected at Retirement, Sustainable Income) are
+  // shown in full detail on the Retirement tab. Keeping them here too
+  // was duplication. The Retirement tab is the canonical source.
 
-  document.getElementById('analyse-contrib-cards').innerHTML = [
-    {
-      label: 'Monthly Contributions',
-      val:   `£${fmtNum(Math.round(monthlyContrib), 0)}/mo`,
-      sub:   'personal + employer',
-      cls:   'gold',
-    },
-    {
-      label: 'Projected at Retirement',
-      val:   `£${fmtNum(Math.round(projectedRetirement), 0)}`,
-      sub:   `age ${targetAge} at ${growthPctDisplay}% growth`,
-      cls:   'white',
-    },
-    {
-      label: 'Sustainable Monthly Income',
-      val:   `£${fmtNum(Math.round(sustainableIncome), 0)}/mo`,
-      sub:   withdrawalLabel,
-      cls:   'green',
-    },
-  ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
-
-  // Dynamic summary — reflects all three phases if active
-  let contribInsight;
-  if (monthlyContrib > 0) {
-    const phaseBreakdown = gr.hasStepdown
-      ? `${gr.p1Years} yr${gr.p1Years!==1?'s':''} at £${fmtNum(Math.round(monthlyContrib),0)}/mo, ${gr.p2Years} yr${gr.p2Years!==1?'s':''} at £${fmtNum(Math.round(gr.p2Amount),0)}/mo, then ${gr.p3Years} yr${gr.p3Years!==1?'s':''} coasting`
-      : gr.hasCoast
-        ? `${gr.p1Years} yr${gr.p1Years!==1?'s':''} contributing at £${fmtNum(Math.round(monthlyContrib),0)}/mo, then ${gr.p3Years} yr${gr.p3Years!==1?'s':''} coasting`
-        : `${yearsLeft} yr${yearsLeft!==1?'s':''} at £${fmtNum(Math.round(monthlyContrib),0)}/mo`;
-    contribInsight = `At £${fmtNum(Math.round(monthlyContrib),0)}/month across ${yearsLeft} year${yearsLeft!==1?'s':''} to retirement (${phaseBreakdown}), your portfolio should reach approximately £${fmtNum(Math.round(projectedRetirement),0)} by age ${targetAge}, generating a sustainable income of £${fmtNum(Math.round(sustainableIncome),0)}/month.`;
-  } else {
-    contribInsight = 'No monthly contributions set. Update the Retirement Tracker page with your contribution amounts.';
-  }
-  document.getElementById('analyse-contrib-insight').textContent = contribInsight;
-
-  // 6. Bed & ISA priority list
+  // 6. Bed & ISA priority list — pill cards
+  // Each holding renders as its own rounded card with a header
+  // (ticker + units/cost + priority badge) and a three-column row of
+  // metrics underneath (market value, gain, est. CGT). Priority badge
+  // colour-tints by tier: red for highest, amber for high, neutral
+  // for medium and muted for low. Cards work at every width — the
+  // 3-column grid stays compact on mobile because the figures are
+  // short, no transformation needed.
   const bedISAPriority = giaRows
     .filter(r => r.gain > 0)
     .sort((a,b) => b.gain - a.gain);
 
   document.getElementById('analyse-bedisa-list').innerHTML = bedISAPriority.length === 0
     ? `<div class="history-empty">No GIA holdings with unrealised gains found.</div>`
-    : `<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--white);opacity:0.7;display:grid;grid-template-columns:65px 1fr 90px 90px 90px 100px;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px">
-        <div>Ticker</div><div>Position</div><div class="col-h">Market Value</div><div class="col-h">Unrealised Gain</div><div class="col-h">Est. CGT Cost</div><div class="col-h">Priority</div>
-       </div>` +
-      bedISAPriority.map((r, i) => {
+    : bedISAPriority.map((r, i) => {
         const cgtOnGain = calculateCGTRate(income, r.gain, i===0 ? remainingCGT : 0);
         const priority = i === 0 ? 'Highest' : i === 1 ? 'High' : i < 4 ? 'Medium' : 'Low';
-        const priorityColour = i === 0 ? 'var(--red)' : i < 2 ? 'var(--amber)' : 'var(--muted)';
-        return `<div style="display:grid;grid-template-columns:65px 1fr 90px 90px 90px 100px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-          <div class="col-ticker">${r.ticker}</div>
-          <div style="font-size:10px;color:var(--muted)">${r.units} units @ £${fmtNum(r.avgCost,2)} avg cost</div>
-          <div style="text-align:right;font-weight:600;color:var(--white)">£${fmtNum(Math.round(r.marketValue),0)}</div>
-          <div style="text-align:right;font-weight:700;color:var(--green)">+£${fmtNum(Math.round(r.gain),0)}</div>
-          <div style="text-align:right;color:var(--red)">£${fmtNum(Math.round(cgtOnGain.totalTax),0)}</div>
-          <div style="text-align:right;font-weight:700;color:${priorityColour}">${priority}</div>
+        const priorityClass = i === 0 ? 'highest' : i === 1 ? 'high' : i < 4 ? 'medium' : 'low';
+        return `<div class="bipri-card">
+          <div class="bipri-header">
+            <div class="bipri-header-left">
+              <div class="bipri-ticker">${r.ticker}</div>
+              <div class="bipri-units">${r.units} units @ £${fmtNum(r.avgCost,2)} avg cost</div>
+            </div>
+            <div class="bipri-priority-pill ${priorityClass}">${priority}</div>
+          </div>
+          <div class="bipri-row">
+            <div class="bipri-cell">
+              <div class="bipri-cell-lbl">Market Value</div>
+              <div class="bipri-cell-val">£${fmtNum(Math.round(r.marketValue),0)}</div>
+            </div>
+            <div class="bipri-cell">
+              <div class="bipri-cell-lbl">Gain</div>
+              <div class="bipri-cell-val gain">+£${fmtNum(Math.round(r.gain),0)}</div>
+            </div>
+            <div class="bipri-cell">
+              <div class="bipri-cell-lbl">Est. CGT</div>
+              <div class="bipri-cell-val cgt">£${fmtNum(Math.round(cgtOnGain.totalTax),0)}</div>
+            </div>
+          </div>
         </div>`;
       }).join('');
 
@@ -15095,20 +15936,34 @@ function renderBudgetPerformance() {
 
     // ── Summary cards ──
     const cardsEl = document.getElementById('analyse-budget-perf-cards');
-    if (cardsEl) cardsEl.innerHTML = [
-      { label: 'Annual Savings Rate',      val: `${savingsRate.toFixed(1)}%`,
-        sub: `plan was ${planRate.toFixed(1)}%`,
-        cls: savingsRate >= planRate ? 'green' : 'amber' },
-      { label: 'Total Saved',              val: `${netActual>=0?'+':''}£${fmtNum(Math.round(Math.abs(netActual)),0)}`,
-        sub: `planned £${fmtNum(Math.round(Math.abs(netPlanned)),0)}`,
-        cls: netActual >= 0 ? 'green' : 'red' },
-      { label: 'Income Variance',          val: `${varIncome>=0?'+':''}£${fmtNum(Math.round(varIncome),0)}`,
-        sub: varIncome >= 0 ? 'above plan' : 'below plan',
-        cls: varIncome >= 0 ? 'green' : 'red' },
-      { label: 'Expense Variance',         val: `${varExp<=0?'+':''}£${fmtNum(Math.round(Math.abs(varExp)),0)}`,
-        sub: varExp <= 0 ? 'under budget' : 'over budget',
-        cls: varExp <= 0 ? 'green' : 'red' },
-    ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+    if (cardsEl) {
+      const colourFor = (cls) => ({
+        gold:  'var(--gold)',
+        green: 'var(--green)',
+        red:   'var(--red)',
+        amber: 'var(--amber)',
+        white: 'var(--white)',
+      })[cls] || 'var(--white)';
+      const perfCfgs = [
+        { label: 'Annual Savings Rate',      val: `${savingsRate.toFixed(1)}%`,
+          sub: `plan was ${planRate.toFixed(1)}%`,
+          cls: savingsRate >= planRate ? 'green' : 'amber' },
+        { label: 'Total Saved',              val: `${netActual>=0?'+':''}£${fmtNum(Math.round(Math.abs(netActual)),0)}`,
+          sub: `planned £${fmtNum(Math.round(Math.abs(netPlanned)),0)}`,
+          cls: netActual >= 0 ? 'green' : 'red' },
+        { label: 'Income Variance',          val: `${varIncome>=0?'+':''}£${fmtNum(Math.round(varIncome),0)}`,
+          sub: varIncome >= 0 ? 'above plan' : 'below plan',
+          cls: varIncome >= 0 ? 'green' : 'red' },
+        { label: 'Expense Variance',         val: `${varExp<=0?'+':''}£${fmtNum(Math.round(Math.abs(varExp)),0)}`,
+          sub: varExp <= 0 ? 'under budget' : 'over budget',
+          cls: varExp <= 0 ? 'green' : 'red' },
+      ];
+      cardsEl.innerHTML = perfCfgs.map(s => `<div class="tax-headline-card">
+        <div class="tax-headline-card-label">${s.label}</div>
+        <div class="tax-headline-card-value" style="color:${colourFor(s.cls)}">${s.val}</div>
+        <div class="tax-headline-card-sub">${s.sub}</div>
+      </div>`).join('');
+    }
 
     // ── Plan vs Actual table ──
     const fmt = v => `£${fmtNum(Math.round(Math.abs(v)),0)}`;
@@ -15265,12 +16120,31 @@ function renderAnalyseNetWorth() {
   const nwGIABarNote    = `${nwMarginalRate}% CGT on gains above £${fmtNum(nwAllowance,0)} allowance`;
 
   if (nwCards) {
-    nwCards.innerHTML = [
-      { label:'Net Worth', val:`\u00a3${fmtNum(Math.round(netWorth),0)}`, sub:'gross assets minus all liabilities', cls:'gold' },
+    const colourFor = (cls) => ({
+      gold:  'var(--gold)',
+      green: 'var(--green)',
+      red:   'var(--red)',
+      amber: 'var(--amber)',
+      white: 'var(--white)',
+    })[cls] || 'var(--white)';
+    const cardCfgs = [
+      { label:'Net Worth', val:`\u00a3${fmtNum(Math.round(netWorth),0)}`, sub:'gross assets minus all liabilities', cls:'gold', primary:true },
       { label:'Investment Portfolio', val:`\u00a3${fmtNum(Math.round(totalPortfolio),0)}`, sub:`GIA \u00a3${fmtNum(Math.round(giaVal),0)} \u00b7 ISA \u00a3${fmtNum(Math.round(isaVal),0)} \u00b7 SIPP \u00a3${fmtNum(Math.round(sippVal),0)}`, cls:'white' },
       { label:'Property Equity', val:`\u00a3${fmtNum(Math.round(propertyEquity),0)}`, sub:'after mortgage \u2014 main residence relief applies', cls:'white' },
       { label:'Tax-Exposed (GIA only)', val:`\u00a3${fmtNum(Math.round(taxableAssets),0)}`, sub:nwCgtNote, cls:'amber' },
-    ].map(s=>`<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+    ];
+    nwCards.innerHTML = cardCfgs.map(s => {
+      const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
+      const valStyle  = s.primary
+        ? `font-size:32px;color:${colourFor(s.cls)}`
+        : `color:${colourFor(s.cls)}`;
+      const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
+      return `<div class="${cardClass}">
+        <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
+        <div class="tax-headline-card-value" style="${valStyle}">${s.val}</div>
+        <div class="tax-headline-card-sub">${s.sub}</div>
+      </div>`;
+    }).join('');
   }
 
   const nwBreak = document.getElementById('analyse-nw-breakdown');
@@ -15477,13 +16351,29 @@ function renderNetWorth() {
   const carsGain = carsValue - carsCost;
   const whiskeyGain = whiskeyValue - whiskeyCost;
 
-  // Summary cards
-  document.getElementById('nw-summary-cards').innerHTML = [
-    { label:'Net Worth', val:`£${fmtNum(Math.round(netWorth),0)}`, sub:'assets minus all liabilities', cls: netWorth>=0?'gold':'red' },
+  // Summary cards — pill format. Net Worth is the primary takeaway
+  // (the answer to "where do I stand?"). The other three are
+  // supporting context.
+  const nwSummaryColourFor = (cls) => ({
+    gold: 'var(--gold)', green: 'var(--green)', red: 'var(--red)',
+    amber: 'var(--amber)', white: 'var(--white)',
+  })[cls] || 'var(--white)';
+  const nwSummaryCfgs = [
+    { label:'Net Worth', val:`£${fmtNum(Math.round(netWorth),0)}`, sub:'assets minus all liabilities', cls: netWorth>=0?'gold':'red', primary:true },
     { label:'Gross Assets', val:`£${fmtNum(Math.round(grossAssets),0)}`, sub:'before liabilities', cls:'white' },
     { label:'Total Liabilities', val:`£${fmtNum(Math.round(totalLiabilities),0)}`, sub:'mortgage + other debts', cls:'red' },
     { label:'Investment Portfolio', val:`£${fmtNum(Math.round(totalInvestments),0)}`, sub:'GIA + ISA + SIPP', cls:'green' },
-  ].map(s=>`<div class="card"><div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div></div>`).join('');
+  ];
+  document.getElementById('nw-summary-cards').innerHTML = nwSummaryCfgs.map(s => {
+    const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
+    const valStyle  = s.primary ? `font-size:32px;color:${nwSummaryColourFor(s.cls)}` : `color:${nwSummaryColourFor(s.cls)}`;
+    const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
+    return `<div class="${cardClass}">
+      <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
+      <div class="tax-headline-card-value" style="${valStyle}">${s.val}</div>
+      <div class="tax-headline-card-sub">${s.sub}</div>
+    </div>`;
+  }).join('');
 
   // Build segments for pie chart. Each gets a fixed slot in the NW_COLOURS
   // palette so the same asset category always appears in the same colour
