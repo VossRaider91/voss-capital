@@ -16384,6 +16384,10 @@ function openBgtHistory() {
   document.getElementById('bgt-live-view').style.display    = 'none';
   document.getElementById('bgt-history-view').style.display = 'block';
   _bgtHistSelectedId = null;
+  // Clear any stale pending edits when entering history fresh — prevents
+  // a user from leaving April with unsaved changes, returning later, and
+  // being confused by a "5 pending edits" badge they don't remember.
+  window._bgtHistPendingEdits = {};
   _renderBgtHistList();
   document.getElementById('bgt-hist-detail').style.display  = 'none';
   document.getElementById('bgt-hist-subtitle').textContent  = 'Select a month to inspect and edit its figures';
@@ -16542,7 +16546,7 @@ function selectBgtHistMonth(monthId) {
   const rec   = (state.monthHistory || []).find(m => m.id === monthId);
   if (!rec) return;
 
-  document.getElementById('bgt-hist-subtitle').textContent    = `Viewing ${rec.month} — changes save automatically`;
+  document.getElementById('bgt-hist-subtitle').textContent    = `Viewing ${rec.month} — edit cells and click Save Changes to commit`;
   document.getElementById('bgt-hist-detail-title').textContent = rec.month;
   document.getElementById('bgt-hist-detail').style.display    = 'block';
 
@@ -16558,10 +16562,29 @@ function _renderBgtHistDetailTable(rec, monthId) {
   // frozen against live-month edits but re-stamp on historical edits
   const averages = rec.averagesAtSnapshot || {};
 
+  // Pending-edits buffer for this archived month. Keyed by monthId so the
+  // user can flip between months without one's edits leaking into another.
+  // Cleared after Save Changes commits, or when the user closes/reopens
+  // the history detail (handled in _bgtSelectHistMonth).
+  if (!window._bgtHistPendingEdits) window._bgtHistPendingEdits = {};
+  if (!window._bgtHistPendingEdits[monthId]) {
+    window._bgtHistPendingEdits[monthId] = { planned: {}, actual: {} };
+  }
+  const pending = window._bgtHistPendingEdits[monthId];
+
+  // Helper: read effective planned/actual considering pending edits over snapshot.
+  // Used both for cell value rendering and for live total recomputation.
+  const effPlanned = (name) => name in pending.planned
+    ? pending.planned[name]
+    : (parseFloat(planned[name]) || 0);
+  const effActual  = (name) => name in pending.actual
+    ? pending.actual[name]
+    : (parseFloat(actual[name]) || 0);
+
   const section = (label, cls, items, isIncome, isVariable) => {
     const rows = items.map(name => {
-      const p    = parseFloat(planned[name]) || 0;
-      const a    = parseFloat(actual[name])  || 0;
+      const p    = effPlanned(name);
+      const a    = effActual(name);
       const diff = isIncome ? (a - p) : (p - a);
       const dCls = diff > 0.005 ? 'bgt-diff-pos' : diff < -0.005 ? 'bgt-diff-neg' : 'bgt-diff-neutral';
 
@@ -16583,12 +16606,18 @@ function _renderBgtHistDetailTable(rec, monthId) {
 
       return `<tr class="bgt-row">
         <td>${name}</td>
-        <td style="color:var(--muted)">£${fmtNum(p,2)}</td>
+        <td>
+          <input class="bgt-planned-input" type="text" inputmode="decimal" value="${p > 0 ? p.toFixed(2) : '0.00'}"
+            data-cell-key="planned-${name}"
+            oninput="_bgtHistStagePlanned('${monthId}','${name}',this.value)"
+            onfocus="this.select()" step="0.01" min="0">
+        </td>
         <td>
           <div class="bgt-cell-actual">
             <input class="bgt-hist-actual-input" type="text" inputmode="decimal" value="${a > 0 ? a.toFixed(2) : ''}"
+              data-cell-key="actual-${name}"
               placeholder="0.00" step="0.01" min="0"
-              onchange="bgtHistUpdateActual('${monthId}','${name}',this.value)"
+              oninput="_bgtHistStageActual('${monthId}','${name}',this.value)"
               onfocus="this.select()">
             ${_bgtProgressBar(a, p, isVariable)}
           </div>
@@ -16597,8 +16626,8 @@ function _renderBgtHistDetailTable(rec, monthId) {
         <td class="${dCls}">${_bgtDiffStr(diff)}</td>
       </tr>`;
     }).join('');
-    const sp = items.reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
-    const sa = items.reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
+    const sp = items.reduce((s,n)=>s+effPlanned(n),0);
+    const sa = items.reduce((s,n)=>s+effActual(n),0);
     const sd = isIncome ? sa-sp : sp-sa;
     const sc = sd >= 0 ? 'bgt-diff-pos' : 'bgt-diff-neg';
     // Section average — sum of category averages across this section
@@ -16617,12 +16646,12 @@ function _renderBgtHistDetailTable(rec, monthId) {
       </tr>`;
   };
 
-  const tIP = BGT_INCOME.reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
-  const tIA = BGT_INCOME.reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
-  const tTP = BGT_TAX.reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
-  const tTA = BGT_TAX.reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
-  const tEP = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
-  const tEA = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
+  const tIP = BGT_INCOME.reduce((s,n)=>s+effPlanned(n),0);
+  const tIA = BGT_INCOME.reduce((s,n)=>s+effActual(n),0);
+  const tTP = BGT_TAX.reduce((s,n)=>s+effPlanned(n),0);
+  const tTA = BGT_TAX.reduce((s,n)=>s+effActual(n),0);
+  const tEP = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+effPlanned(n),0);
+  const tEA = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+effActual(n),0);
   const netAct = tIA - tTA - tEA;
   const nCls   = netAct >= 0 ? 'bgt-diff-pos' : 'bgt-diff-neg';
 
@@ -16641,10 +16670,18 @@ function _renderBgtHistDetailTable(rec, monthId) {
     ? `Avg column shows the per-category rolling average across ${monthsInSnap} archived month${monthsInSnap === 1 ? '' : 's'}, recomputed any time historical data changes.`
     : 'Avg column populates once you have at least one other archived month to compare against.';
 
+  // Pending-edits indicator — counts how many cells have changes waiting to commit
+  const pendingCount =
+    Object.keys(pending.planned).length +
+    Object.keys(pending.actual).length;
+  const pendingNote = pendingCount > 0
+    ? `<span style="color:var(--amber);font-weight:600">${pendingCount} pending edit${pendingCount === 1 ? '' : 's'}</span> — totals shown above include unsaved changes. Click Save Changes to commit and recompute averages.`
+    : 'No pending edits. Type into any planned or actual cell to make changes.';
+
   document.getElementById('bgt-hist-detail-table').innerHTML = `
     <table class="bgt-table">
       <thead class="bgt-thead"><tr>
-        <th style="text-align:left">Category</th><th>Planned £</th><th>Actual £ (editable)</th><th>Avg £</th><th>Difference</th>
+        <th style="text-align:left">Category</th><th>Planned £ (editable)</th><th>Actual £ (editable)</th><th>Avg £</th><th>Difference</th>
       </tr></thead>
       <tbody>
         ${section('Income','bgt-section-income',BGT_INCOME,true,false)}
@@ -16666,7 +16703,11 @@ function _renderBgtHistDetailTable(rec, monthId) {
         })()}
       </tbody>
     </table>
-    <div style="margin-top:10px;font-size:9px;color:var(--muted);font-style:italic;line-height:1.5">${stampNote}</div>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px">
+      <div style="font-size:10px;color:var(--muted);font-style:italic;line-height:1.5;flex:1;min-width:240px">${pendingNote}</div>
+      <button class="btn-gold" onclick="bgtHistSaveChanges('${monthId}')" style="white-space:nowrap">Save Changes</button>
+    </div>
+    <div style="margin-top:8px;font-size:9px;color:var(--muted);font-style:italic;line-height:1.5">${stampNote}</div>`;
 }
 
 function _renderBgtHistAudit(rec) {
@@ -16734,33 +16775,153 @@ function bgtHistDeleteAuditEntry(monthId, originalIdx) {
 }
 
 // ── Historical actual edit (saves to monthHistory record) ──
-function bgtHistUpdateActual(monthId, name, value) {
+// ── Historical edit handlers ──────────────────────────────
+// Pending-edits flow: typing into a planned or actual cell stages the
+// new value into a per-month buffer (window._bgtHistPendingEdits[monthId]).
+// Nothing persists until the user clicks Save Changes — this gives them
+// a clear commit point and the ability to abandon a half-typed correction
+// by clicking another month or closing history. The detail table re-renders
+// after each keystroke so the totals, diffs and Net Position figures all
+// reflect the in-flight edits live (with a "X pending edits" amber note
+// in the footer to keep the un-saved state obvious).
+function _bgtHistStagePlanned(monthId, name, value) {
+  if (!window._bgtHistPendingEdits) window._bgtHistPendingEdits = {};
+  if (!window._bgtHistPendingEdits[monthId]) {
+    window._bgtHistPendingEdits[monthId] = { planned: {}, actual: {} };
+  }
+  window._bgtHistPendingEdits[monthId].planned[name] = parseFloat(value) || 0;
+  // Re-render so totals and diffs update live, but DON'T re-render audit
+  // (which would steal focus from the input the user is typing into).
+  // Defer the re-render slightly so onfocus doesn't clobber the cursor.
+  _bgtScheduleHistDetailRerender(monthId);
+}
+
+function _bgtHistStageActual(monthId, name, value) {
+  if (!window._bgtHistPendingEdits) window._bgtHistPendingEdits = {};
+  if (!window._bgtHistPendingEdits[monthId]) {
+    window._bgtHistPendingEdits[monthId] = { planned: {}, actual: {} };
+  }
+  window._bgtHistPendingEdits[monthId].actual[name] = parseFloat(value) || 0;
+  _bgtScheduleHistDetailRerender(monthId);
+}
+
+// Debounced re-render to avoid hammering DOM on every keystroke. The table
+// currently re-renders on each input event which means typing "1234" in
+// quick succession triggers four full table rebuilds. The 120ms debounce
+// keeps the live total feel responsive without thrashing.
+let _bgtHistRerenderTimer = null;
+function _bgtScheduleHistDetailRerender(monthId) {
+  clearTimeout(_bgtHistRerenderTimer);
+  _bgtHistRerenderTimer = setTimeout(() => {
+    const state = bgtLoad();
+    const rec   = (state.monthHistory || []).find(m => m.id === monthId);
+    if (!rec) return;
+    // Capture which input the user is typing into via its stable
+    // data-cell-key attribute, then restore focus + caret after the
+    // re-render so typing flow feels uninterrupted.
+    const active     = document.activeElement;
+    const cellKey    = (active && active.tagName === 'INPUT') ? active.getAttribute('data-cell-key') : null;
+    const caretPos   = (active && active.tagName === 'INPUT') ? active.selectionStart : null;
+    _renderBgtHistDetailTable(rec, monthId);
+    if (cellKey) {
+      const newActive = document.querySelector(`#bgt-hist-detail-table input[data-cell-key="${CSS.escape(cellKey)}"]`);
+      if (newActive) {
+        newActive.focus();
+        if (caretPos != null) {
+          try { newActive.setSelectionRange(caretPos, caretPos); } catch (e) {}
+        }
+      }
+    }
+  }, 120);
+}
+
+// Commit handler — Save Changes button. Walks the pending edits, writes
+// them into the archived snapshot, recomputes the record's totals, restamps
+// averages across every archived month (because changing one month's
+// figures shifts the rolling averages everywhere else), logs each edit
+// into the archived month's own audit array with an "edited retrospectively"
+// flag, and refreshes every panel that surfaces historical figures.
+function bgtHistSaveChanges(monthId) {
+  if (!window._bgtHistPendingEdits) window._bgtHistPendingEdits = {};
+  const pending = window._bgtHistPendingEdits[monthId] || { planned: {}, actual: {} };
+  const pendingCount =
+    Object.keys(pending.planned).length +
+    Object.keys(pending.actual).length;
+
+  if (pendingCount === 0) {
+    toast('No changes to save');
+    return;
+  }
+
+  snapshotState(`Edit history — ${monthId}`);
+
   const state = bgtLoad();
   const idx   = (state.monthHistory || []).findIndex(m => m.id === monthId);
-  if (idx === -1) return;
+  if (idx === -1) { toast('Month not found'); return; }
 
   const rec = state.monthHistory[idx];
-  if (!rec.actualSnapshot) rec.actualSnapshot = {};
-  rec.actualSnapshot[name] = parseFloat(value) || 0;
+  if (!rec.plannedSnapshot) rec.plannedSnapshot = {};
+  if (!rec.actualSnapshot)  rec.actualSnapshot  = {};
+  if (!rec.audit)           rec.audit           = [];
 
-  // Recompute all totals for this record
-  const planned = rec.plannedSnapshot || {};
+  // Apply the staged edits onto the snapshot, capturing before/after for the audit log
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+    + ' ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+  Object.entries(pending.planned).forEach(([name, val]) => {
+    const oldVal = parseFloat(rec.plannedSnapshot[name]) || 0;
+    if (Math.abs(oldVal - val) < 0.005) return; // unchanged
+    rec.plannedSnapshot[name] = val;
+    rec.audit.push({
+      category:        name,
+      amount:          val,
+      date:            dateStr,
+      note:            `Planned edited retrospectively (was £${fmtNum(oldVal,2)})`,
+      retroactiveEdit: true,
+      field:           'planned',
+    });
+  });
+
+  Object.entries(pending.actual).forEach(([name, val]) => {
+    const oldVal = parseFloat(rec.actualSnapshot[name]) || 0;
+    if (Math.abs(oldVal - val) < 0.005) return; // unchanged
+    rec.actualSnapshot[name] = val;
+    rec.audit.push({
+      category:        name,
+      amount:          val,
+      date:            dateStr,
+      note:            `Actual edited retrospectively (was £${fmtNum(oldVal,2)})`,
+      retroactiveEdit: true,
+      field:           'actual',
+    });
+  });
+
+  // Recompute this record's headline totals from the now-updated snapshots
+  const planned = rec.plannedSnapshot;
   const actual  = rec.actualSnapshot;
-  rec.totalIncomeActual = BGT_INCOME.reduce((s,n)=>s+(parseFloat(actual[n])||0),0);
-  rec.totalExpActual    = [...BGT_TAX,...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+(parseFloat(actual[n])||0),0);
-  rec.netActual         = rec.totalIncomeActual - rec.totalExpActual;
+  rec.totalIncomePlanned = BGT_INCOME.reduce((s,n) => s + (parseFloat(planned[n]) || 0), 0);
+  rec.totalIncomeActual  = BGT_INCOME.reduce((s,n) => s + (parseFloat(actual[n])  || 0), 0);
+  rec.totalExpPlanned    = [...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE].reduce((s,n) => s + (parseFloat(planned[n]) || 0), 0);
+  rec.totalExpActual     = [...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE].reduce((s,n) => s + (parseFloat(actual[n])  || 0), 0);
+  rec.netPlanned         = rec.totalIncomePlanned - rec.totalExpPlanned;
+  rec.netActual          = rec.totalIncomeActual  - rec.totalExpActual;
 
-  // This edit shifts averages across every other month — restamp the lot
+  // A change to one record's actuals shifts averages across every record
   _bgtRestampAllAverages(state);
 
   bgtSave(state);
 
-  // Re-render the detail table and refresh the list tile net figure
+  // Clear the pending edits buffer for this month — they're now committed
+  delete window._bgtHistPendingEdits[monthId];
+
+  // Refresh everything that depends on historical figures
   _renderBgtHistDetailTable(rec, monthId);
   _renderBgtHistAudit(rec);
   _renderBgtHistList();
-  // Historical change → averages may have shifted, refresh live analytics
   _refreshBgtAnalytics();
+
+  toast(`Saved ${pendingCount} change${pendingCount === 1 ? '' : 's'} to ${rec.month}`);
 }
 
 // ── State mutators (live month) ────────────────────────────
