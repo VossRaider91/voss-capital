@@ -1027,8 +1027,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-row td:first-child { text-align: left; color: var(--muted); font-size: 12px; font-weight: 500; }
 .bgt-row:last-child td { border-bottom: none; }
 .bgt-row.bgt-total td {
-  font-weight: 600; color: var(--white);
-  border-top: 0.5px solid var(--border2); font-size: 14px;
+  font-weight: 600; color: var(--blue);
+  font-size: 14px;
 }
 .bgt-row.bgt-net td {
   font-weight: 700; font-size: 20px;
@@ -1045,30 +1045,114 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   border: 0.5px solid var(--border);
 }
 .bgt-progress-bar { height: 100%; border-radius: 50px; transition: width 0.3s ease; }
+
+/* ─── BUDGET TRACKER INPUT PILLS ─────────────────────────────────
+   Editable inputs (.bgt-planned-input + .bgt-actual-input) now render
+   as rounded pills with a soft tint background, full border, no
+   underline. Distinguishes editable cells from read-only totals at a
+   glance — your eye knows immediately where to tap. Section totals
+   render as plain numeric strings in <td>, so they naturally stay
+   flat and don't compete with the pill rows.
+
+   Both inputs share base styling. Planned uses muted text colour and
+   neutral background; actual uses white text and a subtly stronger
+   tint to mark it as the live "what actually happened" value. Both
+   gain a blue focus ring matching the rest of the app's focus state.
+*/
+.bgt-planned-input,
+.bgt-actual-input,
+.bgt-hist-actual-input {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 50px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  font-size: 13px;
+  width: 110px;
+  text-align: right;
+  padding: 6px 14px;
+  outline: none;
+  transition: background-color 0.18s, border-color 0.18s, color 0.18s;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+  -webkit-appearance: none;
+  appearance: none;
+  /* Removes the spinner buttons on type=number inputs so the pill
+     stays a clean shape. */
+}
+.bgt-planned-input::-webkit-outer-spin-button,
+.bgt-planned-input::-webkit-inner-spin-button,
+.bgt-actual-input::-webkit-outer-spin-button,
+.bgt-actual-input::-webkit-inner-spin-button,
+.bgt-hist-actual-input::-webkit-outer-spin-button,
+.bgt-hist-actual-input::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
 .bgt-planned-input {
-  background: transparent; border: none;
-  border-bottom: 0.5px solid var(--border);
   color: var(--muted);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  font-size: 13px; font-weight: 500;
-  width: 90px; text-align: right;
-  padding: 4px 4px; outline: none;
-  transition: border-color 0.2s, color 0.2s;
-  font-variant-numeric: tabular-nums; letter-spacing: -0.1px;
+  font-weight: 500;
 }
-.bgt-planned-input:focus { border-bottom-color: var(--blue); color: var(--white); }
-.bgt-actual-input {
-  background: transparent; border: none;
-  border-bottom: 0.5px solid var(--border2);
+.bgt-actual-input,
+.bgt-hist-actual-input {
   color: var(--white);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  font-size: 13px; font-weight: 600;
-  width: 90px; text-align: right;
-  padding: 4px 4px; outline: none;
-  transition: border-color 0.2s;
-  font-variant-numeric: tabular-nums; letter-spacing: -0.1px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.12);
 }
-.bgt-actual-input:focus { border-bottom-color: var(--blue); }
+.bgt-planned-input:hover,
+.bgt-actual-input:hover,
+.bgt-hist-actual-input:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.16);
+}
+.bgt-planned-input:focus {
+  background: rgba(10,132,255,0.08);
+  border-color: rgba(10,132,255,0.45);
+  color: var(--white);
+}
+.bgt-actual-input:focus,
+.bgt-hist-actual-input:focus {
+  background: rgba(10,132,255,0.10);
+  border-color: rgba(10,132,255,0.50);
+}
+.bgt-actual-input::placeholder,
+.bgt-hist-actual-input::placeholder {
+  color: var(--muted2);
+  font-weight: 500;
+}
+/* Defensive scoped overrides to ensure pill styling wins against any
+   late-cascade rules that may have targeted these inputs by tag or id.
+   Specificity boost via parent IDs guarantees the pill background and
+   border survive even if another rule tries to reset them. */
+#bgt-main-table input.bgt-planned-input,
+#bgt-main-table input.bgt-actual-input,
+#bgt-history-view input.bgt-planned-input,
+#bgt-history-view input.bgt-actual-input,
+#bgt-history-view input.bgt-hist-actual-input {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 50px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.10);
+}
+#bgt-main-table input.bgt-actual-input,
+#bgt-history-view input.bgt-actual-input,
+#bgt-history-view input.bgt-hist-actual-input {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.12);
+  border-bottom-color: rgba(255,255,255,0.12);
+}
+#bgt-main-table input.bgt-planned-input:focus,
+#bgt-history-view input.bgt-planned-input:focus {
+  background: rgba(10,132,255,0.08);
+  border-color: rgba(10,132,255,0.45);
+  border-bottom-color: rgba(10,132,255,0.45);
+}
+#bgt-main-table input.bgt-actual-input:focus,
+#bgt-history-view input.bgt-actual-input:focus,
+#bgt-history-view input.bgt-hist-actual-input:focus {
+  background: rgba(10,132,255,0.10);
+  border-color: rgba(10,132,255,0.50);
+  border-bottom-color: rgba(10,132,255,0.50);
+}
 .bgt-diff-pos { color: var(--green); font-weight: 600; }
 .bgt-diff-neg { color: var(--red); font-weight: 600; }
 .bgt-diff-neutral { color: var(--muted); }
@@ -1295,18 +1379,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   background: rgba(10,132,255,0.10);
 }
 .bgt-hist-table-read td { color: var(--muted2); font-size: 12px; }
-.bgt-hist-actual-input {
-  background: transparent; border: none;
-  border-bottom: 0.5px solid var(--border);
-  color: var(--white);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  font-size: 13px; font-weight: 600;
-  width: 90px; text-align: right;
-  padding: 4px 4px; outline: none;
-  transition: border-color 0.2s;
-  font-variant-numeric: tabular-nums; letter-spacing: -0.1px;
-}
-.bgt-hist-actual-input:focus { border-bottom-color: var(--amber); }
+/* Note: .bgt-hist-actual-input styling is consolidated with .bgt-planned-input
+   and .bgt-actual-input at the top of this stylesheet (the pill input rules
+   around line 1062). Don't add a separate underline-style override here. */
 
 /* TAX TAB */
 .tax-table { width: 100%; }
@@ -2480,10 +2555,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     grid-template-columns: 1fr 1fr 1fr !important;
     column-gap: 8px;
     row-gap: 6px;
-    padding: 12px 10px !important;
+    padding: 12px 14px !important;
     background: var(--card);
-    border-bottom: 0.5px solid var(--border);
-    border-radius: 0;
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 6px;
   }
   /* Section header rows still span full width */
   #bgt-main-table tr:has(td.bgt-section-label),
@@ -2491,7 +2567,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     display: block !important;
     padding: 0 !important;
     background: transparent !important;
-    border-bottom: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
   }
   #bgt-main-table tr:has(td.bgt-section-label) td,
   #bgt-history-view tr:has(td.bgt-section-label) td {
@@ -2614,23 +2692,98 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      PLANNED / ACTUAL column labels for visual rhythm. Left alignment was
      awkward because the small uppercase label sits centred above a wide
      input, and the value drifted to the far left. */
+  /* Mobile: pill inputs span full width with comfortable tap-friendly
+     vertical padding. Text stays centred for the stacked mobile layout
+     where each cell sits below its uppercase label header. */
   #bgt-main-table .bgt-planned-input,
   #bgt-main-table .bgt-actual-input,
   #bgt-history-view .bgt-planned-input,
-  #bgt-history-view .bgt-actual-input {
+  #bgt-history-view .bgt-actual-input,
+  #bgt-history-view .bgt-hist-actual-input {
     width: 100% !important;
-    min-height: 36px;
+    min-height: 38px;
     text-align: center !important;
     font-size: 14px !important;
-    padding: 4px 0 !important;
+    padding: 8px 14px !important;
   }
-  /* Section subtotal rows ("Total Income", "Total Tax Provision" etc.)
-     get a slightly different visual treatment to mark them out. */
+  /* Section subtotal rows ("Total Income", "Total Tax Provision" etc.).
+     Option A treatment: hide the uppercase column labels (which only
+     make sense for editable rows), wrap each value cell in a static
+     chip-style pill with subtle background and border, and colour-tint
+     the difference pill green or red so the sign is read at a glance.
+     The result reads as a clean bottom-line summary that mirrors the
+     pill language of the editable rows above without competing for
+     attention or implying tappability.
+
+     Net Position pill at the bottom of the table has its own dedicated
+     treatment further down — these rules don't touch it. */
   #bgt-main-table .bgt-row.bgt-total,
   #bgt-history-view .bgt-row.bgt-total,
   #bgt-ytd-panel .bgt-row.bgt-total {
-    background: rgba(255,255,255,0.02);
-    border-top: 1px solid var(--border2);
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.16);
+  }
+  /* Total label cell — override the white !important set above for
+     regular rows. Blue text marks the row as a section summary at a
+     glance, matching the blue chip values in the same row. */
+  #bgt-main-table .bgt-row.bgt-total td:nth-child(1),
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(1),
+  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(1) {
+    color: var(--blue) !important;
+  }
+  /* Hide the auto-generated PLANNED / ACTUAL / DIFFERENCE column labels
+     that the data rows use. The total row's column structure is already
+     established by the rows above it, so repeating the labels here just
+     adds noise. */
+  #bgt-main-table .bgt-row.bgt-total td:nth-child(2)::before,
+  #bgt-main-table .bgt-row.bgt-total td:nth-child(3)::before,
+  #bgt-main-table .bgt-row.bgt-total td:nth-child(4)::before,
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(2)::before,
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(3)::before,
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(4)::before,
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(5)::before,
+  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(2)::before,
+  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(3)::before,
+  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(4)::before {
+    display: none !important;
+  }
+  /* Wrap each value cell in a chip-style pill. Static — no hover or
+     focus state — so the row reads as read-only summary, not an input.
+     Padding and border-radius mirror the editable input pills above
+     so the visual language stays consistent. */
+  #bgt-main-table .bgt-row.bgt-total td:nth-child(2),
+  #bgt-main-table .bgt-row.bgt-total td:nth-child(3),
+  #bgt-main-table .bgt-row.bgt-total td:nth-child(4),
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(2),
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(3),
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(4),
+  #bgt-history-view .bgt-row.bgt-total td:nth-child(5),
+  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(2),
+  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(3),
+  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(4) {
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(255,255,255,0.10);
+    border-radius: 50px;
+    padding: 8px 14px !important;
+    text-align: center !important;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.1px;
+  }
+  /* Colour-tinted pill for the difference cell. Green when the section
+     came in better than plan, red when worse. The classes bgt-diff-pos
+     and bgt-diff-neg are set in JS based on the sign of the section's
+     net diff, so styling them here picks up the colour automatically. */
+  #bgt-main-table .bgt-row.bgt-total td.bgt-diff-pos,
+  #bgt-history-view .bgt-row.bgt-total td.bgt-diff-pos,
+  #bgt-ytd-panel .bgt-row.bgt-total td.bgt-diff-pos {
+    background: rgba(48, 209, 88, 0.10) !important;
+    border-color: rgba(48, 209, 88, 0.22) !important;
+  }
+  #bgt-main-table .bgt-row.bgt-total td.bgt-diff-neg,
+  #bgt-history-view .bgt-row.bgt-total td.bgt-diff-neg,
+  #bgt-ytd-panel .bgt-row.bgt-total td.bgt-diff-neg {
+    background: rgba(255, 69, 58, 0.10) !important;
+    border-color: rgba(255, 69, 58, 0.24) !important;
   }
   /* ── NET POSITION ROW — single pill matching YTD stat-pill style ─
      Mobile only. Replaces the previous stacked Plan/Actual/Diff treatment
@@ -3211,7 +3364,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <!-- Fund cards -->
-  <div class="flex-between mb12 fund-holdings-header">
+  <div class="flex-between fund-holdings-header" style="margin-bottom:14px">
     <div class="section-label" style="margin-bottom:0">Fund Holdings &amp; Prices</div>
     <div style="display:flex;gap:8px">
       <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-GIA" onclick="pullFromWrapper('GIA', this)">Pull from GIA</button>
@@ -3244,7 +3397,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="subsection-label">Additional Funds</div>
     <button class="btn-ghost btn-sm" onclick="addAdditionalFund()">+ Add Fund</button>
   </div>
-  <div class="stat-sub mb16" style="font-style:italic">These funds are tracked for visibility and history but do not participate in drift correction or target allocation.</div>
+  <div class="stat-sub mb16" style="font-style:italic;margin-top:2px">These funds are tracked for visibility and history but do not participate in drift correction or target allocation.</div>
   <div id="additionalFundsGrid" class="mb16"></div>
 
   <div id="lastPullWrapper" style="display:none"></div>
@@ -3778,14 +3931,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
         <span class="stat-sub">Net Property Equity</span>
         <span style="font-weight:700;color:var(--gold)" id="nw-equity-display">£0</span>
-      </div>
-      <div class="input-group mt12" data-pound>
-        <span class="input-label">Other Property / BTL Value £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-other-property" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
-      </div>
-      <div class="input-group mt12" data-pound>
-        <span class="input-label">Other Property Mortgage £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-other-mortgage" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
       </div>
     </div>
 
@@ -7416,7 +7561,7 @@ function initCommaInputs() {
     // Retirement
     'ret-personal','ret-employer','ret-monthly','ret-current',
     // Net Worth — nw-mortgage excluded; it's read-only and pre-formatted by mpSyncMortgageLiability
-    'nw-house-value','nw-other-property','nw-other-mortgage',
+    'nw-house-value',
     'nw-cash','nw-crypto','nw-business','nw-other','nw-liabilities',
     // Calculator
     'budget',
@@ -9782,15 +9927,13 @@ function renderFreedomNumber() {
   if (potMode === 'networth') {
     const houseValue    = parseFloat((document.getElementById('nw-house-value')?.value||'').replace(/,/g,'')) || 0;
     const mortgage      = parseFloat((document.getElementById('nw-mortgage')?.value||'').replace(/,/g,'')) || 0;
-    const otherProp     = parseFloat((document.getElementById('nw-other-property')?.value||'').replace(/,/g,'')) || 0;
-    const otherMortgage = parseFloat((document.getElementById('nw-other-mortgage')?.value||'').replace(/,/g,'')) || 0;
     const business      = parseFloat((document.getElementById('nw-business')?.value||'').replace(/,/g,'')) || 0;
     const other         = parseFloat((document.getElementById('nw-other')?.value||'').replace(/,/g,'')) || 0;
     const liabilities   = parseFloat((document.getElementById('nw-liabilities')?.value||'').replace(/,/g,'')) || 0;
     const carsValue     = (typeof nwRows !== 'undefined' ? nwRows.cars.reduce((s,r)=>s+(r.value||0),0)    : 0);
     const whiskeyValue  = (typeof nwRows !== 'undefined' ? nwRows.whiskey.reduce((s,r)=>s+(r.value||0),0) : 0);
-    currentPot += houseValue + otherProp + business + other + carsValue + whiskeyValue
-                  - mortgage - otherMortgage - liabilities;
+    currentPot += houseValue + business + other + carsValue + whiskeyValue
+                  - mortgage - liabilities;
     potLabel = 'full net worth';
   }
 
@@ -14763,8 +14906,6 @@ function renderAnalyseNetWorth() {
   };
   const houseValue    = readNW('house-value');
   const mortgage      = readNW('mortgage');
-  const otherProp     = readNW('other-property');
-  const otherMortgage = readNW('other-mortgage');
   const cash          = readNW('cash');
   const crypto        = readNW('crypto');
   const business      = readNW('business');
@@ -14789,8 +14930,8 @@ function renderAnalyseNetWorth() {
   const sippVal = portfolio.filter(h=>h.wrapper==='SIPP'||h.type==='employer').reduce((s,h)=>s+h.shares*(h.price||0),0);
   const totalPortfolio = giaVal + isaVal + sippVal;
 
-  const propertyEquity = Math.max(0, houseValue - mortgage) + Math.max(0, otherProp - otherMortgage);
-  const totalLiabilities = mortgage + otherMortgage + liabilities;
+  const propertyEquity = Math.max(0, houseValue - mortgage);
+  const totalLiabilities = mortgage + liabilities;
   const grossAssets = propertyEquity + cash + crypto + business + carsValue + whiskeyValue + other + totalPortfolio;
   const netWorth = grossAssets - liabilities;
 
@@ -14924,7 +15065,7 @@ function loadNetWorthInputs() {
   // owned by the Mortgage Strategic Planner. We re-sync it from there at the end
   // of this function so it always reflects the live amortisation balance, never
   // a stale snapshot from the last time net worth was saved.
-  const fields = ['house-value','other-property','other-mortgage','cash','crypto','business','other','liabilities'];
+  const fields = ['house-value','cash','crypto','business','other','liabilities'];
   fields.forEach(f => {
     const el = document.getElementById(`nw-${f}`);
     if (el && saved[f] !== undefined) el.value = saved[f];
@@ -14953,7 +15094,7 @@ function loadNetWorthInputs() {
 }
 
 function saveNetWorthInputs() {
-  const fields = ['house-value','mortgage','other-property','other-mortgage','cash','crypto','business','other','liabilities'];
+  const fields = ['house-value','mortgage','cash','crypto','business','other','liabilities'];
   const saved = {};
   fields.forEach(f => {
     // Strip commas before saving — fields are type="text" with comma formatting
@@ -15005,8 +15146,6 @@ function renderNetWorth() {
   // Read manual inputs
   const houseValue    = parseFloat((document.getElementById('nw-house-value')?.value||'').replace(/,/g,'')) || 0;
   const mortgage      = parseFloat((document.getElementById('nw-mortgage')?.value||'').replace(/,/g,'')) || 0;
-  const otherProp     = parseFloat((document.getElementById('nw-other-property')?.value||'').replace(/,/g,'')) || 0;
-  const otherMortgage = parseFloat((document.getElementById('nw-other-mortgage')?.value||'').replace(/,/g,'')) || 0;
   const cash          = parseFloat((document.getElementById('nw-cash')?.value||'').replace(/,/g,'')) || 0;
   const crypto        = parseFloat((document.getElementById('nw-crypto')?.value||'').replace(/,/g,'')) || 0;
   const business      = parseFloat((document.getElementById('nw-business')?.value||'').replace(/,/g,'')) || 0;
@@ -15019,15 +15158,15 @@ function renderNetWorth() {
   const whiskeyCost  = nwRows.whiskey.reduce((s,r)=>s+(r.cost||0),0);
 
   // Property equity
-  const propertyEquity = (houseValue - mortgage) + (otherProp - otherMortgage);
+  const propertyEquity = houseValue - mortgage;
 
   // Update equity display
   const equityEl = document.getElementById('nw-equity-display');
   if (equityEl) equityEl.textContent = `£${fmtNum(Math.round(houseValue - mortgage), 0)}`;
 
   // Gross assets
-  const grossAssets = totalInvestments + houseValue + otherProp + cash + crypto + business + carsValue + whiskeyValue + other;
-  const totalLiabilities = mortgage + otherMortgage + liabilities;
+  const grossAssets = totalInvestments + houseValue + cash + crypto + business + carsValue + whiskeyValue + other;
+  const totalLiabilities = mortgage + liabilities;
   const netWorth = grossAssets - totalLiabilities;
 
   // Gains on tangible assets
@@ -15132,36 +15271,22 @@ function renderNetWorth() {
       onmousemove="moveNWPieTooltip(event)"/>`;
   }).join('');
 
-  // Percentage labels on slices ≥5%. Positioned at the midpoint of each
-  // slice along the centre-line of the stroke band (radius midway between
-  // inner and outer edges). Dark text against bright slice colours.
-  let labelAngle = -Math.PI / 2;
-  const labelRadius = (rOuter + rInner) / 2;
-  const sliceLabels = segments.map(seg => {
-    if (seg.value <= 0) return '';
-    const pct = total > 0 ? seg.value / total : 0;
-    const sliceAngle = pct * 2 * Math.PI;
-    const midAngle = labelAngle + sliceAngle / 2;
-    labelAngle += sliceAngle;
-    if (pct < 0.05) return '';
-    const lx = cx + labelRadius * Math.cos(midAngle);
-    const ly = cy + labelRadius * Math.sin(midAngle);
-    return `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}"
-      text-anchor="middle" dominant-baseline="central"
-      fill="#0a0a0a" font-size="11" font-weight="700"
-      style="pointer-events:none">${(pct * 100).toFixed(0)}%</text>`;
-  }).join('');
-
   // Centre stack — small uppercase NET WORTH label above the £ value.
   // Compact-money formatter handles thousands and millions cleanly:
   // £1.4m / £210k / £450. The 16px font size is tight in the donut hole
   // so the formatter's compact output keeps everything visible.
+  //
+  // Note: per-slice percentage labels were intentionally removed — the
+  // hover tooltip surfaces the percentage (and the £ value) for any slice
+  // the user actually wants to inspect, and removing the labels gives
+  // the chart a cleaner ring shape with the centre-stack reading more
+  // prominently.
   const totalDisplay = fmtMoneyCompact(total);
   const centreLabel = `
     <text x="${cx}" y="${cy - 6}" text-anchor="middle" fill="var(--muted)" font-size="9" font-weight="600" letter-spacing="2" style="pointer-events:none">NET WORTH</text>
     <text x="${cx}" y="${cy + 14}" text-anchor="middle" fill="var(--white)" font-size="16" font-weight="700" style="pointer-events:none">${totalDisplay}</text>`;
 
-  document.getElementById('nw-pie').innerHTML = slicePaths + sliceLabels + centreLabel;
+  document.getElementById('nw-pie').innerHTML = slicePaths + centreLabel;
 
   // Legend — gradient swatches match the colour rod / bar style used on
   // the portfolio holding rows, so the visual language is consistent.
@@ -16427,7 +16552,7 @@ function _renderBgtMainTable(state) {
       ${rows}
       <tr class="bgt-row bgt-total">
         <td>Total ${label}</td><td>£${fmtNum(sp,2)}</td>
-        <td style="font-weight:700;color:var(--white)">£${fmtNum(sa,2)}</td>
+        <td style="font-weight:700;color:var(--blue)">£${fmtNum(sa,2)}</td>
         <td class="${sc}">${_bgtDiffStr(sd)}</td>
       </tr>`;
   };
@@ -17301,8 +17426,8 @@ function _renderBgtHistDetailTable(rec, monthId) {
     return `<tr><td colspan="5" class="bgt-section-label ${cls}"><span class="bgt-section-pill">${label}</span></td></tr>
       ${rows}
       <tr class="bgt-row bgt-total">
-        <td>Total ${label}</td><td style="color:var(--muted)">£${fmtNum(sp,2)}</td>
-        <td style="font-weight:700;color:var(--white)" id="bgt-hist-sec-act-${label.replace(/\s+/g,'_')}"
+        <td>Total ${label}</td><td style="color:var(--blue)">£${fmtNum(sp,2)}</td>
+        <td style="font-weight:700;color:var(--blue)" id="bgt-hist-sec-act-${label.replace(/\s+/g,'_')}"
           >£${fmtNum(sa,2)}</td>
         ${savgCell}
         <td class="${sc}">${_bgtDiffStr(sd)}</td>
