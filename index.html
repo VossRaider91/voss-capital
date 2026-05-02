@@ -44,6 +44,15 @@
   /* Status colours */
   --green: #30D158;
   --red: #FF453A;
+
+  /* Spacing scale — Apple 4pt grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
 }
 body {
   background: #0D0D0D;
@@ -95,7 +104,7 @@ body::before {
   margin-left: 6px;
   transition: background 0.15s, color 0.15s;
 }
-.vc-sync-pill.vc-sync-synced  { background: rgba(48,209,88,0.12); color: var(--green); }
+.vc-sync-pill.vc-sync-synced  { background: rgba(48,209,88,0.14); color: var(--green); }
 .vc-sync-pill.vc-sync-syncing { background: rgba(10,132,255,0.14); color: var(--blue-bright); }
 .vc-sync-pill.vc-sync-offline { background: rgba(255,159,10,0.14); color: var(--amber); }
 .vc-sync-pill.vc-sync-error   { background: rgba(255,69,58,0.14); color: var(--red); }
@@ -164,9 +173,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   background: var(--card2);
 }
 .nav-tab.active {
-  color: var(--blue);
+  color: #a8d4ff;
   border-color: rgba(10,132,255,0.32);
-  background: rgba(10,132,255,0.10);
+  background: rgba(10,132,255,0.16);
 }
 .nav-tab .nav-icon { font-size: 16px; line-height: 1; opacity: 0.65; }
 .nav-tab.active .nav-icon { opacity: 1; }
@@ -184,9 +193,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .sub-tab:hover { color: var(--white); border-color: var(--border2); background: rgba(255,255,255,0.06); }
 .sub-tab.active {
-  color: var(--blue);
+  color: #a8d4ff;
   border-color: rgba(10,132,255,0.32);
-  background: rgba(10,132,255,0.10);
+  background: rgba(10,132,255,0.16);
 }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
@@ -198,7 +207,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 0.5px solid var(--border);
   border-radius: 14px;
-  padding: 22px 26px;
+  padding: 24px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.35);
 }
 .card-gold {
@@ -207,7 +216,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 0.5px solid var(--border2);
   border-radius: 14px;
-  padding: 24px 28px;
+  padding: 24px;
   position: relative; overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.40);
 }
@@ -222,8 +231,26 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    headings beneath main section-labels. Replaces the bespoke inline
    "9px/3px-letter-spacing" styles that were duplicated in many places. */
 .subsection-label {
-  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
-  color: var(--muted); font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.2px;
+  line-height: 1.3;
+}
+.subsection-label.eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.subsection-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: -0.05px;
+  line-height: 1.4;
+  margin-top: 2px;
 }
 
 /* Withdrawal strategy toggle (Retirement tab) — segmented two-button
@@ -291,9 +318,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   gap: 10px;
   align-items: end;
   padding: 12px 14px;
-  background: rgba(255,255,255,0.025);
+  background: rgba(255,255,255,0.04);
   border-radius: 10px;
-  border: 0.5px solid var(--border);
+  border: 0.5px solid rgba(255,255,255,0.08);
 }
 .edit-layer-row .input-label {
   font-size: 9px;
@@ -355,8 +382,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    The wrapper name (GIA / ISA) is the only section-label; everything
    else inside uses subsection-label + tax-subsection-divider. */
 .tax-subsection {
-  background: rgba(255,255,255,0.025);
-  border: 0.5px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 10px;
   padding: 14px 16px;
 }
@@ -374,7 +401,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .flex-center { display: flex; align-items: center; gap: 10px; }
 .mb8 { margin-bottom: 8px; }
 .mb16 { margin-bottom: 16px; }
-.mb20 { margin-bottom: 20px; }
 .mb24 { margin-bottom: 24px; }
 .mt12 { margin-top: 12px; }
 
@@ -394,7 +420,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--white);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 14px; font-weight: 500;
-  padding: 10px 14px; outline: none;
+  padding: 12px 14px; outline: none;
+  min-height: 44px;
   transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   width: 100%;
   font-variant-numeric: tabular-nums;
@@ -406,7 +433,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .num-input:focus, .text-input:focus {
   border-color: var(--blue);
   background: rgba(10,132,255,0.04);
-  box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
 }
 .budget-input {
   background: var(--recess);
@@ -415,7 +442,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--white);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 22px; font-weight: 600;
-  width: 140px; padding: 8px 12px; outline: none;
+  width: 140px; padding: 10px 12px; outline: none;
+  min-height: 44px;
   transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
@@ -424,7 +452,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .budget-input:focus {
   border-color: var(--blue);
   background: rgba(10,132,255,0.04);
-  box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
 }
 
 /* BUTTONS */
@@ -441,7 +469,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .btn-gold:hover { background: var(--blue-bright); }
 .btn-gold:active { transform: scale(0.98); }
 .btn-ghost {
-  background: rgba(10,132,255,0.10); color: var(--blue);
+  background: rgba(10,132,255,0.14); color: var(--blue);
   border: 0.5px solid rgba(10,132,255,0.40);
   padding: 10px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
@@ -451,7 +479,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: all 0.2s; white-space: nowrap;
 }
 .btn-ghost:hover { background: rgba(10,132,255,0.18); border-color: var(--blue); }
-.btn-sm { padding: 6px 14px; font-size: 12px; letter-spacing: -0.1px; border-radius: 10px; }
+.btn-sm { padding: 8px 14px; font-size: 12px; letter-spacing: -0.1px; border-radius: 10px; min-height: 32px; }
 .btn-danger {
   background: rgba(255,255,255,0.04);
   border: 0.5px solid var(--border);
@@ -483,11 +511,23 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .btn-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
 .btn-full { width: 100%; }
 
-/* STAT BLOCKS */
+/* STAT BLOCKS — pillified when inside grid layouts */
 .stat-grid { display: grid; gap: 16px; }
 .stat { display: flex; flex-direction: column; gap: 5px; }
+
+/* When stats sit inside grid-3 or grid-4 layouts, give them a
+   pill-card surface so they match the wider pill aesthetic. */
+.grid-3 > .stat,
+.grid-4 > .stat {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  gap: 4px;
+}
+
 .stat-label {
-  font-size: 12px; letter-spacing: -0.05px; text-transform: none;
+  font-size: 11px; letter-spacing: -0.05px; text-transform: none;
   color: var(--muted); font-weight: 500; opacity: 1;
 }
 .stat-val {
@@ -502,7 +542,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .stat-val.sm { font-size: 22px; letter-spacing: -0.6px; }
 .stat-val.lg { font-size: 36px; letter-spacing: -1px; }
 .stat-val.xl { font-size: 44px; letter-spacing: -1.4px; }
-.stat-sub { font-size: 12px; color: var(--muted); letter-spacing: -0.05px; }
+.stat-sub { font-size: 11px; color: var(--muted); letter-spacing: -0.05px; }
 
 /* BADGES */
 .badge {
@@ -510,10 +550,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   padding: 3px 10px; border-radius: 50px;
   letter-spacing: -0.05px; white-space: nowrap; display: inline-block;
 }
-.badge-ok { background: rgba(48,209,88,0.15); color: var(--green); }
-.badge-over { background: rgba(255,69,58,0.15); color: var(--red); }
-.badge-under { background: rgba(255,159,10,0.15); color: var(--amber); }
-.badge-none { background: rgba(255,255,255,0.06); color: var(--muted); }
+.badge-ok { background: rgba(48,209,88,0.14); border: 0.5px solid rgba(48,209,88,0.28); color: var(--green); }
+.badge-over { background: rgba(255,69,58,0.14); border: 0.5px solid rgba(255,69,58,0.28); color: var(--red); }
+.badge-under { background: rgba(255,159,10,0.14); border: 0.5px solid rgba(255,159,10,0.28); color: var(--amber); }
+.badge-none { background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.10); color: var(--muted); }
 
 /* Drift alert banner */
 #drift-alert-banner {
@@ -535,7 +575,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .drift-alert-rows { display: flex; flex-wrap: wrap; gap: 10px; }
 .drift-alert-chip {
   font-size: 12px; font-weight: 500; color: var(--amber);
-  background: rgba(255,159,10,0.10);
+  background: rgba(255,159,10,0.14);
   border: 0.5px solid rgba(255,159,10,0.32);
   border-radius: 50px; padding: 3px 10px;
   letter-spacing: -0.05px;
@@ -562,7 +602,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 0.5px solid var(--border);
   border-radius: 14px;
-  padding: 18px 22px;
+  padding: 20px;
   position: relative; overflow: hidden;
   transition: border-color 0.2s, background 0.2s;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
@@ -575,8 +615,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--muted); font-weight: 500; margin-bottom: 4px;
 }
 .fund-meta .fund-name {
-  font-size: 18px; font-weight: 600; color: var(--white);
-  margin-bottom: 2px; letter-spacing: -0.4px;
+  font-size: 17px; font-weight: 600; color: var(--white);
+  margin-bottom: 2px; letter-spacing: -0.3px;
 }
 .fund-meta .fund-full { font-size: 12px; color: var(--muted); letter-spacing: -0.05px; }
 .fund-inputs-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: end; }
@@ -594,18 +634,18 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .alloc-row:last-child { border-bottom: none; }
 .alloc-row.skipped { opacity: 0.55; }
-.col-units { font-size: 16px; font-weight: 600; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
+.col-units { font-size: 17px; font-weight: 600; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
 .col-h {
   font-size: 12px; letter-spacing: -0.05px; text-transform: none;
   color: var(--muted); font-weight: 500; text-align: right; opacity: 1;
 }
 .col-h.left { text-align: left; }
-.col-ticker { font-size: 14px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
+.col-ticker { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
 .col-holding { font-size: 12px; color: var(--muted); line-height: 1.6; letter-spacing: -0.05px; }
 .col-holding .hi { color: var(--white); }
 .col-pct { text-align: right; font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; }
 .col-buf { font-size: 11px; color: var(--muted); text-align: right; line-height: 1.5; }
-.col-amt { font-size: 14px; font-weight: 500; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
+.col-amt { font-size: 13px; font-weight: 500; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
 .col-deploy { font-size: 18px; font-weight: 600; color: var(--white); text-align: right; letter-spacing: -0.4px; font-variant-numeric: tabular-nums; }
 .pct-good { color: var(--green); }
 .pct-warn { color: var(--amber); }
@@ -626,7 +666,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 0.5px solid var(--border);
   border-radius: 14px;
-  padding: 18px 22px;
+  padding: 20px;
   margin-bottom: 10px;
   position: relative; overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
@@ -672,28 +712,28 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .cn-pill.cn-type-personal {
   color: var(--gold);
-  background: rgba(255,214,10,0.10);
-  border-color: rgba(255,214,10,0.22);
+  background: rgba(255,214,10,0.14);
+  border-color: rgba(255,214,10,0.28);
 }
 .cn-pill.cn-type-employer {
   color: var(--blue);
-  background: rgba(10,132,255,0.12);
+  background: rgba(10,132,255,0.14);
   border-color: rgba(10,132,255,0.28);
 }
 .cn-pill.cn-wrap-gia {
   color: var(--amber);
-  background: rgba(255,159,10,0.10);
-  border-color: rgba(255,159,10,0.22);
+  background: rgba(255,159,10,0.14);
+  border-color: rgba(255,159,10,0.28);
 }
 .cn-pill.cn-wrap-sipp {
   color: var(--blue);
-  background: rgba(10,132,255,0.10);
-  border-color: rgba(10,132,255,0.22);
+  background: rgba(10,132,255,0.14);
+  border-color: rgba(10,132,255,0.28);
 }
 .cn-pill.cn-wrap-isa {
   color: var(--green);
-  background: rgba(48,209,88,0.10);
-  border-color: rgba(48,209,88,0.22);
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.28);
 }
 /* vs-previous pill — green for gains, red for losses */
 .cn-vs-prev {
@@ -706,24 +746,24 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .cn-vs-prev.pos {
   color: var(--green);
-  background: rgba(48,209,88,0.10);
-  border-color: rgba(48,209,88,0.22);
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.28);
 }
 .cn-vs-prev.neg {
-  color: var(--red);
-  background: rgba(255,69,58,0.10);
-  border-color: rgba(255,69,58,0.22);
+  color: #ff6961;
+  background: rgba(255,69,58,0.14);
+  border-color: rgba(255,69,58,0.28);
 }
 /* Per-holding mini cards inside contribution entry — slightly lighter
    chrome than the parent so they nest cleanly. */
 .cn-holding-mini {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.04);
   border: 0.5px solid rgba(255,255,255,0.06);
   border-radius: 10px;
   padding: 10px 12px;
 }
 .cn-holding-mini .ticker {
-  font-size: 12px; font-weight: 700; color: var(--white);
+  font-size: 12px; font-weight: 600; color: var(--white);
   letter-spacing: -0.1px; margin-bottom: 4px;
 }
 .cn-holding-mini .units-line {
@@ -777,18 +817,18 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    Universal CSS — works at every width. The 3-column metrics grid
    stays compact on mobile because the figures are short text. */
 .bipri-card {
-  background: rgba(255,255,255,0.03);
-  border: 0.5px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 14px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   margin-bottom: 8px;
 }
 .bipri-header {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   padding-bottom: 12px;
   border-bottom: 0.5px solid rgba(255,255,255,0.06);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
 }
@@ -797,17 +837,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   min-width: 0;
 }
 .bipri-ticker {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--white);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
   line-height: 1.2;
 }
 .bipri-units {
-  font-size: 10px;
-  color: var(--muted);
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
   font-variant-numeric: tabular-nums;
-  margin-top: 2px;
+  margin-top: 3px;
   letter-spacing: -0.05px;
 }
 .bipri-row {
@@ -825,18 +865,18 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-size: 9px;
   color: rgba(255,255,255,0.45);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  letter-spacing: 0.6px;
+  font-weight: 600;
 }
 .bipri-cell-val {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--white);
   letter-spacing: -0.2px;
   font-variant-numeric: tabular-nums;
 }
 .bipri-cell-val.gain { color: var(--green); }
-.bipri-cell-val.cgt  { color: var(--red); }
+.bipri-cell-val.cgt  { color: #ff6961; }
 
 /* Priority pill — colour-tinted by tier */
 .bipri-priority-pill {
@@ -855,23 +895,23 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .bipri-priority-pill.highest {
   color: #ff6961;
-  background: rgba(255,69,58,0.12);
+  background: rgba(255,69,58,0.14);
   border-color: rgba(255,69,58,0.32);
 }
 .bipri-priority-pill.high {
   color: #ffb340;
-  background: rgba(255,159,10,0.12);
+  background: rgba(255,159,10,0.14);
   border-color: rgba(255,159,10,0.30);
 }
 .bipri-priority-pill.medium {
-  color: rgba(255,255,255,0.6);
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.15);
+  color: #64a8ff;
+  background: rgba(10,132,255,0.14);
+  border-color: rgba(10,132,255,0.28);
 }
 .bipri-priority-pill.low {
-  color: rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.03);
-  border-color: rgba(255,255,255,0.08);
+  color: #aeaeb2;
+  background: rgba(142,142,147,0.16);
+  border-color: rgba(142,142,147,0.24);
 }
 
 /* ── SEGMENTED PILL TOGGLE ────────────────────────────────────────
@@ -967,20 +1007,20 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   vertical-align: middle;
 }
 .remaining-chip.cgt {
-  background: rgba(255,214,10,0.10);
-  border-color: rgba(255,214,10,0.22);
+  background: rgba(255,214,10,0.14);
+  border-color: rgba(255,214,10,0.28);
 }
 .remaining-chip.isa {
-  background: rgba(48,209,88,0.10);
-  border-color: rgba(48,209,88,0.22);
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.28);
 }
 .remaining-chip.depleted {
-  background: rgba(255,69,58,0.10) !important;
-  border-color: rgba(255,69,58,0.30) !important;
+  background: rgba(255,69,58,0.14) !important;
+  border-color: rgba(255,69,58,0.32) !important;
 }
 .remaining-chip-amt {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   letter-spacing: -0.3px;
 }
 .remaining-chip.cgt .remaining-chip-amt { color: var(--gold); }
@@ -997,7 +1037,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    and its caption beneath. Replaces a loose progress bar + footer
    line that used to float in space. */
 .ret-progress-strip {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.04);
   border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 14px;
   padding: 12px 16px;
@@ -1048,21 +1088,21 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   padding: 4px 12px;
   border-radius: 50px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   margin-left: auto;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   border: 0.5px solid;
 }
 .growth-overall-chip.pos {
-  background: rgba(48,209,88,0.10);
-  border-color: rgba(48,209,88,0.22);
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.28);
   color: var(--green);
 }
 .growth-overall-chip.neg {
-  background: rgba(255,69,58,0.10);
-  border-color: rgba(255,69,58,0.22);
-  color: var(--red);
+  background: rgba(255,69,58,0.14);
+  border-color: rgba(255,69,58,0.28);
+  color: #ff6961;
 }
 
 .edit-form {
@@ -1088,7 +1128,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   height: 32px;
   padding: 0;
   border-radius: 50%;
-  background: rgba(10,132,255,0.10);
+  background: rgba(10,132,255,0.14);
   border: 0.5px solid rgba(10,132,255,0.28);
   color: var(--blue-bright, #0a84ff);
   cursor: pointer;
@@ -1139,10 +1179,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .holding-row:last-child { border-bottom: none; }
 .holding-color { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
-.holding-ticker { font-size: 14px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
-.holding-detail { font-size: 12px; color: var(--muted); line-height: 1.6; letter-spacing: -0.05px; }
+.holding-ticker { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
+.holding-detail { font-size: 11px; color: var(--muted); line-height: 1.6; letter-spacing: -0.05px; }
 .holding-val { font-size: 13px; font-weight: 500; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
-.holding-pct { font-size: 14px; font-weight: 600; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
+.holding-pct { font-size: 13px; font-weight: 600; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ── HOLDING CARDS — option B layout ─────────────────────────
    Each holding renders as a self-contained rounded card with three
@@ -1152,8 +1192,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    holding shared a single horizontal flex grid.
 */
 .hcard {
-  background: rgba(255,255,255,0.03);
-  border: 0.5px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 14px;
   padding: 14px 16px;
   margin-bottom: 8px;
@@ -1185,10 +1225,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   min-width: 0;
 }
 .hcard-ticker {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--white);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
   line-height: 1.2;
 }
 .hcard-meta {
@@ -1201,8 +1241,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .hcard-meta-blue  { color: var(--blue); }
 .hcard-meta-green { color: var(--green); }
 .hcard-total {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--white);
   letter-spacing: -0.3px;
   font-variant-numeric: tabular-nums;
@@ -1320,18 +1360,18 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .hcard-section-amber {
   color: var(--amber);
-  background: rgba(255,159,10,0.10);
-  border-color: rgba(255,159,10,0.22);
+  background: rgba(255,159,10,0.14);
+  border-color: rgba(255,159,10,0.28);
 }
 .hcard-section-blue {
   color: var(--blue);
-  background: rgba(10,132,255,0.10);
-  border-color: rgba(10,132,255,0.22);
+  background: rgba(10,132,255,0.14);
+  border-color: rgba(10,132,255,0.28);
 }
 .hcard-section-green {
   color: var(--green);
-  background: rgba(48,209,88,0.10);
-  border-color: rgba(48,209,88,0.22);
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.28);
 }
 
 .legend-item { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 8px; align-items: center; padding: 4px 0; }
@@ -1374,12 +1414,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-variant-numeric: tabular-nums;
 }
 .portfolio-delta-pill.positive {
-  background: rgba(48,209,88,0.12);
+  background: rgba(48,209,88,0.14);
   color: var(--green);
 }
 .portfolio-delta-pill.negative {
-  background: rgba(255,69,58,0.12);
-  color: var(--red);
+  background: rgba(255,69,58,0.14);
+  color: #ff6961;
 }
 .portfolio-delta-pill.neutral {
   background: rgba(255,255,255,0.06);
@@ -1459,7 +1499,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 .vc-pie-tooltip .vc-pie-tip-ticker {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 12px;
   letter-spacing: -0.2px;
   margin-bottom: 2px;
@@ -1571,7 +1611,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--white);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 14px; font-weight: 500;
-  padding: 10px 14px; outline: none;
+  padding: 12px 14px; outline: none;
+  min-height: 44px;
   transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   text-align: right; width: 100%;
   font-variant-numeric: tabular-nums;
@@ -1580,13 +1621,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .mp-input:focus {
   border-color: var(--blue);
   background: rgba(10,132,255,0.04);
-  box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
 }
 .mp-table-wrap {
   overflow-x: auto; max-height: 420px; overflow-y: auto;
-  border: 0.5px solid var(--border);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 12px;
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.04);
 }
 .mp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .mp-table th {
@@ -1608,9 +1649,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-variant-numeric: tabular-nums; letter-spacing: -0.05px;
 }
 .mp-table td:first-child { text-align: left; color: var(--white); font-weight: 500; }
-.mp-table tr.mp-current-month td { background: rgba(10,132,255,0.08); color: var(--white); }
+.mp-table tr.mp-current-month td { background: rgba(10,132,255,0.14); color: var(--white); }
 .mp-table tr.mp-current-month td:first-child { color: var(--blue); font-weight: 600; }
-.mp-table tr.mp-rate-switch td { background: rgba(10,132,255,0.04); }
+.mp-table tr.mp-rate-switch td { background: rgba(10,132,255,0.06); }
 .mp-table tr.mp-rate-switch td:first-child { color: var(--blue); }
 .mp-table td.mp-balance { color: var(--white); font-weight: 500; }
 .mp-table td.mp-interest { color: var(--red); }
@@ -1627,7 +1668,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: all 0.2s;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 }
-.mp-btn-back:hover { border-color: rgba(10,132,255,0.4); color: var(--blue); background: rgba(10,132,255,0.08); }
+.mp-btn-back:hover { border-color: rgba(10,132,255,0.4); color: var(--blue); background: rgba(10,132,255,0.14); }
 .progress-wrap {
   background: var(--recess); border-radius: 50px;
   height: 5px; overflow: hidden; margin-top: 6px;
@@ -1667,15 +1708,15 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .pt-capped-tag {
   display: inline-block; margin-left: 5px;
   font-size: 10px; letter-spacing: -0.05px; text-transform: none;
-  color: #8facc8; background: rgba(143,172,200,0.12);
+  color: #8facc8; background: rgba(143,172,200,0.16);
   padding: 1px 6px; border-radius: 6px;
   vertical-align: middle; font-style: normal;
 }
 
 /* CHART */
 .chart-wrap {
-  background: rgba(255,255,255,0.02);
-  border: 0.5px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   padding: 16px; margin-top: 12px;
 }
@@ -1776,7 +1817,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      pill sits cleanly without a stripe cutting underneath the row. */
 }
 .bgt-row.bgt-net td {
-  font-weight: 700; font-size: 20px;
+  font-weight: 600; font-size: 22px;
   border-top: 1px solid var(--blue);
   border-bottom: none;
   letter-spacing: -0.6px;
@@ -1915,35 +1956,31 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   align-items: center;
   padding: 4px 12px;
   border-radius: 50px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   line-height: 1.4;
   background: rgba(255,255,255,0.06);
   border: 0.5px solid rgba(255,255,255,0.04);
-  /* color is inherited from the parent .bgt-section-* class, so the
-     INCOME pill is green text, TAX is red, FIXED is amber, VARIABLE is
-     blue. The background tint stays neutral so the colour pop comes
-     from the text itself. */
   color: inherit;
 }
 /* Per-section pill backgrounds — soft tint matching the section's colour */
 .bgt-section-income .bgt-section-pill {
-  background: rgba(48,209,88,0.10);
-  border-color: rgba(48,209,88,0.18);
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.28);
 }
 .bgt-section-tax .bgt-section-pill {
-  background: rgba(255,69,58,0.10);
-  border-color: rgba(255,69,58,0.18);
+  background: rgba(255,69,58,0.14);
+  border-color: rgba(255,69,58,0.28);
 }
 .bgt-section-fixed .bgt-section-pill {
-  background: rgba(255,159,10,0.10);
-  border-color: rgba(255,159,10,0.18);
+  background: rgba(255,159,10,0.14);
+  border-color: rgba(255,159,10,0.28);
 }
 .bgt-section-variable .bgt-section-pill {
-  background: rgba(10,132,255,0.10);
-  border-color: rgba(10,132,255,0.18);
+  background: rgba(10,132,255,0.14);
+  border-color: rgba(10,132,255,0.28);
 }
 .bgt-section-income { color: var(--green); }
 .bgt-section-tax { color: var(--red); }
@@ -2012,7 +2049,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   border-radius: 6px; transition: color 0.15s, background 0.15s;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 }
-.bgt-del-btn:hover { color: var(--red); background: rgba(255,69,58,0.10); }
+.bgt-del-btn:hover { color: var(--red); background: rgba(255,69,58,0.14); }
 .bgt-edit-btn {
   background: none; border: none; color: var(--muted2);
   cursor: pointer; font-size: 12px; padding: 3px 6px;
@@ -2020,7 +2057,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   letter-spacing: -0.05px;
 }
-.bgt-edit-btn:hover { color: var(--blue); background: rgba(10,132,255,0.10); }
+.bgt-edit-btn:hover { color: var(--blue); background: rgba(10,132,255,0.14); }
 .bgt-audit-edit-form {
   display: none; padding: 12px 14px;
   background: var(--recess);
@@ -2052,16 +2089,16 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-month-tile {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 14px;
-  border: 0.5px solid var(--border);
-  background: rgba(255,255,255,0.025);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
   border-radius: 12px;
   margin-bottom: 8px; cursor: pointer;
   transition: border-color 0.18s, background 0.18s;
 }
-.bgt-month-tile:hover { border-color: var(--border2); background: rgba(255,255,255,0.05); }
+.bgt-month-tile:hover { border-color: var(--border2); background: rgba(255,255,255,0.07); }
 .bgt-month-tile.bgt-tile-active {
   border-color: rgba(255,159,10,0.40);
-  background: rgba(255,159,10,0.08);
+  background: rgba(255,159,10,0.14);
 }
 .bgt-month-tile-name { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
 .bgt-month-tile-stats { display: flex; gap: 20px; font-size: 12px; color: var(--muted); letter-spacing: -0.05px; }
@@ -2073,17 +2110,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: color 0.15s, border-color 0.15s, background 0.15s;
   flex-shrink: 0;
 }
-.bgt-del-month-btn:hover { background: rgba(255,69,58,0.12); border-color: rgba(255,69,58,0.5); color: var(--red); }
+.bgt-del-month-btn:hover { background: rgba(255,69,58,0.14); border-color: rgba(255,69,58,0.5); color: var(--red); }
 .bgt-year-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 14px;
-  background: rgba(255,255,255,0.025);
-  border: 0.5px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   margin-bottom: 6px; cursor: pointer;
   user-select: none; transition: background 0.15s, border-color 0.15s;
 }
-.bgt-year-row:hover { background: rgba(255,255,255,0.05); border-color: var(--border2); }
+.bgt-year-row:hover { background: rgba(255,255,255,0.07); border-color: var(--border2); }
 .bgt-year-label {
   font-size: 13px; font-weight: 600; color: var(--white);
   letter-spacing: -0.2px;
@@ -2120,8 +2157,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-year-pill:hover { color: var(--white); border-color: var(--border2); background: rgba(255,255,255,0.06); }
 .bgt-year-pill.active {
   border-color: rgba(10,132,255,0.32);
-  color: var(--blue);
-  background: rgba(10,132,255,0.10);
+  color: #a8d4ff;
+  background: rgba(10,132,255,0.16);
 }
 .bgt-hist-table-read td { color: var(--muted2); font-size: 12px; }
 /* Note: .bgt-hist-actual-input styling is consolidated with .bgt-planned-input
@@ -2138,8 +2175,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    actually takes. The other cards stay neutral so the eye settles on
    the action card naturally. */
 .tax-headline-card {
-  background: rgba(255,255,255,0.03);
-  border: 0.5px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 14px;
   padding: 14px 16px;
 }
@@ -2152,7 +2189,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .tax-headline-card-value {
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--white);
   line-height: 1.1;
   letter-spacing: -0.5px;
@@ -2180,7 +2217,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* Highlighted action card — Set Your Standing Order */
 .tax-headline-card.tax-headline-action {
-  background: rgba(10,132,255,0.12);
+  background: rgba(10,132,255,0.16);
   border: 0.5px solid rgba(10,132,255,0.32);
   border-left: 3px solid var(--blue);
   padding: 16px 16px 16px 18px;
@@ -2212,8 +2249,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   margin-bottom: 14px;
 }
 .hmrc-pmt-card {
-  background: rgba(255,255,255,0.03);
-  border: 0.5px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 14px;
   padding: 14px 16px;
 }
@@ -2225,10 +2262,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   margin-bottom: 8px;
 }
 .hmrc-pmt-date {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--white);
-  letter-spacing: -0.05px;
+  letter-spacing: -0.2px;
 }
 .hmrc-pmt-time {
   font-size: 10px;
@@ -2253,8 +2290,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   line-height: 1.3;
 }
 .hmrc-pmt-amount {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--gold);
   letter-spacing: -0.3px;
   font-variant-numeric: tabular-nums;
@@ -2276,8 +2313,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* Total card — soft gold tint to mark as headline takeaway */
 .hmrc-pmt-total {
-  background: rgba(255,214,10,0.08);
-  border: 0.5px solid rgba(255,214,10,0.22);
+  background: rgba(255,214,10,0.14);
+  border: 0.5px solid rgba(255,214,10,0.28);
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -2294,8 +2331,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   line-height: 1.3;
 }
 .hmrc-pmt-total-amt {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--gold);
   letter-spacing: -0.3px;
   font-variant-numeric: tabular-nums;
@@ -2326,28 +2363,28 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   border-bottom: 0.5px solid var(--border);
 }
 .cgt-step {
-  background: rgba(255,255,255,0.025);
-  border: 0.5px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   padding: 14px 18px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
 }
 .cgt-step-label { font-size: 13px; color: var(--muted); letter-spacing: -0.05px; font-weight: 500; }
 .cgt-step-val {
-  font-size: 16px; font-weight: 600; color: var(--white);
+  font-size: 17px; font-weight: 600; color: var(--white);
   font-variant-numeric: tabular-nums; letter-spacing: -0.3px;
 }
 .cgt-step.highlight {
-  border-color: rgba(10,132,255,0.40);
-  background: rgba(10,132,255,0.06);
+  border-color: rgba(10,132,255,0.32);
+  background: rgba(10,132,255,0.14);
 }
 .cgt-step.liability {
-  border-color: rgba(255,69,58,0.40);
-  background: rgba(255,69,58,0.06);
+  border-color: rgba(255,69,58,0.32);
+  background: rgba(255,69,58,0.14);
 }
 .cgt-step.exempt {
-  border-color: rgba(48,209,88,0.32);
-  background: rgba(48,209,88,0.04);
+  border-color: rgba(48,209,88,0.28);
+  background: rgba(48,209,88,0.14);
 }
 .gain-pos { color: var(--green); }
 .gain-neg { color: var(--red); }
@@ -2390,7 +2427,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .sell-units-input:focus {
   border-color: var(--blue);
   background: rgba(10,132,255,0.04);
-  box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
 }
 
 @media (max-width: 700px) {
@@ -2520,7 +2557,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     color: var(--blue-bright);
   }
   #mobile-nav-pill.open {
-    background: rgba(10,132,255,0.10);
+    background: rgba(10,132,255,0.16);
     border-color: rgba(10,132,255,0.32);
   }
   #mobile-nav-pill.open .pill-label {
@@ -2546,12 +2583,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   /* ── HEADINGS ─────────────────────────────────────────────── */
   h1 { font-size: 22px !important; }
-  h2 { font-size: 18px !important; }
-  h3 { font-size: 16px !important; }
+  h2 { font-size: 17px !important; }
+  h3 { font-size: 15px !important; }
 
   /* ── STAT VALUES — scale large numbers ────────────────────── */
   .stat-val { font-size: 22px !important; letter-spacing: -0.4px !important; }
-  .stat-val.sm { font-size: 18px !important; }
+  .stat-val.sm { font-size: 17px !important; }
   .stat-val.lg { font-size: 28px !important; letter-spacing: -0.6px !important; }
   .stat-val.xl { font-size: 32px !important; letter-spacing: -0.8px !important; }
 
@@ -2870,7 +2907,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     padding: 14px 18px;
   }
   .ret-settings-collapsible .collapsible-header .section-label {
-    font-size: 16px !important;
+    font-size: 17px !important;
   }
   /* When expanded on mobile, soften the bottom corners so the body
      visually flows out of the header. */
@@ -2943,8 +2980,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   .bedisa-ticker {
     grid-area: ticker;
-    font-size: 18px !important;
-    font-weight: 700 !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
     color: var(--white) !important;
     letter-spacing: -0.3px;
   }
@@ -3207,7 +3244,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   .calc-controls-row .flex-center:focus-within {
     border-color: var(--blue);
     background: rgba(10,132,255,0.04);
-    box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
   }
   /* Drift Limit input had `style="width:80px"` inline for desktop;
      override so it spans the full pill on mobile. */
@@ -3279,164 +3316,235 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
 
   /* ── TAX TAB — Section 104 Pool, ISA & SIPP holdings tables ────
-     The desktop 7-column grid (Section 104: Ticker / Units / Avg Cost /
-     Cost Base / Market Value / Unrealised Gain / Est. CGT) and the
-     simple 4-column grid (ISA & SIPP: Ticker / Units / Price / Value)
-     don't fit a 380px mobile screen — half the columns get cut off.
-     Restructure each row into a stacked card with the ticker + units
-     as a header, and the remaining numerical cells laid out in a
-     2-column grid below. Each cell gets a label via ::before so the
-     data stays readable without the desktop column header. The
-     thead row is hidden because the cell labels make it redundant. */
+     Option B 2x2 mobile layout. The desktop is a 7-column grid we
+     can't carry to 380px. Instead each .tax-row becomes a self-
+     contained card with market value as the hero figure (since
+     it's the number you scan for), gain and est. CGT in a 2-col
+     footer below. Avg cost and cost base are hidden on mobile —
+     the desktop view still shows them. The whole table container
+     becomes a 2-col grid so cards sit side by side, halving the
+     scroll length. Same structure for the simpler ISA / SIPP
+     tables which only have 4 cells (ticker, units, price, value);
+     they get value as the hero with no footer cells. */
 
-  /* Hide table headers on mobile — replaced by per-cell labels */
+  /* Hide table headers on mobile — replaced by per-card layout */
   .tax-thead, .tax-thead-simple {
     display: none !important;
   }
 
-  /* Each data row becomes a self-contained card with a soft pill style */
-  .tax-row, .tax-row-simple {
-    display: block !important;
-    padding: 14px 16px !important;
-    margin-bottom: 8px;
-    background: rgba(255,255,255,0.03);
-    border: 0.5px solid rgba(255,255,255,0.10) !important;
-    border-radius: 14px;
-    border-bottom: 0.5px solid rgba(255,255,255,0.10) !important;
-  }
-  .tax-row:last-child, .tax-row-simple:last-child {
-    margin-bottom: 0;
-  }
-
-  /* Section 104 row — 7 cells: 1=ticker, 2=units, 3=avg cost, 4=cost base,
-     5=market value, 6=unrealised gain, 7=est. CGT.
-     Layout: header row pairs ticker (left) + units (right). Body
-     becomes a 2-col grid showing the 5 numerical cells. With 5 items
-     in a 2-col grid the last one (Est. CGT) spans the full width. */
-  .tax-row .col-ticker {
-    font-size: 16px !important;
-    font-weight: 700;
-    color: var(--white);
-    margin-bottom: 0;
-    display: inline-block;
-    width: auto !important;
-  }
-  /* Units cell sits right beside the ticker, right-aligned, with a
-     soft underline divider beneath the header pair */
-  .tax-row > div:nth-child(2) {
-    float: right;
-    text-align: right !important;
-    font-size: 13px !important;
-    color: var(--muted) !important;
-    font-weight: 500 !important;
-    width: auto !important;
-  }
-  .tax-row > div:nth-child(2)::before {
-    content: '';
-  }
-  /* After the float clears, the rest of the cells live in a 2-col grid */
-  .tax-row > div:nth-child(3),
-  .tax-row > div:nth-child(4),
-  .tax-row > div:nth-child(5),
-  .tax-row > div:nth-child(6),
-  .tax-row > div:nth-child(7) {
-    display: block !important;
-    width: 50% !important;
-    float: left;
-    text-align: left !important;
-    padding-top: 12px;
-    margin-top: 12px;
-    box-sizing: border-box;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-  }
-  /* Top border divider above the metrics grid — only on the first
-     two metric cells so it spans the full row visually */
-  .tax-row > div:nth-child(3) {
-    border-top: 0.5px solid rgba(255,255,255,0.06);
-    padding-right: 8px;
-  }
-  .tax-row > div:nth-child(4) {
-    border-top: 0.5px solid rgba(255,255,255,0.06);
-    padding-left: 8px;
-  }
-  .tax-row > div:nth-child(5) { padding-right: 8px; padding-top: 10px; }
-  .tax-row > div:nth-child(6) { padding-left: 8px; padding-top: 10px; }
-  /* Est. CGT spans full width on its own row at the bottom */
-  .tax-row > div:nth-child(7) {
+  /* Container becomes a 2-col grid so cards sit side by side */
+  .tax-table {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
     width: 100% !important;
-    padding-top: 10px;
-  }
-  /* Each metric cell gets a small label above its value */
-  .tax-row > div:nth-child(3)::before { content: 'Avg Cost'; }
-  .tax-row > div:nth-child(4)::before { content: 'Cost Base'; }
-  .tax-row > div:nth-child(5)::before { content: 'Market Value'; }
-  .tax-row > div:nth-child(6)::before { content: 'Unrealised Gain'; }
-  .tax-row > div:nth-child(7)::before { content: 'Est. CGT'; }
-  .tax-row > div:nth-child(n+3)::before {
-    display: block;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-    margin-bottom: 2px;
-  }
-  /* Clearfix for the floats */
-  .tax-row::after {
-    content: '';
-    display: table;
-    clear: both;
   }
 
-  /* Simple table (ISA / SIPP) — 4 cells: 1=ticker, 2=units, 3=price, 4=value.
-     Same header pattern (ticker + units), body shows price + value
-     in a 2-col grid below. */
-  .tax-row-simple .col-ticker {
-    font-size: 16px !important;
-    font-weight: 700;
-    color: var(--white);
-    display: inline-block;
-    width: auto !important;
-  }
-  .tax-row-simple > div:nth-child(2) {
-    float: right;
-    text-align: right !important;
-    font-size: 13px !important;
-    color: var(--muted) !important;
-    font-weight: 500 !important;
-    width: auto !important;
-  }
-  .tax-row-simple > div:nth-child(3),
-  .tax-row-simple > div:nth-child(4) {
-    display: block !important;
-    width: 50% !important;
-    float: left;
-    text-align: left !important;
-    padding-top: 12px;
-    margin-top: 12px;
+  /* Each row becomes an Option B card. Reset all inherited table
+     styling first — we're rebuilding from scratch. */
+  .tax-row, .tax-row-simple {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 0 !important;
+    padding: 12px 14px !important;
+    margin: 0 !important;
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.08) !important;
+    border-radius: 12px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08) !important;
+    width: 100% !important;
     box-sizing: border-box;
-    border-top: 0.5px solid rgba(255,255,255,0.06);
-    font-size: 13px !important;
-    font-weight: 700 !important;
   }
-  .tax-row-simple > div:nth-child(3) { padding-right: 8px; }
-  .tax-row-simple > div:nth-child(4) { padding-left: 8px; }
-  .tax-row-simple > div:nth-child(3)::before { content: 'Price'; }
-  .tax-row-simple > div:nth-child(4)::before { content: 'Value'; }
-  .tax-row-simple > div:nth-child(n+3)::before {
+
+  /* ── Section 104 row — 7 cells:
+        1=ticker, 2=units, 3=avg cost, 4=cost base,
+        5=market value, 6=unrealised gain, 7=est. CGT ── */
+
+  /* Hide avg cost and cost base on mobile — they live in the
+     desktop view. Mobile prioritises the figures you scan for. */
+  .tax-row > div:nth-child(3),
+  .tax-row > div:nth-child(4) {
+    display: none !important;
+  }
+
+  /* Cell 1 (ticker) — top-left, 15px bold */
+  .tax-row .col-ticker {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 2 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--white);
+    letter-spacing: -0.3px;
+    text-align: left !important;
+    align-self: baseline;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Cell 2 (units) — top-right, small muted */
+  .tax-row > div:nth-child(2) {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 2 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,0.5) !important;
+    text-align: right !important;
+    align-self: baseline;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-variant-numeric: tabular-nums;
+    float: none !important;
+  }
+  .tax-row > div:nth-child(2)::after {
+    content: ' units';
+  }
+
+  /* Cell 5 (market value) — hero figure spans full width row 2 */
+  .tax-row > div:nth-child(5) {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 / 3 !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: var(--white) !important;
+    letter-spacing: -0.3px;
+    text-align: left !important;
+    font-variant-numeric: tabular-nums;
+    margin: 8px 0 0 !important;
+    padding: 0 0 8px !important;
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+    width: auto !important;
+    float: none !important;
+  }
+
+  /* Cell 6 (unrealised gain) — left footer, 12px coloured */
+  .tax-row > div:nth-child(6) {
+    grid-column: 1 / 2 !important;
+    grid-row: 3 / 4 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+    margin: 8px 0 0 !important;
+    padding: 0 !important;
+    font-variant-numeric: tabular-nums;
+    width: auto !important;
+    float: none !important;
+  }
+
+  /* Cell 7 (est. CGT) — right footer, 12px coloured */
+  .tax-row > div:nth-child(7) {
+    grid-column: 2 / 3 !important;
+    grid-row: 3 / 4 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-align: right !important;
+    margin: 8px 0 0 !important;
+    padding: 0 !important;
+    font-variant-numeric: tabular-nums;
+    width: auto !important;
+    float: none !important;
+    color: #ff6961 !important;
+  }
+
+  /* Tiny uppercase labels above the footer figures */
+  .tax-row > div:nth-child(6)::before,
+  .tax-row > div:nth-child(7)::before {
     display: block;
     font-size: 9px;
-    color: var(--muted);
+    color: rgba(255,255,255,0.45);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
+    letter-spacing: 0.6px;
+    font-weight: 600;
     margin-bottom: 2px;
   }
-  .tax-row-simple::after {
-    content: '';
-    display: table;
-    clear: both;
+  .tax-row > div:nth-child(6)::before { content: 'Gain'; }
+  .tax-row > div:nth-child(7)::before { content: 'Est. CGT'; }
+
+  /* ── Simple table (ISA / SIPP) — 4 cells:
+        1=ticker, 2=units, 3=price, 4=value ── */
+
+  /* Cell 1 (ticker) — top-left */
+  .tax-row-simple .col-ticker {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 2 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--white);
+    letter-spacing: -0.3px;
+    text-align: left !important;
+    align-self: baseline;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Cell 2 (units) — top-right */
+  .tax-row-simple > div:nth-child(2) {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 2 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,0.5) !important;
+    text-align: right !important;
+    align-self: baseline;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-variant-numeric: tabular-nums;
+    float: none !important;
+  }
+  .tax-row-simple > div:nth-child(2)::after {
+    content: ' units';
+  }
+
+  /* Cell 3 (price) — small muted line above value */
+  .tax-row-simple > div:nth-child(3) {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 / 3 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,0.5) !important;
+    text-align: left !important;
+    margin: 6px 0 0 !important;
+    padding: 0 !important;
+    font-variant-numeric: tabular-nums;
+    width: auto !important;
+    float: none !important;
+  }
+  .tax-row-simple > div:nth-child(3)::before {
+    content: 'Price ';
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  /* Cell 4 (value) — hero figure spans full width row 3 */
+  .tax-row-simple > div:nth-child(4) {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 / 4 !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: var(--green) !important;
+    letter-spacing: -0.3px;
+    text-align: left !important;
+    margin: 6px 0 0 !important;
+    padding: 8px 0 0 !important;
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+    font-variant-numeric: tabular-nums;
+    width: auto !important;
+    float: none !important;
+  }
+  /* Soft red for negative gain inside Section 104 mobile cards.
+     The default .gain-neg uses --red (#FF453A) which is too harsh
+     against the soft tinted cards — switch to #ff6961 to match
+     the rest of the family. */
+  .tax-row > div:nth-child(6).gain-neg {
+    color: #ff6961 !important;
   }
 
   /* ── TAX & SELL CALCULATOR TABS — Apply the same pill styling
@@ -3491,7 +3599,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #tab-sell .flex-center:focus-within {
     border-color: var(--blue);
     background: rgba(10,132,255,0.04);
-    box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
   }
   /* The Income Tax Calculator's three inputs sit in a flex row on
      desktop with "+" separators between them. On mobile, stack as
@@ -3638,7 +3746,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     background: var(--card);
     border: 0.5px solid var(--border);
     border-radius: 14px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
   /* Section header rows still span full width */
   #bgt-main-table tr:has(td.bgt-section-label),
@@ -3886,10 +3994,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     column-gap: 12px !important;
     row-gap: 2px !important;
     align-items: center;
-    background: rgba(10,132,255,0.10);
+    background: rgba(10,132,255,0.16);
     border: 0.5px solid var(--blue) !important;
     border-radius: 12px;
-    margin-top: 10px;
+    margin-top: 0;
     padding: 14px 16px !important;
   }
   /* Cell 1 = the label cell. Hide its DOM text content (we use a pseudo
@@ -4202,7 +4310,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      JSON backup with one tap on iPhone instead of scrolling to the footer. -->
 <div id="first-run-import-card" style="display:none;margin:14px 0 18px;padding:18px 18px 16px;background:rgba(40,40,42,0.55);border:0.5px solid rgba(10,132,255,0.32);border-radius:14px;backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05)">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-    <span style="font-size:18px;line-height:1">⬆</span>
+    <span style="font-size:17px;line-height:1">⬆</span>
     <div style="font-size:15px;font-weight:600;color:var(--white);letter-spacing:-0.2px">Welcome — load your backup</div>
   </div>
   <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">
@@ -4322,7 +4430,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div style="flex-shrink:0">
       <div class="input-label mb8">Monthly Budget</div>
       <div class="flex-center">
-        <span style="font-size:26px;font-weight:700;color:var(--blue)">£</span>
+        <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
         <input class="budget-input" type="text" inputmode="numeric" id="budget" value="2700" step="50">
       </div>
     </div>
@@ -4416,7 +4524,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
       <div class="flex-between" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
         <span class="input-label" style="color:var(--gold)">Total Deployed (Buffered)</span>
-        <span style="font-size:22px;font-weight:700;color:var(--white)" id="totalDeployedVal">—</span>
+        <span style="font-size:22px;font-weight:600;color:var(--white)" id="totalDeployedVal">—</span>
       </div>
       <div class="stat-sub" id="deployNote" style="margin-top:6px"></div>
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px">
@@ -4432,7 +4540,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <div id="bufferRows"></div>
       <div class="flex-between" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <span class="input-label" style="color:var(--gold)">Total Buffer Pot</span>
-        <span style="font-size:22px;font-weight:700;color:var(--gold)" id="bufferPotTotal">—</span>
+        <span style="font-size:22px;font-weight:600;color:var(--gold)" id="bufferPotTotal">—</span>
       </div>
 
       <!-- Month vs Month comparison — populated by _renderMonthVsMonth -->
@@ -4483,11 +4591,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   </div>
 
   <div class="flex-between mb16" id="history-controls-row">
-    <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchHistoryTab('all',this)">All</button>
-      <button class="sub-tab" onclick="switchHistoryTab('personal',this)">Personal</button>
-      <button class="sub-tab" onclick="switchHistoryTab('employer',this)">Employer</button>
-      <button class="sub-tab" onclick="switchHistoryTab('sold',this)">Sold</button>
+    <div class="seg-toggle">
+      <button class="seg-option active" onclick="switchHistoryTab('all',this)"><span>All</span></button>
+      <button class="seg-option" onclick="switchHistoryTab('personal',this)"><span>Personal</span></button>
+      <button class="seg-option" onclick="switchHistoryTab('employer',this)"><span>Employer</span></button>
+      <button class="seg-option" onclick="switchHistoryTab('sold',this)"><span>Sold</span></button>
     </div>
     <button class="btn-danger btn-sm" onclick="clearAllHistory()">Clear All</button>
   </div>
@@ -4542,7 +4650,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span class="input-label">CGT Realised on This Sale £</span>
-        <span style="font-size:8px;font-weight:700;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px">AUTO</span>
+        <span style="font-size:9px;font-weight:600;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px">AUTO</span>
       </div>
       <input class="num-input" type="text" inputmode="decimal" id="sold-cgt-realised" value="0" step="0.01" min="0"
         oninput="_markSoldFieldManual('sold-cgt-realised')">
@@ -4605,7 +4713,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
     <div class="card input-group" data-pound>
       <span class="input-label">Total Monthly Contributions £</span>
-      <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-monthly" value="2700" step="100" style="color:var(--gold);font-weight:700" readonly></div>
+      <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-monthly" value="2700" step="100" style="color:var(--gold);font-weight:600" readonly></div>
     </div>
     <div class="card input-group" data-pound>
       <span class="input-label">Current Portfolio Value £</span>
@@ -4618,7 +4726,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="card input-group" style="position:relative">
       <span class="input-label" style="color:var(--gold)">Phase 1 — Full Contributions (Years)</span>
       <input class="num-input" type="text" inputmode="numeric" id="ret-contrib-years" value="21" step="1" min="0" oninput="onContribYearsChange()" style="border-color:var(--gold)">
-      <div id="ret-coast-badge" style="display:none;position:absolute;top:8px;right:10px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:var(--blue);background:rgba(10,132,255,0.12);padding:2px 8px;border-radius:10px">Coast FIRE</div>
+      <div id="ret-coast-badge" style="display:none;position:absolute;top:8px;right:10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--blue);background:rgba(10,132,255,0.16);padding:2px 8px;border-radius:10px">Coast FIRE</div>
       <div style="font-size:9px;color:var(--muted);margin-top:4px" id="ret-contrib-note">Full contributions for whole term</div>
     </div>
     <div class="card input-group" style="position:relative" data-pound>
@@ -4688,7 +4796,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
       <!-- Phase context strip — shows for all multi-phase configurations -->
       <div id="ret-phase-context" style="display:none;background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;margin-bottom:16px">
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px">Contribution Roadmap</div>
+        <div style="margin-bottom:12px">
+          <div class="subsection-label" style="color:var(--gold)">Contribution Roadmap</div>
+          <div class="subsection-sub">How your phases unfold over time</div>
+        </div>
         <div class="grid-4">
           <div class="stat">
             <div class="stat-label" style="color:var(--gold)">Phase 1 End Value</div>
@@ -4714,8 +4825,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
 
       <!-- Legacy Coast FIRE context row (kept for backward compat, hidden when phase context shown) -->
-      <div id="ret-coast-context" style="display:none;background:rgba(10,132,255,0.07);border-left:3px solid var(--blue);border-radius:10px;padding:12px 18px;margin-bottom:16px">
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:8px">Coast FIRE Mode Active</div>
+      <div id="ret-coast-context" style="display:none;background:rgba(10,132,255,0.16);border-left:3px solid var(--blue);border-radius:10px;padding:12px 18px;margin-bottom:16px">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:8px">Coast FIRE Mode Active</div>
         <div class="grid-4">
           <div class="stat"><div class="stat-label">Value at Coast Point</div><div class="stat-val sm" style="color:var(--blue)" id="ret-coast-val">—</div><div class="stat-sub" id="ret-coast-age-label">when contributions stop</div></div>
           <div class="stat"><div class="stat-label">Coasting Years</div><div class="stat-val sm" style="color:var(--blue)" id="ret-coast-years">—</div><div class="stat-sub">growth only, no contributions</div></div>
@@ -4802,22 +4913,22 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px" class="ret-cp-grid">
       <div class="tax-headline-card" style="padding:12px 14px">
         <div class="tax-headline-card-label" style="font-size:11px">Time Remaining</div>
-        <div class="tax-headline-card-value" style="font-size:18px" id="ret-cp-time">—</div>
+        <div class="tax-headline-card-value" style="font-size:17px" id="ret-cp-time">—</div>
         <div class="tax-headline-card-sub" id="ret-cp-time-sub">to target retirement age</div>
       </div>
       <div class="tax-headline-card" style="padding:12px 14px">
         <div class="tax-headline-card-label" style="font-size:11px">Inflation-Adjusted Value</div>
-        <div class="tax-headline-card-value" style="font-size:18px" id="ret-cp-real">—</div>
+        <div class="tax-headline-card-value" style="font-size:17px" id="ret-cp-real">—</div>
         <div class="tax-headline-card-sub">in today's money</div>
       </div>
       <div class="tax-headline-card" style="padding:12px 14px">
         <div class="tax-headline-card-label" style="font-size:11px">Growth Generated</div>
-        <div class="tax-headline-card-value" style="font-size:18px;color:var(--green)" id="ret-cp-growth">—</div>
+        <div class="tax-headline-card-value" style="font-size:17px;color:var(--green)" id="ret-cp-growth">—</div>
         <div class="tax-headline-card-sub">pure compounding, no inputs</div>
       </div>
       <div class="tax-headline-card" style="padding:12px 14px">
         <div class="tax-headline-card-label" style="font-size:11px">Your Contributions Add</div>
-        <div class="tax-headline-card-value" style="font-size:18px;color:var(--gold)" id="ret-cp-progress">—</div>
+        <div class="tax-headline-card-value" style="font-size:17px;color:var(--gold)" id="ret-cp-progress">—</div>
         <div class="tax-headline-card-sub" id="ret-cp-progress-sub">on top of current pot</div>
       </div>
     </div>
@@ -4935,7 +5046,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
         <span class="stat-sub">Net Property Equity</span>
-        <span style="font-weight:700;color:var(--gold)" id="nw-equity-display">£0</span>
+        <span style="font-weight:600;color:var(--gold)" id="nw-equity-display">£0</span>
       </div>
     </div>
 
@@ -5036,7 +5147,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div id="bgt-live-view">
 
     <!-- Month header bar -->
-    <div class="card card-left mb20" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div class="card card-left mb24" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Monthly Budget Tracker</div>
         <div class="stat-sub" id="bgt-month-label">— Loading</div>
@@ -5048,7 +5159,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
 
     <!-- Quick Add bar -->
-    <div class="card mb20">
+    <div class="card mb24">
       <div class="section-label mb12">Quick Add Expense</div>
       <div class="bgt-quick-add">
         <div class="input-group">
@@ -5106,7 +5217,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div id="bgt-history-view" style="display:none">
 
     <!-- Header bar -->
-    <div class="card card-left mb20" style="border-left-color:var(--amber);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div class="card card-left mb24" style="border-left-color:var(--amber);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div>
         <div class="section-label" style="color:var(--amber);margin-bottom:2px">History Browser</div>
         <div class="stat-sub" id="bgt-hist-subtitle">Select a month below to inspect it</div>
@@ -5115,7 +5226,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
 
     <!-- Month selector list -->
-    <div class="card mb20" id="bgt-hist-list">
+    <div class="card mb24" id="bgt-hist-list">
       <div class="stat-sub">No months completed yet.</div>
     </div>
 
@@ -5249,11 +5360,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
     </div>
 
-    <div class="sub-tabs mb16" style="margin-top:18px">
-      <button class="sub-tab active" onclick="switchPortfolioTab('all',this)">All</button>
-      <button class="sub-tab" onclick="switchPortfolioTab('personal',this)">Personal (GIA)</button>
-      <button class="sub-tab" onclick="switchPortfolioTab('employer',this)">Employer (SIPP)</button>
-      <button class="sub-tab" onclick="switchPortfolioTab('isa',this)">ISA</button>
+    <div class="seg-toggle mb16" style="margin-top:18px">
+      <button class="seg-option active" onclick="switchPortfolioTab('all',this)"><span>All</span></button>
+      <button class="seg-option" onclick="switchPortfolioTab('personal',this)"><span>Personal (GIA)</span></button>
+      <button class="seg-option" onclick="switchPortfolioTab('employer',this)"><span>Employer (SIPP)</span></button>
+      <button class="seg-option" onclick="switchPortfolioTab('isa',this)"><span>ISA</span></button>
     </div>
 
     <!-- Holdings list (sectioned by New / Legacy, grouped by wrapper) -->
@@ -5301,25 +5412,25 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <div class="input-label mb8">PAYE Salary £</div>
         <div style="font-size:9px;color:transparent;margin-bottom:4px;user-select:none">—</div>
         <div class="flex-center">
-          <span style="font-size:20px;font-weight:700;color:var(--blue)">£</span>
+          <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
           <input class="budget-input" type="text" inputmode="numeric" id="inc-paye" value="12570" step="100" style="width:120px" oninput="updateIncomeTotal()">
         </div>
       </div>
-      <div class="income-input-sep" style="font-size:20px;color:var(--muted);padding-top:28px">+</div>
+      <div class="income-input-sep" style="font-size:22px;color:var(--muted);padding-top:28px">+</div>
       <div>
         <div class="input-label mb8">Dividend Income £</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px">First £500 is tax-free</div>
         <div class="flex-center">
-          <span style="font-size:20px;font-weight:700;color:var(--blue)">£</span>
+          <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
           <input class="budget-input" type="text" inputmode="numeric" id="inc-dividends" value="87430" step="100" style="width:120px" oninput="updateIncomeTotal()">
         </div>
       </div>
-      <div class="income-input-sep" style="font-size:20px;color:var(--muted);padding-top:28px">+</div>
+      <div class="income-input-sep" style="font-size:22px;color:var(--muted);padding-top:28px">+</div>
       <div>
         <div class="input-label mb8">Bonus £</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Select how it's paid</div>
         <div class="flex-center">
-          <span style="font-size:20px;font-weight:700;color:var(--blue)">£</span>
+          <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
           <input class="budget-input" type="text" inputmode="numeric" id="inc-bonus" value="0" step="100" style="width:120px" oninput="updateIncomeTotal()">
         </div>
         <div style="display:flex;gap:12px;margin-top:8px">
@@ -5339,27 +5450,33 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
       <div style="background:var(--dark);border-radius:10px;padding:14px 20px;border-left:2px solid rgba(10,132,255,0.4)">
         <div class="input-label mb4">Total Income</div>
-        <div style="font-size:28px;font-weight:700;color:var(--gold)" id="inc-total-display">£100,000</div>
+        <div style="font-size:28px;font-weight:600;color:var(--gold)" id="inc-total-display">£100,000</div>
         <div style="font-size:9px;color:var(--muted);margin-top:4px" id="inc-pa-trap-flag"></div>
       </div>
       <div style="background:var(--dark);border-radius:10px;padding:14px 20px;border-left:3px solid var(--border)" id="inc-tax-code-badge">
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:4px">Estimated Tax Code</div>
-        <div style="font-size:28px;font-weight:700;color:var(--green);letter-spacing:2px">1257L</div>
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px">Estimated Tax Code</div>
+        <div style="font-size:28px;font-weight:600;color:var(--green);letter-spacing:2px">1257L</div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">Full £12,570 personal allowance</div>
       </div>
     </div>
 
     <!-- Dividend tax summary -->
     <div id="divTaxSummary" style="background:var(--dark);border-radius:10px;padding:14px 18px;margin-bottom:12px;display:none">
-      <div id="divTaxSummaryLabel" style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:700">Tax Summary (<span class="tax-year-label">2026/27</span>)</div>
+      <div style="margin-bottom:12px">
+        <div class="subsection-label" id="divTaxSummaryLabel">Tax Summary <span style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:-0.05px">(<span class="tax-year-label">2026/27</span>)</span></div>
+        <div class="subsection-sub">PAYE, dividend, and net position broken down</div>
+      </div>
       <div id="divTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
     </div>
 
     <!-- Bonus tax breakdown — only shown when bonus > 0. Now sits AFTER the
          main breakdown above as a supplementary view, since it's
          conditional and only relevant when a bonus is entered. -->
-    <div id="bonusTaxSummary" style="background:rgba(10,132,255,0.07);border-left:3px solid var(--blue);border-radius:10px;padding:14px 18px;margin-bottom:0;display:none">
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:10px;font-weight:700">Tax on Bonus</div>
+    <div id="bonusTaxSummary" style="background:rgba(10,132,255,0.16);border-left:3px solid var(--blue);border-radius:10px;padding:14px 18px;margin-bottom:0;display:none">
+      <div style="margin-bottom:12px">
+        <div class="subsection-label" style="color:#a8d4ff">Tax on Bonus</div>
+        <div class="subsection-sub" style="color:rgba(199,226,255,0.7)">How your bonus is taxed on top of your salary</div>
+      </div>
       <div id="bonusTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
     </div>
   </div>
@@ -5380,7 +5497,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <div class="input-label mb8">Last Filed Return — Total Liability £ <span id="tax-prior-year-label" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(2024/25)</span></div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:8px">From the most recent return you've filed · drives this year's POAs</div>
         <div class="flex-center" style="gap:8px">
-          <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
+          <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
           <input class="budget-input" type="text" inputmode="numeric" id="tax-prior-liability" value="0" step="100" style="width:130px" oninput="renderTaxProvisionPlanner()">
         </div>
         <div style="font-size:9px;color:var(--amber);margin-top:6px;font-style:italic;line-height:1.5">
@@ -5432,19 +5549,22 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <!-- Subsection 1: CGT Settings (inputs that drive everything below) -->
     <div class="tax-subsection mb16">
-      <div class="subsection-label mb8">CGT Settings</div>
+      <div style="margin-bottom:12px">
+        <div class="subsection-label">CGT Settings</div>
+        <div class="subsection-sub">Your annual allowance and what's already been used</div>
+      </div>
       <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:12px">
         <div>
           <div class="input-label mb8">CGT Annual Allowance</div>
           <div class="flex-center">
-            <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
+            <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
             <input class="budget-input" type="text" inputmode="numeric" id="cgt-allowance" value="3000" step="100" style="width:110px">
           </div>
         </div>
         <div>
           <div class="input-label mb8">CGT Already Used This Year</div>
           <div class="flex-center" style="gap:8px">
-            <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
+            <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
             <input class="budget-input" type="text" inputmode="numeric" id="cgt-used" value="0" step="100" style="width:110px">
           </div>
         </div>
@@ -5459,13 +5579,23 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <!-- Subsection 3: Section 104 Pool holdings -->
     <div class="tax-subsection-divider"></div>
-    <div class="subsection-label mb12">Section 104 Pool · Holdings &amp; Unrealised CGT</div>
-    <div id="giaTable"></div>
+    <div class="tax-subsection mb16">
+      <div style="margin-bottom:12px">
+        <div class="subsection-label">Section 104 Pool</div>
+        <div class="subsection-sub">Holdings &amp; unrealised CGT</div>
+      </div>
+      <div id="giaTable"></div>
+    </div>
 
     <!-- Subsection 4: CGT Calculation breakdown -->
     <div class="tax-subsection-divider"></div>
-    <div class="subsection-label mb8">CGT Calculation</div>
-    <div id="cgtBreakdown"></div>
+    <div class="tax-subsection">
+      <div style="margin-bottom:8px">
+        <div class="subsection-label">CGT Calculation</div>
+        <div class="subsection-sub">How your liability is built up step by step</div>
+      </div>
+      <div id="cgtBreakdown"></div>
+    </div>
   </div>
 
   <!-- ISA — Individual Savings Account
@@ -5479,8 +5609,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <!-- Subsection 1: Allowance tracker -->
     <div class="tax-subsection mb16" id="isa-tracker-card">
-      <div class="flex-between mb12">
-        <div class="subsection-label" style="margin-bottom:0">Allowance Tracker</div>
+      <div class="flex-between mb12" style="align-items:flex-start">
+        <div>
+          <div class="subsection-label">Allowance Tracker</div>
+          <div class="subsection-sub">£20,000 ISA allowance for the current tax year</div>
+        </div>
         <div style="font-size:9px;color:var(--muted);font-style:italic" id="isa-tracker-reset-note"></div>
       </div>
       <div class="isa-tracker-grid">
@@ -5492,8 +5625,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <div class="stat">
           <div class="stat-label">Used This Year</div>
           <div class="flex-center" style="gap:6px">
-            <span style="font-size:18px;font-weight:600;color:var(--blue)">£</span>
-            <input class="budget-input" type="text" inputmode="numeric" id="isa-tracker-used-input" value="0" style="width:110px;font-size:18px"
+            <span style="font-size:17px;font-weight:600;color:var(--blue)">£</span>
+            <input class="budget-input" type="text" inputmode="numeric" id="isa-tracker-used-input" value="0" style="width:110px;font-size:17px"
                    oninput="onISAUsedEdit(this.value)">
           </div>
           <div class="stat-sub">via bed &amp; ISA transfers · editable</div>
@@ -5517,8 +5650,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <!-- Subsection 2: Holdings table -->
     <div class="tax-subsection-divider"></div>
-    <div class="subsection-label mb12">Holdings</div>
-    <div id="isaTable"></div>
+    <div class="tax-subsection">
+      <div style="margin-bottom:12px">
+        <div class="subsection-label">Holdings</div>
+        <div class="subsection-sub">Tax-free wrapper, no CGT applies</div>
+      </div>
+      <div id="isaTable"></div>
+    </div>
   </div>
 
   <!-- SIPP — Self Invested Personal Pension -->
@@ -5561,8 +5699,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <!-- Untagged warning -->
   <div id="untaggedWarning" style="display:none">
     <div class="card mb16" style="border-color:var(--amber)">
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:600;margin-bottom:10px">Holdings Without a Wrapper Tag</div>
-      <div class="stat-sub mb12">The following holdings have no wrapper assigned and are excluded from CGT calculations. Go to Total Portfolio and add them with a wrapper, or tag them below.</div>
+      <div style="margin-bottom:12px">
+        <div class="subsection-label" style="color:var(--amber)">Holdings Without a Wrapper Tag</div>
+        <div class="subsection-sub">These holdings have no wrapper assigned and are excluded from CGT calculations. Go to Total Portfolio and add them with a wrapper, or tag them below.</div>
+      </div>
       <div id="untaggedList"></div>
     </div>
   </div>
@@ -5580,7 +5720,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div>
       <div class="input-label mb8">CGT Annual Allowance</div>
       <div class="flex-center">
-        <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
+        <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
         <input class="budget-input" type="text" inputmode="numeric" id="sell-allowance" value="3000" step="100" style="width:110px">
       </div>
     </div>
@@ -5588,7 +5728,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div>
       <div class="input-label mb8">CGT Already Used This Year</div>
       <div class="flex-center" style="gap:8px">
-        <span style="font-size:22px;font-weight:700;color:var(--blue)">£</span>
+        <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
         <input class="budget-input" type="text" inputmode="numeric" id="sell-used" value="0" step="100" style="width:110px">
       </div>
     </div>
@@ -5617,14 +5757,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div>
       <div class="input-label mb8">ISA Annual Allowance</div>
       <div class="flex-center">
-        <span style="font-size:18px;font-weight:700;color:var(--blue)">£</span>
+        <span style="font-size:17px;font-weight:600;color:var(--blue)">£</span>
         <input class="budget-input" type="text" inputmode="numeric" id="sell-isa-allowance" value="20000" step="1000" style="width:120px">
       </div>
     </div>
     <div>
       <div class="input-label mb8">ISA Already Used This Year</div>
       <div class="flex-center">
-        <span style="font-size:18px;font-weight:700;color:var(--blue)">£</span>
+        <span style="font-size:17px;font-weight:600;color:var(--blue)">£</span>
         <input class="budget-input" type="text" inputmode="numeric" id="sell-isa-used" value="0" step="100" style="width:120px">
       </div>
     </div>
@@ -5640,11 +5780,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card mb24" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>
       <div class="stat-label mb8">Current UK Tax Year</div>
-      <div style="font-size:16px;font-weight:700;color:var(--white)" id="sell-tax-year">—</div>
+      <div style="font-size:17px;font-weight:600;color:var(--white)" id="sell-tax-year">—</div>
     </div>
     <div>
       <div class="stat-label mb8">Days Until Allowance Resets</div>
-      <div style="font-size:16px;font-weight:700;color:var(--amber)" id="sell-days-left">—</div>
+      <div style="font-size:17px;font-weight:600;color:var(--amber)" id="sell-days-left">—</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn-gold btn-sm" id="btnPullGIA" onclick="showSellView('gia')">Pull GIA &amp; Calculate</button>
@@ -5712,7 +5852,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   <!-- Last updated banner -->
   <div class="card mb24" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-left:2px solid rgba(10,132,255,0.4)">
-    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700">Portfolio Analysis — Live Data</div>
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600">Portfolio Analysis — Live Data</div>
     <div style="font-size:10px;color:var(--muted)" id="analyse-last-updated">—</div>
   </div>
 
@@ -5866,7 +6006,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card-gold mb16">
     <div class="section-label">Mortgage Strategic Planner</div>
     <div class="stat-sub mb16">Plan early-payment scenarios, compare interest costs against investing the difference, and model your remaining mortgage term.</div>
-    <button class="btn-gold" onclick="openMortgagePlanner()" style="width:100%;padding:18px;font-size:16px;font-weight:600;letter-spacing:-0.2px">
+    <button class="btn-gold" onclick="openMortgagePlanner()" style="width:100%;padding:18px;font-size:17px;font-weight:600;letter-spacing:-0.2px">
       ⌂ Open Mortgage Strategic Planner
     </button>
   </div>
@@ -5880,7 +6020,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <!-- Header -->
   <div class="card card-left mb24 mp-header" style="border-left-color:var(--blue);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>
-      <div class="subsection-label" style="color:var(--blue);margin-bottom:4px">Mortgage Strategic Planner</div>
+      <div class="subsection-label eyebrow" style="color:var(--blue);margin-bottom:4px">Mortgage Strategic Planner</div>
       <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px">Analyse Financial Position → Mortgage Planner</div>
     </div>
     <button class="mp-btn-back" onclick="closeMortgagePlanner()">← Back to Analysis</button>
@@ -5916,7 +6056,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     </div>
     <div class="gold-divider"></div>
     <div style="margin-bottom:14px">
-      <div class="subsection-label" style="color:var(--blue);margin-bottom:4px" id="mp-future-heading">Future Projections</div>
+      <div class="subsection-label eyebrow" style="color:var(--blue);margin-bottom:4px" id="mp-future-heading">Future Projections</div>
       <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px;line-height:1.5" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">
@@ -5946,7 +6086,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <span style="display:inline-flex;align-items:center;gap:6px">
           <span style="width:10px;height:10px;background:rgba(10,132,255,0.15);border-radius:3px;display:inline-block"></span>Rate switch
         </span>
-        <span id="mp-rate-switch-note" style="color:var(--blue);font-weight:700"></span>
+        <span id="mp-rate-switch-note" style="color:var(--blue);font-weight:600"></span>
       </div>
     </div>
     <div class="mp-table-wrap">
@@ -5973,7 +6113,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 <div class="save-toast" id="saveToast">Saved</div>
 
 <div class="data-controls-footer" style="text-align:center;padding:40px 0 20px;border-top:1px solid var(--border);margin-top:40px">
-  <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;font-weight:700">Data Controls</div>
+  <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;font-weight:600">Data Controls</div>
   <div style="display:flex;justify-content:center;gap:12px;align-items:center">
     <button id="undoBtn" class="btn-ghost btn-sm" onclick="undoLastAction()" disabled style="font-size:9px;opacity:0.3;padding:6px 16px" title="Nothing to undo">↩ Undo</button>
     <div style="width:1px;height:20px;background:var(--border)"></div>
@@ -5991,9 +6131,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 <!-- Backup reminder modal — fires once per month on the 1st (or first visit afterwards) -->
 <div id="backup-reminder-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--card);border:1px solid var(--gold);max-width:480px;width:100%;padding:32px;border-radius:10px;text-align:center">
-    <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:16px">Monthly Backup Reminder</div>
+    <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:16px">Monthly Backup Reminder</div>
     <div style="font-size:42px;color:var(--gold);margin-bottom:12px">⬇</div>
-    <div style="font-size:18px;color:var(--white);font-weight:500;line-height:1.4;margin-bottom:14px">Time for your monthly backup</div>
+    <div style="font-size:17px;color:var(--white);font-weight:500;line-height:1.4;margin-bottom:14px">Time for your monthly backup</div>
     <div id="backup-reminder-body" style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:24px"></div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       <button class="btn-gold" onclick="_acknowledgeBackupReminder(true)" style="padding:10px 24px;font-size:10px;letter-spacing:2px">⬇ Export Now</button>
@@ -6006,7 +6146,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 <div id="gia-budget-prompt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--card);border:0.5px solid var(--border2);max-width:460px;width:100%;padding:28px;border-radius:14px;text-align:center;backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 8px 32px rgba(0,0,0,0.40)">
     <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:10px">GIA save complete</div>
-    <div style="font-size:18px;color:var(--white);font-weight:600;line-height:1.3;margin-bottom:8px;letter-spacing:-0.3px">Add this to your budget tracker?</div>
+    <div style="font-size:17px;color:var(--white);font-weight:600;line-height:1.3;margin-bottom:8px;letter-spacing:-0.3px">Add this to your budget tracker?</div>
     <div id="gia-budget-prompt-body" style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:22px;letter-spacing:-0.05px"></div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       <button class="btn-gold" onclick="_acknowledgeBudgetPrompt(true)" style="padding:10px 22px">Add to Budget</button>
@@ -6028,8 +6168,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div style="background:var(--card);border:0.5px solid var(--border2);max-width:920px;width:100%;padding:28px;border-radius:14px;backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 8px 32px rgba(0,0,0,0.40);max-height:90vh;overflow-y:auto">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:12px">
       <div>
-        <div class="subsection-label" style="color:var(--blue);margin-bottom:6px">Strategy Editor</div>
-        <div style="font-size:20px;color:var(--white);font-weight:600;letter-spacing:-0.3px">Edit Layered Strategy</div>
+        <div class="subsection-label eyebrow" style="color:var(--blue);margin-bottom:6px">Strategy Editor</div>
+        <div style="font-size:22px;color:var(--white);font-weight:600;letter-spacing:-0.4px">Edit Layered Strategy</div>
       </div>
       <button class="btn-ghost btn-sm" onclick="closeEditLayersModal()" style="opacity:0.7">✕ Cancel</button>
     </div>
@@ -6037,12 +6177,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <div id="edit-layers-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px"></div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:10px;margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:18px">
       <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px">Total target allocation</div>
-      <div id="edit-layers-total" style="font-size:16px;font-weight:700;letter-spacing:-0.2px;font-variant-numeric:tabular-nums">100.0%</div>
+      <div id="edit-layers-total" style="font-size:17px;font-weight:600;letter-spacing:-0.2px;font-variant-numeric:tabular-nums">100.0%</div>
     </div>
 
-    <div id="edit-layers-error" style="display:none;font-size:11px;color:var(--red);margin-bottom:14px;padding:10px 14px;background:rgba(255,69,58,0.08);border-radius:8px;border:0.5px solid rgba(255,69,58,0.2);line-height:1.45"></div>
+    <div id="edit-layers-error" style="display:none;font-size:11px;color:#ff6961;margin-bottom:14px;padding:10px 14px;background:rgba(255,69,58,0.14);border-radius:8px;border:0.5px solid rgba(255,69,58,0.28);line-height:1.45"></div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:14px;border-top:0.5px solid var(--border)">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -7566,8 +7706,8 @@ function _mobileScrollToTop() {
 }
 
 function switchHistoryTab(type, btn) {
-  const parentTabs = btn.closest('.sub-tabs');
-  if (parentTabs) parentTabs.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  const parentTabs = btn.closest('.sub-tabs, .seg-toggle');
+  if (parentTabs) parentTabs.querySelectorAll('.sub-tab, .seg-option').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   const formCard = document.getElementById('historyFormCard');
   const formTitle = document.getElementById('historyFormTitle');
@@ -7663,7 +7803,7 @@ function renderSoldShareRows() {
     let costIndicator = '';
     let costNote = '';
     if (r.ticker && r.found) {
-      costIndicator = `<span style="font-size:8px;font-weight:700;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px;margin-left:6px">AUTO</span>`;
+      costIndicator = `<span style="font-size:9px;font-weight:600;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px;margin-left:6px">AUTO</span>`;
       costNote = `<span style="font-size:9px;color:var(--muted);margin-top:2px">From ${wrapper} cost pool · ${fmtNum(r.unitsHeld, 0)} units held · editable if needed</span>`;
     } else if (r.ticker && r.units > 0 && !r.found) {
       // Ticker entered but no holding found — warn
@@ -8402,8 +8542,8 @@ function _setPriceUpdateTimestamp() {
 }
 
 function switchPortfolioTab(type, btn) {
-  const parentTabs = btn.closest('.sub-tabs');
-  if (parentTabs) parentTabs.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  const parentTabs = btn.closest('.sub-tabs, .seg-toggle');
+  if (parentTabs) parentTabs.querySelectorAll('.sub-tab, .seg-option').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   renderPortfolio(type);
 }
@@ -9082,13 +9222,13 @@ function _renderMonthVsMonth() {
       <table style="width:100%;border-collapse:collapse;font-size:11px">
         <thead style="background:var(--card2)">
           <tr>
-            <th style="padding:8px 12px;text-align:left;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:700;opacity:0.7">Fund</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:700;opacity:0.7">Units</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:700;opacity:0.7">Δ</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:700;opacity:0.7">Allocation</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:700;opacity:0.7">Δ</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:700;opacity:0.7">Price</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:700;opacity:0.7">Δ</th>
+            <th style="padding:8px 12px;text-align:left;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Fund</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Units</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Δ</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Allocation</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Δ</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Price</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Δ</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -9632,7 +9772,7 @@ function renderAdditionalFunds() {
       <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
         <div class="input-group">
           <span class="input-label">Ticker</span>
-          <input class="text-input" type="text" value="${f.ticker}" style="text-transform:uppercase;font-weight:700"
+          <input class="text-input" type="text" value="${f.ticker}" style="text-transform:uppercase;font-weight:600"
             onchange="updateExtraFund(${i},'ticker',this.value.toUpperCase())">
         </div>
         <div class="input-group">
@@ -9988,7 +10128,7 @@ function renderHistory(filter='all') {
           <div>
             <div class="flex-center mb8">
               <span style="background:rgba(255,69,58,0.15);color:var(--red);font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px">SOLD</span>
-              <span style="background:rgba(255,255,255,0.05);color:${wrapperColour};font-size:9px;font-weight:700;padding:2px 10px;border-radius:10px;border:1px solid ${wrapperColour};margin-left:6px">${entryWrapper}</span>
+              <span style="background:rgba(255,255,255,0.05);color:${wrapperColour};font-size:9px;font-weight:600;padding:2px 10px;border-radius:10px;border:1px solid ${wrapperColour};margin-left:6px">${entryWrapper}</span>
               <span class="history-date" style="margin-left:8px">${entry.date}</span>
             </div>
             <div class="history-val" style="color:var(--red)">£${fmtNum(Math.round(entry.proceeds||0),0)} proceeds</div>
@@ -10765,9 +10905,9 @@ function calculateRetirement() {
   const thisYear = new Date().getFullYear();
   // ── Phase badge ───────────────────────────────────────────
   const phaseCol = (inP1, inP2, inP3) => {
-    if (inP1) return `<span style="font-size:8px;font-weight:700;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:10px">P1</span>`;
-    if (inP2) return `<span style="font-size:8px;font-weight:700;color:var(--amber);background:rgba(255,159,10,0.12);padding:1px 5px;border-radius:10px">P2</span>`;
-    return `<span style="font-size:8px;font-weight:700;color:#8facc8;background:rgba(143,172,200,0.10);padding:1px 5px;border-radius:10px;letter-spacing:0.5px">COAST</span>`;
+    if (inP1) return `<span style="font-size:9px;font-weight:600;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:10px">P1</span>`;
+    if (inP2) return `<span style="font-size:9px;font-weight:600;color:var(--amber);background:rgba(255,159,10,0.12);padding:1px 5px;border-radius:10px">P2</span>`;
+    return `<span style="font-size:9px;font-weight:600;color:#8facc8;background:rgba(143,172,200,0.10);padding:1px 5px;border-radius:10px;letter-spacing:0.5px">COAST</span>`;
   };
 
   // ── Yearly Input cell ─────────────────────────────────────
@@ -10852,7 +10992,7 @@ function calculateRetirement() {
 
       // Coast rows get a subtle background tint and bold growth
       const rowClass    = isRet ? 'retirement' : inP3 ? 'milestone pt-coast' : 'milestone';
-      const growthStyle = inP3 ? 'color:var(--green);font-weight:700' : 'color:var(--green)';
+      const growthStyle = inP3 ? 'color:var(--green);font-weight:600' : 'color:var(--green)';
 
       tableRows += `<tr class="${rowClass}"${borderStyle}>
         <td style="text-align:left">${thisYear + y}</td>
@@ -11926,7 +12066,7 @@ function renderPortfolio(filter='all') {
     <div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
-          <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:700">New Holdings</div>
+          <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600">New Holdings</div>
           <div style="font-size:9px;color:var(--muted)">From monthly history — ticked by default so they feed the calculator's drift and rebalancing · % shown relative to new holdings only · Total: £${fmtNum(Math.round(newTotal),0)}</div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${newSectionId}')" id="btn-${newSectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
@@ -11940,7 +12080,7 @@ function renderPortfolio(filter='all') {
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
-          <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:700;color:var(--muted)">Legacy Holdings</div>
+          <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600;color:var(--muted)">Legacy Holdings</div>
           <div style="font-size:9px;color:var(--muted2)">Pre-calculator holdings — unticked by default so the calculator doesn't try to rebalance against your historical positions · % shown relative to legacy holdings only · Total: £${fmtNum(Math.round(legacyTotal),0)}</div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${legacySectionId}')" id="btn-${legacySectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
@@ -12314,17 +12454,17 @@ function renderGrowthChart(type='monthly') {
     <div class="grid-3 mb16 growth-stats-grid">
       <div class="tax-headline-card" style="padding:12px 14px">
         <div class="tax-headline-card-label" style="font-size:11px">Current Portfolio Value</div>
-        <div class="tax-headline-card-value" style="font-size:20px;color:var(--gold)">£${fmtNum(Math.round(latestValue),0)}</div>
+        <div class="tax-headline-card-value" style="font-size:22px;color:var(--gold)">£${fmtNum(Math.round(latestValue),0)}</div>
         <div class="tax-headline-card-sub">at current prices across all wrappers</div>
       </div>
       <div class="tax-headline-card" style="padding:12px 14px">
         <div class="tax-headline-card-label" style="font-size:11px">Total Contributed (Cost Base)</div>
-        <div class="tax-headline-card-value" style="font-size:20px;color:var(--blue)">£${fmtNum(Math.round(latestContrib),0)}</div>
+        <div class="tax-headline-card-value" style="font-size:22px;color:var(--blue)">£${fmtNum(Math.round(latestContrib),0)}</div>
         <div class="tax-headline-card-sub">from HL cost base</div>
       </div>
       <div class="tax-headline-card" style="padding:12px 14px">
         <div class="tax-headline-card-label" style="font-size:11px">Market Growth</div>
-        <div class="tax-headline-card-value" style="font-size:20px;color:${marketGrowth>=0?'var(--green)':'var(--red)'}">${marketGrowth>=0?'+':''}£${fmtNum(Math.round(marketGrowth),0)} (${growthPct>=0?'+':''}${growthPct.toFixed(1)}%)</div>
+        <div class="tax-headline-card-value" style="font-size:22px;color:${marketGrowth>=0?'var(--green)':'var(--red)'}">${marketGrowth>=0?'+':''}£${fmtNum(Math.round(marketGrowth),0)} (${growthPct>=0?'+':''}${growthPct.toFixed(1)}%)</div>
         <div class="tax-headline-card-sub">unrealised gain across portfolio</div>
       </div>
     </div>
@@ -12378,14 +12518,14 @@ function showGrowthTip(i, event) {
   if (!tip || !wrap) return;
 
   tip.innerHTML = `
-    <div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:6px;letter-spacing:1px">${p.fullDate}</div>
+    <div style="font-size:10px;font-weight:600;color:var(--gold);margin-bottom:6px;letter-spacing:1px">${p.fullDate}</div>
     <div style="display:grid;grid-template-columns:auto auto;gap:2px 16px">
       <span style="color:var(--muted)">Portfolio value</span>
-      <span style="font-weight:700;color:var(--white)">£${fmtNum(Math.round(p.value),0)}</span>
+      <span style="font-weight:600;color:var(--white)">£${fmtNum(Math.round(p.value),0)}</span>
       <span style="color:var(--muted)">Cost base</span>
       <span style="color:var(--blue)">£${fmtNum(Math.round(p.contributed),0)}</span>
       <span style="color:var(--muted)">Unrealised gain</span>
-      <span style="font-weight:700;color:${gainCol}">${gain>=0?'+':''}£${fmtNum(Math.round(Math.abs(gain)),0)} (${gainPct>=0?'+':''}${gainPct.toFixed(1)}%)</span>
+      <span style="font-weight:600;color:${gainCol}">${gain>=0?'+':''}£${fmtNum(Math.round(Math.abs(gain)),0)} (${gainPct>=0?'+':''}${gainPct.toFixed(1)}%)</span>
       ${monthChange !== null ? `
       <span style="color:var(--muted)">vs prev month</span>
       <span style="color:${mCol}">${monthChange>=0?'+':''}£${fmtNum(Math.round(Math.abs(monthChange)),0)} (${monthChangePct>=0?'+':''}${monthChangePct?.toFixed(1)}%)</span>
@@ -12773,8 +12913,8 @@ function updateIncomeTotal() {
     taxCodeEl.innerHTML = `
       <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div>
-          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:4px">Estimated Tax Code</div>
-          <div style="font-size:24px;font-weight:700;color:${codeColour};letter-spacing:2px">${taxCode}</div>
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px">Estimated Tax Code</div>
+          <div style="font-size:24px;font-weight:600;color:${codeColour};letter-spacing:2px">${taxCode}</div>
         </div>
         <div style="padding-top:18px">
           <div style="font-size:10px;color:var(--muted);line-height:1.6">${codeNote}</div>
@@ -14169,7 +14309,7 @@ function renderTaxTab() {
             <div class="col-h" style="text-align:right;color:var(--muted)">£${fmtNum(r.avgCost,2)}</div>
             <div class="col-h" style="text-align:right;color:var(--muted)">£${fmtNum(Math.round(r.totalCost),0)}</div>
             <div class="col-h" style="text-align:right;color:var(--white);font-weight:600">£${fmtNum(Math.round(r.marketValue),0)}</div>
-            <div class="col-h ${gainClass}" style="text-align:right;font-weight:700">${r.unrealisedGain >= 0 ? '+' : ''}£${fmtNum(Math.round(r.unrealisedGain),0)}</div>
+            <div class="col-h ${gainClass}" style="text-align:right;font-weight:600">${r.unrealisedGain >= 0 ? '+' : ''}£${fmtNum(Math.round(r.unrealisedGain),0)}</div>
             <div class="col-h" style="text-align:right;color:var(--red);font-weight:600">~£${fmtNum(Math.round(rowCalc.totalTax),0)}</div>
           </div>`;
         }).join('')}
@@ -14201,7 +14341,7 @@ function renderTaxTab() {
       <div class="cgt-step-val" style="color:var(--red)">£${fmtNum(Math.round(cgtCalc.taxAtHigher),0)}</div>
     </div>` : ''}
     ${cgtCalc.inTrap ? `
-    <div class="cgt-step" style="border-left:3px solid var(--red);background:rgba(255,69,58,0.06)">
+    <div class="cgt-step" style="border-left:3px solid var(--red);background:rgba(255,69,58,0.14)">
       <div>
         <div class="cgt-step-label" style="color:var(--red)">⚠ Personal Allowance Trap</div>
         <div class="stat-sub" style="margin-top:3px">Income between £100,000–£125,140. £${fmtNum(cgtCalc.paLost,0)} personal allowance withdrawn. Effective marginal rate on income in this band is 60%.</div>
@@ -14220,7 +14360,7 @@ function renderTaxTab() {
     document.getElementById('isaTable').innerHTML = `<div class="history-empty">No ISA holdings found. Add holdings tagged as ISA on the Total Portfolio page.</div>`;
   } else {
     document.getElementById('isaTable').innerHTML = `
-      <div style="margin-bottom:8px"><span class="stat-sub">Total ISA Value: </span><span style="font-size:16px;font-weight:700;color:var(--green)">£${fmtNum(Math.round(totalISAValue),0)}</span> <span class="stat-sub" style="margin-left:8px">— No CGT applicable</span></div>
+      <div style="margin-bottom:8px"><span class="stat-sub">Total ISA Value: </span><span style="font-size:17px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(totalISAValue),0)}</span> <span class="stat-sub" style="margin-left:8px">— No CGT applicable</span></div>
       <div class="tax-table">
         <div class="tax-thead-simple">
           <div class="col-h left">Ticker</div>
@@ -14232,7 +14372,7 @@ function renderTaxTab() {
           <div class="col-ticker">${r.ticker}</div>
           <div class="col-h" style="text-align:right;color:var(--white)">${r.shares}</div>
           <div class="col-h" style="text-align:right;color:var(--muted)">£${fmtNum(r.currentPrice,2)}</div>
-          <div class="col-h" style="text-align:right;color:var(--green);font-weight:700">£${fmtNum(Math.round(r.marketValue),0)}</div>
+          <div class="col-h" style="text-align:right;color:var(--green);font-weight:600">£${fmtNum(Math.round(r.marketValue),0)}</div>
         </div>`).join('')}
       </div>`;
   }
@@ -14242,7 +14382,7 @@ function renderTaxTab() {
     document.getElementById('sippTable').innerHTML = `<div class="history-empty">No SIPP holdings found. Employer contributions from Monthly History are automatically treated as SIPP.</div>`;
   } else {
     document.getElementById('sippTable').innerHTML = `
-      <div style="margin-bottom:8px"><span class="stat-sub">Total SIPP Value: </span><span style="font-size:16px;font-weight:700;color:var(--green)">£${fmtNum(Math.round(totalSIPPValue),0)}</span> <span class="stat-sub" style="margin-left:8px">— No CGT applicable (pension wrapper)</span></div>
+      <div style="margin-bottom:8px"><span class="stat-sub">Total SIPP Value: </span><span style="font-size:17px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(totalSIPPValue),0)}</span> <span class="stat-sub" style="margin-left:8px">— No CGT applicable (pension wrapper)</span></div>
       <div class="tax-table">
         <div class="tax-thead-simple">
           <div class="col-h left">Ticker</div>
@@ -14254,7 +14394,7 @@ function renderTaxTab() {
           <div class="col-ticker">${r.ticker}</div>
           <div class="col-h" style="text-align:right;color:var(--white)">${r.shares}</div>
           <div class="col-h" style="text-align:right;color:var(--muted)">£${fmtNum(r.currentPrice,2)}</div>
-          <div class="col-h" style="text-align:right;color:var(--green);font-weight:700">£${fmtNum(Math.round(r.marketValue),0)}</div>
+          <div class="col-h" style="text-align:right;color:var(--green);font-weight:600">£${fmtNum(Math.round(r.marketValue),0)}</div>
         </div>`).join('')}
       </div>`;
   }
@@ -14268,7 +14408,7 @@ function renderTaxTab() {
       `<div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)">
         <div style="font-size:12px;font-weight:600;color:var(--white)">${h.ticker} — ${h.shares} units @ £${_formatPriceDisplay(h.price||0) || (h.price||0).toFixed(2)}</div>
         <div style="display:flex;gap:6px">
-          ${['GIA','ISA','SIPP'].map(w => `<button class="btn-ghost btn-sm" style="padding:4px 10px;font-size:8px" onclick="tagHoldingWrapper('${h.id}','${w}')">${w}</button>`).join('')}
+          ${['GIA','ISA','SIPP'].map(w => `<button class="btn-ghost btn-sm" style="padding:4px 10px;font-size:9px" onclick="tagHoldingWrapper('${h.id}','${w}')">${w}</button>`).join('')}
         </div>
       </div>`
     ).join('');
@@ -14869,30 +15009,30 @@ function renderBedISA() {
     ${plan.map(p => `<div class="sell-plan-row bedisa-row" style="grid-template-columns:70px 1fr 70px 100px 120px 90px">
       <div class="col-ticker bedisa-ticker">${p.ticker}</div>
       <div class="bedisa-action" style="font-size:10px;color:var(--muted);line-height:1.6">Sell @ £${fmtNum(p.currentPrice,2)}<br><span style="color:var(--muted2)">Cost £${fmtNum(p.avgCost,2)}/unit</span></div>
-      <div class="bedisa-units" style="text-align:right;font-size:17px;font-weight:700;color:var(--white)" data-label="Units">${p.unitsSell}</div>
+      <div class="bedisa-units" style="text-align:right;font-size:17px;font-weight:600;color:var(--white)" data-label="Units">${p.unitsSell}</div>
       <div class="bedisa-gain" style="text-align:right;font-weight:600;color:${p.gainRealised>=0?'var(--green)':'var(--red)'}" data-label="Gain Realised">
         ${p.gainRealised>=0?'+':''}£${fmtNum(Math.round(Math.abs(p.gainRealised)),0)}</div>
-      <div class="bedisa-proceeds" style="text-align:right;font-weight:700;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(p.proceeds),0)}</div>
+      <div class="bedisa-proceeds" style="text-align:right;font-weight:600;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(p.proceeds),0)}</div>
       <div class="bedisa-cgt" style="text-align:right;color:var(--green)" data-label="CGT Cost">£0</div>
     </div>`).join('')}
     <div class="bedisa-totals" style="display:grid;grid-template-columns:70px 1fr 70px 100px 120px 90px;gap:8px;padding:12px 0;border-top:1px solid var(--border);margin-top:4px">
-      <div></div><div style="font-size:10px;font-weight:700;color:var(--white);letter-spacing:1px">TOTALS</div><div></div>
-      <div style="text-align:right;font-weight:700;color:${totalGain>=0?'var(--green)':'var(--red)'}" data-label="Gain Realised">
+      <div></div><div style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">TOTALS</div><div></div>
+      <div style="text-align:right;font-weight:600;color:${totalGain>=0?'var(--green)':'var(--red)'}" data-label="Gain Realised">
         ${totalGain>=0?'+':''}£${fmtNum(Math.round(Math.abs(totalGain)),0)}</div>
-      <div style="text-align:right;font-weight:700;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(totalProceeds),0)}</div>
-      <div style="text-align:right;font-weight:700;color:var(--green)" data-label="CGT Cost">£0</div>
+      <div style="text-align:right;font-weight:600;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(totalProceeds),0)}</div>
+      <div style="text-align:right;font-weight:600;color:var(--green)" data-label="CGT Cost">£0</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
       <div style="padding:10px 14px;background:var(--dark);border-radius:10px;border-left:3px solid ${unusedCGT<10?'var(--green)':'var(--amber)'}">
         <div class="stat-label mb4">Unused CGT allowance after transfer</div>
-        <div style="font-size:20px;font-weight:700;color:${unusedCGT<10?'var(--green)':'var(--amber)'}">£${fmtNum(Math.round(unusedCGT),0)}</div>
+        <div style="font-size:22px;font-weight:600;color:${unusedCGT<10?'var(--green)':'var(--amber)'}">£${fmtNum(Math.round(unusedCGT),0)}</div>
       </div>
       <div style="padding:10px 14px;background:var(--dark);border-radius:10px;border-left:3px solid ${unusedISA<50?'var(--green)':'var(--gold)'}">
         <div class="stat-label mb4">Unused ISA allowance after transfer</div>
-        <div style="font-size:20px;font-weight:700;color:${unusedISA<50?'var(--green)':'var(--gold)'}">£${fmtNum(Math.round(unusedISA),0)}</div>
+        <div style="font-size:22px;font-weight:600;color:${unusedISA<50?'var(--green)':'var(--gold)'}">£${fmtNum(Math.round(unusedISA),0)}</div>
       </div>
     </div>
-    ${unusedISA > 50 && unusedCGT < 10 ? `<div style="margin-top:12px;padding:12px 16px;background:rgba(255,159,10,0.07);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8">
+    ${unusedISA > 50 && unusedCGT < 10 ? `<div style="margin-top:12px;padding:12px 16px;background:rgba(255,159,10,0.16);border:0.5px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8">
       CGT allowance fully used. To transfer the remaining £${fmtNum(Math.round(unusedISA),0)} to ISA would incur additional CGT at 24% on gains above the allowance. The allowance resets on 6 April ${new Date().getMonth() >= 3 ? new Date().getFullYear()+1 : new Date().getFullYear()} — consider completing the transfer at the start of next tax year.
     </div>` : ''}`;
 
@@ -15003,7 +15143,7 @@ function renderSellCalculator() {
         <div class="col-h" style="text-align:right;color:var(--white)">£${fmtNum(h.currentPrice, 2)}</div>
         <div class="col-h ${gainClass}" style="text-align:right;font-weight:600">${h.totalGain >= 0 ? '+' : ''}£${fmtNum(Math.round(h.totalGain), 0)}</div>
         <div class="col-h" style="text-align:right;color:var(--muted)">£${fmtNum(h.gainPerUnit, 2)}</div>
-        <div class="col-h" style="text-align:right;color:var(--gold);font-weight:700">${h.maxSellableUnits > 0 ? h.maxSellableUnits : '—'}</div>
+        <div class="col-h" style="text-align:right;color:var(--gold);font-weight:600">${h.maxSellableUnits > 0 ? h.maxSellableUnits : '—'}</div>
         <div class="col-h" style="text-align:right;color:var(--white)">£${fmtNum(Math.round(maxProceeds), 0)}</div>
       </div>`;
     }).join('')}`;
@@ -15069,21 +15209,21 @@ function renderSellCalculator() {
           Sell at £${fmtNum(p.currentPrice, 2)}<br>
           <span style="color:var(--muted2)">Cost base £${fmtNum(p.avgCost, 2)}/unit</span>
         </div>
-        <div style="text-align:right;font-size:20px;font-weight:700;color:var(--white)">${p.unitsSell}</div>
+        <div style="text-align:right;font-size:22px;font-weight:600;color:var(--white)">${p.unitsSell}</div>
         <div style="text-align:right;font-size:14px;font-weight:600;color:var(--red)">+£${fmtNum(Math.round(p.gainOnSale), 0)}</div>
         <div style="text-align:right;font-size:14px;font-weight:600;color:var(--white)">£${fmtNum(Math.round(p.proceeds), 0)}</div>
-        <div style="text-align:right;font-size:14px;font-weight:700;color:var(--green)">£${fmtNum(Math.round(p.taxSaved), 0)}</div>
+        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(p.taxSaved), 0)}</div>
       </div>`).join('')}
       <div style="display:grid;grid-template-columns:65px 1fr 80px 90px 90px 90px;gap:8px;padding-top:14px;border-top:1px solid var(--border);margin-top:4px">
         <div></div>
-        <div style="font-size:10px;font-weight:700;color:var(--white);letter-spacing:1px">TOTALS</div>
+        <div style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">TOTALS</div>
         <div></div>
-        <div style="text-align:right;font-size:14px;font-weight:700;color:var(--red)">+£${fmtNum(Math.round(totalGainRealised), 0)}</div>
-        <div style="text-align:right;font-size:14px;font-weight:700;color:var(--white)">£${fmtNum(Math.round(totalProceeds), 0)}</div>
-        <div style="text-align:right;font-size:14px;font-weight:700;color:var(--green)">£${fmtNum(Math.round(totalTaxSaved), 0)}</div>
+        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--red)">+£${fmtNum(Math.round(totalGainRealised), 0)}</div>
+        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--white)">£${fmtNum(Math.round(totalProceeds), 0)}</div>
+        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(totalTaxSaved), 0)}</div>
       </div>
       ${unusedAllowance > 1 ? `
-      <div class="cgt-step" style="margin-top:16px;background:rgba(255,159,10,0.06);border-left:3px solid var(--amber)">
+      <div class="cgt-step" style="margin-top:16px;background:rgba(255,159,10,0.14);border-left:3px solid var(--amber)">
         <div>
           <div class="cgt-step-label" style="color:var(--amber)">£${fmtNum(Math.round(unusedAllowance), 0)} of allowance unused</div>
           <div class="stat-sub" style="margin-top:3px">Not enough gain across holdings to fully use your allowance this year</div>
@@ -15129,7 +15269,7 @@ function renderSellCalculator() {
             ? `<span style="color:var(--green);font-weight:600">${r.soldUnits} units → ISA</span>`
             : `<span style="color:var(--muted)">No change</span>`}
         </div>
-        <div style="text-align:right;font-size:16px;font-weight:700;color:var(--white)">${r.remainingUnits}</div>
+        <div style="text-align:right;font-size:17px;font-weight:600;color:var(--white)">${r.remainingUnits}</div>
         <div style="text-align:right;font-size:13px;font-weight:600;color:var(--gold)">£${fmtNum(Math.round(r.remainingValue), 0)}</div>
         <div style="text-align:right;font-size:13px;color:var(--muted)">£${fmtNum(Math.round(r.remainingCost), 0)}</div>
         <div style="text-align:right;font-size:13px;font-weight:600" class="${gainClass}">${r.remainingGain >= 0 ? '+' : ''}£${fmtNum(Math.round(r.remainingGain), 0)}</div>
@@ -15137,11 +15277,11 @@ function renderSellCalculator() {
     }).join('')}
     <div style="display:grid;grid-template-columns:65px 1fr 80px 90px 90px 90px;gap:8px;padding-top:14px;border-top:1px solid var(--border);margin-top:4px">
       <div></div>
-      <div style="font-size:10px;font-weight:700;color:var(--white);letter-spacing:1px">REMAINING GIA</div>
+      <div style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">REMAINING GIA</div>
       <div></div>
-      <div style="text-align:right;font-size:14px;font-weight:700;color:var(--gold)">£${fmtNum(Math.round(totalPostValue), 0)}</div>
+      <div style="text-align:right;font-size:14px;font-weight:600;color:var(--gold)">£${fmtNum(Math.round(totalPostValue), 0)}</div>
       <div></div>
-      <div style="text-align:right;font-size:14px;font-weight:700;color:${totalPostGain >= 0 ? 'var(--green)' : 'var(--red)'}">${totalPostGain >= 0 ? '+' : ''}£${fmtNum(Math.round(totalPostGain), 0)}</div>
+      <div style="text-align:right;font-size:14px;font-weight:600;color:${totalPostGain >= 0 ? 'var(--green)' : 'var(--red)'}">${totalPostGain >= 0 ? '+' : ''}£${fmtNum(Math.round(totalPostGain), 0)}</div>
     </div>`;
 
   // Store plan reference but no save button on Pull GIA view
@@ -15498,7 +15638,7 @@ function mpRecalc() {
     const isAction = s.label.startsWith('Your Savings');
     const baseClass = isAction ? 'tax-headline-card' : 'tax-headline-card';
     const extraStyle = isAction
-      ? `background:rgba(255,214,10,0.08);border-color:rgba(255,214,10,0.22);border-left:3px solid var(--gold);padding:16px 16px 16px 18px`
+      ? `background:rgba(255,214,10,0.16);border-color:rgba(255,214,10,0.32);border-left:3px solid var(--gold);padding:16px 16px 16px 18px`
       : `border-left:3px solid ${s.colour};padding:16px 16px 16px 18px`;
     return `
     <div class="${baseClass}" style="${extraStyle}">
@@ -15532,7 +15672,7 @@ function mpRecalc() {
     const rowClass   = r.isCurrentMonth ? 'mp-current-month' : r.isRateSwitch ? 'mp-rate-switch' : '';
     const flag       = r.isCurrentMonth ? ' ← Today' : r.isRateSwitch ? ' ← Rate switches here' : '';
     return `<tr class="${rowClass}">
-      <td>${monthLabel}${flag ? `<span style="font-size:8px;margin-left:4px;opacity:0.7">${flag}</span>` : ''}</td>
+      <td>${monthLabel}${flag ? `<span style="font-size:9px;margin-left:4px;opacity:0.7">${flag}</span>` : ''}</td>
       <td style="color:${r.isPostSwitch ? 'var(--blue)' : 'var(--muted)'}">${r.activeAnnRate.toFixed(2)}%</td>
       <td class="mp-balance">${fmt3(r.openingBal)}</td>
       <td class="mp-interest">£${fmtNum(r.interest, 2)}</td>
@@ -15743,7 +15883,7 @@ function renderAnalyse() {
   document.getElementById('analyse-cgt-insight').textContent = cgtInsight;
 
   document.getElementById('analyse-tax-year-reset').innerHTML = daysToReset < 90
-    ? `<div style="padding:10px 14px;background:rgba(255,159,10,0.08);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:var(--amber)">Tax year ends in ${daysToReset} days — consider using remaining CGT allowance before 5 April ${taxYearStart+1}.</div>`
+    ? `<div style="padding:10px 14px;background:rgba(255,159,10,0.16);border:0.5px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:var(--amber)">Tax year ends in ${daysToReset} days — consider using remaining CGT allowance before 5 April ${taxYearStart+1}.</div>`
     : '';
 
   // 4. Concentration & overlap
@@ -15773,7 +15913,7 @@ function renderAnalyse() {
         <div style="flex:1;height:6px;background:var(--dark);border-radius:3px;overflow:hidden">
           <div style="height:100%;width:${pct.toFixed(0)}%;background:var(--gold);border-radius:3px"></div>
         </div>
-        <div style="font-size:12px;font-weight:700;color:var(--gold);min-width:40px;text-align:right">${pct.toFixed(1)}%</div>
+        <div style="font-size:12px;font-weight:600;color:var(--gold);min-width:40px;text-align:right">${pct.toFixed(1)}%</div>
         <div style="font-size:10px;color:var(--muted);min-width:80px;text-align:right">£${fmtNum(Math.round(val),0)}</div>
       </div>`;
     }).join('');
@@ -15793,15 +15933,15 @@ function renderAnalyse() {
   document.getElementById('analyse-concentration').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
       <div>
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:700">Geographic Exposure</div>
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:600">Geographic Exposure</div>
         ${geoRows || '<div class="history-empty">No recognised fund metadata available.</div>'}
       </div>
       <div>
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:700">Overlap &amp; Risk Notes</div>
-        ${usPct > 70 ? `<div style="padding:10px 14px;background:rgba(255,159,10,0.08);border-left:3px solid var(--amber);border-radius:10px;margin-bottom:8px;font-size:10px;color:var(--amber)">US exposure is ${usPct.toFixed(0)}% of your portfolio. High concentration in a single market.</div>` : ''}
-        ${overlapWarnings.map(w => `<div style="padding:10px 14px;background:rgba(255,159,10,0.06);border-left:3px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:10px;color:var(--muted)">${w}</div>`).join('')}
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:600">Overlap &amp; Risk Notes</div>
+        ${usPct > 70 ? `<div style="padding:10px 14px;background:rgba(255,159,10,0.16);border:0.5px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;margin-bottom:8px;font-size:10px;color:var(--amber)">US exposure is ${usPct.toFixed(0)}% of your portfolio. High concentration in a single market.</div>` : ''}
+        ${overlapWarnings.map(w => `<div style="padding:10px 14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-left:3px solid var(--muted);border-radius:10px;margin-bottom:8px;font-size:10px;color:var(--muted)">${w}</div>`).join('')}
         ${overlapWarnings.length===0 && usPct<=70 ? `<div style="font-size:10px;color:var(--green)">No significant overlap detected between your held funds.</div>` : ''}
-        <div style="margin-top:16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:700">Unique Indices Tracked</div>
+        <div style="margin-top:16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600">Unique Indices Tracked</div>
         ${Object.entries(indexExposure).sort((a,b)=>b[1]-a[1]).map(([idx,val])=>`
           <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:10px">
             <span style="color:var(--white)">${idx}</span>
@@ -15843,7 +15983,7 @@ function renderAnalyse() {
           </div>
           <div class="bipri-row">
             <div class="bipri-cell">
-              <div class="bipri-cell-lbl">Market Value</div>
+              <div class="bipri-cell-lbl">Value</div>
               <div class="bipri-cell-val">£${fmtNum(Math.round(r.marketValue),0)}</div>
             </div>
             <div class="bipri-cell">
@@ -16170,20 +16310,20 @@ function renderAnalyseNetWorth() {
             <div style="flex:1;min-width:0">
               <span style="font-size:10px;color:var(--muted)">${r.icon} ${r.label}</span>
               ${r.note ? `<span style="color:var(--muted2);font-size:9px;margin-left:4px">(${r.note})</span>` : ''}
-              <span style="margin-left:6px;font-size:8px;padding:1px 5px;border-radius:10px;font-weight:700;letter-spacing:0.5px;background:${r.taxFree?'rgba(48,209,88,0.15)':'rgba(255,69,58,0.15)'};color:${r.taxFree?'var(--green)':'var(--red)'}">
+              <span style="margin-left:6px;font-size:9px;padding:1px 5px;border-radius:10px;font-weight:600;letter-spacing:0.5px;background:${r.taxFree?'rgba(48,209,88,0.14)':'rgba(255,69,58,0.14)'};border:0.5px solid ${r.taxFree?'rgba(48,209,88,0.28)':'rgba(255,69,58,0.28)'};color:${r.taxFree?'var(--green)':'#ff6961'}">
                 ${r.taxFree?'TAX-FREE':'CGT APPLIES'}
               </span>
             </div>
-            <span style="font-size:12px;font-weight:700;color:var(--white);white-space:nowrap;margin-left:12px">\u00a3${fmtNum(Math.round(r.val),0)}</span>
+            <span style="font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;margin-left:12px">\u00a3${fmtNum(Math.round(r.val),0)}</span>
           </div>`).join('')}
         ${liabilities > 0 ? `
           <div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:4px;border-top:1px solid var(--border)">
             <span style="font-size:10px;color:var(--red)">\u26a0 Other Liabilities</span>
-            <span style="font-size:12px;font-weight:700;color:var(--red)">-\u00a3${fmtNum(Math.round(liabilities),0)}</span>
+            <span style="font-size:12px;font-weight:600;color:var(--red)">-\u00a3${fmtNum(Math.round(liabilities),0)}</span>
           </div>` : ''}
         <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:2px solid var(--border)">
-          <span style="font-size:10px;font-weight:700;color:var(--white);letter-spacing:1px">NET WORTH</span>
-          <span style="font-size:15px;font-weight:700;color:var(--gold)">\u00a3${fmtNum(Math.round(netWorth),0)}</span>
+          <span style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">NET WORTH</span>
+          <span style="font-size:15px;font-weight:600;color:var(--gold)">\u00a3${fmtNum(Math.round(netWorth),0)}</span>
         </div>
       </div>
       <div style="background:var(--dark);border-radius:10px;padding:14px">
@@ -16520,7 +16660,7 @@ function renderNetWorth() {
           </div>
           ${sub?`<div style="padding-left:20px;margin-top:2px">${sub}</div>`:''}
         </div>
-        <div style="text-align:right;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums">£${fmtNum(Math.round(s.value),0)}</div>
+        <div style="text-align:right;font-weight:600;color:var(--white);font-variant-numeric:tabular-nums">£${fmtNum(Math.round(s.value),0)}</div>
         <div style="text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${pct.toFixed(1)}%</div>
       </div>`;
     }).join('');
@@ -17728,8 +17868,8 @@ function _renderBgtMainTable(state) {
       // more — every category at minimum carries planned forward, which
       // matches how real budgeting works.
       const recurringIcon = isRecurring
-        ? `<span onclick="bgtToggleRecurring('${name}')" title="Fully recurring — planned and actual both auto-fill each new month from £${fmtNum(p,0)}. Click to make planned-only (orange)." style="cursor:pointer;color:var(--green);font-weight:700;margin-left:6px;font-size:11px;user-select:none">↻</span>`
-        : `<span onclick="bgtToggleRecurring('${name}')" title="Planned-only — the planned figure carries forward each new month, but actual resets to 0 so you can enter the real spend. Click to mark as fully recurring (green)." style="cursor:pointer;color:var(--amber);font-weight:700;margin-left:6px;font-size:11px;user-select:none">↻</span>`;
+        ? `<span onclick="bgtToggleRecurring('${name}')" title="Fully recurring — planned and actual both auto-fill each new month from £${fmtNum(p,0)}. Click to make planned-only (orange)." style="cursor:pointer;color:var(--green);font-weight:600;margin-left:6px;font-size:11px;user-select:none">↻</span>`
+        : `<span onclick="bgtToggleRecurring('${name}')" title="Planned-only — the planned figure carries forward each new month, but actual resets to 0 so you can enter the real spend. Click to mark as fully recurring (green)." style="cursor:pointer;color:var(--amber);font-weight:600;margin-left:6px;font-size:11px;user-select:none">↻</span>`;
       return `<tr class="bgt-row">
         <td>${name}${recurringIcon}</td>
         <td><input class="bgt-planned-input" type="text" inputmode="decimal" value="${p > 0 ? p.toFixed(2) : '0.00'}"
@@ -17746,7 +17886,7 @@ function _renderBgtMainTable(state) {
       ${rows}
       <tr class="bgt-row bgt-total">
         <td>Total ${label}</td><td>£${fmtNum(sp,2)}</td>
-        <td style="font-weight:700;color:var(--blue)">£${fmtNum(sa,2)}</td>
+        <td style="font-weight:600;color:var(--blue)">£${fmtNum(sa,2)}</td>
         <td class="${sc}">${_bgtDiffStr(sd)}</td>
       </tr>`;
   };
@@ -17794,7 +17934,7 @@ function _renderBgtMainTable(state) {
   // banner above the standard narrative so the user can't miss it
   const planDeficitWarning = netPlan < 0
     ? `<div style="margin-top:12px;padding:10px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:var(--red);line-height:1.6;border-left:2px solid var(--red)">
-         <span style="font-weight:700">⚠ Plan does not balance</span> — your planned outgoings (tax + expenses) exceed planned income by £${fmtNum(Math.abs(netPlan),0)}.
+         <span style="font-weight:600">⚠ Plan does not balance</span> — your planned outgoings (tax + expenses) exceed planned income by £${fmtNum(Math.abs(netPlan),0)}.
          Either add missing income (e.g. dividends to the Dividend Salary row), reduce planned outgoings, or accept the gap will need to come from savings.
        </div>`
     : '';
@@ -17846,11 +17986,11 @@ function _renderBgtMainTable(state) {
           statusText = `Under-provisioned for tax · £${fmtNum(Math.round(shortfall),0)} short of the £${fmtNum(Math.round(recommended),0)}/mo recommendation. Top up the Tax Provision row this month.`;
         }
         return `<div style="margin-top:8px;padding:8px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:${statusColour};line-height:1.6;border-left:2px solid ${statusColour}">
-          <span style="font-weight:700">${statusIcon}</span> ${statusText}
+          <span style="font-weight:600">${statusIcon}</span> ${statusText}
         </div>`;
       })()}
       <div style="margin-top:8px;font-size:9px;color:var(--muted);line-height:1.5">
-        <span style="color:var(--green);font-weight:700">↻</span> next to a category means it's recurring — its planned value will auto-fill into Actuals on the first day of each new month with a matching audit log entry.
+        <span style="color:var(--green);font-weight:600">↻</span> next to a category means it's recurring — its planned value will auto-fill into Actuals on the first day of each new month with a matching audit log entry.
         Click the icon next to any row to toggle.
       </div>
     </div>`;
@@ -17985,7 +18125,7 @@ function _renderBgtYtdPanel(state) {
       </div>
 
       <!-- Headline summary cards — pill-card stack matching Tax Provision Planner aesthetic -->
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
         <div class="tax-headline-card tax-headline-action">
           <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Annual Net Position</div>
           <div class="tax-headline-card-value" style="font-size:32px;color:${netDiffCls}">${signedFmt(netActual)}</div>
@@ -18012,7 +18152,7 @@ function _renderBgtYtdPanel(state) {
       </div>
 
       <!-- Plan vs Actual roll-up -->
-      <table class="bgt-table" style="margin-bottom:16px">
+      <table class="bgt-table" style="margin-bottom:8px">
         <thead class="bgt-thead"><tr>
           <th style="text-align:left">Total</th><th>Planned £</th><th>Actual £</th><th>Difference</th>
         </tr></thead>
@@ -18115,7 +18255,7 @@ function _renderBgtBreakdownPanel(state) {
       const overAvg = histAvg > 0 && amt > histAvg;
       const valColour = overAvg ? 'var(--amber)' : 'var(--white)';
       const overTag = overAvg
-        ? `<span style="font-size:8px;color:var(--amber);font-style:italic;margin-left:6px">↑ above avg £${fmtNum(histAvg, 2)}</span>`
+        ? `<span style="font-size:9px;color:var(--amber);font-style:italic;margin-left:6px">↑ above avg £${fmtNum(histAvg, 2)}</span>`
         : '';
 
       // Pill colour scales with % of income — green low, amber mid, red high
@@ -18131,7 +18271,7 @@ function _renderBgtBreakdownPanel(state) {
             </div>
           </div>
           <div style="font-size:11px;color:${valColour};font-weight:600;text-align:right;min-width:70px">£${fmtNum(amt, 2)}</div>
-          <div style="font-size:10px;color:${pillColour};font-weight:700;background:rgba(255,255,255,0.04);padding:3px 8px;border-radius:10px;min-width:50px;text-align:center">${pct.toFixed(1)}%</div>
+          <div style="font-size:10px;color:${pillColour};font-weight:600;background:rgba(255,255,255,0.04);padding:3px 8px;border-radius:10px;min-width:50px;text-align:center">${pct.toFixed(1)}%</div>
         </div>`;
     }).join('');
 
@@ -18153,8 +18293,8 @@ function _renderBgtBreakdownPanel(state) {
           <div class="stat-sub">Each category as a % of this month's actual income</div>
         </div>
         <div class="bgt-saved-tile" style="text-align:right">
-          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700">Saved This Month</div>
-          <div style="font-size:20px;font-weight:700;color:${savedColour};line-height:1.1;margin-top:2px">${savedPct.toFixed(1)}%</div>
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600">Saved This Month</div>
+          <div style="font-size:22px;font-weight:600;color:${savedColour};line-height:1.1;margin-top:2px">${savedPct.toFixed(1)}%</div>
           <div style="font-size:10px;color:var(--muted);margin-top:2px">£${fmtNum(savedAmount, 2)} of £${fmtNum(totalIncome, 2)}</div>
         </div>
       </div>
@@ -18192,9 +18332,9 @@ function _renderBgtAveragesPanel(state) {
     const overAvg = currentMonthAmt > a.avg && a.avg > 0;
     const colour  = overAvg ? 'var(--amber)' : 'var(--white)';
     const overTag = overAvg
-      ? `<span style="font-size:8px;color:var(--amber);font-style:italic;margin-left:6px">this month £${fmtNum(currentMonthAmt, 2)} ↑</span>`
+      ? `<span style="font-size:9px;color:var(--amber);font-style:italic;margin-left:6px">this month £${fmtNum(currentMonthAmt, 2)} ↑</span>`
       : currentMonthAmt > 0
-        ? `<span style="font-size:8px;color:var(--muted);font-style:italic;margin-left:6px">this month £${fmtNum(currentMonthAmt, 2)}</span>`
+        ? `<span style="font-size:9px;color:var(--muted);font-style:italic;margin-left:6px">this month £${fmtNum(currentMonthAmt, 2)}</span>`
         : '';
     return `
       <tr class="bgt-row">
@@ -18273,7 +18413,7 @@ function _renderBgtAudit(state) {
     return `
       <div class="bgt-audit-row" id="bgt-audit-row-${origIdx}">
         <span style="color:var(--white);font-weight:600">${_esc(e.category)}${e.note ? `<span style="display:block;font-size:9px;color:var(--muted);font-weight:400;margin-top:1px">${_esc(e.note)}</span>` : ''}</span>
-        <span style="color:var(--gold);font-weight:700">+£${fmtNum(e.amount,2)}</span>
+        <span style="color:var(--gold);font-weight:600">+£${fmtNum(e.amount,2)}</span>
         <span style="color:var(--muted);font-size:10px">${e.date}</span>
         <button class="bgt-edit-btn" onclick="bgtToggleAuditEdit(${origIdx})" title="Edit this transaction">✎</button>
         <button class="bgt-del-btn" onclick="bgtDeleteAuditEntry(${origIdx})" title="Remove">✕</button>
@@ -18581,7 +18721,7 @@ function _renderBgtHistDetailTable(rec, monthId) {
         const underFlag   =  isIncome && a > 0 && a < avg; // income below avg → amber warning
         const avgColour   = (overFlag || underFlag) ? 'var(--amber)' : 'var(--muted)';
         const monthsLabel = months === 1 ? '1 mo' : `${months} mo`;
-        avgCell = `<td style="color:${avgColour}">£${fmtNum(avg, 2)}<span style="display:block;font-size:8px;color:var(--muted);font-weight:400">${monthsLabel}</span></td>`;
+        avgCell = `<td style="color:${avgColour}">£${fmtNum(avg, 2)}<span style="display:block;font-size:9px;color:var(--muted);font-weight:400">${monthsLabel}</span></td>`;
       } else {
         avgCell = `<td style="color:var(--muted2)">—</td>`;
       }
@@ -18621,7 +18761,7 @@ function _renderBgtHistDetailTable(rec, monthId) {
       ${rows}
       <tr class="bgt-row bgt-total">
         <td>Total ${label}</td><td style="color:var(--blue)">£${fmtNum(sp,2)}</td>
-        <td style="font-weight:700;color:var(--blue)" id="bgt-hist-sec-act-${label.replace(/\s+/g,'_')}"
+        <td style="font-weight:600;color:var(--blue)" id="bgt-hist-sec-act-${label.replace(/\s+/g,'_')}"
           >£${fmtNum(sa,2)}</td>
         ${savgCell}
         <td class="${sc}">${_bgtDiffStr(sd)}</td>
@@ -18708,7 +18848,7 @@ function _renderBgtHistAudit(rec) {
     const origIdx = len - 1 - i;  // reverse display index back to array index
     return `<div class="bgt-audit-row">
       <span style="color:var(--white);font-weight:600">${_esc(e.category)}${e.note ? `<span style="display:block;font-size:9px;color:var(--muted);font-weight:400;margin-top:1px">${_esc(e.note)}</span>` : ''}</span>
-      <span style="color:var(--amber);font-weight:700">+£${fmtNum(e.amount,2)}</span>
+      <span style="color:var(--amber);font-weight:600">+£${fmtNum(e.amount,2)}</span>
       <span style="color:var(--muted);font-size:10px">${e.date}</span>
       <button class="bgt-del-btn" onclick="bgtHistDeleteAuditEntry('${monthId}',${origIdx})" title="Remove this transaction">✕</button>
     </div>`;
