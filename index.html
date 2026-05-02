@@ -1120,6 +1120,42 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-section-tax { color: var(--red); }
 .bgt-section-fixed { color: var(--amber); }
 .bgt-section-variable { color: var(--blue); }
+
+/* ═══════════════════════════════════════════════════════════
+   TAX REMINDER — paid-row indicator on HMRC schedule + cash flow
+   tables. Once a deadline is marked Paid via the banner, its row
+   in both the Upcoming HMRC Payments table and the Cash Flow
+   Projection renders with a strikethrough and a small green
+   "PAID" badge. The strikethrough makes the past-deadline visible
+   for reference (you can see what you settled and when) without
+   it competing with active deadlines for attention.
+═══════════════════════════════════════════════════════════ */
+.tr-paid-row td {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,255,255,0.4);
+  text-decoration-thickness: 1px;
+  opacity: 0.55;
+}
+.tr-paid-row td .tr-paid-badge,
+.tr-paid-row .tr-paid-badge {
+  text-decoration: none;
+  /* the strikethrough on the parent <td> would otherwise pass through
+     this child element — explicitly clear it on the badge */
+}
+.tr-paid-badge {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 50px;
+  background: rgba(48,209,88,0.16);
+  color: #7fe89a;
+  border: 0.5px solid rgba(48,209,88,0.32);
+  margin-left: 8px;
+  vertical-align: 1px;
+}
+
 .bgt-quick-add { display: grid; grid-template-columns: 1fr 120px 1fr auto; gap: 10px; align-items: end; }
 /* Each input-group inside Quick Add must have a uniform vertical structure
    — label on top at the same height across all columns, field below at the
@@ -3055,6 +3091,23 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 })();
 </script>
 
+<!-- Tax reminder banner slot — populated by _renderTaxReminderBanner().
+     Sits at the top of every page so HMRC payment reminders are seen
+     regardless of which tab the user is on. The renderer fires checkpoints
+     at 7 days, 3 days, and 1 day before each deadline. Got it dismisses
+     just the current checkpoint (next one re-shows). Paid marks the entire
+     deadline as settled and never re-shows. Both states sync across
+     devices via Supabase since the dismissal store is in the LS map. -->
+<div id="tax-reminder-banner-slot" style="margin: 14px 0 0;"></div>
+
+<!-- HL Direct Debit reminder banner slot — populated by _renderHlDdReminderBanner().
+     Fires 3 days and 1 day before the configured HL DD day (default 7th of
+     month). If the configured day falls on a weekend, the reminder uses
+     the next working day. Same UX pattern as HMRC banner: Got it silences
+     this checkpoint (next one re-shows), Completed marks this month done
+     (returns automatically next month). -->
+<div id="hl-dd-reminder-banner-slot" style="margin: 8px 0 0;"></div>
+
 <header class="vc-header">
   <div class="vc-status">
     <span class="vc-status-pill" id="vc-status-pill">Live</span>
@@ -3445,6 +3498,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         </button>
       </div>
       <div class="stat-sub" id="ret-withdrawal-desc" style="margin-top:6px;font-size:9px;line-height:1.35">4% Rule — withdraw 4% annually, preserving principal indefinitely.</div>
+    </div>
+    <div class="card input-group">
+      <span class="input-label">HL Direct Debit Day</span>
+      <input class="num-input" type="number" inputmode="numeric" id="ret-hl-dd-day" value="7" step="1" min="1" max="31" oninput="_saveHlDdDay(this.value)">
+      <div class="stat-sub" style="margin-top:6px;font-size:9px;line-height:1.35">Day of month your HL Direct Debit lands. Reminders fire 3 days and 1 day before. Weekends roll forward to the next working day.</div>
     </div>
   </div>
     </div><!-- /collapsible-body -->
@@ -3847,7 +3905,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
           <span class="input-label">Category</span>
           <select class="num-input" id="bgt-qa-category" style="text-align:left;cursor:pointer">
             <option value="Groceries">Groceries</option>
-            <option value="Gym">Gym</option>
             <option value="Extras">Extras</option>
             <option value="Nights Out">Nights Out</option>
             <option value="Investment Deposit">Investment Deposit</option>
@@ -4839,6 +4896,9 @@ const LS = {
   BUDGET: 'rma_budget_v1',
   FUNDS_CONFIG: 'rma_funds_config_v1',
   MANUAL_OVERRIDE_UNTIL: 'rma_manual_override_until',
+  TAX_REMINDER_DISMISSALS: 'rma_tax_reminder_dismissals_v1',
+  HL_DD_DAY: 'rma_hl_dd_day_v1',
+  HL_DD_DISMISSALS: 'rma_hl_dd_dismissals_v1',
 };
 
 // Standalone localStorage key for the "last price update" timestamp shown
@@ -6219,6 +6279,12 @@ function switchTab(name, btn) {
   // Mobile nav: refresh pill label and collapse the grid (no-op on desktop)
   _updateMobileNavPill();
   _closeMobileNav();
+
+  // Re-render the tax reminder banner — fresh check on every tab switch so
+  // the banner shows on whichever tab the user lands on. Cheap (reads LS,
+  // computes a date diff) so safe to run unconditionally.
+  try { _renderTaxReminderBanner(); } catch (e) {}
+  try { _renderHlDdReminderBanner(); } catch (e) {}
   // Mobile only: scroll to the top of the new tab so the user always starts
   // at the heading rather than wherever they happened to be on the previous
   // tab. Desktop ignores this — viewport is tall enough that you can see
@@ -11717,7 +11783,16 @@ function loadTaxSettings() {
     document.getElementById('sell-allowance')?.addEventListener('input', () => { _mirrorSellAllowanceToCgt(); saveTaxSettings(); });
     document.getElementById('sell-isa-allowance')?.addEventListener('input', () => { saveTaxSettings(); renderISATracker(); });
     document.getElementById('sell-isa-used')?.addEventListener('input', () => { saveTaxSettings(); renderISATracker(); });
-    document.getElementById('tax-prior-liability')?.addEventListener('input', saveTaxSettings);
+    document.getElementById('tax-prior-liability')?.addEventListener('input', () => {
+      saveTaxSettings();
+      // Schedule a re-render after the input save completes — the banner
+      // depends on liability inputs so it should refresh whenever they change.
+      // Debounced via timeout to avoid hammering on every keystroke.
+      clearTimeout(loadTaxSettings._reminderTimer);
+      loadTaxSettings._reminderTimer = setTimeout(() => {
+        try { _renderTaxReminderBanner(); } catch (e) {}
+      }, 400);
+    });
     document.querySelectorAll('input[name="bonus-type"]').forEach(el => el.addEventListener('change', updateIncomeTotal));
     loadTaxSettings._listenersWired = true;
   }
@@ -11935,6 +12010,540 @@ function _buildHMRCPaymentSchedule(priorLiability, thisYearLiability) {
   return { payments, totalNext12Mo };
 }
 
+// ════════════════════════════════════════════════════════════════════
+// TAX DEADLINE REMINDER BANNER
+//
+// Shows a coloured warning banner at the top of every page when an HMRC
+// deadline is approaching. Three checkpoint triggers (7 days, 3 days,
+// 1 day) so the user gets discrete prompts at meaningful intervals
+// rather than a continuously-shifting countdown.
+//
+// Two actions per banner:
+//   • Got it     — silences this checkpoint only. Banner re-appears at the
+//                  next checkpoint (e.g. dismissing at 7d means it returns
+//                  at 3d, then again at 1d if still unpaid).
+//   • Paid       — marks the deadline as fully settled. Banner never
+//                  re-shows for this deadline regardless of checkpoint.
+//
+// State persistence: LS.TAX_REMINDER_DISMISSALS holds an object keyed by
+// stable deadline IDs (date + label hash). Each entry stores the action
+// taken and timestamp. The store is in the LS map so it round-trips
+// through Supabase sync — dismiss on phone, the laptop respects it within
+// ~10 seconds.
+//
+// The renderer fires:
+//   • Once on init() after Supabase pull completes
+//   • On every switchTab() so it's visible regardless of starting tab
+//   • Once an hour via setInterval (handles tab left open across midnight)
+//   • After any change to Tax Provision Planner inputs (might shift the
+//     payment schedule and surface new deadlines)
+// ════════════════════════════════════════════════════════════════════
+
+// Build a stable identifier for a deadline. Uses the ISO date + a
+// simplified label slug so two payments on the same date (balancing +
+// POA1 on 31 Jan) get distinct keys.
+function _taxReminderKey(payment) {
+  const dateIso = payment.date.toISOString().slice(0, 10);
+  const slug = (payment.label || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 60);
+  return `${dateIso}__${slug}`;
+}
+
+// Determine which checkpoint window a deadline falls into. Returns null
+// if outside all windows (more than 7 days away, or already past).
+//   '7d' → 5 to 7 days away (covers the 7-day mark for a few days)
+//   '3d' → 2 to 4 days away
+//   '1d' → 0 to 1 day away
+// The banner fires at the first day of each window. If the user dismisses
+// at 7d (Got it), the banner stays gone through 6d/5d but re-appears at
+// 4d (entering the 3d window). Same for 1d.
+function _taxReminderCheckpoint(daysUntil) {
+  if (daysUntil > 7 || daysUntil < 0) return null;
+  if (daysUntil >= 5)              return '7d';
+  if (daysUntil >= 2)              return '3d';
+  return '1d';
+}
+
+// Read the dismissal store from LS. Returns an object even if storage
+// is missing or corrupt.
+function _taxReminderLoadDismissals() {
+  try {
+    const raw = localStorage.getItem(LS.TAX_REMINDER_DISMISSALS);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (e) { return {}; }
+}
+
+function _taxReminderSaveDismissals(store) {
+  try {
+    localStorage.setItem(LS.TAX_REMINDER_DISMISSALS, JSON.stringify(store));
+    if (typeof markLocalDirty === 'function') markLocalDirty();
+    if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced();
+  } catch (e) {}
+}
+
+// Returns an array of deadlines that should currently show a banner.
+// Each entry: { payment, daysUntil, checkpoint, isPotShort, potProjected }.
+function _taxRemindersGetActive() {
+  // Read prior-year liability from the Tax Provision Planner inputs.
+  // If unavailable, no banner can be generated.
+  const priorEl = document.getElementById('tax-prior-liability');
+  const thisEl  = document.getElementById('tax-this-year-liability');
+  if (!priorEl) return [];
+  const priorLiability = parseFloat((priorEl.value || '').replace(/,/g,'')) || 0;
+  const thisYearLiabilityRaw = thisEl ? (thisEl.textContent || '').replace(/[£,]/g,'') : '0';
+  const thisYearLiability = parseFloat(thisYearLiabilityRaw) || priorLiability;
+
+  if (priorLiability < _POA_THRESHOLD) return [];
+
+  const { payments } = _buildHMRCPaymentSchedule(priorLiability, thisYearLiability);
+  const dismissals   = _taxReminderLoadDismissals();
+  const today        = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const active = [];
+  for (const p of payments) {
+    const dueDate   = new Date(p.date);
+    dueDate.setHours(0, 0, 0, 0);
+    const daysUntil = Math.round((dueDate.getTime() - today.getTime()) / (24*60*60*1000));
+    const checkpoint = _taxReminderCheckpoint(daysUntil);
+    if (!checkpoint) continue;
+
+    const key   = _taxReminderKey(p);
+    const entry = dismissals[key];
+
+    // Paid trumps everything — never re-show
+    if (entry && entry.action === 'paid') continue;
+    // Acknowledged this checkpoint? Skip until next checkpoint window
+    if (entry && entry.action === 'got_it' && entry.checkpoint === checkpoint) continue;
+
+    active.push({
+      payment: p,
+      daysUntil,
+      checkpoint,
+      key,
+    });
+  }
+  return active;
+}
+
+// Mark a deadline checkpoint as acknowledged. Banner returns at the
+// next checkpoint window.
+function _taxRemindersAcknowledge(key, checkpoint) {
+  const store = _taxReminderLoadDismissals();
+  store[key] = {
+    action:     'got_it',
+    checkpoint: checkpoint,
+    at:         Date.now(),
+  };
+  _taxReminderSaveDismissals(store);
+  _renderTaxReminderBanner();
+}
+
+// Mark a deadline as paid. Banner never re-shows for this deadline
+// regardless of remaining checkpoints. Logs to the active month's audit
+// trail so there's a record of when payment was confirmed.
+function _taxRemindersMarkPaid(key, label, amount) {
+  const store = _taxReminderLoadDismissals();
+  store[key] = {
+    action: 'paid',
+    label:  label,
+    amount: amount,
+    at:     Date.now(),
+  };
+  _taxReminderSaveDismissals(store);
+
+  // Audit log into active budget month
+  try {
+    const state = bgtLoad();
+    if (!state.audit) state.audit = [];
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+      + ' ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    state.audit.push({
+      category: 'Tax Provision',
+      amount:   amount,
+      date:     dateStr,
+      note:     `Marked paid: ${label}`,
+      taxPaid:  true,
+    });
+    bgtSave(state);
+  } catch (e) {}
+
+  _renderTaxReminderBanner();
+  // Re-render the Tax Provision Planner so the schedule + cash flow tables
+  // immediately reflect the new paid status (strikethrough + PAID badge,
+  // updated 12-month total, recomputed pot trajectory).
+  if (typeof renderTaxProvisionPlanner === 'function') {
+    try { renderTaxProvisionPlanner(); } catch (e) {}
+  }
+  toast(`Marked paid: ${label}`);
+}
+
+// Garbage-collect dismissal entries for deadlines that are more than 90
+// days in the past. Keeps the LS object compact over time.
+function _taxRemindersPurgeOld() {
+  const store = _taxReminderLoadDismissals();
+  const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000);
+  let changed = false;
+  Object.keys(store).forEach(k => {
+    // Extract date from key format: 'YYYY-MM-DD__slug'
+    const datePart = k.split('__')[0];
+    const t = Date.parse(datePart);
+    if (isFinite(t) && t < cutoff) {
+      delete store[k];
+      changed = true;
+    }
+  });
+  if (changed) _taxReminderSaveDismissals(store);
+}
+
+// Renders the banner(s) into the slot. Empty if no active reminders.
+// Stacks vertically when multiple deadlines fall within their windows
+// (e.g. 31 January where balancing + POA1 land same day).
+function _renderTaxReminderBanner() {
+  const slot = document.getElementById('tax-reminder-banner-slot');
+  if (!slot) return;
+
+  const active = _taxRemindersGetActive();
+  if (active.length === 0) {
+    slot.innerHTML = '';
+    slot.style.display = 'none';
+    return;
+  }
+
+  slot.style.display = 'block';
+  slot.innerHTML = active.map(item => _renderSingleTaxReminderBanner(item)).join('');
+}
+
+// Render one banner card. Severity is amber for 7d/3d, red for 1d.
+function _renderSingleTaxReminderBanner(item) {
+  const { payment, daysUntil, checkpoint, key } = item;
+  const isUrgent = checkpoint === '1d';
+
+  // Headline copy adapts to the checkpoint
+  let headline;
+  if (daysUntil === 0)      headline = 'HMRC payment due today';
+  else if (daysUntil === 1) headline = 'HMRC payment due tomorrow';
+  else                       headline = `HMRC payment due in ${daysUntil} days`;
+
+  const dateStr = payment.date.toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  // Theme tokens — amber for 7d/3d, red for 1d
+  const tint       = isUrgent ? 'rgba(255, 69, 58, 0.14)' : 'rgba(255, 159, 10, 0.12)';
+  const borderClr  = isUrgent ? 'rgba(255, 69, 58, 0.32)' : 'rgba(255, 159, 10, 0.28)';
+  const accentClr  = isUrgent ? '#ff453a' : '#ff9f0a';
+  const titleClr   = isUrgent ? '#ffb0ab' : '#ffd28a';
+  const subClr     = isUrgent ? 'rgba(255,176,171,0.8)' : 'rgba(255,210,138,0.8)';
+  const dismissBg  = isUrgent ? 'rgba(255, 69, 58, 0.2)' : 'rgba(255, 159, 10, 0.18)';
+  const dismissBdr = isUrgent ? 'rgba(255, 69, 58, 0.4)' : 'rgba(255, 159, 10, 0.35)';
+  const dismissTxt = titleClr;
+
+  // SVG icon — triangle for amber warning, circle for red urgent
+  const icon = isUrgent
+    ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px">
+         <circle cx="12" cy="12" r="10" stroke="${accentClr}" stroke-width="1.5" fill="rgba(255,69,58,0.2)"/>
+         <path d="M12 7v6M12 16v.5" stroke="${accentClr}" stroke-width="1.6" stroke-linecap="round"/>
+       </svg>`
+    : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px">
+         <path d="M12 2L2 21h20L12 2z" stroke="${accentClr}" stroke-width="1.5" fill="rgba(255,159,10,0.2)"/>
+         <path d="M12 9v5M12 17v.5" stroke="${accentClr}" stroke-width="1.6" stroke-linecap="round"/>
+       </svg>`;
+
+  // Escape attribute values to avoid breaking the inline onclick if labels
+  // ever contain quotes (defensive — current labels don't, but cheap to do)
+  const safeLabel = (payment.label || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+  return `
+    <div style="background:${tint};border:0.5px solid ${borderClr};border-left:3px solid ${accentClr};border-radius:12px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+        ${icon}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:${titleClr};margin:0 0 2px;line-height:1.4;letter-spacing:-0.1px">${headline}</div>
+          <div style="font-size:12px;color:${subClr};margin:0;line-height:1.45">£${fmtNum(Math.round(payment.amount), 0)} · ${payment.label} · ${dateStr}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding-left:32px">
+        <button onclick="_taxRemindersMarkPaid('${key}', '${safeLabel}', ${payment.amount})"
+          style="flex:1;background:rgba(48,209,88,0.18);border:0.5px solid rgba(48,209,88,0.42);color:#7fe89a;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;border-radius:50px;letter-spacing:0.1px;min-height:36px;-webkit-tap-highlight-color:transparent">Paid</button>
+        <button onclick="_taxRemindersAcknowledge('${key}', '${checkpoint}')"
+          style="flex:1;background:${dismissBg};border:0.5px solid ${dismissBdr};color:${dismissTxt};font-size:13px;font-weight:500;padding:10px 16px;cursor:pointer;border-radius:50px;letter-spacing:0.1px;min-height:36px;-webkit-tap-highlight-color:transparent">Got it</button>
+      </div>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// HL DIRECT DEBIT REMINDER BANNER
+//
+// Monthly recurring reminder. The user's HL Direct Debit lands on a
+// configurable day-of-month (default 7th, set in Retirement Settings).
+// Reminders fire 3 days and 1 day before the debit date, prompting the
+// user to "Calculate HL Account" once the deposit lands so the portfolio
+// rebalances against target percentages.
+//
+// Two checkpoints (3d / 1d) — calmer than the HMRC reminder which fires
+// at 7d/3d/1d. This is a routine admin nudge, not a financial deadline,
+// so the visual treatment uses blue (informational) instead of amber/red.
+//
+// Weekend roll-forward: if the configured day lands on a Saturday or
+// Sunday, the actual debit posts on the next working day. The reminder
+// schedule respects this so checkpoints anchor on the actual debit date.
+//
+// Two actions per banner:
+//   • Got it     — silences this checkpoint only. Banner re-appears at
+//                  the next checkpoint (3d → 1d).
+//   • Completed  — marks this month's calculation done. Banner won't
+//                  return until the next month's cycle.
+//
+// State persistence: LS.HL_DD_DISMISSALS keyed by 'YYYY-MM-DD__hl_dd'
+// so each month's debit gets a unique key. Self-renews indefinitely.
+// LS.HL_DD_DAY stores the configured day-of-month (1-31).
+// ════════════════════════════════════════════════════════════════════
+
+const _HL_DD_DEFAULT_DAY = 7;
+
+// Read the configured day-of-month for the HL Direct Debit. Defaults to 7
+// for users who haven't visited Retirement Settings. Clamps to 1-28 to
+// avoid edge cases with months that don't have 29/30/31.
+function _hlDdGetDay() {
+  try {
+    const raw = localStorage.getItem(LS.HL_DD_DAY);
+    if (raw == null || raw === '') return _HL_DD_DEFAULT_DAY;
+    const n = parseInt(raw, 10);
+    if (!isFinite(n) || n < 1) return _HL_DD_DEFAULT_DAY;
+    if (n > 28) return 28; // safe upper bound — every month has at least 28 days
+    return n;
+  } catch (e) { return _HL_DD_DEFAULT_DAY; }
+}
+
+// Persist the configured day. Called from the Retirement Settings input.
+// Triggers a re-render of the reminder banner since the schedule depends
+// on this value. Syncs to Supabase via the standard sync push.
+function _saveHlDdDay(value) {
+  const n = parseInt(value, 10);
+  const safe = (isFinite(n) && n >= 1 && n <= 31) ? Math.min(n, 28) : _HL_DD_DEFAULT_DAY;
+  try {
+    localStorage.setItem(LS.HL_DD_DAY, String(safe));
+    if (typeof markLocalDirty === 'function') markLocalDirty();
+    if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced();
+  } catch (e) {}
+  // Re-render after a small delay so the user finishes typing
+  clearTimeout(_saveHlDdDay._timer);
+  _saveHlDdDay._timer = setTimeout(() => {
+    try { _renderHlDdReminderBanner(); } catch (e) {}
+  }, 300);
+}
+
+// Apply weekend roll-forward to a date. If the date falls on a Saturday
+// (day 6) or Sunday (day 0), advance to the next Monday. Returns a fresh
+// Date object — does not mutate the input.
+function _hlDdAdjustForWeekend(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dow = d.getDay();
+  if (dow === 6) d.setDate(d.getDate() + 2); // Sat → Mon
+  else if (dow === 0) d.setDate(d.getDate() + 1); // Sun → Mon
+  return d;
+}
+
+// Get the next HL DD debit date from today. If today's day-of-month is
+// past the configured DD day (or equal but already past as a weekend-
+// adjusted date), the next debit is in the following month.
+function _hlDdGetNextDebitDate() {
+  const day = _hlDdGetDay();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Try this month's date first
+  let candidate = new Date(today.getFullYear(), today.getMonth(), day);
+  candidate = _hlDdAdjustForWeekend(candidate);
+
+  // If the (adjusted) date is in the past, roll to next month
+  if (candidate.getTime() < today.getTime()) {
+    candidate = new Date(today.getFullYear(), today.getMonth() + 1, day);
+    candidate = _hlDdAdjustForWeekend(candidate);
+  }
+
+  return candidate;
+}
+
+// Build the dismissal store key for a given debit date. Format matches
+// the HMRC pattern: 'YYYY-MM-DD__hl_dd' so it sorts alphabetically and
+// reads naturally.
+function _hlDdReminderKey(debitDate) {
+  const iso = debitDate.toISOString().slice(0, 10);
+  return `${iso}__hl_dd`;
+}
+
+// Determine which checkpoint window the next debit falls into. Two
+// checkpoints — 3 days and 1 day. Returns null if outside both.
+//   '3d' → 2 to 3 days away
+//   '1d' → 0 to 1 day away
+function _hlDdCheckpoint(daysUntil) {
+  if (daysUntil > 3 || daysUntil < 0) return null;
+  if (daysUntil >= 2) return '3d';
+  return '1d';
+}
+
+// Read the dismissal store from LS. Mirrors _taxReminderLoadDismissals
+// but for the HL DD store.
+function _hlDdLoadDismissals() {
+  try {
+    const raw = localStorage.getItem(LS.HL_DD_DISMISSALS);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (e) { return {}; }
+}
+
+function _hlDdSaveDismissals(store) {
+  try {
+    localStorage.setItem(LS.HL_DD_DISMISSALS, JSON.stringify(store));
+    if (typeof markLocalDirty === 'function') markLocalDirty();
+    if (typeof _vossSyncPushDebounced === 'function') _vossSyncPushDebounced();
+  } catch (e) {}
+}
+
+// Get the active reminder (if any) for the next upcoming debit. Returns
+// null if no reminder should show — either outside the warning window,
+// already completed for this month, or already acknowledged at the
+// current checkpoint.
+function _hlDdGetActiveReminder() {
+  const debitDate = _hlDdGetNextDebitDate();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysUntil = Math.round((debitDate.getTime() - today.getTime()) / (24*60*60*1000));
+  const checkpoint = _hlDdCheckpoint(daysUntil);
+  if (!checkpoint) return null;
+
+  const key = _hlDdReminderKey(debitDate);
+  const dismissals = _hlDdLoadDismissals();
+  const entry = dismissals[key];
+
+  // Completed this month — never re-show until next month's cycle
+  if (entry && entry.action === 'completed') return null;
+  // Acknowledged this checkpoint? Skip until next checkpoint window
+  if (entry && entry.action === 'got_it' && entry.checkpoint === checkpoint) return null;
+
+  return { debitDate, daysUntil, checkpoint, key };
+}
+
+// Mark the current checkpoint as acknowledged. Banner returns at next.
+function _hlDdAcknowledge(key, checkpoint) {
+  const store = _hlDdLoadDismissals();
+  store[key] = {
+    action:     'got_it',
+    checkpoint: checkpoint,
+    at:         Date.now(),
+  };
+  _hlDdSaveDismissals(store);
+  _renderHlDdReminderBanner();
+}
+
+// Mark this month's calculation completed. Banner gone until next cycle.
+function _hlDdMarkCompleted(key) {
+  const store = _hlDdLoadDismissals();
+  store[key] = {
+    action: 'completed',
+    at:     Date.now(),
+  };
+  _hlDdSaveDismissals(store);
+  _renderHlDdReminderBanner();
+  toast('HL calculation marked complete');
+}
+
+// Garbage-collect dismissal entries for debit dates more than 60 days
+// in the past. Keeps the LS object compact across many cycles.
+function _hlDdPurgeOld() {
+  const store = _hlDdLoadDismissals();
+  const cutoff = Date.now() - (60 * 24 * 60 * 60 * 1000);
+  let changed = false;
+  Object.keys(store).forEach(k => {
+    const datePart = k.split('__')[0];
+    const t = Date.parse(datePart);
+    if (isFinite(t) && t < cutoff) {
+      delete store[k];
+      changed = true;
+    }
+  });
+  if (changed) _hlDdSaveDismissals(store);
+}
+
+// Render the banner into the slot. Empty if no active reminder.
+function _renderHlDdReminderBanner() {
+  const slot = document.getElementById('hl-dd-reminder-banner-slot');
+  if (!slot) return;
+
+  const item = _hlDdGetActiveReminder();
+  if (!item) {
+    slot.innerHTML = '';
+    slot.style.display = 'none';
+    return;
+  }
+
+  slot.style.display = 'block';
+  slot.innerHTML = _renderSingleHlDdBanner(item);
+}
+
+// Render one banner card. Visual escalates subtly from 3d (calm blue) to
+// 1d (slightly stronger blue). No red — these are routine reminders.
+function _renderSingleHlDdBanner(item) {
+  const { debitDate, daysUntil, checkpoint, key } = item;
+  const isUrgent = checkpoint === '1d';
+
+  // Headline copy adapts to the checkpoint
+  let headline;
+  if (daysUntil === 0)      headline = 'HL Direct Debit lands today';
+  else if (daysUntil === 1) headline = 'HL Direct Debit lands tomorrow';
+  else                       headline = `HL Direct Debit lands in ${daysUntil} days`;
+
+  const dateStr = debitDate.toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  // Theme tokens — calm blue for 3d, slightly stronger for 1d
+  const tint       = isUrgent ? 'rgba(10, 132, 255, 0.16)' : 'rgba(10, 132, 255, 0.10)';
+  const borderClr  = isUrgent ? 'rgba(10, 132, 255, 0.34)' : 'rgba(10, 132, 255, 0.26)';
+  const accentClr  = '#0a84ff';
+  const titleClr   = isUrgent ? '#c7e2ff' : '#a8d4ff';
+  const subClr     = isUrgent ? 'rgba(199,226,255,0.8)' : 'rgba(168,212,255,0.78)';
+  const dismissBg  = isUrgent ? 'rgba(10, 132, 255, 0.22)' : 'rgba(10, 132, 255, 0.18)';
+  const dismissBdr = isUrgent ? 'rgba(10, 132, 255, 0.4)' : 'rgba(10, 132, 255, 0.36)';
+  const dismissTxt = titleClr;
+  const fillOpacity = isUrgent ? 0.24 : 0.18;
+
+  // Circular info icon — same shape both checkpoints, fill changes
+  const icon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px">
+    <circle cx="12" cy="12" r="10" stroke="${accentClr}" stroke-width="1.5" fill="rgba(10,132,255,${fillOpacity})"/>
+    <path d="M12 8v5M12 16v.5" stroke="${accentClr}" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`;
+
+  return `
+    <div style="background:${tint};border:0.5px solid ${borderClr};border-left:3px solid ${accentClr};border-radius:12px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+        ${icon}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:${titleClr};margin:0 0 2px;line-height:1.4;letter-spacing:-0.1px">${headline}</div>
+          <div style="font-size:12px;color:${subClr};margin:0;line-height:1.45">Calculate HL Account · ${dateStr}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding-left:32px">
+        <button onclick="_hlDdMarkCompleted('${key}')"
+          style="flex:1;background:rgba(48,209,88,0.18);border:0.5px solid rgba(48,209,88,0.42);color:#7fe89a;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;border-radius:50px;letter-spacing:0.1px;min-height:36px;-webkit-tap-highlight-color:transparent">Completed</button>
+        <button onclick="_hlDdAcknowledge('${key}', '${checkpoint}')"
+          style="flex:1;background:${dismissBg};border:0.5px solid ${dismissBdr};color:${dismissTxt};font-size:13px;font-weight:500;padding:10px 16px;cursor:pointer;border-radius:50px;letter-spacing:0.1px;min-height:36px;-webkit-tap-highlight-color:transparent">Got it</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderTaxProvisionPlanner() {
   const out = document.getElementById('tax-provision-output');
   const liabilityEl = document.getElementById('tax-this-year-liability');
@@ -12053,16 +12662,32 @@ function renderTaxProvisionPlanner() {
   // Schedule table — facts only, no inflated figures
   let scheduleHtml = '';
   if (payments.length > 0) {
+    // Read paid markers so we can flag rows in this table. The dismissal
+    // store includes both Got it acknowledgements and Paid markers; we
+    // only care about the latter for visual decoration.
+    const paidStore = (typeof _taxReminderLoadDismissals === 'function')
+      ? _taxReminderLoadDismissals() : {};
     const rows = payments.map(p => {
       const dateStr = p.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const daysAway = Math.round((p.date.getTime() - Date.now()) / (24*60*60*1000));
-      return `<tr class="bgt-row">
+      const key = (typeof _taxReminderKey === 'function') ? _taxReminderKey(p) : null;
+      const isPaid = key && paidStore[key] && paidStore[key].action === 'paid';
+      const paidBadge = isPaid ? `<span class="tr-paid-badge">PAID</span>` : '';
+      const rowClass = isPaid ? 'bgt-row tr-paid-row' : 'bgt-row';
+      return `<tr class="${rowClass}">
         <td>${dateStr}</td>
-        <td style="color:var(--muted);font-size:10px">in ${daysAway} day${daysAway === 1 ? '' : 's'}</td>
-        <td>${p.label}</td>
+        <td style="color:var(--muted);font-size:10px">${isPaid ? 'settled' : `in ${daysAway} day${daysAway === 1 ? '' : 's'}`}</td>
+        <td>${p.label}${paidBadge}</td>
         <td style="font-weight:700;color:var(--gold);text-align:right">£${fmtNum(Math.round(p.amount), 0)}</td>
       </tr>`;
     }).join('');
+    // The 12-month total only counts unpaid liabilities — the user already
+    // settled paid ones, so they're no longer "cash leaving"
+    const unpaidTotal = payments.reduce((s, p) => {
+      const key = (typeof _taxReminderKey === 'function') ? _taxReminderKey(p) : null;
+      const isPaid = key && paidStore[key] && paidStore[key].action === 'paid';
+      return s + (isPaid ? 0 : p.amount);
+    }, 0);
     scheduleHtml = `
       <div class="section-label" style="margin-bottom:8px">Upcoming HMRC Payments (next 12 months)</div>
       <table class="bgt-table" style="margin-bottom:14px">
@@ -12075,27 +12700,65 @@ function renderTaxProvisionPlanner() {
         <tbody>${rows}</tbody>
         <tfoot><tr class="bgt-row bgt-total">
           <td colspan="3" style="color:var(--gold);font-weight:700">Total cash leaving over next 12 months</td>
-          <td style="color:var(--gold);font-weight:700;text-align:right">£${fmtNum(Math.round(totalNext12Mo), 0)}</td>
+          <td style="color:var(--gold);font-weight:700;text-align:right">£${fmtNum(Math.round(unpaidTotal), 0)}</td>
         </tr></tfoot>
       </table>`;
   }
 
-  // Cash flow projection — shows the pot at each payment date
+  // Cash flow projection — shows the pot at each payment date.
+  // Paid deadlines stay visible with a strikethrough so you can see
+  // what's already settled, but they're EXCLUDED from the pot
+  // arithmetic — once paid, the cash already left, so it shouldn't
+  // continue to subtract from your projected tax pot.
   let projectionHtml = '';
   if (flowRows.length > 0) {
-    const projRows = flowRows.map(r => {
+    const paidStore = (typeof _taxReminderLoadDismissals === 'function')
+      ? _taxReminderLoadDismissals() : {};
+
+    // Recompute pot trajectory excluding paid payments. The original
+    // flowRows assume every payment subtracts; we replace that with
+    // running totals that skip paid entries.
+    let runningPot = savedSoFar;
+    const adjustedRows = flowRows.map(r => {
+      const monthsFromNow = (r.p.date.getTime() - Date.now()) / (30.44 * 24 * 60 * 60 * 1000);
+      const accumulated = savedSoFar + (minimum * Math.max(0, monthsFromNow));
+      const key = (typeof _taxReminderKey === 'function') ? _taxReminderKey(r.p) : null;
+      const isPaid = key && paidStore[key] && paidStore[key].action === 'paid';
+
+      // Sum prior UNPAID payments only — paid ones don't reduce the projected pot
+      const priorUnpaidPayments = flowRows
+        .filter(q => q.p.date.getTime() < r.p.date.getTime())
+        .filter(q => {
+          const qKey = (typeof _taxReminderKey === 'function') ? _taxReminderKey(q.p) : null;
+          return !(qKey && paidStore[qKey] && paidStore[qKey].action === 'paid');
+        })
+        .reduce((s, q) => s + q.p.amount, 0);
+
+      const potBefore = accumulated - priorUnpaidPayments;
+      const potAfter  = isPaid ? potBefore : potBefore - r.p.amount;
+
+      return { ...r, isPaid, potBefore, potAfter };
+    });
+
+    const projRows = adjustedRows.map(r => {
       const dateStr = r.p.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       const beforeColour = r.potBefore >= r.p.amount ? 'var(--green)' : 'var(--amber)';
       const afterColour  = r.potAfter >= 0 ? 'var(--white)' : 'var(--red)';
-      return `<tr class="bgt-row">
+      const paidBadge = r.isPaid ? `<span class="tr-paid-badge">PAID</span>` : '';
+      const rowClass = r.isPaid ? 'bgt-row tr-paid-row' : 'bgt-row';
+      return `<tr class="${rowClass}">
         <td>${dateStr}</td>
-        <td>${r.p.label}</td>
+        <td>${r.p.label}${paidBadge}</td>
         <td style="text-align:right;color:${beforeColour};font-weight:600">£${fmtNum(Math.round(r.potBefore), 0)}</td>
         <td style="text-align:right;color:var(--gold)">£${fmtNum(Math.round(r.p.amount), 0)}</td>
         <td style="text-align:right;color:${afterColour};font-weight:600">£${fmtNum(Math.round(r.potAfter), 0)}</td>
       </tr>`;
     }).join('');
-    const projNote = anyShortfall
+
+    // Recompute shortfall flag against the adjusted (paid-excluding) rows
+    const adjustedShortfall = adjustedRows.some(r => !r.isPaid && r.potAfter < -50);
+
+    const projNote = adjustedShortfall
       ? `If you save £${fmtNum(Math.round(minimum), 0)}/mo from today, you'll be slightly short at one or more payment dates (figures in red). The £${fmtNum(Math.round(comfortable), 0)}/mo recommendation above includes a buffer to avoid this.`
       : `Saving £${fmtNum(Math.round(minimum), 0)}/mo from today covers every HMRC payment in the cycle. The £${fmtNum(Math.round(comfortable), 0)}/mo recommendation just gives a small buffer.`;
     projectionHtml = `
@@ -17258,6 +17921,36 @@ function init() {
     _vossSyncInit();
   }
   // Otherwise the head module will fire _vossSyncOnReady() once it loads.
+
+  // Tax reminder banner — purge old dismissals, then render at top of page.
+  // Deferred slightly so the Tax Provision Planner inputs have rendered with
+  // their saved values; without this the renderer reads zeros and skips
+  // every reminder on first paint. Re-renders also fire on switchTab and on
+  // any change to tax-prior-liability via the input listener wired in
+  // loadTaxSettings, so this is just the boot-time pass.
+  setTimeout(() => {
+    try {
+      _taxRemindersPurgeOld();
+      _renderTaxReminderBanner();
+    } catch (e) { console.warn('[Tax Reminder] init failed', e); }
+    // HL DD reminder runs alongside HMRC. Loads saved day-of-month into
+    // the Retirement Settings input so the field shows the configured
+    // value (default 7) on every page load.
+    try {
+      _hlDdPurgeOld();
+      const dayInput = document.getElementById('ret-hl-dd-day');
+      if (dayInput) dayInput.value = _hlDdGetDay();
+      _renderHlDdReminderBanner();
+    } catch (e) { console.warn('[HL DD Reminder] init failed', e); }
+  }, 600);
+
+  // Re-check tax reminders once an hour — handles the edge case where the
+  // user leaves a tab open across midnight and a deadline checkpoint
+  // crosses without any tab switch / page reload to trigger a fresh render.
+  setInterval(() => {
+    try { _renderTaxReminderBanner(); } catch (e) {}
+    try { _renderHlDdReminderBanner(); } catch (e) {}
+  }, 60 * 60 * 1000);
 
   // Live prices auto-refresh on page load. Runs after a 1.5s delay so the
   // app has settled and the initial Supabase pull (if any) has had a chance
