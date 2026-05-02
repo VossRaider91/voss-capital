@@ -2153,6 +2153,60 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     font-size: 13px !important;
   }
 
+  /* ── UNIFIED £-PILL TREATMENT (mobile only) ────────────────
+     Inputs that should display a nested £ symbol are wrapped at
+     build time by retrofit_pound_v2.py in a <div class="pound-wrap">.
+     The wrapper hugs only the input (no sibling helper text), so
+     positioning the £ pseudo at top:50% always centres correctly
+     against the input regardless of what's around it.
+     The wrap is also added in JS render functions for dynamic
+     content (cars / whiskey rows in renderNWRows).
+     EXCLUSION: the calculator's per-fund cards (.fund-inputs-grid)
+     are explicitly excluded — those are dense 6-cell grids where a
+     52px-tall pill would unbalance the row heights against the
+     non-£ cells (Units Held, Buffer %, Target %). */
+  .pound-wrap {
+    position: relative;
+    display: block;
+  }
+  .pound-wrap > .num-input,
+  .pound-wrap > .mp-input {
+    padding-left: 38px !important;
+    height: 52px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    width: 100%;
+  }
+  .pound-wrap::before {
+    content: "£";
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--blue);
+    line-height: 1;
+    pointer-events: none;
+    z-index: 2;
+  }
+  /* Read-only inputs (Outstanding Mortgage with 🔒 auto badge) get
+     a muted £ to match the field's de-emphasised appearance. */
+  .pound-wrap:has(> input[readonly])::before {
+    color: var(--muted);
+  }
+  /* Calculator fund cards stay compact — explicitly opt out. */
+  .fund-inputs-grid .pound-wrap > .num-input {
+    padding-left: 14px !important;
+    height: auto !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+  }
+  .fund-inputs-grid .pound-wrap::before {
+    display: none;
+  }
+
   /* ── TAX & SELL CALCULATOR TABS — Apply the same pill styling
         as the calculator. The tax and sell tabs use identical
         `.flex-center` + `.budget-input` markup for their £ inputs
@@ -3300,21 +3354,21 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       <span class="input-label">Annual Growth Rate %</span>
       <input class="num-input" type="text" inputmode="decimal" id="ret-growth" value="7" step="0.5" min="1" max="20">
     </div>
-    <div class="card input-group">
+    <div class="card input-group" data-pound>
       <span class="input-label">Your Monthly Contribution £</span>
-      <input class="num-input" type="text" inputmode="numeric" id="ret-personal" value="2700" step="100">
+      <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-personal" value="2700" step="100"></div>
     </div>
-    <div class="card input-group">
+    <div class="card input-group" data-pound>
       <span class="input-label">Employer Monthly Contribution £</span>
-      <input class="num-input" type="text" inputmode="numeric" id="ret-employer" value="0" step="100" oninput="updateRetTotal()">
+      <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-employer" value="0" step="100" oninput="updateRetTotal()"></div>
     </div>
-    <div class="card input-group">
+    <div class="card input-group" data-pound>
       <span class="input-label">Total Monthly Contributions £</span>
-      <input class="num-input" type="text" inputmode="numeric" id="ret-monthly" value="2700" step="100" style="color:var(--gold);font-weight:700" readonly>
+      <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-monthly" value="2700" step="100" style="color:var(--gold);font-weight:700" readonly></div>
     </div>
-    <div class="card input-group">
+    <div class="card input-group" data-pound>
       <span class="input-label">Current Portfolio Value £</span>
-      <input class="num-input" type="text" inputmode="numeric" id="ret-current" value="0" step="1000">
+      <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-current" value="0" step="1000"></div>
     </div>
     <div class="card input-group">
       <span class="input-label">Inflation Rate %</span>
@@ -3531,9 +3585,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
     <!-- Inputs row -->
     <div class="grid-3 mb16">
-      <div class="input-group">
+      <div class="input-group" data-pound>
         <span class="input-label">Annual Spending Required £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="ret-fn-spending" value="42,000" oninput="onFreedomInputChange()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-fn-spending" value="42,000" oninput="onFreedomInputChange()"></div>
         <span class="stat-sub">your target lifestyle in today's money</span>
       </div>
       <div class="input-group">
@@ -3609,51 +3663,51 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <!-- Property -->
     <div class="card-gold">
       <div class="section-label mb16" style="color:var(--amber)">Property</div>
-      <div class="input-group mb12">
+      <div class="input-group mb12" data-pound>
         <span class="input-label">Primary Residence — Current Value £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-house-value" value="0" step="1000" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-house-value" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
       </div>
-      <div class="input-group mb12">
+      <div class="input-group mb12" data-pound>
         <span class="input-label">Outstanding Mortgage £ <span style="color:var(--blue);font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;margin-left:4px">🔒 auto</span></span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-mortgage" value="0" readonly tabindex="-1" style="opacity:0.75;cursor:not-allowed">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-mortgage" value="0" readonly tabindex="-1" style="opacity:0.75;cursor:not-allowed"></div>
         <div style="font-size:9px;color:var(--muted);margin-top:4px;font-style:italic">Update outstanding balance in the Mortgage Strategic Planner — it updates here automatically.</div>
       </div>
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
         <span class="stat-sub">Net Property Equity</span>
         <span style="font-weight:700;color:var(--gold)" id="nw-equity-display">£0</span>
       </div>
-      <div class="input-group mt12">
+      <div class="input-group mt12" data-pound>
         <span class="input-label">Other Property / BTL Value £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-other-property" value="0" step="1000" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-other-property" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
       </div>
-      <div class="input-group mt12">
+      <div class="input-group mt12" data-pound>
         <span class="input-label">Other Property Mortgage £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-other-mortgage" value="0" step="1000" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-other-mortgage" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
       </div>
     </div>
 
     <!-- Investments & Cash -->
     <div class="card-gold">
       <div class="section-label mb16" style="color:var(--green)">Cash &amp; Other Investments</div>
-      <div class="input-group mb12">
+      <div class="input-group mb12" data-pound>
         <span class="input-label">Cash at Bank £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-cash" value="0" step="100" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-cash" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
       </div>
-      <div class="input-group mb12">
+      <div class="input-group mb12" data-pound>
         <span class="input-label">Crypto (total current value) £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-crypto" value="0" step="100" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-crypto" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
       </div>
-      <div class="input-group mb12">
+      <div class="input-group mb12" data-pound>
         <span class="input-label">Business Equity (est. value) £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-business" value="0" step="1000" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-business" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
       </div>
-      <div class="input-group mb12">
+      <div class="input-group mb12" data-pound>
         <span class="input-label">Other Assets £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-other" value="0" step="100" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-other" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
       </div>
-      <div class="input-group">
+      <div class="input-group" data-pound>
         <span class="input-label">Other Liabilities (loans, credit) £</span>
-        <input class="num-input" type="text" inputmode="numeric" id="nw-liabilities" value="0" step="100" min="0" oninput="renderNetWorth()">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-liabilities" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
       </div>
     </div>
 
@@ -3755,9 +3809,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
             <option value="Miscellaneous">Miscellaneous</option>
           </select>
         </div>
-        <div class="input-group">
+        <div class="input-group" data-pound>
           <span class="input-label">Amount £</span>
-          <input class="num-input" type="text" inputmode="decimal" id="bgt-qa-amount" value="" step="0.01" min="0" placeholder="0.00">
+          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="bgt-qa-amount" value="" step="0.01" min="0" placeholder="0.00"></div>
         </div>
         <div class="input-group">
           <span class="input-label">Note <span style="color:var(--muted);font-weight:400">(optional)</span></span>
@@ -4496,9 +4550,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <div class="card-gold mb24">
     <div class="section-label mb16">Mortgage Inputs</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:20px">
-      <div class="mp-input-group">
+      <div class="mp-input-group" data-pound>
         <label class="mp-input-label" for="mp-balance">Current Balance £</label>
-        <input class="mp-input" type="text" inputmode="decimal" id="mp-balance" value="309,413.81" oninput="mpRecalc()">
+        <div class="pound-wrap"><input class="mp-input" type="text" inputmode="decimal" id="mp-balance" value="309,413.81" oninput="mpRecalc()"></div>
       </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-rate">Current Rate %</label>
@@ -4508,13 +4562,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <label class="mp-input-label" for="mp-term">Months Remaining</label>
         <input class="mp-input" type="text" inputmode="numeric" id="mp-term" value="219" step="1" min="1" oninput="mpRecalc()">
       </div>
-      <div class="mp-input-group">
+      <div class="mp-input-group" data-pound>
         <label class="mp-input-label" for="mp-payment">Monthly Payment £</label>
-        <input class="mp-input" type="text" inputmode="decimal" id="mp-payment" value="2,026.53" oninput="mpRecalc()">
+        <div class="pound-wrap"><input class="mp-input" type="text" inputmode="decimal" id="mp-payment" value="2,026.53" oninput="mpRecalc()"></div>
       </div>
-      <div class="mp-input-group">
+      <div class="mp-input-group" data-pound>
         <label class="mp-input-label" for="mp-overpay">Monthly Overpayment £</label>
-        <input class="mp-input" type="text" inputmode="decimal" id="mp-overpay" value="0" oninput="mpRecalc()">
+        <div class="pound-wrap"><input class="mp-input" type="text" inputmode="decimal" id="mp-overpay" value="0" oninput="mpRecalc()"></div>
       </div>
     </div>
     <div class="gold-divider"></div>
@@ -6266,10 +6320,10 @@ function renderSoldShareRows() {
           oninput="_onSoldRowUnitsChange(${i}, this.value)">
         ${unitsWarn}
       </div>
-      <div class="input-group">
+      <div class="input-group" data-pound>
         <span class="input-label">Sale Price £</span>
-        <input class="num-input" type="text" inputmode="decimal" value="${r.price||0}" step="0.001" min="0"
-          oninput="_onSoldRowPriceChange(${i}, this.value)">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${r.price||0}" step="0.001" min="0"
+          oninput="_onSoldRowPriceChange(${i}, this.value)"></div>
       </div>
       <div class="input-group">
         <span class="input-label">Avg Cost £ ${costIndicator}</span>
@@ -7024,9 +7078,9 @@ function buildFundCards() {
           <span class="input-label">Units Held</span>
           <input class="num-input" type="text" inputmode="numeric" id="held_${f.id}" value="${held}" step="1" min="0">
         </div>
-        <div class="input-group">
+        <div class="input-group" data-pound>
           <span class="input-label">Price £</span>
-          <input class="num-input" type="text" inputmode="decimal" id="price_${f.id}" value="${price}" step="0.001" min="0.01">
+          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="price_${f.id}" value="${price}" step="0.001" min="0.01"></div>
         </div>
         <div class="input-group">
           <span class="input-label">Buffer %</span>
@@ -7036,9 +7090,9 @@ function buildFundCards() {
           <span class="input-label">Target %</span>
           <input class="num-input" type="text" inputmode="numeric" id="target_${f.id}" value="${target}" step="1" min="1" max="99">
         </div>
-        <div class="input-group">
+        <div class="input-group" data-pound>
           <span class="input-label">Trade Fee £</span>
-          <input class="num-input" type="text" inputmode="decimal" id="fee_${f.id}" value="0" step="0.01" min="0" placeholder="0.00">
+          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="fee_${f.id}" value="0" step="0.01" min="0" placeholder="0.00"></div>
         </div>
         <div class="input-group" style="justify-content:flex-end">
           <span class="input-label">&nbsp;</span>
@@ -8213,10 +8267,10 @@ function renderAdditionalFunds() {
           <input class="num-input" type="text" inputmode="numeric" value="${f.held||0}" step="1" min="0"
             onchange="updateExtraFund(${i},'held',this.value)">
         </div>
-        <div class="input-group">
+        <div class="input-group" data-pound>
           <span class="input-label">Price £</span>
-          <input class="num-input" type="text" inputmode="decimal" value="${f.price||0}" step="0.001" min="0"
-            onchange="updateExtraFund(${i},'price',this.value)">
+          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${f.price||0}" step="0.001" min="0"
+            onchange="updateExtraFund(${i},'price',this.value)"></div>
         </div>
         <div class="input-group">
           <span class="input-label">Buffer %</span>
@@ -8322,9 +8376,9 @@ function buildEmpFundsInput() {
         <span class="input-label">${f.ticker} Units</span>
         <input class="num-input" type="text" inputmode="numeric" id="emp_${f.id}" value="0" step="1" min="0">
       </div>
-      <div class="input-group">
+      <div class="input-group" data-pound>
         <span class="input-label">${f.ticker} Price £</span>
-        <input class="num-input" type="text" inputmode="decimal" id="empprice_${f.id}" value="0" step="0.001" min="0">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="empprice_${f.id}" value="0" step="0.001" min="0"></div>
       </div>
     </div>`).join('');
 }
@@ -8347,10 +8401,10 @@ function renderHistoryExtraFunds() {
           <input class="num-input" type="text" inputmode="numeric" id="extraunits_${i}" value="${f.units||0}" step="1" min="0"
             oninput="historyExtraFunds[${i}].units=parseFloat(this.value)||0">
         </div>
-        <div class="input-group">
+        <div class="input-group" data-pound>
           <span class="input-label">Price £</span>
-          <input class="num-input" type="text" inputmode="decimal" id="extraprice_${i}" value="${f.price||0}" step="0.001" min="0"
-            oninput="historyExtraFunds[${i}].price=parseFloat(this.value)||0">
+          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="extraprice_${i}" value="${f.price||0}" step="0.001" min="0"
+            oninput="historyExtraFunds[${i}].price=parseFloat(this.value)||0"></div>
         </div>
         <button class="btn-danger btn-sm" onclick="removeHistoryExtraFund(${i})">Remove</button>
       </div>`).join('') + '</div>';
@@ -8631,13 +8685,13 @@ function renderHistory(filter='all') {
               <option value="SIPP" ${entryWrapper==='SIPP'?'selected':''}>SIPP — Self Invested Personal Pension</option>
             </select>
           </div>
-          <div class="input-group">
+          <div class="input-group" data-pound>
             <span class="input-label">Portfolio Value £</span>
-            <input class="num-input" type="text" inputmode="numeric" id="edit_val_${entry.id}" value="${entry.portfolioValue||0}">
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_val_${entry.id}" value="${entry.portfolioValue||0}"></div>
           </div>
-          <div class="input-group">
+          <div class="input-group" data-pound>
             <span class="input-label">Budget £</span>
-            <input class="num-input" type="text" inputmode="numeric" id="edit_budget_${entry.id}" value="${entry.budget||0}">
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_budget_${entry.id}" value="${entry.budget||0}"></div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
@@ -8646,9 +8700,9 @@ function renderHistory(filter='all') {
               <span class="input-label">${f.ticker} Units</span>
               <input class="num-input" type="text" inputmode="numeric" id="edit_units_${entry.id}_${f.ticker}" value="${f.held}" step="1" min="0">
             </div>
-            <div class="input-group">
+            <div class="input-group" data-pound>
               <span class="input-label">${f.ticker} Price £</span>
-              <input class="num-input" type="text" inputmode="decimal" id="edit_price_${entry.id}_${f.ticker}" value="${_formatPriceDisplay(f.price||0) || (f.price||0)}" step="0.001" min="0">
+              <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="edit_price_${entry.id}_${f.ticker}" value="${_formatPriceDisplay(f.price||0) || (f.price||0)}" step="0.001" min="0"></div>
             </div>
           `).join('')}
         </div>
@@ -10436,8 +10490,8 @@ function renderPortfolio(filter='all') {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
         <div class="input-group"><span class="input-label">Units</span>
           <input class="num-input" type="text" inputmode="numeric" id="pedit_shares_${h.id}" value="${h.shares}" step="1" min="0"></div>
-        <div class="input-group"><span class="input-label">Price £</span>
-          <input class="num-input" type="text" inputmode="decimal" id="pedit_price_${h.id}" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"></div>
+        <div class="input-group" data-pound><span class="input-label">Price £</span>
+          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="pedit_price_${h.id}" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"></div></div>
         <div class="input-group"><span class="input-label">Wrapper</span>
           <select class="num-input" id="pedit_wrapper_${h.id}" style="text-align:left;cursor:pointer">
             <option value="GIA" ${(h.wrapper||'GIA')==='GIA'?'selected':''}>GIA</option>
@@ -14214,14 +14268,18 @@ function renderNWRows(type) {
   if (!el) return;
   el.innerHTML = nwRows[type].map((r, i) => `
     <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center">
-      <input class="num-input" type="text" inputmode="numeric" value="${(r.cost||0)>999?(r.cost||0).toLocaleString('en-GB'):r.cost||0}" step="100" min="0" placeholder="Cost £"
-        onfocus="this.value=this.value.replace(/,/g,'')"
-        onblur="const n=parseFloat(this.value.replace(/,/g,''))||0;if(n>999)this.value=n.toLocaleString('en-GB')"
-        oninput="nwRows['${type}'][${i}].cost=parseFloat(this.value.replace(/,/g,''))||0;renderNetWorth()">
-      <input class="num-input" type="text" inputmode="numeric" value="${(r.value||0)>999?(r.value||0).toLocaleString('en-GB'):r.value||0}" step="100" min="0" placeholder="Value £"
-        onfocus="this.value=this.value.replace(/,/g,'')"
-        onblur="const n=parseFloat(this.value.replace(/,/g,''))||0;if(n>999)this.value=n.toLocaleString('en-GB')"
-        oninput="nwRows['${type}'][${i}].value=parseFloat(this.value.replace(/,/g,''))||0;renderNetWorth()">
+      <div class="pound-wrap">
+        <input class="num-input" type="text" inputmode="numeric" value="${(r.cost||0)>999?(r.cost||0).toLocaleString('en-GB'):r.cost||0}" step="100" min="0" placeholder="Cost £"
+          onfocus="this.value=this.value.replace(/,/g,'')"
+          onblur="const n=parseFloat(this.value.replace(/,/g,''))||0;if(n>999)this.value=n.toLocaleString('en-GB')"
+          oninput="nwRows['${type}'][${i}].cost=parseFloat(this.value.replace(/,/g,''))||0;renderNetWorth()">
+      </div>
+      <div class="pound-wrap">
+        <input class="num-input" type="text" inputmode="numeric" value="${(r.value||0)>999?(r.value||0).toLocaleString('en-GB'):r.value||0}" step="100" min="0" placeholder="Value £"
+          onfocus="this.value=this.value.replace(/,/g,'')"
+          onblur="const n=parseFloat(this.value.replace(/,/g,''))||0;if(n>999)this.value=n.toLocaleString('en-GB')"
+          oninput="nwRows['${type}'][${i}].value=parseFloat(this.value.replace(/,/g,''))||0;renderNetWorth()">
+      </div>
       <button class="btn-danger btn-sm" onclick="nwRows['${type}'].splice(${i},1);renderNWRows('${type}');renderNetWorth()">✕</button>
     </div>`).join('');
 }
