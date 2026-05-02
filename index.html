@@ -198,7 +198,27 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   background: rgba(10,132,255,0.16);
 }
 .tab-panel { display: none; }
-.tab-panel.active { display: block; }
+.tab-panel.active {
+  display: block;
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  transform-origin: center top;
+  will-change: transform, opacity;
+}
+.tab-panel.active.entering {
+  transform: scale(0.96);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-panel.active,
+  .tab-panel.active.entering {
+    transform: none;
+    opacity: 1;
+    transition: none;
+  }
+}
 
 /* CARDS & LAYOUT */
 .card {
@@ -7641,7 +7661,17 @@ function switchTab(name, btn) {
   document.getElementById('mortgage-planner-panel')?.classList.remove('active');
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
+  const newPanel = document.getElementById('tab-'+name);
+  // Apply entering state first so the panel starts at scale(0.96)/opacity(0).
+  // Two requestAnimationFrame calls ensure the browser commits the entering
+  // styles before we strip the class — otherwise the transition gets
+  // collapsed and you see a snap instead of a spring.
+  newPanel.classList.add('active', 'entering');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      newPanel.classList.remove('entering');
+    });
+  });
   btn.classList.add('active');
 
   // Always hide sold form and history form when switching tabs
