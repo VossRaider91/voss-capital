@@ -1502,7 +1502,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
 
   /* ── GRIDS — collapse multi-column to 1 or 2 columns ──────── */
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; gap: 10px !important; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr !important; gap: 10px !important; }
+  /* grid-4 stat panels (Portfolio Snapshot, Phase Context, Wrapper Efficiency,
+     etc.) hold 4 small cards. On mobile a single column wastes screen
+     width; a 2x2 grid keeps the stats compact and scannable. */
+  .grid-4 { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
   .isa-tracker-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
   .fund-inputs-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .stat-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
