@@ -2008,6 +2008,31 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-section-variable { color: var(--blue); }
 
 /* ═══════════════════════════════════════════════════════════
+   ANNUAL EXPENSE SUMMARY — collapsible header pill.
+   Wraps the section title and chevron in a blue-tinted action
+   pill so it reads as a clear interactive element on mobile,
+   not just a heading floating in negative space. Uses the 16/32
+   action variant tint so it matches the YTD net position pill
+   and the active nav tab aesthetic.
+   ═══════════════════════════════════════════════════════════ */
+.bgt-cat-summary-header {
+  background: rgba(10,132,255,0.16);
+  border: 0.5px solid rgba(10,132,255,0.32);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: background 0.18s, border-color 0.18s;
+}
+.bgt-cat-summary-header:hover {
+  background: rgba(10,132,255,0.22);
+}
+.bgt-cat-summary-header .section-label {
+  color: var(--white);
+}
+
+/* ═══════════════════════════════════════════════════════════
    TAX REMINDER — paid-row indicator on HMRC schedule + cash flow
    tables. Once a deadline is marked Paid via the banner, its row
    in both the Upcoming HMRC Payments table and the Cash Flow
@@ -4878,16 +4903,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         </div>
       </div>
 
-      <!-- Legacy Coast FIRE context row (kept for backward compat, hidden when phase context shown) -->
-      <div id="ret-coast-context" style="display:none;background:rgba(10,132,255,0.16);border-left:3px solid var(--blue);border-radius:10px;padding:12px 18px;margin-bottom:16px">
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:8px">Coast FIRE Mode Active</div>
-        <div class="grid-4">
-          <div class="stat"><div class="stat-label">Value at Coast Point</div><div class="stat-val sm" style="color:var(--blue)" id="ret-coast-val">—</div><div class="stat-sub" id="ret-coast-age-label">when contributions stop</div></div>
-          <div class="stat"><div class="stat-label">Coasting Years</div><div class="stat-val sm" style="color:var(--blue)" id="ret-coast-years">—</div><div class="stat-sub">growth only, no contributions</div></div>
-          <div class="stat"><div class="stat-label">Contribution Years</div><div class="stat-val sm" id="ret-contrib-years-display">—</div><div class="stat-sub">active saving period</div></div>
-          <div class="stat"><div class="stat-label">Extra Growth (Coasting)</div><div class="stat-val sm green" id="ret-coast-extra">—</div><div class="stat-sub">vs stopping at coast point</div></div>
-        </div>
-      </div>
+      <!-- Legacy Coast FIRE context row removed in v16. The Phase Context
+           Strip above (P1 / P2 / P3 cards) replaced this block entirely.
+           A hidden anchor div is kept so existing JS that reads
+           ret-coast-context still finds an element, just always hidden. -->
+      <div id="ret-coast-context" style="display:none"></div>
 
       <!-- Pill-card stack — Monthly Income is the primary takeaway
            (it's what you'll actually live on at retirement). The
@@ -7670,13 +7690,19 @@ function _applyMobileCollapseState() {
   // Read saved state. If nothing saved, default both to collapsed (mobile first-run).
   let state = _readCollapseState();
   if (!state) {
-    state = { prices: true, holding: true, retirement: true };
+    state = { prices: true, holding: true, retirement: true, 'bgt-cat-summary': true };
     _writeCollapseState(state);
   } else {
     // Backfill: if user upgraded from a build before retirement was collapsible,
     // their saved state won't have a retirement key. Default it to collapsed too.
     if (state.retirement === undefined) {
       state.retirement = true;
+      _writeCollapseState(state);
+    }
+    // Backfill for the budget-tracker category summary collapsible. Default to
+    // collapsed on first encounter so the panel starts tidy on mobile.
+    if (state['bgt-cat-summary'] === undefined) {
+      state['bgt-cat-summary'] = true;
       _writeCollapseState(state);
     }
   }
@@ -14316,7 +14342,12 @@ function renderTaxTab() {
   // ── Summary cards — pill format. Estimated CGT Liability is the
   // primary takeaway since it's what you'd actually owe HMRC. GIA
   // Unrealised Gain is the supporting context that drives that figure.
-  // Total Portfolio Value was dropped here — it's a portfolio-tab
+  // Tax Position Summary now shows ONLY the CGT Liability action card.
+  // The GIA Unrealised Gain figure was removed in v16 because the GIA
+  // Wrapper Summary directly below this card already surfaces it with
+  // fuller context (Market Value + Cost Base + Unrealised Gain together).
+  // Repeating it here was redundant on the same scroll.
+  // Total Portfolio Value was dropped earlier — it's a portfolio-tab
   // metric, not a tax-tab metric.
   const taxColourFor = (cls) => ({
     gold: 'var(--gold)', green: 'var(--green)', red: 'var(--red)',
@@ -14324,7 +14355,6 @@ function renderTaxTab() {
   })[cls] || 'var(--white)';
   const taxCfgs = [
     { label:'Estimated CGT Liability', val:`£${fmtNum(Math.round(cgtCalc.totalTax),0)}`, sub:`${cgtCalc.effectiveRate.toFixed(1)}% effective rate after £${fmtNum(remainingAllowance,0)} allowance`, cls: cgtCalc.totalTax > 0 ? 'red' : 'white', primary:true },
-    { label:'GIA Unrealised Gain', val: totalGIAGain >= 0 ? `+£${fmtNum(Math.round(totalGIAGain),0)}` : `-£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'if sold today across all GIA holdings', cls: totalGIAGain >= 0 ? 'green' : 'red' },
   ];
   document.getElementById('taxSummaryCards').innerHTML = taxCfgs.map(s => {
     const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
@@ -18216,7 +18246,10 @@ function _renderBgtYtdPanel(state) {
         </div>
       </div>
 
-      <!-- Plan vs Actual roll-up -->
+      <!-- Plan vs Actual roll-up — just Income and Expenses; the Net
+           Position is already presented as the action card at the top
+           of this panel, so duplicating it here adds noise without
+           giving the user any new information. -->
       <table class="bgt-table" style="margin-bottom:8px">
         <thead class="bgt-thead"><tr>
           <th style="text-align:left">Total</th><th>Planned £</th><th>Actual £</th><th>Difference</th>
@@ -18234,29 +18267,26 @@ function _renderBgtYtdPanel(state) {
             <td>${fmt(ann.expActual)}</td>
             <td style="color:${expDiffCls}">${signedFmt(expDiff)}</td>
           </tr>
-          <tr class="bgt-row bgt-net">
-            <td style="color:var(--gold)" data-row-label="Annual Net Position" data-row-subline="${(()=>{
-              if (Math.abs(netDiff) < 0.005) return 'on plan';
-              const sign = netDiff >= 0 ? 'better' : 'worse';
-              return `£${fmtNum(Math.abs(netDiff),2)} ${sign} than plan`;
-            })()}">Net Position</td>
-            <td style="color:var(--gold)">${signedFmt(netPlanned)}</td>
-            <td style="color:${netDiffCls}">${signedFmt(netActual)}</td>
-            <td style="color:${netDiffCls}">${signedFmt(netDiff)}</td>
-          </tr>
         </tbody>
       </table>
 
-      <!-- Per-category breakdown -->
-      <div class="section-label" style="margin-bottom:8px">Annual Expense Summary by Category</div>
-      <table class="bgt-table">
-        <thead class="bgt-thead"><tr>
-          <th style="text-align:left">Category</th><th>Planned £</th><th>Actual £</th><th>Difference</th>
-        </tr></thead>
-        <tbody>
-          ${catRows || '<tr class="bgt-row"><td colspan="4" style="text-align:center;color:var(--muted);font-style:italic">No category data yet for ' + activeYear + '</td></tr>'}
-        </tbody>
-      </table>
+      <!-- Per-category breakdown — collapsible on mobile -->
+      <div data-collapsible="bgt-cat-summary" class="${(_readCollapseState() || {})['bgt-cat-summary'] !== false ? 'collapsed' : ''}">
+        <div class="flex-between collapsible-header bgt-cat-summary-header" onclick="toggleMobileCollapse('bgt-cat-summary')">
+          <div class="section-label" style="margin-bottom:0;font-size:15px">Annual Expense Summary by Category</div>
+          <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+        </div>
+        <div class="collapsible-body" style="margin-top:12px">
+          <table class="bgt-table">
+            <thead class="bgt-thead"><tr>
+              <th style="text-align:left">Category</th><th>Planned £</th><th>Actual £</th><th>Difference</th>
+            </tr></thead>
+            <tbody>
+              ${catRows || '<tr class="bgt-row"><td colspan="4" style="text-align:center;color:var(--muted);font-style:italic">No category data yet for ' + activeYear + '</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>`;
 }
 
