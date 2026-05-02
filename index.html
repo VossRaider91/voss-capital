@@ -3815,21 +3815,54 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #bgt-ytd-panel .bgt-row td:nth-child(3) {
     grid-column: 2 / 3 !important;
   }
-  #bgt-main-table .bgt-row td:nth-child(4),
-  #bgt-history-view .bgt-row td:nth-child(4),
-  #bgt-ytd-panel .bgt-row td:nth-child(4) {
+  #bgt-main-table .bgt-row:not(.bgt-total) td:nth-child(4),
+  #bgt-history-view .bgt-row:not(.bgt-total) td:nth-child(4),
+  #bgt-ytd-panel .bgt-row:not(.bgt-total) td:nth-child(4) {
     grid-column: 3 / 4 !important;
-    text-align: right !important;
     align-self: start;
-    /* Match the inputs' visual baseline. The bgt-planned-input and
-       bgt-actual-input each have `padding: 4px 4px` plus a 0.5px
-       border-bottom; the diff cell is plain text so without this
-       padding its value sits visibly higher than the input values. */
-    padding: 4px 4px !important;
-    border-bottom: 0.5px solid transparent;  /* invisible spacer to match input height */
-    font-size: 13px !important;
-    font-weight: 600 !important;
+    /* Diff cell is a plain td. The pill is rendered as an inner span
+       (.bgt-diff-pill) so the ::before label can sit above it, exactly
+       mirroring the Planned/Actual cell structure where ::before sits
+       above the input pill. */
+    padding: 0 !important;
+    text-align: center !important;
+    display: block !important;
+  }
+  /* Inner pill for the diff cell — matches the input pills' height and font.
+     Does NOT apply on total rows because those use the td as the pill. */
+  #bgt-main-table .bgt-row:not(.bgt-total) td:nth-child(4) .bgt-diff-pill,
+  #bgt-history-view .bgt-row:not(.bgt-total) td:nth-child(4) .bgt-diff-pill,
+  #bgt-ytd-panel .bgt-row:not(.bgt-total) td:nth-child(4) .bgt-diff-pill {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.10);
+    border-radius: 50px;
+    padding: 8px 14px;
+    min-height: 38px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
     line-height: 1.2;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.1px;
+    width: 100%;
+  }
+  /* Tinted variants — green when actual came in better than plan,
+     red when worse. Use the 14/28 opacity standard. */
+  #bgt-main-table .bgt-row:not(.bgt-total) td:nth-child(4).bgt-diff-pos .bgt-diff-pill,
+  #bgt-history-view .bgt-row:not(.bgt-total) td:nth-child(4).bgt-diff-pos .bgt-diff-pill,
+  #bgt-ytd-panel .bgt-row:not(.bgt-total) td:nth-child(4).bgt-diff-pos .bgt-diff-pill {
+    background: rgba(48, 209, 88, 0.14);
+    border-color: rgba(48, 209, 88, 0.28);
+  }
+  #bgt-main-table .bgt-row:not(.bgt-total) td:nth-child(4).bgt-diff-neg .bgt-diff-pill,
+  #bgt-history-view .bgt-row:not(.bgt-total) td:nth-child(4).bgt-diff-neg .bgt-diff-pill,
+  #bgt-ytd-panel .bgt-row:not(.bgt-total) td:nth-child(4).bgt-diff-neg .bgt-diff-pill {
+    background: rgba(255, 69, 58, 0.14);
+    border-color: rgba(255, 69, 58, 0.28);
   }
   /* Add small column labels above each numeric cell so users know what they're looking at */
   #bgt-main-table .bgt-row td:nth-child(2)::before,
@@ -3869,7 +3902,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     letter-spacing: 0.5px;
     margin-bottom: 3px;
     font-weight: 500;
-    text-align: right;
+    text-align: center;
+    width: 100%;
   }
   /* Centre content of Planned and Actual cells (both inputs in data rows
      AND plain-text values in Total rows) so columns align cleanly under
@@ -11154,22 +11188,22 @@ function renderFreedomNumber() {
   const card = document.getElementById('ret-freedom-card');
   if (!card) return;
 
-  // Restore saved settings on first run after a load
+  // Restore saved settings on every render. We update the input value only
+  // if the field isn't currently focused — that way a remote sync update
+  // from another device repopulates the field, but active typing is never
+  // overwritten mid-edit.
   const stored = (lsGet(LS.RETIREMENT, {}) || {}).freedom || {};
   const spendEl = document.getElementById('ret-fn-spending');
   const swrEl   = document.getElementById('ret-fn-swr');
   const modeEl  = document.getElementById('ret-fn-pot-mode');
-  if (spendEl && !spendEl.dataset.fnLoaded) {
+  if (spendEl && document.activeElement !== spendEl) {
     if (stored.spending !== undefined && stored.spending !== null) spendEl.value = fmtNum(stored.spending, 0);
-    spendEl.dataset.fnLoaded = '1';
   }
-  if (swrEl && !swrEl.dataset.fnLoaded) {
+  if (swrEl && document.activeElement !== swrEl) {
     if (stored.swr !== undefined && stored.swr !== null && stored.swr > 0) swrEl.value = stored.swr;
-    swrEl.dataset.fnLoaded = '1';
   }
-  if (modeEl && !modeEl.dataset.fnLoaded) {
+  if (modeEl && document.activeElement !== modeEl) {
     if (stored.potMode) modeEl.value = stored.potMode;
-    modeEl.dataset.fnLoaded = '1';
   }
 
   // Inputs
@@ -17851,7 +17885,8 @@ function renderBudgetTab() {
 
 // ── Render helpers ─────────────────────────────────────────
 function _bgtDiffStr(diff) {
-  return diff >= 0 ? `+£${fmtNum(Math.abs(diff), 2)}` : `-£${fmtNum(Math.abs(diff), 2)}`;
+  const value = diff >= 0 ? `+£${fmtNum(Math.abs(diff), 2)}` : `-£${fmtNum(Math.abs(diff), 2)}`;
+  return `<span class="bgt-diff-pill">${value}</span>`;
 }
 function _bgtProgressBar(actual, planned, isVariable) {
   if (!isVariable || planned <= 0) return '';
