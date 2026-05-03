@@ -282,6 +282,33 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   line-height: 1.4;
   margin-top: 2px;
 }
+/* For subtitles sitting beneath a flex-between header that has a right-aligned
+   action button (e.g. Layered Strategy + Edit Layers, Additional Funds + Add Fund).
+   Padding-right reserves space so the prose never collides visually with the button
+   above. Three steps: 160px on wide desktop where the button feels generous,
+   120px on tablet-ish widths where the button is mid-size, 90px on phone where
+   the button is .btn-sm + smaller text. */
+.section-sub-paired { padding-right: 160px; }
+@media (max-width: 900px) {
+  .section-sub-paired { padding-right: 120px; }
+}
+@media (max-width: 700px) {
+  .section-sub-paired { padding-right: 90px; }
+}
+
+/* Section header with a label + subtitle on the left and a right-aligned action
+   button. Button anchors to the bottom of the text block so they form a clean
+   baseline. Stays as a row at every viewport width — the button is small enough
+   that it never crowds the text column. */
+.section-header-paired {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.section-header-paired > .section-header-text { flex: 1 1 auto; min-width: 0; }
+.section-header-paired > .section-header-action { flex: 0 0 auto; }
 
 /* Withdrawal strategy toggle (Retirement tab) — segmented two-button
    chooser. Active button gets gold fill + dark text, inactive gets
@@ -5133,20 +5160,28 @@ body.modal-active .container > footer {
   <div id="auto-refresh-countdown-calc" style="font-size:10px;color:var(--muted);margin-bottom:12px;font-weight:500;letter-spacing:-0.05px;opacity:0.7"></div>
 
   <!-- Layered Strategy header — Edit Layers opens the modal that mutates FUNDS -->
-  <div class="flex-between mb12" style="padding-top:14px;border-top:1px solid var(--border)">
-    <div class="subsection-label">Layered Strategy</div>
-    <button class="btn-ghost btn-sm" onclick="openEditLayersModal()">Edit Layers</button>
+  <div class="section-header-paired" style="padding-top:14px;border-top:1px solid var(--border)">
+    <div class="section-header-text">
+      <div class="subsection-label">Layered Strategy</div>
+      <div class="stat-sub" style="font-style:italic;margin-top:6px">Targets must sum to 100%.<br>Edits apply to future buy calculations only.<br>Your existing holdings stay untouched.</div>
+    </div>
+    <div class="section-header-action">
+      <button class="btn-ghost btn-sm" onclick="openEditLayersModal()">Edit Layers</button>
+    </div>
   </div>
-  <div class="stat-sub mb16" style="font-style:italic">Targets must sum to 100%. Edits apply to future buy calculations only.<br>Your existing holdings stay untouched.</div>
 
   <div id="fundsGrid" class="mb16"></div>
 
   <!-- Additional funds section -->
-  <div class="flex-between mb12">
-    <div class="subsection-label">Additional Funds</div>
-    <button class="btn-ghost btn-sm" onclick="addAdditionalFund()">+ Add Fund</button>
+  <div class="section-header-paired">
+    <div class="section-header-text">
+      <div class="subsection-label">Additional Funds</div>
+      <div class="stat-sub" style="font-style:italic;margin-top:6px">These funds are tracked for visibility and history.<br>They do not participate in drift correction or target allocation.</div>
+    </div>
+    <div class="section-header-action">
+      <button class="btn-ghost btn-sm" onclick="addAdditionalFund()">+ Add Fund</button>
+    </div>
   </div>
-  <div class="stat-sub mb16" style="font-style:italic;margin-top:2px">These funds are tracked for visibility and history.<br>They do not participate in drift correction or target allocation.</div>
   <div id="additionalFundsGrid" class="mb16"></div>
 
   <div id="lastPullWrapper" style="display:none"></div>
