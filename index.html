@@ -4351,22 +4351,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(1) {
     color: var(--blue) !important;
   }
-  /* Hide the auto-generated PLANNED / ACTUAL / DIFFERENCE column labels
-     that the data rows use. The total row's column structure is already
-     established by the rows above it, so repeating the labels here just
-     adds noise. */
-  #bgt-main-table .bgt-row.bgt-total td:nth-child(2)::before,
-  #bgt-main-table .bgt-row.bgt-total td:nth-child(3)::before,
-  #bgt-main-table .bgt-row.bgt-total td:nth-child(4)::before,
-  #bgt-history-view .bgt-row.bgt-total td:nth-child(2)::before,
-  #bgt-history-view .bgt-row.bgt-total td:nth-child(3)::before,
-  #bgt-history-view .bgt-row.bgt-total td:nth-child(4)::before,
-  #bgt-history-view .bgt-row.bgt-total td:nth-child(5)::before,
-  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(2)::before,
-  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(3)::before,
-  #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(4)::before {
-    display: none !important;
-  }
+  /* Section total rows reuse the same PLANNED / ACTUAL / DIFFERENCE column
+     labels as data rows. On mobile the original column headers can scroll
+     well out of view by the time you reach a section total, so the inline
+     labels above each chip make the row self-explanatory at a glance. */
   /* Wrap each value cell in a chip-style pill. Static — no hover or
      focus state — so the row reads as read-only summary, not an input.
      Padding and border-radius mirror the editable input pills above
@@ -18899,11 +18887,7 @@ function _renderBgtMainTable(state) {
           ${section('Fixed Expenses','bgt-section-fixed',BGT_FIXED,false,false)}
           ${section('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true)}
           <tr class="bgt-row bgt-net">
-            <td style="color:var(--gold)" data-row-label="Monthly Net Position" data-row-subline="${(()=>{
-              if (Math.abs(netDiff) < 0.005) return 'on plan';
-              const sign = netDiff >= 0 ? 'better' : 'worse';
-              return `£${fmtNum(Math.abs(netDiff),2)} ${sign} than plan`;
-            })()}" data-row-actual="${_bgtDiffStr(netAct)}">${netAct>=0?'✅':'⚠️'} Net Position</td>
+            <td style="color:var(--gold)" data-row-label="Monthly Net Position" data-row-subline="Income £${fmtNum(tIA,0)} · Expenses £${fmtNum(tTA + tEA,0)}" data-row-actual="${_bgtDiffStr(netAct)}">${netAct>=0?'✅':'⚠️'} Net Position</td>
             <td class="${planNetCls}">${planNetPrefix}£${fmtNum(Math.abs(netPlan),2)}${planNetIcon}</td>
             <td class="${nCls}" style="color:${netAct>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netAct)}</td>
             <td class="${nCls}" style="color:${netDiff>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netDiff)}</td>
@@ -19076,12 +19060,8 @@ function _renderBgtYtdPanel(state) {
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
         <div class="tax-headline-card tax-headline-action">
           <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Annual Net Position</div>
-          <div class="tax-headline-card-value" style="font-size:32px;color:${netDiffCls}">${signedFmt(netActual)}</div>
-          <div class="tax-headline-card-sub">${(()=>{
-            if (Math.abs(netDiff) < 0.005) return 'on plan';
-            const sign = netDiff >= 0 ? 'better' : 'worse';
-            return `£${fmtNum(Math.abs(netDiff),2)} ${sign} than plan`;
-          })()}</div>
+          <div class="tax-headline-card-value" style="font-size:32px;color:${netActual>=0?'var(--green)':'var(--red)'}">${signedFmt(netActual)}</div>
+          <div class="tax-headline-card-sub">Income £${fmtNum(ann.incomeActual,0)} · Expenses £${fmtNum(ann.expActual,0)}</div>
         </div>
         <div class="tax-headline-card">
           <div class="tax-headline-card-label">Total Invested</div>
