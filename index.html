@@ -6185,8 +6185,6 @@ body.modal-active .container > footer {
 
     <!-- Headline figures and schedule -->
     <div id="tax-provision-output"></div>
-
-    <p class="disclaimer" style="margin-top:14px">Self-assessment payments on account apply when last year's liability exceeded £1,000. The first POA is due 31 January (alongside the balancing payment for the prior year), the second POA on 31 July. This planner assumes you've kept up with past payments on schedule.</p>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════
@@ -18844,27 +18842,11 @@ function _renderBgtMainTable(state) {
   // Planned-deficit detection — fires when the plan itself doesn't balance
   // (income < tax + expenses, before any actuals are even entered). Materially
   // different from "actuals exceed income this month" — this is a structural
-  // problem with the plan, not a spending problem. Prepended to the narrative
-  // so the user sees it first, regardless of how the actuals are tracking.
+  // problem with the plan, not a spending problem. Surfaced as a red banner
+  // above the table so the user can't miss it.
   const planNetCls    = netPlan >= 0 ? 'bgt-diff-pos' : 'bgt-diff-neg';
   const planNetPrefix = netPlan < 0 ? '-' : '';
   const planNetIcon   = netPlan < 0 ? ' ⚠' : '';
-
-  let netNarrative;
-  if (tIA === 0 && tEA === 0) {
-    netNarrative = `No actuals entered yet. Your planned net position is £${fmtNum(Math.abs(netPlan),0)} ${netPlan >= 0 ? 'surplus' : 'deficit'} this month.`;
-  } else if (netAct >= 0) {
-    const vsPlanned = netDiff >= 0
-      ? `£${fmtNum(Math.round(netDiff),0)} ahead of plan`
-      : `£${fmtNum(Math.round(Math.abs(netDiff)),0)} behind plan`;
-    netNarrative = `You are on track to save £${fmtNum(Math.round(netAct),0)} this month — ${vsPlanned}.`;
-  } else {
-    const shortfall = Math.abs(netAct);
-    const vsPlanned = netDiff < 0
-      ? ` That's £${fmtNum(Math.round(Math.abs(netDiff)),0)} worse than planned.`
-      : ` That's £${fmtNum(Math.round(netDiff),0)} better than the planned deficit.`;
-    netNarrative = `Expenses currently exceed income by £${fmtNum(Math.round(shortfall),0)} this month.${vsPlanned}`;
-  }
 
   // Planned-deficit warning takes precedence — render as a separate red
   // banner above the standard narrative so the user can't miss it
@@ -18895,7 +18877,6 @@ function _renderBgtMainTable(state) {
         </tbody>
       </table>
       ${planDeficitWarning}
-      <div style="margin-top:12px;padding:10px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:var(--muted);font-style:italic;line-height:1.6">${netNarrative}</div>
       ${(() => {
         // Tax provision status — uses the same simple model as the Tax tab.
         // Recommendation = this year's liability ÷ 12, rounded up to nearest
@@ -19268,7 +19249,7 @@ function _renderBgtAveragesPanel(state) {
       <tr class="bgt-row">
         <td style="color:${colour}">${cat}${overTag}</td>
         <td>£${fmtNum(a.avg, 2)}</td>
-        <td style="color:var(--muted)">${a.monthsTracked} ${a.monthsTracked === 1 ? 'month' : 'months'}</td>
+        <td style="color:var(--muted)">${a.monthsTracked}&nbsp;${a.monthsTracked === 1 ? 'month' : 'months'}</td>
         <td style="color:var(--muted)">£${fmtNum(a.total, 2)}</td>
       </tr>`;
   };
