@@ -11516,7 +11516,7 @@ function calculateGlobalRetirement() {
 
   // Three-phase loop — identical to calculateRetirement()
   let rv = currentValue;
-  let rc = currentValue;
+  let rc = 0;  // future contributions only (excludes starting pot)
 
   for (let m = 0; m < p1Years * 12; m++) {
     rv = (rv + monthlyContrib) * (1 + monthlyRate);
@@ -11535,10 +11535,10 @@ function calculateGlobalRetirement() {
   }
 
   const finalNominal     = rv;
-  const totalContributed = rc;
+  const totalContributed = rc;  // future contributions only
   const finalReal        = finalNominal / Math.pow(1 + inflationRate, totalYears);
-  const growthGenerated  = finalNominal - totalContributed;
-  const progressPct      = finalNominal > 0 ? Math.min(currentValue / finalNominal * 100, 100) : 0;
+  const growthGenerated  = finalNominal - currentValue - totalContributed;
+  const progressPct      = finalNominal > 0 ? (currentValue / finalNominal * 100) : 0;
 
   const withdrawalMode   = s.withdrawalMode || '4pct';
   let monthlyIncome;
@@ -11617,7 +11617,7 @@ function calculateRetirement() {
   // Identical loop used for BOTH headline and milestone table.
   // ════════════════════════════════════════════════════════
   let rv = currentValue;  // running portfolio value
-  let rc = currentValue;  // running total contributed
+  let rc = 0;             // running FUTURE contributions only (excludes starting pot)
 
   // Phase 1
   for (let m = 0; m < p1Years * 12; m++) {
@@ -11641,17 +11641,22 @@ function calculateRetirement() {
   }
 
   const finalNominal     = rv;
-  const totalContributed = rc;
+  const totalContributed = rc;  // future contributions only
   const finalReal        = finalNominal / Math.pow(1 + inflationRate, totalYears);
-  const growthGenerated  = finalNominal - totalContributed;
-  const progressPct      = finalNominal > 0 ? Math.min(currentValue / finalNominal * 100, 100) : 0;
+  // Three-bucket math: final = starting pot + future contributions + growth.
+  // Growth here is the residual — captures compounding on both the starting pot
+  // and the new contributions over the projection window.
+  const growthGenerated  = finalNominal - currentValue - totalContributed;
+  // No 100% cap so progress reads honestly when over target.
+  const progressPct      = finalNominal > 0 ? (currentValue / finalNominal * 100) : 0;
   const coastExtraGrowth = (hasCoast || hasStepdown) ? (finalNominal - valueAfterP1) : 0;
 
   // ── Withdrawal income calculation ─────────────────────────
   const mode = _retWithdrawalMode || '4pct';
   let monthlyIncome;
   if (mode === 'drawdown') {
-    // PMT formula: deplete pot to £0 by age 95, with ongoing growth
+    // PMT formula: deplete pot to £0 by age 95, with ongoing growth at the
+    // same rate as accumulation (simple model — no separate retirement rate).
     const drawdownMonths = Math.max(1, 95 - targetAge) * 12;
     if (monthlyRate > 0) {
       monthlyIncome = finalNominal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -drawdownMonths));
@@ -11669,10 +11674,10 @@ function calculateRetirement() {
 
   // ── Update headline stats ─────────────────────────────────
   const phaseDesc = hasStepdown
-    ? `P1: ${p1Years}yr full · P2: ${p2Years}yr £${fmtNum(p2Amount,0)}/mo · P3: ${p3Years}yr coasting`
+    ? `P1: ${p1Years}yr Full · P2: ${p2Years}yr £${fmtNum(p2Amount,0)}/mo · P3: ${p3Years}yr Coasting`
     : hasCoast
-      ? `coasting ${p3Years} yrs · full contributions end age ${currentAge + p1Years}`
-      : monthlyContrib > 0 ? `nominal value in ${totalYears} years` : `${totalYears} years compounding`;
+      ? `Coasting ${p3Years} Yrs · Full Contributions End Age ${currentAge + p1Years}`
+      : monthlyContrib > 0 ? `Nominal Value in ${totalYears} Years` : `${totalYears} Years Compounding`;
 
   // animateNumber wired May 2026 — smooth tween as inputs are nudged
   animateNumber(document.getElementById('ret-final'), finalNominal, { prefix: '£', decimals: 0 });
@@ -11834,7 +11839,7 @@ function calculateRetirement() {
   </tr></thead><tbody>`;
 
   let mv = currentValue;
-  let mc = currentValue;
+  let mc = 0;  // future contributions only (excludes starting pot)
   let p2DividerShown = false;
   let p3DividerShown = false;
 
@@ -11855,7 +11860,9 @@ function calculateRetirement() {
     }
 
     if (isMilestone) {
-      const g = mv - mc;
+      // Three-bucket math — see headline note. Growth is the residual after
+      // subtracting the starting pot AND the running future-contribution total.
+      const g = mv - currentValue - mc;
       let rowIncome;
       if (mode === 'drawdown') {
         const remMonths = Math.max(1, 95 - age) * 12;
@@ -12056,14 +12063,16 @@ function renderFreedomNumber() {
     return 0; // Phase 3: coasting
   };
 
-  // Determine "current pot" by mode
+  // Determine "current pot" by mode.
+  // SIPP locked-away handling: under age 50 it's still years from pension
+  // access age (currently 57+), so excluding it from "what could I retire on
+  // today" gives a truer picture. From 50 onwards SIPP is close enough to
+  // accessible that ignoring it understates the pot.
+  const sipExcluded = currentAge < 50;
   let currentPot = portfolioVal;
   let potLabel   = 'investment portfolio';
   if (potMode === 'giaisa') {
-    // SIPP is locked away until pension access age, so excluding it gives
-    // a truer picture of the pot available for early retirement / coasting.
-    // Recompute from the live portfolio rather than gr.currentValue (which
-    // is the full pot including SIPP).
+    // Always excludes SIPP regardless of age — explicit user choice
     const portfolio = lsGet(LS.PORTFOLIO, []);
     const giaVal = portfolio.filter(h => h.wrapper==='GIA' || (!h.wrapper && h.type!=='employer' && h.wrapper!=='ISA' && h.wrapper!=='SIPP'))
                             .reduce((s,h)=>s+h.shares*(h.price||0),0);
@@ -12073,10 +12082,17 @@ function renderFreedomNumber() {
     potLabel   = 'GIA + ISA only';
   }
   if (potMode === 'liquid' || potMode === 'networth') {
+    // Liquid and Net Worth modes: under 50 we exclude SIPP automatically.
+    // 50 and above we include the full portfolio.
+    if (sipExcluded) {
+      const portfolio = lsGet(LS.PORTFOLIO, []);
+      currentPot = portfolio.filter(h => h.wrapper !== 'SIPP' && h.type !== 'employer')
+                            .reduce((s,h)=>s+h.shares*(h.price||0),0);
+    }
     const cash   = parseFloat((document.getElementById('nw-cash')?.value||'').replace(/,/g,'')) || 0;
     const crypto = parseFloat((document.getElementById('nw-crypto')?.value||'').replace(/,/g,'')) || 0;
     currentPot += cash + crypto;
-    potLabel = 'portfolio + cash + crypto';
+    potLabel = sipExcluded ? 'GIA + ISA + cash + crypto (SIPP excluded)' : 'portfolio + cash + crypto';
   }
   if (potMode === 'networth') {
     const houseValue    = parseFloat((document.getElementById('nw-house-value')?.value||'').replace(/,/g,'')) || 0;
@@ -12088,7 +12104,7 @@ function renderFreedomNumber() {
     const whiskeyValue  = (typeof nwRows !== 'undefined' ? nwRows.whiskey.reduce((s,r)=>s+(r.value||0),0) : 0);
     currentPot += houseValue + business + other + carsValue + whiskeyValue
                   - mortgage - liabilities;
-    potLabel = 'full net worth';
+    potLabel = sipExcluded ? 'net worth excluding SIPP' : 'full net worth';
   }
 
   // Title Case version for stat-strip subs (per Apple HIG).
