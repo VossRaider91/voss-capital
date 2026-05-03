@@ -1030,14 +1030,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* ── SELL TAB — Tax Band toggle and CGT chip width parity ────────
    The CGT settings card (.sell-cgt-settings) uses flex-wrap:wrap.
-   At viewports below ~1100px the row wraps, putting the Tax Band
-   pill on one row and the CGT chip on the next. Without these rules
-   each pill sizes to its own content — Tax Band is wider because
-   its two options + padding total more pixels than the CGT chip's
-   £3,000 + descriptor. To make them match, force both wrap divs to
-   take a full row (flex:1 1 100%), then stretch the pill inside
-   each to 100% width. The seg-options inside the toggle then get
-   flex:1 each so Basic/Higher split the toggle width evenly. */
+   At viewports ≤1100px the row wraps, putting the Tax Band pill on
+   one row and the CGT chip on the next. Without these rules each
+   pill sizes to its own content — Tax Band is wider because its
+   options + padding total more pixels than the CGT chip's £3,000 +
+   descriptor. To make them match, force both wrap divs to a full
+   row (flex:1 1 100%), then stretch the pill inside each to 100%.
+   The seg-options inside the toggle then get flex:1 each so
+   Basic/Higher split the toggle width evenly. */
 @media (max-width: 1100px) {
   .sell-cgt-settings .sell-tax-band-wrap,
   .sell-cgt-settings .sell-cgt-chip-wrap {
@@ -1499,7 +1499,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   border-color: rgba(255, 69, 58, 0.4);
 }
 
-/* ── PORTFOLIO EDIT FORM ──────────────────────────────────────── */
+/* ── PORTFOLIO EDIT FORM ──────────────────────────────────────────
+   Inline form below a holding card when Edit is clicked. Desktop:
+   4-column grid. Mobile (≤700px): stacks vertically with full-width
+   inputs and a buttons row below so nothing gets crushed. */
 .portfolio-edit-form {
   background: var(--dark);
   border: 1px solid var(--border);
@@ -12358,6 +12361,7 @@ function renderPortfolio(filter='all') {
     const typeMeta = h.fromHistory ? 'FROM HISTORY' : typeLabel;
     // Price always renders as a compact static pill — no inline editing on
     // the main portfolio view, so legacy and new holdings look identical.
+    // To change a price, the user clicks Edit which opens the inline form.
     const pricePillContent = `<span class="hcard-price-pound">£</span>${_formatPriceDisplay(h.price||0) || '0'}`;
 
     return `<div class="hcard" id="hrow_${h.id}">
