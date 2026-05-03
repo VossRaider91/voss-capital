@@ -7806,7 +7806,7 @@ function _renderAutoRefreshCountdown() {
   const pauseUntil = _getManualOverrideUntil();
   if (pauseUntil > 0) {
     const remaining = pauseUntil - Date.now();
-    els.forEach(el => { el.textContent = `Manual prices · auto-refresh in ${_formatCountdown(remaining)}`; });
+    els.forEach(el => { el.textContent = `Manual Prices · Auto-Refresh in ${_formatCountdown(remaining)}`; });
     return;
   }
 
@@ -7827,10 +7827,10 @@ function _renderAutoRefreshCountdown() {
   const elapsed = Date.now() - _lastPollAt;
   const remaining = POLL_INTERVAL_MS - elapsed;
   if (remaining <= 0) {
-    els.forEach(el => { el.textContent = 'Auto-refresh due any moment…'; });
+    els.forEach(el => { el.textContent = 'Auto-Refresh Due Any Moment…'; });
     return;
   }
-  els.forEach(el => { el.textContent = `Auto-refresh in ${_formatCountdown(remaining)}`; });
+  els.forEach(el => { el.textContent = `Auto-Refresh in ${_formatCountdown(remaining)}`; });
 }
 
 // 1Hz ticker that re-renders the countdown text. Idempotent — clears any
