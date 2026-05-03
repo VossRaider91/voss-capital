@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 :root {
   /* Neutral Space Grey base */
   --black: #0D0D0D;
@@ -64,13 +66,20 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
+  /* SF Pro stylistic alternates: cv11 = straight-sided 4 and 6 (read better
+     at large sizes), ss01 = alternate 'a'. tnum gives tabular numerals. */
+  font-feature-settings: 'cv11', 'ss01', 'tnum';
 }
 body::before {
   content: '';
   position: fixed; inset: 0;
+  /* Layered radial gradient — three-stop subtle layering. Top-centre
+     warm highlight + faint cool blue fall-off bottom-right. Adds depth
+     without being noticeable as a gradient. */
   background:
-    radial-gradient(ellipse 60% 40% at 30% 0%, rgba(255,255,255,0.025), transparent 70%),
-    radial-gradient(ellipse 50% 50% at 70% 100%, rgba(255,255,255,0.015), transparent 70%);
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,255,255,0.035), transparent 60%),
+    radial-gradient(ellipse 60% 60% at 80% 110%, rgba(10,132,255,0.025), transparent 65%),
+    radial-gradient(ellipse 70% 50% at 20% 100%, rgba(255,255,255,0.012), transparent 70%);
   pointer-events: none; z-index: 0;
 }
 .container { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
@@ -554,6 +563,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-size: 28px; font-weight: 600; color: var(--white);
   line-height: 1; letter-spacing: -0.8px;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum', 'cv11', 'ss01';
 }
 .stat-val.gold { color: var(--white); }
 .stat-val.green { color: var(--green); }
@@ -624,11 +634,19 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   border-radius: 14px;
   padding: 20px;
   position: relative; overflow: hidden;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 .fund-card::before { content: none; }
-.fund-card:hover { border-color: var(--border2); background: var(--card2); }
+.fund-card:hover {
+  border-color: var(--border2);
+  background: var(--card2);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 20px rgba(0,0,0,0.32);
+}
+@media (hover: none) {
+  .fund-card:hover { transform: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); }
+}
 .fund-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 .fund-meta .fund-layer {
   font-size: 12px; letter-spacing: -0.05px; text-transform: none;
@@ -968,7 +986,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-size: 12px;
   font-weight: 600;
   color: rgba(255,255,255,0.55);
-  padding: 7px 18px;
+  padding: 7px 14px;
   border-radius: 50px;
   border: 0.5px solid transparent;
   white-space: nowrap;
@@ -1008,6 +1026,48 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .seg-toggle .seg-option:has(input:checked):hover > span {
   color: #c5e0ff;
+}
+
+/* ── SELL TAB — Tax Band toggle and CGT chip width parity ────────
+   The CGT settings card (.sell-cgt-settings) uses flex-wrap:wrap.
+   At viewports below ~1100px the row wraps, putting the Tax Band
+   pill on one row and the CGT chip on the next. Without these rules
+   each pill sizes to its own content — Tax Band is wider because
+   its two options + padding total more pixels than the CGT chip's
+   £3,000 + descriptor. To make them match, force both wrap divs to
+   take a full row (flex:1 1 100%), then stretch the pill inside
+   each to 100% width. The seg-options inside the toggle then get
+   flex:1 each so Basic/Higher split the toggle width evenly. */
+@media (max-width: 1100px) {
+  .sell-cgt-settings .sell-tax-band-wrap,
+  .sell-cgt-settings .sell-cgt-chip-wrap {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+  .sell-cgt-settings .sell-tax-band-wrap .seg-toggle {
+    display: flex !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: space-between !important;
+  }
+  .sell-cgt-settings .sell-tax-band-wrap .seg-toggle .seg-option {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+  .sell-cgt-settings .sell-tax-band-wrap .seg-toggle .seg-option > span {
+    width: 100% !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+  .sell-cgt-settings .sell-cgt-chip-wrap .remaining-chip {
+    display: flex !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: space-between !important;
+  }
 }
 
 /* ── REMAINING ALLOWANCE CHIP ────────────────────────────────────
@@ -1056,6 +1116,49 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    Pill-shaped container that wraps the projection's progress bar
    and its caption beneath. Replaces a loose progress bar + footer
    line that used to float in space. */
+/* ── RETIREMENT — Floating section anchor nav ─────────────────────
+   Desktop-only left rail anchored to the four Retirement sections
+   (Settings, Projection, Current Pot, Freedom Number). Sticks while
+   scrolling, with the active section highlighted via .is-active set
+   by IntersectionObserver. Hidden below 1100px where the 900px content
+   column leaves no room for a side rail. */
+.ret-anchor-nav {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .ret-anchor-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: fixed;
+    left: max(20px, calc((100vw - 900px) / 2 - 180px));
+    top: 100px;
+    width: 160px;
+    z-index: 5;
+  }
+  .ret-anchor-nav a {
+    display: block;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    border-radius: 8px;
+    border-left: 2px solid transparent;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    letter-spacing: -0.05px;
+  }
+  .ret-anchor-nav a:hover {
+    color: var(--white);
+    background: rgba(255,255,255,0.04);
+  }
+  .ret-anchor-nav a.is-active {
+    color: var(--white);
+    border-left-color: var(--blue);
+    background: rgba(10,132,255,0.08);
+  }
+}
+
 .ret-progress-strip {
   background: rgba(255,255,255,0.04);
   border: 0.5px solid rgba(255,255,255,0.08);
@@ -1196,8 +1299,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   display: grid; grid-template-columns: 18px 20px 65px 1fr 90px 70px 80px;
   gap: 8px; align-items: center; padding: 10px 0;
   border-bottom: 0.5px solid var(--border);
+  transition: background 0.15s ease, padding 0.15s ease;
+  border-radius: 6px;
+  margin: 0 -8px; padding-left: 8px; padding-right: 8px;
 }
 .holding-row:last-child { border-bottom: none; }
+@media (hover: hover) {
+  .holding-row:hover { background: rgba(255,255,255,0.025); }
+}
 .holding-color { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
 .holding-ticker { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
 .holding-detail { font-size: 11px; color: var(--muted); line-height: 1.6; letter-spacing: -0.05px; }
@@ -1260,6 +1369,51 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .hcard-meta-amber { color: var(--amber); }
 .hcard-meta-blue  { color: var(--blue); }
 .hcard-meta-green { color: var(--green); }
+
+/* ── WRAPPER PILLS ───────────────────────────────────────────────
+   Colour-coded pill that identifies which wrapper a holding sits in
+   (GIA / ISA / SIPP). Replaces older plain-text approach with a
+   tinted rounded badge so the wrapper context is instantly scannable. */
+.hcard-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.wrapper-pill {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 50px;
+  border: 0.5px solid;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.wrapper-pill-amber {
+  background: rgba(255,159,10,0.14);
+  border-color: rgba(255,159,10,0.32);
+  color: var(--amber);
+}
+.wrapper-pill-blue {
+  background: rgba(10,132,255,0.14);
+  border-color: rgba(10,132,255,0.32);
+  color: var(--blue);
+}
+.wrapper-pill-green {
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.32);
+  color: var(--green);
+}
+.hcard-type-meta {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
 .hcard-total {
   font-size: 17px;
   font-weight: 600;
@@ -1291,27 +1445,6 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--blue);
   font-weight: 700;
   margin-right: 1px;
-}
-.hcard-price-pill.editable {
-  padding: 3px 10px;
-}
-.hcard-price-input {
-  background: transparent;
-  border: none;
-  color: var(--white);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  width: 60px;
-  outline: none;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.1px;
-  padding: 2px 0;
-  -webkit-appearance: none;
-  appearance: none;
-}
-.hcard-price-input:focus {
-  color: var(--blue);
 }
 .hcard-progress {
   height: 3px;
@@ -1364,6 +1497,73 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .hcard-remove-btn:hover {
   background: rgba(255, 69, 58, 0.15);
   border-color: rgba(255, 69, 58, 0.4);
+}
+
+/* ── PORTFOLIO EDIT FORM ──────────────────────────────────────── */
+.portfolio-edit-form {
+  background: var(--dark);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 4px;
+}
+.portfolio-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+.portfolio-edit-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.portfolio-edit-actions button { flex: 0 0 auto; }
+.portfolio-edit-convert {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+.portfolio-edit-convert-text {
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 540px;
+  line-height: 1.5;
+  flex: 1 1 280px;
+}
+.portfolio-edit-convert-btn {
+  background: rgba(240,184,64,0.12);
+  color: #f0b840;
+  border: 1px solid rgba(240,184,64,0.4);
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+@media (max-width: 700px) {
+  .portfolio-edit-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .portfolio-edit-grid .input-group { width: 100%; }
+  .portfolio-edit-grid .num-input { width: 100%; box-sizing: border-box; }
+  .portfolio-edit-grid .pound-wrap { width: 100%; }
+  .portfolio-edit-grid .pound-wrap .num-input { width: 100%; }
+  .portfolio-edit-actions { width: 100%; margin-top: 4px; }
+  .portfolio-edit-actions button {
+    flex: 1 1 0;
+    min-height: 38px;
+    font-size: 13px;
+  }
+  .portfolio-edit-convert {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .portfolio-edit-convert-text { max-width: none; flex: none; }
+  .portfolio-edit-convert-btn { width: 100%; min-height: 38px; }
 }
 
 /* Wrapper group section pill — replaces the old uppercase + border-bottom */
@@ -1772,6 +1972,36 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .flash-gold { animation: flashGold 1.4s ease forwards; }
 
 .budget-input.flash-gold { border-color: var(--blue) !important; }
+
+/* Skeleton shimmer for price cells during live fetch. Subtle horizontal
+   gradient sweep applied via .price-loading. Auto-disabled by reduced-motion. */
+@keyframes priceShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.price-loading {
+  position: relative;
+  overflow: hidden;
+}
+.price-loading::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(10,132,255,0.06) 35%,
+    rgba(10,132,255,0.12) 50%,
+    rgba(10,132,255,0.06) 65%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: priceShimmer 1.4s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  .price-loading::after { animation: none; opacity: 0.5; }
+}
 
 /* ── BUDGET TRACKER ── */
 .bgt-table { width: 100%; border-collapse: collapse; }
@@ -2239,6 +2469,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   line-height: 1.1;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum', 'cv11', 'ss01';
 }
 .tax-headline-card-suffix {
   font-size: 13px;
@@ -4272,8 +4503,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   /* :not(.tax-headline-card) clauses scope this strictly to the
      Asset Breakdown card. Without them, the same selectors also hit the
      Tax Exposure card sitting next to it (same #analyse-nw-breakdown
-     parent), turning .tax-headline-action into a flex-wrap row and
-     putting the value beside the label. */
+     parent), turning .tax-headline-action into a flex-wrap row. */
   #analyse-nw-breakdown > div > div:not(.tax-headline-card) {
     padding: 8px 0 !important;
   }
@@ -4784,7 +5014,16 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
      RETIREMENT TRACKER TAB
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-retirement">
-  <div data-collapsible="retirement" class="ret-settings-collapsible mb16">
+  <!-- Floating section anchor nav. Desktop only (≥1100px). Sticks to
+       the left of the content column with smooth-scroll anchors and
+       IntersectionObserver-driven active highlighting. -->
+  <nav class="ret-anchor-nav" aria-label="Retirement sections">
+    <a href="#ret-settings-section" data-anchor="ret-settings-section">Settings</a>
+    <a href="#retResults" data-anchor="retResults">Projection</a>
+    <a href="#ret-current-position" data-anchor="ret-current-position">Current Pot</a>
+    <a href="#ret-freedom-card" data-anchor="ret-freedom-card">Freedom Number</a>
+  </nav>
+  <div data-collapsible="retirement" class="ret-settings-collapsible mb16" id="ret-settings-section">
     <div class="collapsible-header" onclick="toggleMobileCollapse('retirement')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
         <div class="section-label" style="margin-bottom:0">Retirement Settings</div>
@@ -5817,7 +6056,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 <div class="tab-panel" id="tab-sell">
 
   <!-- Settings bar -->
-  <div class="card card-left mb24" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+  <div class="card card-left mb24 sell-cgt-settings" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
     <div>
       <div class="input-label mb8">CGT Annual Allowance</div>
       <div class="flex-center">
@@ -5833,7 +6072,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         <input class="budget-input" type="text" inputmode="numeric" id="sell-used" value="0" step="100" style="width:110px">
       </div>
     </div>
-    <div>
+    <div class="sell-tax-band-wrap">
       <div class="input-label mb8">Tax Band</div>
       <div class="seg-toggle">
         <label class="seg-option">
@@ -5847,7 +6086,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
       <div id="sell-rate-note" style="font-size:9px;margin-top:6px;max-width:240px;line-height:1.5;color:var(--muted)"></div>
     </div>
-    <div class="margin-left-auto-mobile-reset" style="margin-left:auto">
+    <div class="margin-left-auto-mobile-reset sell-cgt-chip-wrap" style="margin-left:auto">
       <div class="remaining-chip cgt">
         <span class="remaining-chip-amt" id="sell-remaining-allowance">£3,000</span>
         <span class="remaining-chip-lbl">remaining CGT allowance</span>
@@ -6732,6 +6971,10 @@ async function refreshLivePrices(triggerButton = null, opts = {}) {
   // by _renderPriceUpdateTimestamp from the last successful timestamp).
   _setTimestampRefreshing();
 
+  // Apply skeleton shimmer to all price input cells while fetch is in flight.
+  const priceInputs = Array.from(document.querySelectorAll('input[id^="priceinput_"]'));
+  priceInputs.forEach(inp => inp.classList.add('price-loading'));
+
   const restoreButtons = () => {
     buttons.forEach((b, i) => {
       b.disabled = false;
@@ -6744,6 +6987,8 @@ async function refreshLivePrices(triggerButton = null, opts = {}) {
       }
       b.style.opacity = '';
     });
+    // Drop the shimmer class regardless of outcome
+    priceInputs.forEach(inp => inp.classList.remove('price-loading'));
   };
 
   let results;
@@ -10613,6 +10858,8 @@ function saveRetirementInputs() {
   _refreshAgeFromDOB();
   const sc = id => parseFloat((document.getElementById(id)?.value||'').replace(/,/g,'')) || 0;
   // Preserve any sub-keys (notably `freedom`) that aren't part of this form.
+  // Without this read, every save would wipe LS.RETIREMENT.freedom and the
+  // Freedom Number inputs would revert to the HTML defaults on next render.
   const existing = lsGet(LS.RETIREMENT, {}) || {};
   lsSet(LS.RETIREMENT, {
     ...existing,
@@ -10630,7 +10877,6 @@ function saveRetirementInputs() {
     stepdownYears:   parseInt(document.getElementById('ret-stepdown-years')?.value) || 0,
     withdrawalMode:  _retWithdrawalMode,
   });
-  // Refresh the global result whenever settings persist — keeps Analyse tab in sync
   calculateGlobalRetirement();
 }
 
@@ -12109,17 +12355,10 @@ function renderPortfolio(filter='all') {
     // Type sub-pill text — shows whether this came from monthly history,
     // is an employer-wrapped legacy fund, or is a personal direct holding.
     const typeLabel = (h.type||'personal').toUpperCase();
-    const wrapperMeta = h.fromHistory
-      ? `${wrapperLabel} · FROM HISTORY`
-      : `${wrapperLabel} · ${typeLabel}`;
-    // Price renders as either a static pill (legacy) or an editable
-    // £-prefixed pill input (fromHistory). Both share the price-pill
-    // shell so the visual rhythm stays consistent across the list.
-    const pricePillContent = h.fromHistory
-      ? `<span class="hcard-price-pound">£</span><input type="text" inputmode="decimal" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"
-           class="hcard-price-input"
-           onchange="updateHoldingInline('${h.id}','price',this.value)">`
-      : `<span class="hcard-price-pound">£</span>${_formatPriceDisplay(h.price||0) || '0'}`;
+    const typeMeta = h.fromHistory ? 'FROM HISTORY' : typeLabel;
+    // Price always renders as a compact static pill — no inline editing on
+    // the main portfolio view, so legacy and new holdings look identical.
+    const pricePillContent = `<span class="hcard-price-pound">£</span>${_formatPriceDisplay(h.price||0) || '0'}`;
 
     return `<div class="hcard" id="hrow_${h.id}">
       <div class="hcard-top">
@@ -12131,13 +12370,16 @@ function renderPortfolio(filter='all') {
         </div>
         <div class="hcard-ticker-block">
           <div class="hcard-ticker">${h.ticker}</div>
-          <div class="hcard-meta hcard-meta-${wcls}">${wrapperMeta}</div>
+          <div class="hcard-meta-row">
+            <span class="wrapper-pill wrapper-pill-${wcls}">${wrapperLabel}</span>
+            <span class="hcard-type-meta">${typeMeta}</span>
+          </div>
         </div>
         <div class="hcard-total">£${fmtNum(Math.round(h.value),0)}</div>
       </div>
       <div class="hcard-pills">
         <div class="hcard-units-pill">${h.shares} units</div>
-        <div class="hcard-price-pill ${h.fromHistory ? 'editable' : ''}">${pricePillContent}</div>
+        <div class="hcard-price-pill">${pricePillContent}</div>
       </div>
       <div class="hcard-progress"><div class="hcard-progress-bar" style="width:${pct.toFixed(1)}%;background:linear-gradient(90deg,${h.colour},${dark})"></div></div>
       <div class="hcard-bottom">
@@ -12148,8 +12390,8 @@ function renderPortfolio(filter='all') {
         </div>
       </div>
     </div>
-    <div id="portfolioEdit_${h.id}" style="display:none;background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:4px">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
+    <div id="portfolioEdit_${h.id}" class="portfolio-edit-form" style="display:none">
+      <div class="portfolio-edit-grid">
         <div class="input-group"><span class="input-label">Units</span>
           <input class="num-input" type="text" inputmode="numeric" id="pedit_shares_${h.id}" value="${h.shares}" step="1" min="0"></div>
         <div class="input-group" data-pound><span class="input-label">Price £</span>
@@ -12160,17 +12402,17 @@ function renderPortfolio(filter='all') {
             <option value="ISA" ${h.wrapper==='ISA'?'selected':''}>ISA</option>
             <option value="SIPP" ${h.wrapper==='SIPP'?'selected':''}>SIPP</option>
           </select></div>
-        <div style="display:flex;gap:6px">
+        <div class="portfolio-edit-actions">
           <button class="btn-gold btn-sm" onclick="savePortfolioEdit('${h.id}')">Save</button>
           <button class="btn-ghost btn-sm" onclick="togglePortfolioEdit('${h.id}')">Cancel</button>
         </div>
       </div>
       ${(h.fromHistory && !h.seeded) ? `
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between">
-        <div style="font-size:11px;color:var(--muted);max-width:540px;line-height:1.5">
+      <div class="portfolio-edit-convert">
+        <div class="portfolio-edit-convert-text">
           <span style="color:#f0b840;font-weight:600">Convert to Legacy</span> moves these units onto your existing legacy ${h.ticker} holding (or creates one) using a weighted-average cost. Removes from New Holdings. One-way.
         </div>
-        <button class="btn-sm" style="background:rgba(240,184,64,0.12);color:#f0b840;border:1px solid rgba(240,184,64,0.4);font-weight:600" onclick="convertToLegacyHolding('${h.id}')">Convert to Legacy Holding</button>
+        <button class="btn-sm portfolio-edit-convert-btn" onclick="convertToLegacyHolding('${h.id}')">Convert to Legacy Holding</button>
       </div>` : ''}
     </div>`;
   };
@@ -12739,6 +12981,52 @@ function fmtMoneyCompact(val) {
     return `${sign}£${Math.round(abs / 1_000)}k`;
   }
   return `${sign}£${Math.round(abs)}`;
+}
+
+// ────────────────────────────────────────────────────────────────────
+// animateNumber — smooth number transitions for headline values
+// ────────────────────────────────────────────────────────────────────
+// Tweens a number from its current rendered value to a target over a
+// short duration. Used for live-updating headline figures to make
+// changes feel real-time rather than snapping. Respects prefers-reduced-
+// motion: users with motion sensitivity get an instant snap to the target.
+function animateNumber(el, target, opts = {}) {
+  if (!el || typeof target !== 'number' || !isFinite(target)) return;
+  const duration = opts.duration ?? 320;
+  const decimals = opts.decimals ?? 0;
+  const prefix   = opts.prefix ?? '';
+  const suffix   = opts.suffix ?? '';
+  const format   = typeof opts.format === 'function' ? opts.format : null;
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const formatVal = (v) => format ? format(v) : `${prefix}${fmtNum(v, decimals)}${suffix}`;
+  if (el._animFrame) { cancelAnimationFrame(el._animFrame); el._animFrame = null; }
+  let from;
+  if (typeof el._animTarget === 'number' && isFinite(el._animTarget)) {
+    from = el._animTarget;
+  } else {
+    const parsed = parseFloat((el.textContent || '').replace(/[^0-9.\-]/g, ''));
+    from = isFinite(parsed) ? parsed : target;
+  }
+  el._animTarget = target;
+  if (reducedMotion || from === target) {
+    el.textContent = formatVal(target);
+    return;
+  }
+  const start = performance.now();
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  const step = (now) => {
+    const elapsed = now - start;
+    const t = Math.min(elapsed / duration, 1);
+    const v = from + (target - from) * ease(t);
+    el.textContent = formatVal(v);
+    if (t < 1) {
+      el._animFrame = requestAnimationFrame(step);
+    } else {
+      el._animFrame = null;
+      el.textContent = formatVal(target);
+    }
+  };
+  el._animFrame = requestAnimationFrame(step);
 }
 
 // Formats a stored price for display in an input. Preserves up to 3 decimal
@@ -19570,6 +19858,44 @@ function init() {
   // updating while the tab is hidden but the timer keeps running so it
   // resumes immediately on visibility change.
   _startAutoRefreshCountdown();
+
+  // Scroll-spy for Retirement tab anchor nav. Highlights the active
+  // section as the user scrolls. Only initialises if the nav element
+  // exists, so does nothing on viewports below 1100px.
+  _initRetirementScrollSpy();
+}
+
+function _initRetirementScrollSpy() {
+  const nav = document.querySelector('.ret-anchor-nav');
+  if (!nav) return;
+  const links = Array.from(nav.querySelectorAll('a[data-anchor]'));
+  if (!links.length) return;
+  const linkById = {};
+  links.forEach(a => { linkById[a.dataset.anchor] = a; });
+  const targets = links.map(a => document.getElementById(a.dataset.anchor)).filter(Boolean);
+  if (!targets.length) return;
+  const visible = new Set();
+  const setActive = () => {
+    if (visible.size === 0) return;
+    let topMost = null;
+    let topY = Infinity;
+    visible.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const y = el.getBoundingClientRect().top;
+      if (y < topY) { topY = y; topMost = id; }
+    });
+    links.forEach(a => a.classList.remove('is-active'));
+    if (topMost && linkById[topMost]) linkById[topMost].classList.add('is-active');
+  };
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) visible.add(e.target.id);
+      else visible.delete(e.target.id);
+    });
+    setActive();
+  }, { threshold: [0, 0.25, 0.5], rootMargin: '-80px 0px -50% 0px' });
+  targets.forEach(t => obs.observe(t));
 }
 
 init();
