@@ -3641,6 +3641,41 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #priceUpdaterGrid .pound-wrap::before {
     display: none;
   }
+  /* Add Holding form: every input and select in the row is pinned to the
+     same 44px height with identical box-sizing and padding, so the five
+     pills are visibly uniform regardless of native input/select chrome
+     differences. The Price pill keeps the blue £ glyph inside via its
+     pound-wrap. */
+  .add-holding-grid .text-input,
+  .add-holding-grid .num-input,
+  .add-holding-grid select.num-input,
+  .add-holding-grid .pound-wrap > .num-input {
+    height: 44px !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    line-height: 44px !important;
+  }
+  .add-holding-grid .text-input,
+  .add-holding-grid .num-input {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  .add-holding-grid select.num-input {
+    padding-left: 14px !important;
+    padding-right: 30px !important;
+  }
+  .add-holding-grid .pound-wrap > .num-input {
+    padding-left: 30px !important;
+    padding-right: 14px !important;
+  }
+  .add-holding-grid .pound-wrap::before {
+    font-size: 16px;
+    left: 14px;
+  }
 
   /* ── TAX TAB — Section 104 Pool, ISA & SIPP holdings tables ────
      Option B 2x2 mobile layout. The desktop is a 7-column grid we
@@ -4853,7 +4888,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="subsection-label">Additional Funds</div>
     <button class="btn-ghost btn-sm" onclick="addAdditionalFund()">+ Add Fund</button>
   </div>
-  <div class="stat-sub mb16" style="font-style:italic;margin-top:2px">These funds are tracked for visibility and history but do not participate in drift correction or target allocation.</div>
+  <div class="stat-sub mb16" style="font-style:italic;margin-top:2px">These funds are tracked for visibility and history.<br>They do not participate in drift correction or target allocation.</div>
   <div id="additionalFundsGrid" class="mb16"></div>
 
   <div id="lastPullWrapper" style="display:none"></div>
@@ -5694,10 +5729,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </div>
       <button class="btn-gold" onclick="addPortfolioHolding()">Add</button>
     </div>
-    <div class="flex-between">
-      <div class="stat-sub">Adding a ticker that already exists updates its unit count. Price is optional but needed for accurate % weightings.</div>
-      <button class="btn-danger btn-sm" onclick="undoLastHolding()">Undo Add</button>
-    </div>
+    <div class="stat-sub">Adding a ticker that already exists updates its unit count.<br>Price is optional but needed for accurate % weightings.</div>
     </div><!-- /collapsible-body -->
   </div>
 
@@ -12107,12 +12139,6 @@ function addPortfolioHolding() {
   buildFundCards();
   renderGrowthChart(getActiveGrowthTab());
   toast(`${shares} units of ${ticker} added to ${wrapper}`);
-}
-
-function undoLastHolding() {
-  // The holding was written to LS.HISTORY so undo via the main snapshot system
-  // which captured the full state before the addition was made.
-  undoLastAction();
 }
 
 function removePortfolioHolding(id) {
