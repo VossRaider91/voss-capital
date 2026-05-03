@@ -4269,26 +4269,24 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
 
   /* ── ANALYSE — Asset Breakdown rows wrap cleanly ────────────── */
-  /* Each row has icon + label + (note) + tag + value. On mobile the
-     inline (note) gets squashed. Make rows wrap and tighten typography. */
-  #analyse-nw-breakdown > div > div {
+  /* :not(.tax-headline-card) clauses scope this strictly to the
+     Asset Breakdown card. Without them, the same selectors also hit the
+     Tax Exposure card sitting next to it (same #analyse-nw-breakdown
+     parent), turning .tax-headline-action into a flex-wrap row and
+     putting the value beside the label. */
+  #analyse-nw-breakdown > div > div:not(.tax-headline-card) {
     padding: 8px 0 !important;
   }
-  #analyse-nw-breakdown > div > div > div:first-child {
+  #analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 4px 6px !important;
     align-items: center !important;
   }
-  #analyse-nw-breakdown > div > div > div:first-child > span {
+  #analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child > span {
     line-height: 1.4 !important;
   }
-  /* Force the TAX-FREE / CGT APPLIES pill (the 3rd span) onto its own
-     line so it sits underneath the label text consistently, regardless
-     of how long the label or note happens to be. Without this, short
-     labels (e.g. ISA) keep the pill inline while longer ones (SIPP,
-     GIA) push it onto a wrap — looks inconsistent across rows. */
-  #analyse-nw-breakdown > div > div > div:first-child > span:nth-child(3) {
+  #analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child > span:nth-child(3) {
     flex-basis: 100% !important;
     margin-left: 0 !important;
     margin-top: 4px !important;
@@ -10614,7 +10612,10 @@ function saveRetirementInputs() {
   // Pull DOB-driven age first so the saved snapshot is always consistent
   _refreshAgeFromDOB();
   const sc = id => parseFloat((document.getElementById(id)?.value||'').replace(/,/g,'')) || 0;
+  // Preserve any sub-keys (notably `freedom`) that aren't part of this form.
+  const existing = lsGet(LS.RETIREMENT, {}) || {};
   lsSet(LS.RETIREMENT, {
+    ...existing,
     dob:             document.getElementById('ret-dob')?.value || '',
     age:             document.getElementById('ret-age')?.value,
     targetAge:       document.getElementById('ret-target-age')?.value,
@@ -11245,6 +11246,7 @@ function onFreedomInputChange() {
     swr:      parseFloat((document.getElementById('ret-fn-swr')?.value||'').replace(/,/g,'')) || 0,
     potMode:  document.getElementById('ret-fn-pot-mode')?.value || 'liquid',
   };
+  snapshotState('freedom-input-change');
   lsSet(LS.RETIREMENT, s);
   renderFreedomNumber();
 }
@@ -11253,22 +11255,22 @@ function renderFreedomNumber() {
   const card = document.getElementById('ret-freedom-card');
   if (!card) return;
 
-  // Restore saved settings on every render. We update the input value only
-  // if the field isn't currently focused — that way a remote sync update
-  // from another device repopulates the field, but active typing is never
-  // overwritten mid-edit.
   const stored = (lsGet(LS.RETIREMENT, {}) || {}).freedom || {};
   const spendEl = document.getElementById('ret-fn-spending');
   const swrEl   = document.getElementById('ret-fn-swr');
   const modeEl  = document.getElementById('ret-fn-pot-mode');
   if (spendEl && document.activeElement !== spendEl) {
-    if (stored.spending !== undefined && stored.spending !== null) spendEl.value = fmtNum(stored.spending, 0);
+    if (typeof stored.spending === 'number' && isFinite(stored.spending) && stored.spending > 0) {
+      spendEl.value = fmtNum(stored.spending, 0);
+    }
   }
   if (swrEl && document.activeElement !== swrEl) {
-    if (stored.swr !== undefined && stored.swr !== null && stored.swr > 0) swrEl.value = stored.swr;
+    if (typeof stored.swr === 'number' && isFinite(stored.swr) && stored.swr > 0) {
+      swrEl.value = stored.swr;
+    }
   }
   if (modeEl && document.activeElement !== modeEl) {
-    if (stored.potMode) modeEl.value = stored.potMode;
+    if (typeof stored.potMode === 'string' && stored.potMode) modeEl.value = stored.potMode;
   }
 
   // Inputs
@@ -16462,15 +16464,15 @@ function renderAnalyseNetWorth() {
       <div style="background:var(--dark);border-radius:10px;padding:14px">
         <div class="stat-label mb12">Tax Exposure</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-          <div class="tax-headline-card tax-headline-action">
-            <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Tax-Free Assets</div>
-            <div class="tax-headline-card-value" style="font-size:32px;color:var(--green)">£${fmtNum(Math.round(taxFreeAssets),0)}</div>
-            <div class="tax-headline-card-sub">Property, ISA, SIPP, cash, cars, whiskey · ${taxFreePct.toFixed(1)}% of gross assets</div>
+          <div class="tax-headline-card tax-headline-action" style="display:block !important;text-align:left !important">
+            <div class="tax-headline-card-label" style="display:block !important;text-align:left !important;text-transform:uppercase;letter-spacing:0.6px;width:100%;margin:0 0 4px 0">Tax-Free Assets</div>
+            <div class="tax-headline-card-value" style="display:block !important;text-align:left !important;font-size:32px;color:var(--green);width:100%;margin:0">£${fmtNum(Math.round(taxFreeAssets),0)}</div>
+            <div class="tax-headline-card-sub" style="display:block !important;text-align:left !important;width:100%;margin:6px 0 0 0">Property, ISA, SIPP, cash, cars, whiskey · ${taxFreePct.toFixed(1)}% of gross assets</div>
           </div>
-          <div class="tax-headline-card">
-            <div class="tax-headline-card-label">GIA Portfolio <span style="font-weight:400;color:var(--muted2);font-size:11px">(CGT on gains)</span></div>
-            <div class="tax-headline-card-value" style="color:var(--amber)">£${fmtNum(Math.round(taxableAssets),0)}</div>
-            <div class="tax-headline-card-sub">${nwGIABarNote}</div>
+          <div class="tax-headline-card" style="display:block !important;text-align:left !important">
+            <div class="tax-headline-card-label" style="display:block !important;text-align:left !important;width:100%;margin:0 0 4px 0">GIA Portfolio <span style="font-weight:400;color:var(--muted2);font-size:11px">(CGT on gains)</span></div>
+            <div class="tax-headline-card-value" style="display:block !important;text-align:left !important;color:var(--amber);width:100%;margin:0">£${fmtNum(Math.round(taxableAssets),0)}</div>
+            <div class="tax-headline-card-sub" style="display:block !important;text-align:left !important;width:100%;margin:6px 0 0 0">${nwGIABarNote}</div>
           </div>
         </div>
         <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:14px 0 6px;font-size:0;white-space:nowrap;line-height:0">
