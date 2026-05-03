@@ -4675,6 +4675,254 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     font-size: 15px !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   APPLE-GRADE POLISH ROUNDS (May 2026)
+   Four additive enhancement rounds. All rules below are scoped to either
+   selectors with no existing rules, or :active pseudo-states that don't
+   collide with any locked styling. Nothing above this comment block
+   has been modified.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Round 1: tap feedback — tap feedback round 1, May 2026 ──
+   Adds active-state scale to interactive surfaces that don't already
+   have one. .btn-gold and .refresh-icon-btn already have their own
+   transforms (scale 0.98 and 0.94 respectively) and are excluded here.
+   Each rule includes a release transition so the scale eases back
+   smoothly when the tap ends. Honoured by prefers-reduced-motion. */
+.btn-ghost,
+.btn-edit,
+.btn-danger,
+.btn-sm,
+.seg-toggle button,
+.seg-toggle .seg-option {
+  transition: background 0.18s, border-color 0.18s, color 0.18s,
+              transform 80ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-ghost:active,
+.btn-edit:active,
+.btn-danger:active,
+.btn-sm:active,
+.seg-toggle button:active,
+.seg-toggle .seg-option:active {
+  transform: scale(0.98);
+  transition: transform 60ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-ghost:active,
+  .btn-edit:active,
+  .btn-danger:active,
+  .btn-sm:active,
+  .seg-toggle button:active,
+  .seg-toggle .seg-option:active {
+    transform: none;
+  }
+}
+
+/* ── Round 2: elevation tiers — elevation tiers round 1, May 2026 ──
+   Defines three reusable shadow tokens for future consistency. These
+   document the elevation language already in use across the codebase:
+   tier 1 is the inset hairline used on flat content cards, tier 2 is
+   the subtle 8px lift used on hover states for cards and Sell pills,
+   tier 3 is the modal/sheet/popover shadow used on edit-layers-modal
+   and .save-toast. Tokens are reference-only at this stage so future
+   surfaces can pick them up without inventing new shadow recipes.
+   No existing rule is modified by this block. */
+:root {
+  --elevation-1: inset 0 1px 0 rgba(255,255,255,0.04);
+  --elevation-2: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 20px rgba(0,0,0,0.32);
+  --elevation-3: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.40);
+}
+
+/* ── Round 3: loading cross-fade — loading cross fade round 1, May 2026 ──
+   Soft fade for price input cells when the live fetch settles. The
+   .price-loading shimmer (defined further up at line ~2004) handles
+   the in-flight state. When the class is removed, the cell value
+   currently snaps in. This adds a brief opacity ease so the value
+   appears smoothly rather than instantly. Achieved by giving every
+   priceinput input a default opacity transition. The flashInput
+   helper still fires its own background flash on top, unchanged.
+   Honoured by prefers-reduced-motion. */
+input[id^="priceinput_"] {
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+input[id^="priceinput_"].price-loading {
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  input[id^="priceinput_"] {
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  }
+  input[id^="priceinput_"].price-loading {
+    opacity: 1;
+  }
+}
+
+/* ── Round 4: typography rhythm — typography rhythm round 1, May 2026 ──
+   Two parts. First, an opt-in utility class for inline number spans
+   that aren't already covered by .stat-val. Picks up Apple's tabular,
+   contextual-alternates feature settings consistent with the rest of
+   the app. Available for use anywhere a future inline £ figure wants
+   the proper treatment.
+   Second, an attribute-selector pass guaranteeing every iOS-keypad
+   input gets tabular-nums. They mostly inherit it via .num-input,
+   but a handful of inputs in inline-styled forms slip through. This
+   rule belt-and-braces them. Existing tabular-nums declarations on
+   .num-input, .text-input, .stat-val, .budget-input remain in force;
+   this rule operates at the same specificity but is non-conflicting. */
+.num-display {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum', 'cv11', 'ss01';
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+input[inputmode="decimal"],
+input[inputmode="numeric"] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum', 'cv11', 'ss01';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   APPLE-GRADE POLISH ROUNDS — WAVE 2 (May 2026)
+   Four further rounds. Soft entry on lists, focus dimming on modals,
+   considered empty states, and number transitions on filter switch.
+   All rules below are additive; nothing earlier in the file is
+   modified. Each round has its own marker comment.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Round A: soft entry — soft entry round 1, May 2026 ──
+   Cascading fade-in for list and grid items on first render. The
+   .soft-entry-stage class is applied to a container by JS, which
+   sets an --i index custom property on each direct child. The CSS
+   animation runs 280ms cubic-out, with delay = i * 28ms capped by
+   the JS helper at 14 children (≈ 392ms total spread). Honoured by
+   prefers-reduced-motion. */
+@keyframes softEntryFade {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.soft-entry-stage > .soft-entry-item {
+  opacity: 0;
+  animation: softEntryFade 280ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 28ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .soft-entry-stage > .soft-entry-item {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/* ── Round B: focus dimming — focus dimming round 1, May 2026 (revised) ──
+   When a modal opens, the body gets a .modal-active class. This blurs
+   and dims the page chrome and content while leaving modals and the
+   toast layer crisp.
+   The modals are siblings inside .container, so applying filter to
+   .container itself bleeds the blur onto the modals (CSS filter
+   propagates to the entire subtree regardless of position:fixed).
+   Fix: target the specific chrome and content elements directly,
+   leaving modals and toasts untouched. Capped at 4px blur for Safari
+   performance. Honoured by prefers-reduced-motion. */
+body.modal-active .vc-header,
+body.modal-active .nav-tabs,
+body.modal-active .tab-panel.active,
+body.modal-active #mortgage-planner-panel,
+body.modal-active .container > footer {
+  filter: blur(4px) brightness(0.7);
+  transition: filter 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+.vc-header,
+.nav-tabs,
+.tab-panel.active,
+#mortgage-planner-panel {
+  transition: filter 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  body.modal-active .vc-header,
+  body.modal-active .nav-tabs,
+  body.modal-active .tab-panel.active,
+  body.modal-active #mortgage-planner-panel,
+  body.modal-active .container > footer {
+    filter: brightness(0.7);
+    transition: none;
+  }
+}
+
+/* ── Round C: considered empty states — empty states round 1, May 2026 ──
+   Upgrades the existing .history-empty pattern with a softer, two-tier
+   treatment. Existing .history-empty rule (line ~849) stays in force
+   for legacy callsites; .empty-state-rich is the new optional variant
+   for when we want a headline plus a soft instruction. Used by the
+   render-side rewrites to lift the first-run feel. */
+.empty-state-rich {
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: -0.05px;
+}
+.empty-state-rich .empty-state-headline {
+  display: block;
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin-bottom: 6px;
+}
+.empty-state-rich .empty-state-hint {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.05px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* ── Round D: filter-switch number transitions — filter transitions round 1, May 2026 ──
+   Smooth fade for the secondary headline figures (holdings count, today's
+   gain pill) when the wrapper filter switches. The primary figure
+   (#totalPortfolioValue) already animates via the existing animateNumber
+   wiring at line 12597. This adds 180ms opacity transitions to the meta
+   line and delta pill so they ease rather than snap when the filter
+   changes. Honoured by prefers-reduced-motion. */
+#portfolio-hero-meta-text,
+#portfolio-delta-pill {
+  transition: opacity 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.portfolio-hero-meta-text.fade-out,
+.portfolio-delta-pill.fade-out {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  #portfolio-hero-meta-text,
+  #portfolio-delta-pill {
+    transition: none;
+  }
+}
+
+/* ── Tax Year Export mobile stack — tax export mobile fix, May 2026 ──
+   The export grid uses inline grid-template-columns:2fr 1fr auto which
+   on iPhone width gives the Format select roughly 90px, not enough to
+   show "Realised Gains" / "ISA Contributions" / "Everything (multiple files)".
+   On viewports ≤700px we override the inline style to stack the controls:
+   year and format selects each on their own full-width row, then the
+   Download CSV button full-width below. The !important is required to
+   beat the inline style declaration. */
+@media (max-width: 700px) {
+  #tax-csv-export-card > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  #tax-csv-export-card .btn-gold {
+    width: 100% !important;
+    height: 38px !important;
+  }
+}
 </style>
 
 <!-- Supabase JS client for cross-device sync. ESM module loaded from CDN.
@@ -4846,7 +5094,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
       </label>
       <label class="check-wrap">
         <input type="checkbox" id="chk-overspend" checked>
-        <span class="check-label">Allow overspend (2%)</span>
+        <span class="check-label">Allow Overspend (2%)</span>
         <span id="budgetNote" style="font-size:9px;color:var(--gold);margin-left:8px;font-weight:600"></span>
       </label>
       <div id="driftNote" style="font-size:9px;color:var(--amber);display:none"></div>
@@ -4996,15 +5244,15 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   <!-- Search and date-range filter — narrows the list below by ticker, note, wrapper, or date -->
   <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:16px;align-items:end" id="history-filter-bar">
     <div class="input-group">
-      <span class="input-label">Search ticker, note, wrapper</span>
+      <span class="input-label">Search Ticker, Note, Wrapper</span>
       <input class="text-input" type="text" id="hist-search" placeholder="e.g. VWRP, ISA, bonus" oninput="renderHistory(getHistoryActiveFilter())">
     </div>
     <div class="input-group">
-      <span class="input-label">From date</span>
+      <span class="input-label">From Date</span>
       <input class="text-input" type="month" id="hist-date-from" onchange="renderHistory(getHistoryActiveFilter())">
     </div>
     <div class="input-group">
-      <span class="input-label">To date</span>
+      <span class="input-label">To Date</span>
       <input class="text-input" type="month" id="hist-date-to" onchange="renderHistory(getHistoryActiveFilter())">
     </div>
     <button class="btn-ghost btn-sm" onclick="clearHistoryFilters()" style="height:34px">Reset</button>
@@ -5575,7 +5823,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
         </div>
         <div class="input-group">
           <span class="input-label">Note <span style="color:var(--muted);font-weight:400">(optional)</span></span>
-          <input class="num-input" type="text" id="bgt-qa-note" placeholder="Add Note Here" maxlength="80" style="text-align:left">
+          <input class="num-input" type="text" id="bgt-qa-note" placeholder="Add a note" maxlength="80" style="text-align:left">
         </div>
         <button class="btn-gold" onclick="bgtQuickAdd()">Add Expense</button>
       </div>
@@ -5976,7 +6224,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="tax-subsection mb16">
       <div style="margin-bottom:12px">
         <div class="subsection-label">Section 104 Pool</div>
-        <div class="subsection-sub">Holdings &amp; unrealised CGT</div>
+        <div class="subsection-sub">Holdings &amp; Unrealised CGT</div>
       </div>
       <div id="giaTable"></div>
     </div>
@@ -6143,7 +6391,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="margin-left-auto-mobile-reset sell-cgt-chip-wrap" style="margin-left:auto">
       <div class="remaining-chip cgt">
         <span class="remaining-chip-amt" id="sell-remaining-allowance">£3,000</span>
-        <span class="remaining-chip-lbl">remaining CGT allowance</span>
+        <span class="remaining-chip-lbl">Remaining CGT Allowance</span>
       </div>
     </div>
   </div>
@@ -6165,7 +6413,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div class="margin-left-auto-mobile-reset" style="margin-left:auto">
       <div class="remaining-chip isa">
         <span class="remaining-chip-amt" id="sell-remaining-isa">£20,000</span>
-        <span class="remaining-chip-lbl">remaining ISA allowance</span>
+        <span class="remaining-chip-lbl">Remaining ISA Allowance</span>
       </div>
     </div>
   </div>
@@ -6531,7 +6779,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     <div id="backup-reminder-body" style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:24px"></div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       <button class="btn-gold" onclick="_acknowledgeBackupReminder(true)" style="padding:10px 24px;font-size:10px;letter-spacing:2px">⬇ Export Now</button>
-      <button class="btn-ghost btn-sm" onclick="_acknowledgeBackupReminder(false)" style="padding:10px 20px;font-size:10px;letter-spacing:2px;opacity:0.7">Remind me later</button>
+      <button class="btn-ghost btn-sm" onclick="_acknowledgeBackupReminder(false)" style="padding:10px 20px;font-size:10px;letter-spacing:2px;opacity:0.7">Remind Me Later</button>
     </div>
     <div style="font-size:9px;color:var(--muted2);margin-top:18px;font-style:italic;line-height:1.5">Backups protect against accidental browser data loss. Save the file to iCloud, Google Drive, or another safe location.</div>
   </div>
@@ -7559,7 +7807,7 @@ function _renderAutoRefreshCountdown() {
   const pauseUntil = _getManualOverrideUntil();
   if (pauseUntil > 0) {
     const remaining = pauseUntil - Date.now();
-    els.forEach(el => { el.textContent = `Manual prices · Auto-Refresh In ${_formatCountdown(remaining)}`; });
+    els.forEach(el => { el.textContent = `Manual prices · auto-refresh in ${_formatCountdown(remaining)}`; });
     return;
   }
 
@@ -7580,10 +7828,10 @@ function _renderAutoRefreshCountdown() {
   const elapsed = Date.now() - _lastPollAt;
   const remaining = POLL_INTERVAL_MS - elapsed;
   if (remaining <= 0) {
-    els.forEach(el => { el.textContent = 'Auto-Refresh Due Any Moment…'; });
+    els.forEach(el => { el.textContent = 'Auto-refresh due any moment…'; });
     return;
   }
-  els.forEach(el => { el.textContent = `Auto-Refresh In ${_formatCountdown(remaining)}`; });
+  els.forEach(el => { el.textContent = `Auto-refresh in ${_formatCountdown(remaining)}`; });
 }
 
 // 1Hz ticker that re-renders the countdown text. Idempotent — clears any
@@ -9193,7 +9441,7 @@ function buildFundCards() {
           <div class="fund-name">${f.ticker}</div>
           <div class="fund-full">${f.name}</div>
         </div>
-        <div class="badge badge-none" id="badge_${f.id}">No data</div>
+        <div class="badge badge-none" id="badge_${f.id}">No Data</div>
       </div>
       <div class="fund-inputs-grid">
         <div class="input-group">
@@ -9609,7 +9857,7 @@ function calculate() {
     { label:'Tracked Funds Value (before deployment)', val:`£${fmtNum(currentPortVal,0)}`, cls:'gold', sub:'your 4 tracked funds only' },
     { label:'After Contribution', val:`£${fmtNum(projAfter,0)}`, cls:'', sub:'tracked funds projected total' },
     { label:'Efficiency', val:`${efficiency}%`, cls: parseFloat(efficiency)>=97?'green':parseFloat(efficiency)>=90?'amber':'red', sub:'of budget deployed' },
-    { label:'Max Drift', val:`${maxDriftVal.toFixed(1)}%`, cls:maxDriftVal<=2?'green':maxDriftVal<=5?'amber':'red', sub:currentPortVal>0?`${maxDriftFund.ticker} ${maxDriftFund.overweight>0?'overweight':'underweight'}`:`${maxDriftFund.ticker} after purchase` },
+    { label:'Max Drift', val:`${maxDriftVal.toFixed(1)}%`, cls:maxDriftVal<=2?'green':maxDriftVal<=5?'amber':'red', sub:currentPortVal>0?`${maxDriftFund.ticker} ${maxDriftFund.overweight>0?'Overweight':'Underweight'}`:`${maxDriftFund.ticker} after purchase` },
   ].map(s=>`<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
 
   // Allocation rows
@@ -9622,7 +9870,7 @@ function calculate() {
     const diff = Math.abs(newPct - f.normTarget*100);
     const pctClass = diff<=1.5?'pct-good':diff<=3?'pct-warn':'pct-bad';
     const beforeAfter = currentPortVal>0 ? `${currentPct}% → ${newPct.toFixed(1)}%` : `→ ${newPct.toFixed(1)}%`;
-    const skipNote = f.skipped ? `<div class="badge badge-skip" style="margin-top:3px">Hard limit · skipped</div>` : f.reducedBy>0 ? `<div style="font-size:9px;color:var(--amber);margin-top:3px">Reduced ${f.reducedBy.toFixed(0)}% by drift rule</div>` : '';
+    const skipNote = f.skipped ? `<div class="badge badge-skip" style="margin-top:3px">Hard Limit · Skipped</div>` : f.reducedBy>0 ? `<div style="font-size:9px;color:var(--amber);margin-top:3px">Reduced ${f.reducedBy.toFixed(0)}% by drift rule</div>` : '';
     return `<div class="alloc-row${f.skipped?' skipped':''}">
       <div><div class="col-ticker">${f.ticker}</div>${skipNote}</div>
       <div class="col-holding">${f.currentShares>0?`${f.currentShares} units<br><span class="hi">£${fmtNum(f.currentVal,0)}</span> (${currentPct}%)`:'<span style="color:var(--muted)">No holdings</span>'}</div>
@@ -11024,9 +11272,9 @@ function _updateRetSettingsSummary() {
   }
   const parts = [];
   parts.push(`${age} y/o`);
-  if (targetAge) parts.push(`retire at ${targetAge}`);
+  if (targetAge) parts.push(`Retire at ${targetAge}`);
   if (monthly > 0) parts.push(`£${fmtNum(monthly,0)}/mo`);
-  if (growth > 0) parts.push(`${growth}% growth`);
+  if (growth > 0) parts.push(`${growth}% Growth`);
   el.textContent = parts.join(' · ');
 }
 
@@ -12493,7 +12741,7 @@ function renderPortfolio(filter='all') {
   const uniqueTickers = new Set(filtered.map(h => h.ticker)).size;
   const metaTextEl = document.getElementById('portfolio-hero-meta-text');
   if (metaTextEl) {
-    metaTextEl.textContent = `${filtered.length} holding${filtered.length===1?'':'s'} · ${uniqueTickers} ticker${uniqueTickers===1?'':'s'}`;
+    metaTextEl.textContent = `${filtered.length} Holding${filtered.length===1?'':'s'} · ${uniqueTickers} Ticker${uniqueTickers===1?'':'s'}`;
   }
 
   // Today's gain pill — only renders the pill when filter is 'all' since
@@ -12514,7 +12762,7 @@ function renderPortfolio(filter='all') {
         deltaPill.className = `portfolio-delta-pill ${cls}`;
         const gainAbs = Math.abs(Math.round(daily.gain));
         const pctStr = Math.abs(daily.gainPct) >= 0.005 ? ` (${sign}${daily.gainPct.toFixed(2)}%)` : '';
-        deltaPill.textContent = `${arrow} ${sign}£${fmtNum(gainAbs, 0)}${pctStr} today`;
+        deltaPill.textContent = `${arrow} ${sign}£${fmtNum(gainAbs, 0)}${pctStr} Today`;
         deltaPill.title = `Baseline: £${fmtNum(Math.round(daily.baseline), 0)} at start of day`;
       }
     } else {
@@ -12527,7 +12775,12 @@ function renderPortfolio(filter='all') {
   const legendEl = document.getElementById('pieLegend');
 
   if (filtered.length===0) {
-    listEl.innerHTML=`<div class="history-empty">No holdings${filter!=='all'?' for this filter':''} yet.</div>`;
+    // empty states round 1, May 2026
+    const emptyHeadline = filter !== 'all' ? `No ${filter === 'personal' ? 'GIA' : filter === 'employer' ? 'SIPP' : 'ISA'} Holdings Yet` : 'No Holdings Yet';
+    const emptyHint = filter !== 'all'
+      ? 'Try the All filter, or add a holding tagged for this wrapper above.'
+      : 'Add your first holding using the form above, or save a month from the Calculator tab.';
+    listEl.innerHTML=`<div class="empty-state-rich"><span class="empty-state-headline">${emptyHeadline}</span><span class="empty-state-hint">${emptyHint}</span></div>`;
     if (svgEl) renderPieChart(svgEl, [], 0);
     if (legendEl) legendEl.innerHTML='';
     return;
@@ -12819,7 +13072,7 @@ function renderPieChart(svgEl, pieData, totalVal) {
   // Centre text — single line "N holdings" centered inside the arc
   const holdingsCount = pieData.length;
   const centreLabel = `
-    <text x="120" y="118" text-anchor="middle" fill="var(--white)" font-size="14" font-weight="600">${holdingsCount} holding${holdingsCount===1?'':'s'}</text>`;
+    <text x="120" y="118" text-anchor="middle" fill="var(--white)" font-size="14" font-weight="600">${holdingsCount} Holding${holdingsCount===1?'':'s'}</text>`;
 
   svgEl.innerHTML = `${track}${slices}${endCaps}${centreLabel}`;
 }
@@ -14950,7 +15203,7 @@ function renderTaxTab() {
 
   // ── GIA table ──
   if (giaRows.length === 0) {
-    document.getElementById('giaTable').innerHTML = `<div class="history-empty">No GIA holdings found. Personal monthly contributions are automatically treated as GIA. Save a month on the Calculator tab to populate this.</div>`;
+    document.getElementById('giaTable').innerHTML = `<div class="empty-state-rich"><span class="empty-state-headline">No GIA Holdings Yet</span><span class="empty-state-hint">Personal monthly contributions are automatically treated as GIA. Save a month on the Calculator tab to populate this.</span></div>`;
   } else {
     document.getElementById('giaTable').innerHTML = `
       <div class="tax-table">
@@ -15022,7 +15275,7 @@ function renderTaxTab() {
     ${cgtCalc.taxableGain <= 0 ? `<div class="cgt-step exempt"><div class="cgt-step-label">Total gain is within your allowance — no CGT due if sold today</div><div class="cgt-step-val" style="color:var(--green)">£0 owed</div></div>` : ''}`;
   // ── ISA table ──
   if (isaRows.length === 0) {
-    document.getElementById('isaTable').innerHTML = `<div class="history-empty">No ISA holdings found. Add holdings tagged as ISA on the Total Portfolio page.</div>`;
+    document.getElementById('isaTable').innerHTML = `<div class="empty-state-rich"><span class="empty-state-headline">No ISA Holdings Yet</span><span class="empty-state-hint">Add holdings tagged as ISA on the Total Portfolio page to see them appear here.</span></div>`;
   } else {
     document.getElementById('isaTable').innerHTML = `
       <div style="margin-bottom:8px"><span class="stat-sub">Total ISA Value: </span><span style="font-size:17px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(totalISAValue),0)}</span> <span class="stat-sub" style="margin-left:8px">— No CGT applicable</span></div>
@@ -15044,7 +15297,7 @@ function renderTaxTab() {
 
   // ── SIPP table ──
   if (sippRows.length === 0) {
-    document.getElementById('sippTable').innerHTML = `<div class="history-empty">No SIPP holdings found. Employer contributions from Monthly History are automatically treated as SIPP.</div>`;
+    document.getElementById('sippTable').innerHTML = `<div class="empty-state-rich"><span class="empty-state-headline">No SIPP Holdings Yet</span><span class="empty-state-hint">Employer contributions logged in Monthly History are automatically treated as SIPP.</span></div>`;
   } else {
     document.getElementById('sippTable').innerHTML = `
       <div style="margin-bottom:8px"><span class="stat-sub">Total SIPP Value: </span><span style="font-size:17px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(totalSIPPValue),0)}</span> <span class="stat-sub" style="margin-left:8px">— No CGT applicable (pension wrapper)</span></div>
@@ -15578,7 +15831,7 @@ function renderBedISA() {
 
   const pool = buildSection104Pool();
   if (Object.keys(pool).length === 0) {
-    document.getElementById('bedISAPlan').innerHTML = '<div class="history-empty">No GIA holdings found.</div>';
+    document.getElementById('bedISAPlan').innerHTML = '<div class="empty-state-rich"><span class="empty-state-headline">No GIA Holdings Yet</span><span class="empty-state-hint">Bed and ISA needs GIA holdings to plan a transfer from. Save a month on the Calculator tab to get started.</span></div>';
     if (saveSec) saveSec.style.display = 'none';
     return;
   }
@@ -15594,7 +15847,7 @@ function renderBedISA() {
   }).filter(Boolean);
 
   if (holdings.length === 0) {
-    document.getElementById('bedISAPlan').innerHTML = '<div class="history-empty">No GIA holdings with current prices. Update prices on Total Portfolio page first.</div>';
+    document.getElementById('bedISAPlan').innerHTML = '<div class="empty-state-rich"><span class="empty-state-headline">Prices Needed</span><span class="empty-state-hint">Update current share prices on the Total Portfolio page so we can plan a Bed and ISA transfer accurately.</span></div>';
     if (saveSec) saveSec.style.display = 'none';
     return;
   }
@@ -15717,7 +15970,7 @@ function renderSellCalculator() {
 
   if (Object.keys(pool).length === 0) {
     document.getElementById('sellResults').style.display = 'block';
-    document.getElementById('sellSummaryCards').innerHTML = `<div class="full" style="grid-column:1/-1"><div class="history-empty">No GIA holdings found. Save personal monthly contributions on the Calculator tab to populate your Section 104 pool.</div></div>`;
+    document.getElementById('sellSummaryCards').innerHTML = `<div class="full" style="grid-column:1/-1"><div class="empty-state-rich"><span class="empty-state-headline">No GIA Holdings Yet</span><span class="empty-state-hint">Save personal monthly contributions on the Calculator tab to populate your Section 104 pool.</span></div></div>`;
     document.getElementById('sellHoldingsTable').innerHTML = '';
     document.getElementById('sellPlan').innerHTML = '';
     document.getElementById('sellPostSale').innerHTML = '';
@@ -16241,8 +16494,8 @@ function mpRecalc() {
 
   // ── Top summary cards ──
   document.getElementById('mp-summary-cards').innerHTML = [
-    { label:'Current Liability',         val:fmt3(mortgageLiability), sub:'this month\'s closing balance · Overpayment Path', cls:'gold' },
-    { label:'Standard Path Interest',    val:fmt3(intStandard),  sub:`${rate}% for ${standardSchedule.length} months · no changes`, cls:'red' },
+    { label:'Current Liability',         val:fmt3(mortgageLiability), sub:'This month\'s closing balance · Overpayment Path', cls:'gold' },
+    { label:'Standard Path Interest',    val:fmt3(intStandard),  sub:`${rate}% for ${standardSchedule.length} months · No Changes`, cls:'red' },
     { label:'Saved by Overpayments',     val:`+${fmt3(interestSavedByOverpay)}`, sub:monthsSavedByOverpay > 0 ? `${monthsSavedByOverpay} months earlier vs Projected` : 'enter an overpayment amount', cls: interestSavedByOverpay > 0 ? 'green' : 'muted' },
     { label:'Overpayment Payoff Date',   val:fmtDate(payoffDate(optimisedSchedule)), sub:`Projected: ${fmtDate(payoffDate(projectedSchedule))}`, cls:'white' },
   ].map(c => `<div class="stat card"><div class="stat-label">${c.label}</div><div class="stat-val sm ${c.cls}">${c.val}</div><div class="stat-sub">${c.sub}</div></div>`).join('');
@@ -16254,20 +16507,20 @@ function mpRecalc() {
       sub:`${rate}% for full term · no remortgage · no overpayments`,
       colour:'var(--muted)',
       items:[
-        { k:'Payoff date',     v:fmtDate(payoffDate(standardSchedule)) },
-        { k:'Total paid',      v:fmt3(paidStandard) },
-        { k:'Total interest',  v:fmt3(intStandard), cls:'red' },
+        { k:'Payoff Date',     v:fmtDate(payoffDate(standardSchedule)) },
+        { k:'Total Paid',      v:fmt3(paidStandard) },
+        { k:'Total Interest',  v:fmt3(intStandard), cls:'red' },
         { k:'Term',            v:`${standardSchedule.length} months` },
       ],
     },
     {
       label:'Projected Path',
-      sub:`${rate}% → ${newRate}% from ${switchDate.replace('-','/')} · no overpayments`,
+      sub:`${rate}% → ${newRate}% from ${switchDate.replace('-','/')} · No Overpayments`,
       colour:'var(--blue)',
       items:[
-        { k:'Payoff date',     v:fmtDate(payoffDate(projectedSchedule)) },
-        { k:'Total paid',      v:fmt3(paidProjected) },
-        { k:'Total interest',  v:fmt3(intProjected), cls:'amber' },
+        { k:'Payoff Date',     v:fmtDate(payoffDate(projectedSchedule)) },
+        { k:'Total Paid',      v:fmt3(paidProjected) },
+        { k:'Total Interest',  v:fmt3(intProjected), cls:'amber' },
         { k:'vs Standard',     v:`saves ${fmt3(intStandard - intProjected)}`, cls:'green' },
       ],
     },
@@ -16278,9 +16531,9 @@ function mpRecalc() {
         : `Same as Projected — enter a Monthly Overpayment to optimise`,
       colour: overpay > 0 ? 'var(--green)' : 'var(--muted)',
       items:[
-        { k:'Payoff date',     v:fmtDate(payoffDate(optimisedSchedule)) },
-        { k:'Total paid',      v:fmt3(paidOptimised) },
-        { k:'Total interest',  v:fmt3(intOptimised), cls: overpay > 0 ? 'green' : 'amber' },
+        { k:'Payoff Date',     v:fmtDate(payoffDate(optimisedSchedule)) },
+        { k:'Total Paid',      v:fmt3(paidOptimised) },
+        { k:'Total Interest',  v:fmt3(intOptimised), cls: overpay > 0 ? 'green' : 'amber' },
         { k:'vs Projected',    v: interestSavedByOverpay > 0 ? `saves ${fmt3(interestSavedByOverpay)}` : '—', cls: interestSavedByOverpay > 0 ? 'green' : 'muted' },
       ],
     },
@@ -16289,10 +16542,10 @@ function mpRecalc() {
       sub:'Overpayment vs Projected — true impact of your overpayments only',
       colour:'var(--gold)',
       items:[
-        { k:'Interest saved',  v: interestSavedByOverpay > 0 ? `+${fmt3(interestSavedByOverpay)}` : '£0', cls: interestSavedByOverpay > 0 ? 'green' : 'muted' },
-        { k:'Time saved',      v: monthsSavedByOverpay > 0 ? `${monthsSavedByOverpay} months` : '—', cls: monthsSavedByOverpay > 0 ? 'green' : 'muted' },
-        { k:'Total paid less', v: paidProjected - paidOptimised > 0 ? fmt3(paidProjected - paidOptimised) : '—', cls: paidProjected > paidOptimised ? 'green' : 'muted' },
-        { k:'Rate drop saves', v:`${fmt3(intStandard - intProjected)} extra`, cls:'muted' },
+        { k:'Interest Saved',  v: interestSavedByOverpay > 0 ? `+${fmt3(interestSavedByOverpay)}` : '£0', cls: interestSavedByOverpay > 0 ? 'green' : 'muted' },
+        { k:'Time Saved',      v: monthsSavedByOverpay > 0 ? `${monthsSavedByOverpay} months` : '—', cls: monthsSavedByOverpay > 0 ? 'green' : 'muted' },
+        { k:'Total Paid Less', v: paidProjected - paidOptimised > 0 ? fmt3(paidProjected - paidOptimised) : '—', cls: paidProjected > paidOptimised ? 'green' : 'muted' },
+        { k:'Rate Drop Saves', v:`${fmt3(intStandard - intProjected)} extra`, cls:'muted' },
       ],
     },
   ].map(s => {
@@ -16633,7 +16886,7 @@ function renderAnalyse() {
     .sort((a,b) => b.gain - a.gain);
 
   document.getElementById('analyse-bedisa-list').innerHTML = bedISAPriority.length === 0
-    ? `<div class="history-empty">No GIA holdings with unrealised gains found.</div>`
+    ? `<div class="empty-state-rich"><span class="empty-state-headline">Nothing to Surface Yet</span><span class="empty-state-hint">No GIA holdings are showing unrealised gains right now. This list will populate once your positions move into profit.</span></div>`
     : bedISAPriority.map((r, i) => {
         const cgtOnGain = calculateCGTRate(income, r.gain, i===0 ? remainingCGT : 0);
         const priority = i === 0 ? 'Highest' : i === 1 ? 'High' : i < 4 ? 'Medium' : 'Low';
@@ -19098,7 +19351,7 @@ function _renderBgtAudit(state) {
           </div>
           <div>
             <div class="input-label mb4">Note <span style="color:var(--muted);font-weight:400">(optional)</span></div>
-            <input class="num-input" type="text" id="bgt-edit-note-${origIdx}" value="${_esc(e.note || '')}" placeholder="Add Note Here" maxlength="80" style="text-align:left;font-size:11px;padding:5px 8px">
+            <input class="num-input" type="text" id="bgt-edit-note-${origIdx}" value="${_esc(e.note || '')}" placeholder="Add a note" maxlength="80" style="text-align:left;font-size:11px;padding:5px 8px">
           </div>
           <div>
             <div class="input-label mb4">Date</div>
@@ -20143,6 +20396,166 @@ function _initRetirementScrollSpy() {
   }, { threshold: [0, 0.25, 0.5], rootMargin: '-80px 0px -50% 0px' });
   targets.forEach(t => obs.observe(t));
 }
+
+// ════════════════════════════════════════════════════════════════════
+// APPLE-GRADE POLISH WAVE 2 — May 2026
+// Helpers and hooks for soft entry, focus dimming, and filter-switch
+// number transitions. Called from existing render and toggle paths
+// without modifying their core logic.
+// ════════════════════════════════════════════════════════════════════
+
+// ── Round A: soft entry — soft entry round 1, May 2026 ──
+// Tracks which tabs have been visited this session so soft entry only
+// runs on first paint of a tab (not every re-render).
+const _vossSoftEntryVisited = new Set();
+
+// applySoftEntry stamps direct child indices on a container. Children
+// matching `selector` get .soft-entry-item plus --i index var. The CSS
+// animation in the style block does the rest. Called from the deferred
+// hook on the next frame so the children exist in the DOM.
+function applySoftEntry(container, selector) {
+  if (!container) return;
+  // Skip if reduced motion preferred
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  container.classList.add('soft-entry-stage');
+  const items = selector ? container.querySelectorAll(selector) : container.children;
+  // Cap delay accumulation at 14 children so very long lists settle in <500ms
+  const cap = 14;
+  Array.from(items).forEach((el, idx) => {
+    el.classList.add('soft-entry-item');
+    el.style.setProperty('--i', Math.min(idx, cap));
+  });
+  // Strip the class once the longest animation has ended so it doesn't
+  // re-run on subsequent restyles.
+  setTimeout(() => {
+    if (container) container.classList.remove('soft-entry-stage');
+    Array.from(items).forEach(el => {
+      el.classList.remove('soft-entry-item');
+      el.style.removeProperty('--i');
+    });
+  }, 1000);
+}
+
+// triggerSoftEntryForTab is called from switchTab. Only runs the cascade
+// the first time a given tab is shown in the session. After that, the
+// tab-panel.entering animation handles the entrance on its own.
+function triggerSoftEntryForTab(name) {
+  if (_vossSoftEntryVisited.has(name)) return;
+  _vossSoftEntryVisited.add(name);
+  // Defer two frames so the tab content has rendered by the time we
+  // stamp delays onto its children.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      try {
+        if (name === 'portfolio') {
+          const newSec = document.getElementById('section-new-holdings');
+          const legSec = document.getElementById('section-legacy-holdings');
+          if (newSec) applySoftEntry(newSec, '.hcard');
+          if (legSec) applySoftEntry(legSec, '.hcard');
+        } else if (name === 'calculator') {
+          const fundsGrid = document.getElementById('fundsGrid');
+          if (fundsGrid) applySoftEntry(fundsGrid, '.fund-card');
+        } else if (name === 'history') {
+          const histList = document.getElementById('historyList');
+          if (histList) applySoftEntry(histList, '.history-entry, .history-row');
+        } else if (name === 'analyse') {
+          const tabPanel = document.getElementById('tab-analyse');
+          if (tabPanel) applySoftEntry(tabPanel, '.card, .card-gold');
+        } else if (name === 'tax') {
+          const tabPanel = document.getElementById('tab-tax');
+          if (tabPanel) applySoftEntry(tabPanel, '.card, .card-gold');
+        } else if (name === 'sell') {
+          const tabPanel = document.getElementById('tab-sell');
+          if (tabPanel) applySoftEntry(tabPanel, '.card, .card-gold, .card-left');
+        } else if (name === 'budget') {
+          const tabPanel = document.getElementById('tab-budget');
+          if (tabPanel) applySoftEntry(tabPanel, '.card, .card-gold');
+        } else if (name === 'retirement') {
+          const tabPanel = document.getElementById('tab-retirement');
+          if (tabPanel) applySoftEntry(tabPanel, '.card, .card-gold');
+        }
+      } catch (e) {
+        // Soft entry is purely cosmetic; never throw.
+        console.warn('soft entry failed:', e);
+      }
+    });
+  });
+}
+
+// Hook into switchTab without overwriting it. Wrap the original so the
+// existing entrance animation runs first, then the soft entry cascade
+// fires on the inner items if it's a first visit.
+(function _wireSoftEntry() {
+  if (typeof switchTab !== 'function') return;
+  const _origSwitchTab = switchTab;
+  window.switchTab = function(name, btn) {
+    const result = _origSwitchTab.call(this, name, btn);
+    triggerSoftEntryForTab(name);
+    return result;
+  };
+})();
+
+// ── Round B: focus dimming — focus dimming round 1, May 2026 ──
+// Watches the three modal elements for display changes via a
+// MutationObserver on style attributes. When any modal is showing,
+// body gets .modal-active which CSS uses to blur and dim .container.
+(function _wireFocusDimming() {
+  const modalIds = ['edit-layers-modal', 'backup-reminder-modal', 'gia-budget-prompt-modal'];
+
+  function _refreshModalActive() {
+    const anyOpen = modalIds.some(id => {
+      const m = document.getElementById(id);
+      return m && m.style.display === 'flex';
+    });
+    document.body.classList.toggle('modal-active', anyOpen);
+  }
+
+  function _observeModal(id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    const obs = new MutationObserver(_refreshModalActive);
+    obs.observe(m, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  // Run on DOM ready since modals exist in the static markup.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      modalIds.forEach(_observeModal);
+      _refreshModalActive();
+    });
+  } else {
+    modalIds.forEach(_observeModal);
+    _refreshModalActive();
+  }
+})();
+
+// ── Round D: filter-switch number transitions — filter transitions round 1, May 2026 ──
+// Wraps switchPortfolioTab to add a brief opacity fade on the meta text
+// and delta pill so they ease across the filter change rather than
+// snapping. The primary headline already tweens via animateNumber.
+(function _wireFilterTransitions() {
+  if (typeof switchPortfolioTab !== 'function') return;
+  const _origSwitchPortfolioTab = switchPortfolioTab;
+  window.switchPortfolioTab = function(type, btn) {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return _origSwitchPortfolioTab.call(this, type, btn);
+    }
+    const meta = document.getElementById('portfolio-hero-meta-text');
+    const pill = document.getElementById('portfolio-delta-pill');
+    if (meta) meta.classList.add('fade-out');
+    if (pill) pill.classList.add('fade-out');
+    // Re-render after the fade has had time to settle visually.
+    setTimeout(() => {
+      const result = _origSwitchPortfolioTab.call(this, type, btn);
+      // Drop the fade class on the next frame so the new value fades in.
+      requestAnimationFrame(() => {
+        if (meta) meta.classList.remove('fade-out');
+        if (pill) pill.classList.remove('fade-out');
+      });
+      return result;
+    }, 90);
+  };
+})();
 
 init();
 </script>
