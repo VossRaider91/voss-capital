@@ -1446,6 +1446,25 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-weight: 700;
   margin-right: 1px;
 }
+/* Sparkline — round 2, May 2026 */
+.hcard-spark {
+  width: 100%;
+  height: 28px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: stretch;
+}
+.hcard-spark-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+@media (max-width: 700px) {
+  .hcard-spark {
+    height: 32px;
+  }
+}
 .hcard-progress {
   height: 3px;
   background: rgba(255,255,255,0.06);
@@ -6623,6 +6642,7 @@ const LS = {
   TAX_REMINDER_DISMISSALS: 'rma_tax_reminder_dismissals_v1',
   HL_DD_DAY: 'rma_hl_dd_day_v1',
   HL_DD_DISMISSALS: 'rma_hl_dd_dismissals_v1',
+  PRICE_HISTORY: 'rma_price_history_v1',
 };
 
 // Standalone localStorage key for the "last price update" timestamp shown
@@ -6634,6 +6654,185 @@ const LAST_PRICE_UPDATE_KEY = 'rma_last_price_update';
 // to label the timestamp pill so the user can tell at a glance whether prices
 // are fresh from an API or hand-entered.
 const LAST_PRICE_SOURCE_KEY = 'rma_last_price_source';
+
+// ════════════════════════════════════════════════════════════════════
+// PRICE HISTORY ACCUMULATOR — round 1, May 2026
+// ════════════════════════════════════════════════════════════════════
+// Records one price point per ticker per calendar day, sourced from
+// every successful live-fetch. The latest fetch on a given day
+// overwrites the day's existing entry, so by end-of-day each entry
+// settles to the close (or the most recent value seen if the app
+// wasn't open at close). Weekends are skipped — markets are shut and
+// we don't want flat duplicate points cluttering the series.
+//
+// Storage shape:
+//   { "VWRP": [{ ts: 1714723200000, price: 132.45 }, ...], ... }
+//
+// Retention: last 90 days per ticker. Older points are dropped on
+// each write, keeping localStorage bounded regardless of how long
+// the accumulator has been running.
+//
+// Sync: the LS key lives on the canonical LS object so the existing
+// Supabase snapshot/apply path picks it up without any allowlist edit.
+
+// Returns YYYY-MM-DD for a timestamp, in UK local time. Used to test
+// whether two timestamps fall on the same calendar day so we know
+// whether to overwrite today's entry or append a new one.
+function _priceHistoryDayKey(ts) {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Records a single price tick for a ticker. Called from the live-fetch
+// commit loop after a successful HL or Twelve Data response. Skips
+// weekends. Same-day ticks overwrite the existing entry; new days
+// append. Trims the array to the last 90 days on each write.
+function recordPriceTick(ticker, price) {
+  if (!ticker || typeof price !== 'number' || !isFinite(price) || price <= 0) return;
+  try {
+    const now = new Date();
+    const dow = now.getDay();
+    if (dow === 0 || dow === 6) return; // Sun/Sat — markets shut
+    const ts = now.getTime();
+    const todayKey = _priceHistoryDayKey(ts);
+    const all = lsGet(LS.PRICE_HISTORY, {}) || {};
+    const arr = Array.isArray(all[ticker]) ? all[ticker] : [];
+    const last = arr.length > 0 ? arr[arr.length - 1] : null;
+    if (last && _priceHistoryDayKey(last.ts) === todayKey) {
+      last.price = price;
+      last.ts = ts;
+    } else {
+      arr.push({ ts, price });
+    }
+    // Retention — drop anything older than 90 days
+    const cutoff = ts - (90 * 24 * 60 * 60 * 1000);
+    const trimmed = arr.filter(p => p.ts >= cutoff);
+    all[ticker] = trimmed;
+    lsSet(LS.PRICE_HISTORY, all);
+  } catch (e) {
+    // Quota exceeded or any other write failure — log and continue.
+    // The app keeps working; we just lose this tick.
+    console.warn('recordPriceTick failed for', ticker, e);
+  }
+}
+
+// One-time backfill: seed PRICE_HISTORY from existing monthly snapshots
+// in LS.HISTORY. Each entry has a timestamp and a funds[] array with
+// { ticker, rawPrice }. We map those into per-ticker price points so the
+// sparkline has something to render before daily collection accumulates
+// real data. Only runs when LS.PRICE_HISTORY is absent — never overwrites
+// an existing series. Snapshots state first since this is a structural
+// LS write per standing order 0.2.
+function backfillPriceHistoryFromMonthly() {
+  try {
+    const existing = localStorage.getItem(LS.PRICE_HISTORY);
+    if (existing !== null) return; // already seeded
+    const monthly = lsGet(LS.HISTORY, []);
+    if (!Array.isArray(monthly) || monthly.length === 0) {
+      // Nothing to seed from — write empty object so we don't re-attempt
+      lsSet(LS.PRICE_HISTORY, {});
+      return;
+    }
+    snapshotState('Backfill price history from monthly');
+    const seeded = {};
+    monthly
+      .filter(e => e && e.timestamp && Array.isArray(e.funds))
+      .sort((a, b) => a.timestamp - b.timestamp) // chronological
+      .forEach(entry => {
+        entry.funds.forEach(f => {
+          if (!f || !f.ticker) return;
+          const price = parseFloat(f.rawPrice);
+          if (!isFinite(price) || price <= 0) return;
+          if (!seeded[f.ticker]) seeded[f.ticker] = [];
+          // Dedup by day key — if the same ticker appears twice in the
+          // same calendar day across snapshots, keep the later one.
+          const dayKey = _priceHistoryDayKey(entry.timestamp);
+          const arr = seeded[f.ticker];
+          const last = arr.length > 0 ? arr[arr.length - 1] : null;
+          if (last && _priceHistoryDayKey(last.ts) === dayKey) {
+            last.price = price;
+            last.ts = entry.timestamp;
+          } else {
+            arr.push({ ts: entry.timestamp, price });
+          }
+        });
+      });
+    lsSet(LS.PRICE_HISTORY, seeded);
+  } catch (e) {
+    console.warn('backfillPriceHistoryFromMonthly failed', e);
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// renderSparkline — round 2, May 2026
+// ────────────────────────────────────────────────────────────────────
+// Builds an inline SVG sparkline for a given ticker from the data in
+// LS.PRICE_HISTORY. Returns '' when there's not enough data to draw
+// (need at least 2 points), so cards with empty history simply don't
+// show a chart and the layout collapses cleanly.
+//
+// Visual: line + soft gradient fill (option 2 from the round 2 design).
+// Colour follows window direction over the last 30 days:
+//   • up >1%   → green
+//   • down >1% → red
+//   • within ±1% → desaturated grey-cyan neutral
+//
+// uid is required to keep gradient IDs unique across the page —
+// otherwise multiple sparklines collide on the same defs entry and
+// only one renders the fill correctly.
+function renderSparkline(ticker, uid, opts = {}) {
+  const width  = opts.width  || 110;
+  const height = opts.height || 28;
+  const all = lsGet(LS.PRICE_HISTORY, {}) || {};
+  const series = Array.isArray(all[ticker]) ? all[ticker] : [];
+  if (series.length < 2) return '';
+  // Slice the last 30 points (which corresponds to ≤30 trading days
+  // because we skip weekends in recordPriceTick)
+  const recent = series.slice(-30);
+  const prices = recent.map(p => p.price).filter(p => isFinite(p) && p > 0);
+  if (prices.length < 2) return '';
+  const first = prices[0];
+  const last  = prices[prices.length - 1];
+  const minP  = Math.min(...prices);
+  const maxP  = Math.max(...prices);
+  const range = maxP - minP || 1;
+  // Colour rule — window direction with ±1% neutral band
+  const pctChange = (last - first) / first * 100;
+  let colour;
+  if (pctChange > 1)        colour = '#30D158'; // var(--green)
+  else if (pctChange < -1)  colour = '#FF453A'; // var(--red)
+  else                      colour = '#7a8a95'; // neutral grey-cyan
+  // Build coordinate strings. Padding of 2px top/bottom keeps the line
+  // off the edges so anti-aliasing doesn't clip it.
+  const padY = 2;
+  const usableH = height - (padY * 2);
+  const stepX = (width - 4) / (prices.length - 1);
+  const points = prices.map((p, i) => {
+    const x = 2 + i * stepX;
+    const y = padY + (1 - (p - minP) / range) * usableH;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  });
+  const linePoints = points.join(' ');
+  // Area path — same coords as the line, then down to the bottom and back
+  const areaPath =
+    `M ${points[0]} L ${points.slice(1).join(' L ')} ` +
+    `L ${(2 + (prices.length - 1) * stepX).toFixed(2)},${height} ` +
+    `L 2,${height} Z`;
+  const gradId = `sparkGrad_${uid}`;
+  return `<svg class="hcard-spark-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${colour}" stop-opacity="0.25"/>
+        <stop offset="1" stop-color="${colour}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${areaPath}" fill="url(#${gradId})"/>
+    <polyline fill="none" stroke="${colour}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="${linePoints}"/>
+  </svg>`;
+}
 
 // ════════════════════════════════════════════════════════════════════
 // LIVE PRICE FETCH LAYER
@@ -8746,6 +8945,9 @@ function applyPriceUpdates(opts = {}) {
       }
     });
     if (touchedThisTicker) updated++;
+    // Price history accumulator — round 1, May 2026
+    // One point per ticker per calendar day; same-day overwrites
+    recordPriceTick(ticker, info.newPrice);
   });
 
   lsSet(LS.PORTFOLIO, portfolio);
@@ -11169,9 +11371,10 @@ function calculateRetirement() {
       ? `coasting ${p3Years} yrs · full contributions end age ${currentAge + p1Years}`
       : monthlyContrib > 0 ? `nominal value in ${totalYears} years` : `${totalYears} years compounding`;
 
-  document.getElementById('ret-final').textContent     = `£${fmtNum(Math.round(finalNominal),0)}`;
+  // animateNumber wired May 2026 — smooth tween as inputs are nudged
+  animateNumber(document.getElementById('ret-final'), finalNominal, { prefix: '£', decimals: 0 });
   document.getElementById('ret-final-sub').textContent = phaseDesc;
-  document.getElementById('ret-real').textContent      = `£${fmtNum(Math.round(finalReal),0)}`;
+  animateNumber(document.getElementById('ret-real'), finalReal, { prefix: '£', decimals: 0 });
   // ── Years to Retirement: precise breakdown ──────────────────
   // Headline: years (big) + "X mo Y d" (smaller). Computed from DOB +
   // target age = exact retirement birthday minus today. Falls back to
@@ -12257,7 +12460,8 @@ function renderPortfolio(filter='all') {
   document.getElementById('holdingsCount').textContent = portfolio.length;
 
   const totalVal = filtered.reduce((s,h) => s+h.shares*(h.price||0), 0);
-  document.getElementById('totalPortfolioValue').textContent = `£${fmtNum(Math.round(totalVal),0)}`;
+  // animateNumber wired May 2026 — smooth tween on live price ticks
+  animateNumber(document.getElementById('totalPortfolioValue'), totalVal, { prefix: '£', decimals: 0 });
 
   // Hero meta line — compact "N holdings · M tickers"
   const uniqueTickers = new Set(filtered.map(h => h.ticker)).size;
@@ -12385,6 +12589,14 @@ function renderPortfolio(filter='all') {
         <div class="hcard-units-pill">${h.shares} units</div>
         <div class="hcard-price-pill">${pricePillContent}</div>
       </div>
+      ${(() => {
+        // Sparkline — round 2, May 2026
+        // Renders only when there's enough data; empty string collapses
+        // the row entirely so cards without history keep the original
+        // layout unchanged.
+        const sparkSvg = renderSparkline(h.ticker, `${h.id}_${isLegacy?'L':'N'}`);
+        return sparkSvg ? `<div class="hcard-spark">${sparkSvg}</div>` : '';
+      })()}
       <div class="hcard-progress"><div class="hcard-progress-bar" style="width:${pct.toFixed(1)}%;background:linear-gradient(90deg,${h.colour},${dark})"></div></div>
       <div class="hcard-bottom">
         <div class="hcard-pct">${pct.toFixed(1)}% of ${isLegacy ? 'legacy' : 'new'} holdings</div>
@@ -19733,6 +19945,10 @@ function init() {
   seedISAHoldings();
   initSoldForm();
   syncPortfolioFromHistory();
+  // Price history accumulator — round 1, May 2026
+  // Seeds PRICE_HISTORY from monthly snapshots on first run only.
+  // No-op on subsequent loads since the LS key already exists.
+  backfillPriceHistoryFromMonthly();
   buildPriceUpdater();
   updateUndoButton();
 
