@@ -583,6 +583,18 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   gap: 4px;
 }
 
+/* Tax breakdown cells use the same pill-card treatment so each row reads
+   as a contained card rather than naked text. Cells stretch to row height
+   automatically so variable sub-text length doesn't create awkward floating
+   gaps in the grid. */
+.tax-breakdown-grid > .stat {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  gap: 4px;
+}
+
 .stat-label {
   font-size: 11px; letter-spacing: -0.05px; text-transform: none;
   color: var(--muted); font-weight: 500; opacity: 1;
@@ -6138,7 +6150,7 @@ body.modal-active .container > footer {
         <div class="subsection-label" id="divTaxSummaryLabel">Tax Summary <span style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:-0.05px">(<span class="tax-year-label">2026/27</span>)</span></div>
         <div class="subsection-sub">PAYE, dividend, and net position broken down</div>
       </div>
-      <div id="divTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
+      <div id="divTaxBreakdown" class="tax-breakdown-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
     </div>
 
     <!-- Bonus tax breakdown — only shown when bonus > 0. Now sits AFTER the
@@ -13939,11 +13951,11 @@ function updateIncomeTotal() {
     const hasDivs = taxableDivs > 0;
     const tyLabel = getCurrentTaxYearLabel();
     if (hasPAYE && hasDivs) {
-      labelElUpdate.textContent = `Estimated Tax Breakdown — PAYE & Dividend Income (${tyLabel})`;
+      labelElUpdate.textContent = `Estimated Tax Breakdown: PAYE & Dividend Income (${tyLabel})`;
     } else if (hasPAYE) {
-      labelElUpdate.textContent = `Estimated Tax Breakdown — PAYE Income (${tyLabel})`;
+      labelElUpdate.textContent = `Estimated Tax Breakdown: PAYE Income (${tyLabel})`;
     } else if (hasDivs) {
-      labelElUpdate.textContent = `Estimated Tax Breakdown — Dividend Income (${tyLabel})`;
+      labelElUpdate.textContent = `Estimated Tax Breakdown: Dividend Income (${tyLabel})`;
     } else {
       labelElUpdate.textContent = `Tax Summary (${tyLabel})`;
     }
@@ -14010,7 +14022,7 @@ function updateIncomeTotal() {
       // PAYE section — always shown so structure is clear even when salary is covered by PA
       {l:'PAYE Salary' + (bonus>0&&bonusIsPAYE?' + Bonus':''),
        v:`£${fmtNum(Math.round(payeIncome),0)}`,
-       s: payeTaxable > 0 ? `£${fmtNum(Math.round(payeTaxable),0)} taxable after £${fmtNum(effectivePA,0)} PA` : `Fully covered by £${fmtNum(effectivePA,0)} personal allowance — £0 taxable`,
+       s: payeTaxable > 0 ? `£${fmtNum(Math.round(payeTaxable),0)} taxable after £${fmtNum(effectivePA,0)} PA` : `Fully covered by £${fmtNum(effectivePA,0)} personal allowance, £0 taxable`,
        c:'white'},
       {l:'Income tax at 20% (basic)',
        v:`£${fmtNum(Math.round(payeAtBR*BR),0)}`,
