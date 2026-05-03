@@ -2482,6 +2482,18 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .bgt-perf-table td:first-child { text-align: left; color: var(--white); font-weight: 500; }
 .bgt-perf-table tr.bgt-perf-total td { color: var(--white); font-weight: 600; border-top: 0.5px solid var(--border2); }
+
+/* Historical Averages "This month £X" overTag — sits inline next to the
+   category name on desktop, but on narrow screens drops onto its own line
+   so phrases like "This month £2,700.00 ↑" don't wrap mid-word in the
+   tight first-column cell. */
+@media (max-width: 768px) {
+  .bgt-perf-overtag {
+    display: block !important;
+    margin-left: 0 !important;
+    margin-top: 2px;
+  }
+}
 .bgt-year-pill {
   font-size: 12px; font-weight: 500; letter-spacing: -0.05px;
   padding: 5px 14px; border-radius: 50px;
@@ -19266,9 +19278,9 @@ function _renderBgtAveragesPanel(state) {
     const overAvg = currentMonthAmt > a.avg && a.avg > 0;
     const colour  = overAvg ? 'var(--amber)' : 'var(--white)';
     const overTag = overAvg
-      ? `<span style="font-size:9px;color:var(--amber);font-style:italic;margin-left:6px">This month £${fmtNum(currentMonthAmt, 2)} ↑</span>`
+      ? `<span class="bgt-perf-overtag" style="font-size:9px;color:var(--amber);font-style:italic;margin-left:6px">This month £${fmtNum(currentMonthAmt, 2)} ↑</span>`
       : currentMonthAmt > 0
-        ? `<span style="font-size:9px;color:var(--muted);font-style:italic;margin-left:6px">This month £${fmtNum(currentMonthAmt, 2)}</span>`
+        ? `<span class="bgt-perf-overtag" style="font-size:9px;color:var(--muted);font-style:italic;margin-left:6px">This month £${fmtNum(currentMonthAmt, 2)}</span>`
         : '';
     return `
       <tr class="bgt-row">
