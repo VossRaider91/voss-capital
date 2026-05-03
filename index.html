@@ -2421,6 +2421,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-section-fixed { color: var(--amber); }
 .bgt-section-variable { color: var(--blue); }
 
+/* Inside section cards specifically, all four colour pills share the
+   same visual styling so they read as a matched set across the stack.
+   Width is intentionally content-hugged rather than fixed so longer
+   labels are not truncated. The pill's height, padding, border and
+   typography are identical across all four sections; only the colour
+   tint changes via the section's parent class. */
+.bgt-section-card .bgt-section-pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* ═══════════════════════════════════════════════════════════
    BUDGET TRACKER — Section Cards (collapsible v20)
    Replaces the long single-table layout with per-section
@@ -2455,7 +2466,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   gap: 10px;
   flex: 1;
   min-width: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .bgt-section-card-headline {
   font-size: 14px;
@@ -2463,17 +2474,27 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--white);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.1px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .bgt-section-card-drift {
   font-size: 11px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: -4px;
 }
 .bgt-section-card-confirm {
   font-size: 10px;
   color: var(--muted);
   margin-left: auto;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (max-width: 480px) {
+  .bgt-section-card-confirm { display: none; }
 }
 .bgt-section-card-chevron {
   display: inline-block;
@@ -3771,7 +3792,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
   /* ── BUDGET TRACKER ───────────────────────────────────────── */
   .bgt-row { grid-template-columns: 1fr auto !important; gap: 8px; }
-  .bgt-section-tax, .bgt-section { padding: 12px !important; }
+  /* Legacy padding rule for the old non-card layout. Scoped with
+     :not(.bgt-section-card) so it does not fire on the new collapsible
+     section cards which manage their own padding via .bgt-section-card-
+     header. Without this scope, .bgt-section-tax cards would render
+     with 12px extra padding while Income/Fixed/Variable cards would
+     not, causing the visible left-edge misalignment. */
+  .bgt-section-tax:not(.bgt-section-card),
+  .bgt-section:not(.bgt-section-card) { padding: 12px !important; }
 
   /* ── ADD / UPDATE HOLDING FORM — stack into 2x3 on mobile ─── */
   /* Desktop: 5 fields + button in a single row. Cramped at 380px. */
@@ -19519,10 +19547,10 @@ function _renderBgtMainTable(state) {
     const sd = isIncome ? sa-sp : sp-sa;
     const driftCls = sd > 0.005 ? 'var(--green)' : sd < -0.005 ? 'var(--red)' : 'var(--muted)';
     const driftStr = Math.abs(sd) < 0.005
-      ? 'on plan'
+      ? 'On Plan'
       : (isIncome
         ? (sd > 0 ? `+£${fmtNum(Math.abs(sd),2)}` : `-£${fmtNum(Math.abs(sd),2)}`)
-        : (sd > 0 ? `-£${fmtNum(Math.abs(sd),2)} under` : `+£${fmtNum(Math.abs(sd),2)} over`));
+        : (sd > 0 ? `-£${fmtNum(Math.abs(sd),2)} Under` : `+£${fmtNum(Math.abs(sd),2)} Over`));
 
     // Confirmation count — rows marked fully recurring (green tick)
     const confirmedCount = items.filter(n => !!recurring[n]).length;
@@ -19601,7 +19629,7 @@ function _renderBgtMainTable(state) {
             <span class="bgt-section-pill">${label}</span>
             <span class="bgt-section-card-headline">£${fmtNum(sa,2)}</span>
             <span class="bgt-section-card-drift" style="color:${driftCls}">${driftStr}</span>
-            <span class="bgt-section-card-confirm">${confirmedCount}/${items.length} confirmed</span>
+            <span class="bgt-section-card-confirm">${confirmedCount}/${items.length} Confirmed</span>
           </div>
           <span class="bgt-section-card-chevron" aria-hidden="true">⌄</span>
         </div>
