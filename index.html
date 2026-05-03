@@ -2567,6 +2567,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .tax-headline-card.tax-headline-action .tax-headline-card-value {
   color: var(--white);
+  font-size: 28px;
 }
 .tax-headline-card.tax-headline-action .tax-headline-card-sub {
   color: rgba(199,226,255,0.7);
@@ -5470,7 +5471,7 @@ body.modal-active .container > footer {
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
         <div class="tax-headline-card tax-headline-action">
           <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Projected Value at Retirement</div>
-          <div class="tax-headline-card-value" style="font-size:32px;color:var(--gold)" id="ret-final">—</div>
+          <div class="tax-headline-card-value" style="color:var(--gold)" id="ret-final">—</div>
           <div class="tax-headline-card-sub" id="ret-final-sub"></div>
         </div>
         <div class="tax-headline-card">
@@ -5532,7 +5533,7 @@ body.modal-active .container > footer {
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
         <div class="tax-headline-card tax-headline-action">
           <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px" id="ret-income-label">Monthly Income (4% Rule)</div>
-          <div class="tax-headline-card-value" style="font-size:32px;color:var(--gold)" id="ret-income">—</div>
+          <div class="tax-headline-card-value" style="color:var(--gold)" id="ret-income">—</div>
           <div class="tax-headline-card-sub">
             <span id="ret-income-sub">sustainable withdrawal</span>
             <span id="ret-spending-wrap" style="display:none">
@@ -5582,7 +5583,7 @@ body.modal-active .container > footer {
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
       <div class="tax-headline-card tax-headline-action">
         <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Monthly Income from Current Pot</div>
-        <div class="tax-headline-card-value" style="font-size:32px;color:var(--green)" id="ret-cp-income">—</div>
+        <div class="tax-headline-card-value" style="color:var(--green)" id="ret-cp-income">—</div>
         <div class="tax-headline-card-sub" id="ret-cp-income-sub">—</div>
       </div>
       <div class="tax-headline-card">
@@ -5674,7 +5675,7 @@ body.modal-active .container > footer {
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
       <div class="tax-headline-card tax-headline-action">
         <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px" id="ret-fn-future-label">Freedom Number (At Retirement)</div>
-        <div class="tax-headline-card-value" style="font-size:32px;color:var(--gold)" id="ret-fn-future">—</div>
+        <div class="tax-headline-card-value" style="color:var(--gold)" id="ret-fn-future">—</div>
         <div class="tax-headline-card-sub" id="ret-fn-future-sub">The pot you'd need on the day you stop</div>
       </div>
       <div class="tax-headline-card">
@@ -15003,7 +15004,7 @@ function renderTaxProvisionPlanner() {
     <div class="tax-headline-stack" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
       <div class="tax-headline-card tax-headline-action">
         <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Set your standing order to</div>
-        <div class="tax-headline-card-value" style="font-size:32px">£${fmtNum(Math.round(comfortable), 0)}<span class="tax-headline-card-suffix">/mo</span></div>
+        <div class="tax-headline-card-value">£${fmtNum(Math.round(comfortable), 0)}<span class="tax-headline-card-suffix">/mo</span></div>
         <div class="tax-headline-card-sub">Round number with a small buffer · Covers your £${fmtNum(Math.round(thisYear), 0)} liability across the cycle</div>
         <div class="tax-headline-card-sync">↪ Auto-syncs to Tax Provision Planned in Budget tracker</div>
       </div>
@@ -15225,7 +15226,7 @@ function renderTaxTab() {
   ];
   document.getElementById('taxSummaryCards').innerHTML = taxCfgs.map(s => {
     const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
-    const valStyle  = s.primary ? `font-size:32px;color:${taxColourFor(s.cls)}` : `color:${taxColourFor(s.cls)}`;
+    const valStyle  = `color:${taxColourFor(s.cls)}`;
     const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
     return `<div class="${cardClass}">
       <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
@@ -16071,7 +16072,7 @@ function renderSellCalculator() {
     `<div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1" class="full">` +
     cardCfgs.map(s => {
       const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
-      const valStyle  = s.primary ? `font-size:32px;color:${colourFor(s.cls)}` : `color:${colourFor(s.cls)}`;
+      const valStyle  = `color:${colourFor(s.cls)}`;
       const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
       return `<div class="${cardClass}">
         <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
@@ -16763,7 +16764,7 @@ function renderAnalyse() {
   ];
   document.getElementById('analyse-snapshot').innerHTML = snapCfgs.map(s => {
     const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
-    const valStyle  = s.primary ? `font-size:32px;color:${snapColourFor(s.cls)}` : `color:${snapColourFor(s.cls)}`;
+    const valStyle  = `color:${snapColourFor(s.cls)}`;
     const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
     return `<div class="${cardClass}">
       <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
@@ -16818,9 +16819,7 @@ function renderAnalyse() {
     ];
     cgtCardsEl.innerHTML = cgtCfgs.map(s => {
       const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
-      const valStyle  = s.primary
-        ? `font-size:32px;color:${colourFor(s.cls)}`
-        : `color:${colourFor(s.cls)}`;
+      const valStyle  = `color:${colourFor(s.cls)}`;
       const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
       const suffixHtml = s.suffix ? `<span class="tax-headline-card-suffix">${s.suffix}</span>` : '';
       return `<div class="${cardClass}">
@@ -17236,9 +17235,7 @@ function renderAnalyseNetWorth() {
     ];
     nwCards.innerHTML = cardCfgs.map(s => {
       const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
-      const valStyle  = s.primary
-        ? `font-size:32px;color:${colourFor(s.cls)}`
-        : `color:${colourFor(s.cls)}`;
+      const valStyle  = `color:${colourFor(s.cls)}`;
       const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
       return `<div class="${cardClass}">
         <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
@@ -17292,7 +17289,7 @@ function renderAnalyseNetWorth() {
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
           <div class="tax-headline-card tax-headline-action" style="display:block !important;text-align:left !important">
             <div class="tax-headline-card-label" style="display:block !important;text-align:left !important;text-transform:uppercase;letter-spacing:0.6px;width:100%;margin:0 0 4px 0">Tax-Free Assets</div>
-            <div class="tax-headline-card-value" style="display:block !important;text-align:left !important;font-size:32px;color:var(--green);width:100%;margin:0">£${fmtNum(Math.round(taxFreeAssets),0)}</div>
+            <div class="tax-headline-card-value" style="display:block !important;text-align:left !important;color:var(--green);width:100%;margin:0">£${fmtNum(Math.round(taxFreeAssets),0)}</div>
             <div class="tax-headline-card-sub" style="display:block !important;text-align:left !important;width:100%;margin:6px 0 0 0">Property, ISA, SIPP, cash, cars, whiskey · ${taxFreePct.toFixed(1)}% of gross assets</div>
           </div>
           <div class="tax-headline-card" style="display:block !important;text-align:left !important">
@@ -17467,7 +17464,7 @@ function renderNetWorth() {
   ];
   document.getElementById('nw-summary-cards').innerHTML = nwSummaryCfgs.map(s => {
     const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
-    const valStyle  = s.primary ? `font-size:32px;color:${nwSummaryColourFor(s.cls)}` : `color:${nwSummaryColourFor(s.cls)}`;
+    const valStyle  = `color:${nwSummaryColourFor(s.cls)}`;
     const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
     return `<div class="${cardClass}">
       <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
@@ -19069,7 +19066,7 @@ function _renderBgtYtdPanel(state) {
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
         <div class="tax-headline-card tax-headline-action">
           <div class="tax-headline-card-label" style="text-transform:uppercase;letter-spacing:0.6px">Annual Net Position</div>
-          <div class="tax-headline-card-value" style="font-size:32px;color:${netActual>=0?'var(--green)':'var(--red)'}">${signedFmt(netActual)}</div>
+          <div class="tax-headline-card-value" style="color:${netActual>=0?'var(--green)':'var(--red)'}">${signedFmt(netActual)}</div>
           <div class="tax-headline-card-sub">Income £${fmtNum(ann.incomeActual,0)} · Expenses £${fmtNum(ann.expActual,0)}</div>
         </div>
         <div class="tax-headline-card">
