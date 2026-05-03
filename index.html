@@ -7564,39 +7564,33 @@ function _setTimestampRefreshing() {
   el.style.opacity = '';
 }
 
-// Auto-fetch live prices on page load. Called after init and after the
-// initial Supabase pull completes (so the user sees the most recent
-// cross-device prices first, then this device's auto-fetch updates them
-// to the current market). Silent — no button state changes, no verbose
-// toast. Wrapped in a brief 250ms delay so the page settles before the
-// fetch starts, but quick enough that the user sees fresh prices almost
-// immediately on opening the app.
+// Auto-fetch live prices on page load. Fires immediately so the user sees
+// fresh prices the instant the page is interactive. refreshLivePrices is
+// async and doesn't block render, so there's no UX cost to firing right
+// away. Silent — no button state changes, no verbose toast.
 function _autoFetchOnLoad() {
-  // Skip if sync is disabled — implies a deliberate offline-only setup.
   // Skip if no portfolio yet — first-time users have nothing to refresh.
   const portfolio = lsGet(LS.PORTFOLIO, []);
   if (!portfolio || portfolio.length === 0) return;
   // Respect manual override pause — opening the app during a paused
   // window must NOT overwrite the prices the user just pasted.
   if (_getManualOverrideUntil() > 0) return;
-  setTimeout(() => {
-    // Re-check the pause inside the timer too (in case sync just landed
-    // a pause from the other device while we were waiting).
-    if (_getManualOverrideUntil() > 0) return;
-    // Anchor the countdown clock so the timer reads "Auto-Refresh In 1:00"
-    // from the moment the load fetch begins, instead of waiting 60 seconds
-    // for the first setInterval tick to update _lastPollAt.
-    _lastPollAt = Date.now();
-    try { refreshLivePrices(null, { silent: true }); } catch (e) {
-      console.warn('[Voss] auto-fetch on load failed:', e);
-    }
-  }, 250);
+  // Anchor the countdown clock immediately so the timer reads
+  // "Auto-refresh in 1:00" from the moment of open, instead of waiting
+  // for the first setInterval tick (60s away) to update _lastPollAt.
+  _lastPollAt = Date.now();
+  try { refreshLivePrices(null, { silent: true }); } catch (e) {
+    console.warn('[Voss] auto-fetch on load failed:', e);
+  }
 }
 
-// Track when the tab was last visible/focused so we can decide whether to
-// auto-refresh on visibility change. Less than 60 seconds = dedupe cache
-// will catch any redundant fetch anyway, so we skip. More than 60 seconds
-// = tab was genuinely backgrounded, fire a silent refresh.
+// Track when the tab was last visible/focused. The visibility-change handler
+// always fires a silent refresh on return so the user sees fresh prices the
+// instant the app comes back, with no perceived lag. The per-ticker live
+// fetch cache (60s TTL) absorbs any duplicate calls cheaply, so spamming
+// visibility events doesn't actually hammer the network. _lastPollAt is also
+// re-anchored on every return so the countdown reads accurately even when
+// the cache short-circuits the underlying fetch.
 let _lastVisibleAt = Date.now();
 function _autoFetchOnVisibilityChange() {
   if (document.visibilityState !== 'visible') {
@@ -7604,12 +7598,7 @@ function _autoFetchOnVisibilityChange() {
     _lastVisibleAt = Date.now();
     return;
   }
-  // Coming back from hidden. If we were away long enough that the dedupe
-  // cache (60s) would have expired, fire a silent refresh. Short app-switches
-  // (<60s) are no-ops because the cache absorbs them.
-  const awayMs = Date.now() - _lastVisibleAt;
   _lastVisibleAt = Date.now();
-  if (awayMs < 60 * 1000) return;
 
   // Only fetch if the user actually has portfolio holdings — defensive.
   const portfolio = lsGet(LS.PORTFOLIO, []);
@@ -7617,6 +7606,11 @@ function _autoFetchOnVisibilityChange() {
 
   // Respect manual override pause.
   if (_getManualOverrideUntil() > 0) return;
+
+  // Re-anchor the countdown so the timer reads "Auto-refresh in 1:00" from
+  // the moment of return rather than displaying "due any moment" until the
+  // next 60-second poll tick fires.
+  _lastPollAt = Date.now();
 
   try { refreshLivePrices(null, { silent: true }); } catch (e) {
     console.warn('[Voss] auto-fetch on focus failed:', e);
@@ -20334,17 +20328,17 @@ function init() {
     try { _renderHlDdReminderBanner(); } catch (e) {}
   }, 60 * 60 * 1000);
 
-  // Live prices auto-refresh on page load. Runs after a 1.5s delay so the
-  // app has settled and the initial Supabase pull (if any) has had a chance
-  // to apply cross-device prices first. Silent — no button state, quiet
-  // toast. The Update All Prices button remains the manual override.
+  // Live prices auto-refresh immediately on page load. Silent — no button
+  // state, quiet toast. The Update All Prices button remains the manual
+  // override.
   _autoFetchOnLoad();
 
-  // Live prices auto-refresh when the tab regains focus after being away
-  // for more than 60 seconds. iOS Safari aggressively backgrounds tabs, so
-  // this catches the common pattern of "switch app, come back" without
-  // hammering the API on every brief switch (the 60s threshold matches the
-  // dedupe cache window). Single listener wired once at init.
+  // Live prices auto-refresh whenever the tab becomes visible again. iOS
+  // Safari aggressively backgrounds tabs, so this catches the common
+  // pattern of "switch app, come back" with zero perceived lag. The
+  // per-ticker fetch cache (60s TTL) absorbs duplicate calls, so brief
+  // app-switches are essentially free at the network layer. Single
+  // listener wired once at init.
   document.addEventListener('visibilitychange', _autoFetchOnVisibilityChange);
 
   // Start the 60-second polling timer. Polling itself is gated by visibility,
