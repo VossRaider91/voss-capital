@@ -186,7 +186,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   border-color: rgba(10,132,255,0.32);
   background: rgba(10,132,255,0.16);
 }
-.nav-tab .nav-icon { font-size: 16px; line-height: 1; opacity: 0.65; }
+.nav-tab .nav-icon { font-size: 16px; line-height: 1; opacity: 0.65; display:inline-flex; align-items:center; justify-content:center; }
+.nav-tab .nav-icon svg { width:18px; height:18px; display:block; }
 .nav-tab.active .nav-icon { opacity: 1; }
 .sub-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .sub-tab {
@@ -2733,6 +2734,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   .nav-tabs { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .nav-tab { padding: 12px 8px; font-size: 11px; letter-spacing: -0.05px; }
   .nav-tab .nav-icon { font-size: 14px; }
+  .nav-tab .nav-icon svg { width:16px; height:16px; }
   .fund-inputs-grid { grid-template-columns: repeat(2, 1fr); }
   .stat-grid.g4 { grid-template-columns: repeat(2, 1fr); }
   .alloc-thead, .alloc-row { grid-template-columns: 55px 1fr 90px 80px; }
@@ -2838,6 +2840,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   #mobile-nav-pill .pill-icon {
     font-size: 16px;
     line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #mobile-nav-pill .pill-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
   }
   #mobile-nav-pill .pill-label {
     font-size: 14px;
@@ -5009,7 +5019,7 @@ body.modal-active .container > footer {
   <!-- Mobile-only collapsing nav pill — hidden on desktop via CSS -->
   <div id="mobile-nav-pill" onclick="toggleMobileNav()" role="button" aria-label="Toggle navigation">
     <span class="pill-active">
-      <span class="pill-icon" id="mobile-nav-pill-icon">📊</span>
+      <span class="pill-icon" id="mobile-nav-pill-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="11" width="3" height="7" rx="1" fill="currentColor" fill-opacity="0.25"/><rect x="10" y="6" width="3" height="12" rx="1" fill="currentColor" fill-opacity="0.25"/><rect x="15" y="9" width="3" height="9" rx="1" fill="currentColor" fill-opacity="0.25"/><path d="M3 20h18M6 16v-5M11 16V8M16 16v-3M21 16V6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></span>
       <span class="pill-label" id="mobile-nav-pill-label">Portfolio Overview</span>
     </span>
     <span class="pill-chevron">⌄</span>
@@ -5018,28 +5028,28 @@ body.modal-active .container > footer {
 
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="switchTab('portfolio',this)">
-    <span class="nav-icon">📊</span>Portfolio Overview
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="11" width="3" height="7" rx="1" fill="currentColor" fill-opacity="0.25"/><rect x="10" y="6" width="3" height="12" rx="1" fill="currentColor" fill-opacity="0.25"/><rect x="15" y="9" width="3" height="9" rx="1" fill="currentColor" fill-opacity="0.25"/><path d="M3 20h18M6 16v-5M11 16V8M16 16v-3M21 16V6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></span>Portfolio Overview
   </button>
   <button class="nav-tab" onclick="switchTab('calculator',this)">
-    <span class="nav-icon">⚡</span>Calculator
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="3" width="14" height="18" rx="2" fill="currentColor" fill-opacity="0.2"/><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="6" width="8" height="3" rx="0.5" fill="currentColor" fill-opacity="0.5"/><circle cx="9" cy="13" r="0.9" fill="currentColor"/><circle cx="12" cy="13" r="0.9" fill="currentColor"/><circle cx="15" cy="13" r="0.9" fill="currentColor"/><circle cx="9" cy="17" r="0.9" fill="currentColor"/><circle cx="12" cy="17" r="0.9" fill="currentColor"/></svg></span>Calculator
   </button>
   <button class="nav-tab" onclick="switchTab('budget',this)">
-    <span class="nav-icon">💰</span>Budget Tracker
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.2"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M14.5 8.5c-0.5-1-1.5-1.5-2.5-1.5c-1.7 0-3 1.3-3 3v2.5h-1.5M9 12.5h4.5M8 16.5h7" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Budget Tracker
   </button>
   <button class="nav-tab" onclick="switchTab('history',this)">
-    <span class="nav-icon">📅</span>Monthly History
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor" fill-opacity="0.2"/><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.3"/><path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="15" r="0.9" fill="currentColor"/><circle cx="12" cy="15" r="0.9" fill="currentColor"/><circle cx="16" cy="15" r="0.9" fill="currentColor"/></svg></span>Monthly History
   </button>
   <button class="nav-tab" onclick="switchTab('tax',this)">
-    <span class="nav-icon">🏛</span>Tax
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 20V11l8-6 8 6v9z" fill="currentColor" fill-opacity="0.2"/><path d="M3 21h18M5 21V10l7-5 7 5v11" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><rect x="9" y="14" width="6" height="7" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span>Tax
   </button>
   <button class="nav-tab" onclick="switchTab('sell',this)">
-    <span class="nav-icon">📤</span>Sell Calculator
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="14" width="16" height="6" rx="1" fill="currentColor" fill-opacity="0.2"/><rect x="4" y="14" width="16" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M12 13V3M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Sell Calculator
   </button>
   <button class="nav-tab" onclick="switchTab('retirement',this)">
-    <span class="nav-icon">🎯</span>Retirement &amp; Net Worth
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.15"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></span>Retirement &amp; Net Worth
   </button>
   <button class="nav-tab" onclick="switchTab('analyse',this)">
-    <span class="nav-icon">🔎</span>Analyse Financial Position
+    <span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" fill="currentColor" fill-opacity="0.2"/><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>Analyse Financial Position
   </button>
 </div>
 
@@ -5188,7 +5198,6 @@ body.modal-active .container > footer {
       <div id="month-vs-month-panel"></div>
     </div>
   </div>
-  <p class="disclaimer">For informational purposes only. Not financial advice. Data saved locally in this browser only.</p>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -5667,7 +5676,7 @@ body.modal-active .container > footer {
     <div style="padding:12px 16px;background:var(--dark);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic" id="ret-fn-narrative"></div>
   </div>
 
-  <p class="disclaimer">Projections assume constant growth and do not account for fees, taxes, or market volatility. Illustrative only.</p>
+  <p class="disclaimer">Projections assume constant growth and do not account for fees, taxes, or market volatility.</p>
 
   <!-- ── NET WORTH CALCULATOR ── -->
   <div class="gold-divider" style="margin:32px 0"></div>
@@ -5779,8 +5788,6 @@ body.modal-active .container > footer {
       <span id="nw-tax-bar-label-right" style="font-size:9px;color:var(--amber)">GIA (CGT on gains applies)</span>
     </div>
   </div>
-
-  <p class="disclaimer">Net worth figures are estimates based on manually entered values and current portfolio prices. Property valuations are indicative only. Not financial advice.</p>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -6349,7 +6356,7 @@ body.modal-active .container > footer {
     </div>
   </div>
 
-  <p class="disclaimer">CGT calculations are estimates based on current UK rates and your unrealised positions. This is not tax advice. Always consult a qualified tax adviser before making decisions based on these figures. UK CGT annual allowance for <span class="tax-year-label">2026/27</span> is £3,000. Rates shown are for shares: 18% basic rate, 24% higher rate — rates effective from 30 October 2024.</p>
+  <p class="disclaimer">UK CGT annual allowance for <span class="tax-year-label">2026/27</span> is £3,000. Rates shown are for shares: 18% basic rate, 24% higher rate, effective from 30 October 2024.</p>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -6484,7 +6491,7 @@ body.modal-active .container > footer {
 
   </div>
 
-  <p class="disclaimer">For planning purposes only. Not financial advice. Always verify figures with a qualified tax adviser before executing any transactions. CGT allowance is £3,000 for <span class="tax-year-label">2026/27</span> tax year. CGT rates on shares: 18% basic rate, 24% higher rate.</p>
+  <p class="disclaimer">CGT allowance is £3,000 for <span class="tax-year-label">2026/27</span> tax year. CGT rates on shares: 18% basic rate, 24% higher rate.</p>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -6630,8 +6637,6 @@ body.modal-active .container > footer {
     <div id="analyse-concentration"></div>
   </div>
 
-  <p class="disclaimer">All analysis is based on current prices and available data. Not financial advice. Figures update automatically when prices are changed or new entries are saved.</p>
-
   <!-- ═══════════════════════════════════════════════════════════
        STRATEGIC TOOLS
        Major financial dimensions get their own card with a clear
@@ -6749,7 +6754,7 @@ body.modal-active .container > footer {
     </div>
   </div>
 
-  <p class="disclaimer">Projections are estimates. Actual figures depend on your lender's calculation method and any future rate changes. Not financial advice.</p>
+  <p class="disclaimer">Projections are estimates. Actual figures depend on your lender's calculation method and any future rate changes.</p>
 </div>
 
 <div class="save-toast" id="saveToast">Saved</div>
@@ -8412,12 +8417,15 @@ document.addEventListener('click', function(e) {
 function _updateMobileNavPill() {
   const activeTab = document.querySelector('.nav-tab.active');
   if (!activeTab) return;
-  const icon = activeTab.querySelector('.nav-icon')?.textContent || '';
-  // Get the label text (everything except the icon)
-  const label = activeTab.textContent.replace(icon, '').trim();
+  const iconEl = activeTab.querySelector('.nav-icon');
+  // Label is the active tab's text content with the icon's text stripped out.
+  // Since icons are now inline SVG, iconEl.textContent is empty and the
+  // replace is a no-op, leaving the label clean. Trim handles legacy emoji too.
+  const iconText = iconEl?.textContent || '';
+  const label = activeTab.textContent.replace(iconText, '').trim();
   const pillIcon  = document.getElementById('mobile-nav-pill-icon');
   const pillLabel = document.getElementById('mobile-nav-pill-label');
-  if (pillIcon)  pillIcon.textContent  = icon;
+  if (pillIcon && iconEl) pillIcon.innerHTML = iconEl.innerHTML;
   if (pillLabel) pillLabel.textContent = label;
 }
 
@@ -13824,23 +13832,10 @@ function updateIncomeTotal() {
     const codeColour = grossTotal > PA_TAPER_END ? 'var(--red)'
       : grossTotal > PA_TAPER_START ? 'var(--amber)'
       : 'var(--green)';
-    let codeNote = '';
-    if (grossTotal > PA_TAPER_END)        codeNote = 'PA fully withdrawn — zero personal allowance';
-    else if (grossTotal > PA_TAPER_START) codeNote = `PA reduced by £${fmtNum(tcReduction,0)} · £${fmtNum(tcAllowance,0)} remaining`;
-    else if (grossTotal === PA_TAPER_START) codeNote = 'At taper threshold — £1 more triggers reduction';
-    else                                   codeNote = `Full £${fmtNum(FULL_PA,0)} personal allowance`;
     taxCodeEl.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px">Estimated Tax Code</div>
-          <div style="font-size:24px;font-weight:600;color:${codeColour};letter-spacing:2px">${taxCode}</div>
-        </div>
-        <div style="padding-top:18px">
-          <div style="font-size:10px;color:var(--muted);line-height:1.6">${codeNote}</div>
-          ${grossTotal > PA_TAPER_START && grossTotal < PA_TAPER_END
-            ? `<div style="font-size:9px;color:var(--amber);margin-top:3px">PA = £12,570 − floor((£${fmtNum(Math.round(grossTotal),0)} − £100,000) ÷ 2) = £${fmtNum(tcAllowance,0)}</div>`
-            : ''}
-        </div>
+      <div>
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px">Estimated Tax Code</div>
+        <div style="font-size:24px;font-weight:600;color:${codeColour};letter-spacing:2px">${taxCode}</div>
       </div>`;
   }
 
