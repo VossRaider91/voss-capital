@@ -12682,7 +12682,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600">New Holdings</div>
-          <div style="font-size:9px;color:var(--muted)">From monthly history — ticked by default so they feed the calculator's drift and rebalancing · % shown relative to new holdings only · Total: £${fmtNum(Math.round(newTotal),0)}</div>
+          <div style="font-size:9px;color:var(--muted);padding-right:12px">From monthly history. Ticked by default so they feed the calculator's drift and rebalancing.<br>% shown relative to new holdings only · Total: £${fmtNum(Math.round(newTotal),0)}</div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${newSectionId}')" id="btn-${newSectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
       </div>
@@ -12696,7 +12696,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600;color:var(--muted)">Legacy Holdings</div>
-          <div style="font-size:9px;color:var(--muted2)">Pre-calculator holdings — unticked by default so the calculator doesn't try to rebalance against your historical positions · % shown relative to legacy holdings only · Total: £${fmtNum(Math.round(legacyTotal),0)}</div>
+          <div style="font-size:9px;color:var(--muted2);padding-right:12px">Pre-calculator holdings. Unticked by default so the calculator doesn't try to rebalance against your historical positions.<br>% shown relative to legacy holdings only · Total: £${fmtNum(Math.round(legacyTotal),0)}</div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${legacySectionId}')" id="btn-${legacySectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
       </div>
