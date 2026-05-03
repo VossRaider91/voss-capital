@@ -2422,6 +2422,279 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .bgt-section-variable { color: var(--blue); }
 
 /* ═══════════════════════════════════════════════════════════
+   BUDGET TRACKER — Section Cards (collapsible v20)
+   Replaces the long single-table layout with per-section
+   collapsible cards. Each card has a header strip carrying the
+   pill, headline figure, drift label, confirmation count, and
+   chevron, with a thin progress bar underneath. Tap header to
+   fold/unfold. State persists via toggleMobileCollapse.
+   ═══════════════════════════════════════════════════════════ */
+.bgt-section-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.bgt-section-card-header {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  padding: 14px 16px;
+}
+.bgt-section-card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.bgt-section-card-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.bgt-section-card-headline {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+}
+.bgt-section-card-drift {
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.bgt-section-card-confirm {
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.bgt-section-card-chevron {
+  display: inline-block;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  padding: 4px 6px;
+}
+.bgt-section-card.collapsed .bgt-section-card-chevron {
+  transform: rotate(-90deg);
+}
+.bgt-section-card-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.bgt-section-card-bar-plan {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255,255,255,0.18);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.bgt-section-card-bar-actual {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease, background 0.18s ease;
+}
+.bgt-section-card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(0,0,0,0.18);
+  border-top: 0.5px solid var(--border);
+}
+.bgt-section-card.collapsed .bgt-section-card-body {
+  display: none;
+}
+.bgt-section-card.collapsed .bgt-section-card-header {
+  padding-bottom: 14px;
+}
+
+/* Individual category row card inside the body */
+.bgt-row-card {
+  background: rgba(255,255,255,0.025);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.bgt-row-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.bgt-row-card-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+}
+.bgt-row-card-tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+.bgt-row-card-tick.tick-confirmed {
+  background: rgba(48,209,88,0.18);
+  color: var(--green);
+}
+.bgt-row-card-tick.tick-pending {
+  background: rgba(255,159,10,0.18);
+  color: var(--amber);
+  font-size: 10px;
+}
+.bgt-row-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.bgt-row-card-cell-label {
+  font-size: 9px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.bgt-row-card-cell-value {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 99px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+}
+.bgt-row-card-cell-value.muted { color: var(--muted); }
+.bgt-row-card-cell-diff-pos {
+  background: rgba(48,209,88,0.12);
+  border-color: rgba(48,209,88,0.32);
+  color: var(--green);
+  font-weight: 600;
+}
+.bgt-row-card-cell-diff-neg {
+  background: rgba(255,69,58,0.12);
+  border-color: rgba(255,69,58,0.32);
+  color: var(--red);
+  font-weight: 600;
+}
+/* Inputs inside the cell value — strip native chrome and inherit pill style */
+.bgt-row-card-cell-value input {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  font-family: inherit;
+  font-size: 11px;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  outline: none;
+}
+.bgt-row-card-cell-value input:focus {
+  outline: none;
+}
+.bgt-row-card-cell-value:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(10,132,255,0.18);
+}
+
+/* Section totals row inside the body (replaces the table's Total row) */
+.bgt-section-card-totals {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-top: 2px;
+}
+.bgt-section-card-totals-label {
+  color: var(--white);
+  font-weight: 600;
+  font-size: 12px;
+}
+.bgt-section-card-totals-figures {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.bgt-section-card-totals-actual {
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Monthly Net Position summary card — keeps the existing pill aesthetic */
+.bgt-net-card {
+  background: var(--card);
+  border: 0.5px solid rgba(10,132,255,0.32);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.bgt-net-card-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+}
+.bgt-net-card-subline {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.bgt-net-card-actual-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+  text-align: right;
+}
+.bgt-net-card-actual-value {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════════
    ANNUAL EXPENSE SUMMARY — collapsible header pill.
    Wraps the section title and chevron in a blue-tinted action
    pill so it reads as a clear interactive element on mobile,
@@ -8807,7 +9080,11 @@ function _applyMobileCollapseState() {
   // Read saved state. If nothing saved, default both to collapsed (mobile first-run).
   let state = _readCollapseState();
   if (!state) {
-    state = { prices: true, holding: true, retirement: true, 'bgt-cat-summary': true, 'holdings-breakdown': true };
+    state = {
+      prices: true, holding: true, retirement: true,
+      'bgt-cat-summary': true, 'holdings-breakdown': true,
+      'bgt-income': true, 'bgt-tax': true, 'bgt-fixed': true, 'bgt-variable': true
+    };
     _writeCollapseState(state);
   } else {
     // Backfill: if user upgraded from a build before retirement was collapsible,
@@ -8828,6 +9105,16 @@ function _applyMobileCollapseState() {
       state['holdings-breakdown'] = true;
       _writeCollapseState(state);
     }
+    // Backfill for the four budget-tracker section cards (Income, Tax,
+    // Fixed Expenses, Variable Expenses). Default each to collapsed so the
+    // budget page opens tidy and the user expands only the section they
+    // want to edit.
+    ['bgt-income','bgt-tax','bgt-fixed','bgt-variable'].forEach(k => {
+      if (state[k] === undefined) {
+        state[k] = true;
+        _writeCollapseState(state);
+      }
+    });
   }
   document.querySelectorAll('[data-collapsible]').forEach(card => {
     const name = card.getAttribute('data-collapsible');
@@ -19176,47 +19463,117 @@ function _renderBgtMainTable(state) {
 
   const recurring = state.recurring || {};
 
-  const section = (label, cls, items, isIncome, isVariable) => {
-    const rows = items.map(name => {
-      const p    = parseFloat(planned[name]) || 0;
-      const a    = parseFloat(actual[name])  || 0;
-      const diff = isIncome ? (a - p) : (p - a);
-      const dCls = diff > 0.005 ? 'bgt-diff-pos' : diff < -0.005 ? 'bgt-diff-neg' : 'bgt-diff-neutral';
-      const isRecurring = !!recurring[name];
-      // Two-state recurring icon. Both states use the same ↻ glyph so the
-      // user sees a clean toggle of meaning rather than swapping symbols:
-      //   • Orange (default) — planned figure carries forward each month
-      //     while actual resets to 0 (typical for variable-actual income
-      //     and expenses where the budget stays the same but the actual
-      //     spend needs to be entered fresh).
-      //   • Green — both planned AND actual are seeded from the previous
-      //     month, treating the category as a fully recurring payment
-      //     (mortgage, council tax, gym etc. — fixed direct debits).
-      // Click to flip between the two states. There is no "off" state any
-      // more — every category at minimum carries planned forward, which
-      // matches how real budgeting works.
-      const recurringIcon = isRecurring
-        ? `<span onclick="bgtToggleRecurring('${name}')" title="Fully recurring — planned and actual both auto-fill each new month from £${fmtNum(p,0)}. Click to make planned-only (orange)." style="cursor:pointer;color:var(--green);font-weight:600;margin-left:6px;font-size:11px;user-select:none">↻</span>`
-        : `<span onclick="bgtToggleRecurring('${name}')" title="Planned-only — the planned figure carries forward each new month, but actual resets to 0 so you can enter the real spend. Click to mark as fully recurring (green)." style="cursor:pointer;color:var(--amber);font-weight:600;margin-left:6px;font-size:11px;user-select:none">↻</span>`;
-      return `<tr class="bgt-row">
-        <td>${name}${recurringIcon}</td>
-        <td><input class="bgt-planned-input" type="text" inputmode="decimal" value="${p > 0 ? p.toFixed(2) : '0.00'}"
-          onchange="bgtUpdatePlanned('${name}',this.value)" onfocus="this.select()" step="0.01" min="0"></td>
-        ${_bgtActualCell(name, a, p, isVariable, 'bgtUpdateActual')}
-        <td class="${dCls}">${_bgtDiffStr(diff)}</td>
-      </tr>`;
-    }).join('');
+  // Build one collapsible section card. `cls` is the colour class
+  // (bgt-section-income / bgt-section-tax / bgt-section-fixed /
+  // bgt-section-variable) for pill colour. `isIncome` flips the diff
+  // sign convention. `isVariable` is passed through to the actual cell
+  // builder so the per-row mini progress bar renders correctly.
+  const sectionCard = (label, cls, items, isIncome, isVariable, collapsibleKey) => {
     const sp = items.reduce((s,n) => s+(parseFloat(planned[n])||0), 0);
     const sa = items.reduce((s,n) => s+(parseFloat(actual[n]) ||0), 0);
     const sd = isIncome ? sa-sp : sp-sa;
-    const sc = sd >= 0 ? 'bgt-diff-pos' : 'bgt-diff-neg';
-    return `<tr><td colspan="4" class="bgt-section-label ${cls}"><span class="bgt-section-pill">${label}</span></td></tr>
-      ${rows}
-      <tr class="bgt-row bgt-total">
-        <td>Total ${label}</td><td>£${fmtNum(sp,2)}</td>
-        <td style="font-weight:600;color:var(--blue)">£${fmtNum(sa,2)}</td>
-        <td class="${sc}">${_bgtDiffStr(sd)}</td>
-      </tr>`;
+    const driftCls = sd > 0.005 ? 'var(--green)' : sd < -0.005 ? 'var(--red)' : 'var(--muted)';
+    const driftStr = Math.abs(sd) < 0.005
+      ? 'on plan'
+      : (isIncome
+        ? (sd > 0 ? `+£${fmtNum(Math.abs(sd),2)}` : `-£${fmtNum(Math.abs(sd),2)}`)
+        : (sd > 0 ? `-£${fmtNum(Math.abs(sd),2)} under` : `+£${fmtNum(Math.abs(sd),2)} over`));
+
+    // Confirmation count — rows marked fully recurring (green tick)
+    const confirmedCount = items.filter(n => !!recurring[n]).length;
+
+    // Progress bar — actual vs planned within the section
+    let barPlanWidth = 0, barActualWidth = 0, barActualColor = 'rgba(255,255,255,0.32)';
+    if (sp > 0 && sa <= sp) {
+      barPlanWidth = 100;
+      barActualWidth = (sa / sp) * 100;
+      barActualColor = 'rgba(255,255,255,0.32)';
+    } else if (sp > 0 && sa > sp) {
+      barPlanWidth = (sp / sa) * 100;
+      barActualWidth = 100;
+      barActualColor = isIncome ? 'var(--green)' : 'var(--amber)';
+    } else if (sp === 0 && sa > 0) {
+      barPlanWidth = 0;
+      barActualWidth = 100;
+      barActualColor = isIncome ? 'var(--green)' : 'var(--amber)';
+    }
+
+    const rowsHtml = items.map(name => {
+      const p    = parseFloat(planned[name]) || 0;
+      const a    = parseFloat(actual[name])  || 0;
+      const diff = isIncome ? (a - p) : (p - a);
+      const dCls = diff > 0.005 ? 'bgt-row-card-cell-diff-pos' : diff < -0.005 ? 'bgt-row-card-cell-diff-neg' : '';
+      const isRecurring = !!recurring[name];
+      // Two-state tick. Green tick = fully recurring (planned + actual
+      // both auto-fill from previous month). Amber rotate = planned-only
+      // (planned carries forward, actual resets so the user enters fresh
+      // each month). Tap to toggle. Same handler as before so the
+      // existing audit-log and carry-forward logic is unchanged.
+      const tickHtml = isRecurring
+        ? `<span class="bgt-row-card-tick tick-confirmed" onclick="bgtToggleRecurring('${name}')" title="Fully recurring — planned and actual both auto-fill each new month from £${fmtNum(p,0)}. Tap to make planned-only.">✓</span>`
+        : `<span class="bgt-row-card-tick tick-pending" onclick="bgtToggleRecurring('${name}')" title="Planned-only — the planned figure carries forward each new month, but actual resets so you can enter the real spend. Tap to mark as fully recurring.">↻</span>`;
+
+      const diffDisplay = Math.abs(diff) < 0.005
+        ? '+£0.00'
+        : (diff > 0 ? `+£${fmtNum(Math.abs(diff),2)}` : `-£${fmtNum(Math.abs(diff),2)}`);
+
+      return `<div class="bgt-row-card">
+        <div class="bgt-row-card-header">
+          <span class="bgt-row-card-name">${name}</span>
+          ${tickHtml}
+        </div>
+        <div class="bgt-row-card-grid">
+          <div>
+            <span class="bgt-row-card-cell-label">Planned</span>
+            <div class="bgt-row-card-cell-value muted">
+              <input class="bgt-planned-input" type="text" inputmode="decimal" value="${p > 0 ? p.toFixed(2) : '0.00'}"
+                onchange="bgtUpdatePlanned('${name}',this.value)" onfocus="this.select()" step="0.01" min="0">
+            </div>
+          </div>
+          <div>
+            <span class="bgt-row-card-cell-label">Actual</span>
+            <div class="bgt-row-card-cell-value">
+              <input class="bgt-actual-input" type="text" inputmode="decimal" value="${a > 0 ? a.toFixed(2) : ''}"
+                placeholder="0.00" step="0.01" min="0"
+                onchange="bgtUpdateActual('${name}',this.value)"
+                onfocus="this.select()">
+            </div>
+          </div>
+          <div>
+            <span class="bgt-row-card-cell-label">Diff</span>
+            <div class="bgt-row-card-cell-value ${dCls}">${diffDisplay}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="bgt-section-card ${cls}" data-collapsible="${collapsibleKey}">
+      <div class="bgt-section-card-header" onclick="toggleMobileCollapse('${collapsibleKey}')">
+        <div class="bgt-section-card-header-row">
+          <div class="bgt-section-card-header-info">
+            <span class="bgt-section-pill">${label}</span>
+            <span class="bgt-section-card-headline">£${fmtNum(sa,2)}</span>
+            <span class="bgt-section-card-drift" style="color:${driftCls}">${driftStr}</span>
+            <span class="bgt-section-card-confirm">${confirmedCount}/${items.length} confirmed</span>
+          </div>
+          <span class="bgt-section-card-chevron" aria-hidden="true">⌄</span>
+        </div>
+        <div class="bgt-section-card-bar">
+          <div class="bgt-section-card-bar-plan" style="width:${barPlanWidth}%"></div>
+          <div class="bgt-section-card-bar-actual" style="width:${barActualWidth}%;background:${barActualColor}"></div>
+        </div>
+      </div>
+      <div class="bgt-section-card-body">
+        ${rowsHtml}
+        <div class="bgt-section-card-totals">
+          <span class="bgt-section-card-totals-label">Total ${label}</span>
+          <div class="bgt-section-card-totals-figures">
+            <span style="color:var(--muted)">Plan £${fmtNum(sp,2)}</span>
+            <span class="bgt-section-card-totals-actual">£${fmtNum(sa,2)}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
   };
 
   const tIP = BGT_INCOME.reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
@@ -19228,84 +19585,70 @@ function _renderBgtMainTable(state) {
   const tEP = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
   const tEA = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
   const netPlan = tIP - tTP - tEP, netAct = tIA - tTA - tEA;
-  const nCls = netAct >= 0 ? 'bgt-diff-pos' : 'bgt-diff-neg';
-
-  // Dynamic net position narrative
-  const netDiff = netAct - netPlan;
-
-  // Planned-deficit detection — fires when the plan itself doesn't balance
-  // (income < tax + expenses, before any actuals are even entered). Materially
-  // different from "actuals exceed income this month" — this is a structural
-  // problem with the plan, not a spending problem. Surfaced as a red banner
-  // above the table so the user can't miss it.
-  const planNetCls    = netPlan >= 0 ? 'bgt-diff-pos' : 'bgt-diff-neg';
-  const planNetPrefix = netPlan < 0 ? '-' : '';
-  const planNetIcon   = netPlan < 0 ? ' ⚠' : '';
 
   // Planned-deficit warning takes precedence — render as a separate red
   // banner above the standard narrative so the user can't miss it
   const planDeficitWarning = netPlan < 0
     ? `<div style="margin-top:12px;padding:10px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:var(--red);line-height:1.6;border-left:2px solid var(--red)">
-         <span style="font-weight:600">⚠ Plan does not balance</span> — your planned outgoings (tax + expenses) exceed planned income by £${fmtNum(Math.abs(netPlan),0)}.
+         <span style="font-weight:600">⚠ Plan does not balance</span> Your planned outgoings (tax + expenses) exceed planned income by £${fmtNum(Math.abs(netPlan),0)}.
          Either add missing income (e.g. dividends to the Dividend Salary row), reduce planned outgoings, or accept the gap will need to come from savings.
        </div>`
     : '';
 
-  document.getElementById('bgt-main-table').innerHTML = `
-    <div class="card mb16">
-      <table class="bgt-table">
-        <thead class="bgt-thead"><tr>
-          <th style="text-align:left">Category</th><th>Planned £</th><th>Actual £</th><th>Difference</th>
-        </tr></thead>
-        <tbody>
-          ${section('Income','bgt-section-income',BGT_INCOME,true,false)}
-          ${section('Tax Provision','bgt-section-tax',BGT_TAX,false,false)}
-          ${section('Fixed Expenses','bgt-section-fixed',BGT_FIXED,false,false)}
-          ${section('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true)}
-          <tr class="bgt-row bgt-net">
-            <td style="color:var(--gold)" data-row-label="Monthly Net Position" data-row-subline="Income £${fmtNum(tIA,0)} · Expenses £${fmtNum(tTA + tEA,0)}" data-row-actual="${_bgtDiffStr(netAct)}">${netAct>=0?'✅':'⚠️'} Net Position</td>
-            <td class="${planNetCls}">${planNetPrefix}£${fmtNum(Math.abs(netPlan),2)}${planNetIcon}</td>
-            <td class="${nCls}" style="color:${netAct>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netAct)}</td>
-            <td class="${nCls}" style="color:${netDiff>=0?'var(--green)':'var(--red)'}">${_bgtDiffStr(netDiff)}</td>
-          </tr>
-        </tbody>
-      </table>
-      ${planDeficitWarning}
-      ${(() => {
-        // Tax provision status — uses the same simple model as the Tax tab.
-        // Recommendation = this year's liability ÷ 12, rounded up to nearest
-        // £50 with 10% buffer. POAs are pre-payments OF this liability, not
-        // additional bills, so they don't inflate the monthly figure.
-        const thisYear = window._selfAssessmentLiability || 0;
-        if (thisYear < 0.01) return '';
-        const recommended = Math.ceil((thisYear / 12) * 1.1 / 50) * 50;
-        const provisioned = parseFloat(actual['Tax Provision']) || 0;
-        const shortfall   = recommended - provisioned;
-        let statusColour, statusIcon, statusText;
-        if (shortfall <= 0) {
-          statusColour = 'var(--green)'; statusIcon = '✓';
-          statusText = `On track for tax · provisioning £${fmtNum(Math.round(provisioned),0)}/mo against £${fmtNum(Math.round(recommended),0)}/mo recommendation`;
-        } else if (shortfall < recommended * 0.25) {
-          statusColour = 'var(--amber)'; statusIcon = '⚠';
-          statusText = `Slightly under-provisioned · £${fmtNum(Math.round(shortfall),0)} short of the £${fmtNum(Math.round(recommended),0)}/mo recommendation`;
-        } else {
-          statusColour = 'var(--red)'; statusIcon = '⚠';
-          statusText = `Under-provisioned for tax · £${fmtNum(Math.round(shortfall),0)} short of the £${fmtNum(Math.round(recommended),0)}/mo recommendation. Top up the Tax Provision row this month.`;
-        }
-        return `<div style="margin-top:8px;padding:8px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:${statusColour};line-height:1.6;border-left:2px solid ${statusColour}">
-          <span style="font-weight:600">${statusIcon}</span> ${statusText}
-        </div>`;
-      })()}
-      <div style="margin-top:8px;font-size:9px;color:var(--muted);line-height:1.5">
-        <span style="color:var(--green);font-weight:600">↻</span> next to a category means it's recurring — its planned value will auto-fill into Actuals on the first day of each new month with a matching audit log entry.
-        Click the icon next to any row to toggle.
-      </div>
+  // Tax provision status — uses the same simple model as the Tax tab.
+  const taxStatusHtml = (() => {
+    const thisYear = window._selfAssessmentLiability || 0;
+    if (thisYear < 0.01) return '';
+    const recommended = Math.ceil((thisYear / 12) * 1.1 / 50) * 50;
+    const provisioned = parseFloat(actual['Tax Provision']) || 0;
+    const shortfall   = recommended - provisioned;
+    let statusColour, statusIcon, statusText;
+    if (shortfall <= 0) {
+      statusColour = 'var(--green)'; statusIcon = '✓';
+      statusText = `On track for tax · provisioning £${fmtNum(Math.round(provisioned),0)}/mo against £${fmtNum(Math.round(recommended),0)}/mo recommendation`;
+    } else if (shortfall < recommended * 0.25) {
+      statusColour = 'var(--amber)'; statusIcon = '⚠';
+      statusText = `Slightly under-provisioned · £${fmtNum(Math.round(shortfall),0)} short of the £${fmtNum(Math.round(recommended),0)}/mo recommendation`;
+    } else {
+      statusColour = 'var(--red)'; statusIcon = '⚠';
+      statusText = `Under-provisioned for tax · £${fmtNum(Math.round(shortfall),0)} short of the £${fmtNum(Math.round(recommended),0)}/mo recommendation. Top up the Tax Provision row this month.`;
+    }
+    return `<div style="margin-top:8px;padding:8px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:${statusColour};line-height:1.6;border-left:2px solid ${statusColour}">
+      <span style="font-weight:600">${statusIcon}</span> ${statusText}
     </div>`;
+  })();
+
+  document.getElementById('bgt-main-table').innerHTML = `
+    ${sectionCard('Income','bgt-section-income',BGT_INCOME,true,false,'bgt-income')}
+    ${sectionCard('Tax Provision','bgt-section-tax',BGT_TAX,false,false,'bgt-tax')}
+    ${sectionCard('Fixed Expenses','bgt-section-fixed',BGT_FIXED,false,false,'bgt-fixed')}
+    ${sectionCard('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true,'bgt-variable')}
+    <div class="bgt-net-card">
+      <div style="min-width:0;flex:1">
+        <div class="bgt-net-card-label">${netAct>=0?'✅':'⚠️'} Monthly Net Position</div>
+        <div class="bgt-net-card-subline">Income £${fmtNum(tIA,0)} · Expenses £${fmtNum(tTA + tEA,0)}</div>
+      </div>
+      <div style="flex-shrink:0">
+        <div class="bgt-net-card-actual-label">Actual</div>
+        <div class="bgt-net-card-actual-value" style="color:${netAct>=0?'var(--green)':'var(--red)'}">${netAct >= 0 ? '+' : '-'}£${fmtNum(Math.abs(netAct),2)}</div>
+      </div>
+    </div>
+    ${planDeficitWarning}
+    ${taxStatusHtml}
+    <div style="margin-top:8px;font-size:9px;color:var(--muted);line-height:1.5">
+      <span style="color:var(--green);font-weight:600">✓</span> next to a category means it's recurring (planned and actual auto-fill each new month). <span style="color:var(--amber);font-weight:600">↻</span> means planned-only — the planned value carries forward but the actual resets so you can enter the real spend. Tap the icon to toggle.
+    </div>
+  `;
 
   // Cascade: keep all the analytics panels in sync with every edit
   _renderBgtYtdPanel(state);
   _renderBgtBreakdownPanel(state);
   _renderBgtAveragesPanel(state);
+
+  // Apply collapsed state to the new section cards
+  if (typeof _applyMobileCollapseState === 'function') {
+    _applyMobileCollapseState();
+  }
 }
 
 // ── Annual Year-to-Date panel ──────────────────────────────
