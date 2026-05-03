@@ -9854,10 +9854,10 @@ function calculate() {
 
   // Summary stats
   document.getElementById('calcSummary').innerHTML = [
-    { label:'Tracked Funds Value (before deployment)', val:`£${fmtNum(currentPortVal,0)}`, cls:'gold', sub:'your 4 tracked funds only' },
-    { label:'After Contribution', val:`£${fmtNum(projAfter,0)}`, cls:'', sub:'tracked funds projected total' },
-    { label:'Efficiency', val:`${efficiency}%`, cls: parseFloat(efficiency)>=97?'green':parseFloat(efficiency)>=90?'amber':'red', sub:'of budget deployed' },
-    { label:'Max Drift', val:`${maxDriftVal.toFixed(1)}%`, cls:maxDriftVal<=2?'green':maxDriftVal<=5?'amber':'red', sub:currentPortVal>0?`${maxDriftFund.ticker} ${maxDriftFund.overweight>0?'Overweight':'Underweight'}`:`${maxDriftFund.ticker} after purchase` },
+    { label:'Tracked Funds Value (before deployment)', val:`£${fmtNum(currentPortVal,0)}`, cls:'gold', sub:'Your 4 tracked funds only' },
+    { label:'After Contribution', val:`£${fmtNum(projAfter,0)}`, cls:'', sub:'Tracked funds projected total' },
+    { label:'Efficiency', val:`${efficiency}%`, cls: parseFloat(efficiency)>=97?'green':parseFloat(efficiency)>=90?'amber':'red', sub:'Of budget deployed' },
+    { label:'Max Drift', val:`${maxDriftVal.toFixed(1)}%`, cls:maxDriftVal<=2?'green':maxDriftVal<=5?'amber':'red', sub:currentPortVal>0?`${maxDriftFund.ticker} ${maxDriftFund.overweight>0?'Overweight':'Underweight'}`:`${maxDriftFund.ticker} After Purchase` },
   ].map(s=>`<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
 
   // Allocation rows
@@ -16018,10 +16018,10 @@ function renderSellCalculator() {
   // so it gets the blue accent treatment. The other three are neutral
   // supporting context.
   const cardCfgs = [
-    { label: 'Remaining Allowance',    val: `£${fmtNum(Math.round(remainingAllowance), 0)}`, cls: 'gold',  sub: `of £${fmtNum(allowance, 0)} available`, primary: true },
-    { label: 'Total GIA Value',        val: `£${fmtNum(Math.round(totalGIAValue), 0)}`,      cls: 'gold',  sub: 'current market value' },
-    { label: 'Total Unrealised Gain',  val: `${totalGIAGain >= 0 ? '+' : ''}£${fmtNum(Math.round(Math.abs(totalGIAGain)), 0)}`, cls: totalGIAGain >= 0 ? 'green' : 'red', sub: 'if sold today' },
-    { label: 'Est. Tax Saved',         val: `£${fmtNum(Math.round(Math.min(remainingAllowance, Math.max(0, totalGIAGain)) * rate / 100), 0)}`, cls: 'green', sub: `at ${rate}% by using allowance` },
+    { label: 'Remaining Allowance',    val: `£${fmtNum(Math.round(remainingAllowance), 0)}`, cls: 'gold',  sub: `Of £${fmtNum(allowance, 0)} available`, primary: true },
+    { label: 'Total GIA Value',        val: `£${fmtNum(Math.round(totalGIAValue), 0)}`,      cls: 'gold',  sub: 'Current market value' },
+    { label: 'Total Unrealised Gain',  val: `${totalGIAGain >= 0 ? '+' : ''}£${fmtNum(Math.round(Math.abs(totalGIAGain)), 0)}`, cls: totalGIAGain >= 0 ? 'green' : 'red', sub: 'If sold today' },
+    { label: 'Est. Tax Saved',         val: `£${fmtNum(Math.round(Math.min(remainingAllowance, Math.max(0, totalGIAGain)) * rate / 100), 0)}`, cls: 'green', sub: `At ${rate}% by using allowance` },
   ];
   const colourFor = (cls) => ({
     gold:  'var(--gold)',
@@ -16720,7 +16720,7 @@ function renderAnalyse() {
   const snapCfgs = [
     { label:'Total Portfolio Value', val:`£${fmtNum(Math.round(totalValue),0)}`, sub:`${holdingCount} holdings across 3 wrappers`, cls:'gold', primary:true },
     { label:'Tax Exempt Coverage', val:`${taxExemptPct.toFixed(1)}%`, sub:`£${fmtNum(Math.round(taxExemptValue),0)} in ISA + SIPP`, cls: taxExemptPct > 40 ? 'green' : 'amber' },
-    { label:'GIA Unrealised Gain', val:`${totalGIAGain>=0?'+':''}£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'if sold today', cls: totalGIAGain>=0 ? 'green' : 'red' },
+    { label:'GIA Unrealised Gain', val:`${totalGIAGain>=0?'+':''}£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'If sold today', cls: totalGIAGain>=0 ? 'green' : 'red' },
     { label:'Years to Retirement', val:yearsLeft, sub:`Target age ${targetAge} in ${taxYearStart+yearsLeft}`, cls:'white' },
   ];
   document.getElementById('analyse-snapshot').innerHTML = snapCfgs.map(s => {
@@ -16774,8 +16774,8 @@ function renderAnalyse() {
       white: 'var(--white)',
     })[cls] || 'var(--white)';
     const cgtCfgs = [
-      { label:'CGT Allowance Remaining', val:`£${fmtNum(remainingCGT,0)}`, suffix:`of £${fmtNum(allowance,0)}`, sub:`resets 5 April ${taxYearStart+1} · ${daysToReset} days away`, cls:'white', primary:true },
-      { label:'Total Unrealised Gain', val:`£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'across GIA holdings only', cls: totalGIAGain>0?'green':'red' },
+      { label:'CGT Allowance Remaining', val:`£${fmtNum(remainingCGT,0)}`, suffix:`of £${fmtNum(allowance,0)}`, sub:`Resets 5 April ${taxYearStart+1} · ${daysToReset} Days Away`, cls:'white', primary:true },
+      { label:'Total Unrealised Gain', val:`£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}`, sub:'Across GIA holdings only', cls: totalGIAGain>0?'green':'red' },
       { label:'Estimated Tax Liability', val:`£${fmtNum(Math.round(cgtCalc.totalTax),0)}`, sub:`${cgtCalc.effectiveRate.toFixed(1)}% effective rate`, cls: cgtCalc.totalTax > 0 ? 'red' : 'white' },
     ];
     cgtCardsEl.innerHTML = cgtCfgs.map(s => {
@@ -16932,9 +16932,9 @@ function renderAnalyse() {
     const totalGrowth = latestVal - startVal - (totalPersonalContrib+totalEmployerContrib);
 
     document.getElementById('analyse-history-cards').innerHTML = [
-      { label:'Months of Data', val:monthsOfData, sub:'saved entries', cls:'gold' },
-      { label:'Total Contributed', val:`£${fmtNum(Math.round(totalPersonalContrib+totalEmployerContrib),0)}`, sub:`avg £${fmtNum(Math.round(avgMonthly),0)}/mo`, cls:'white' },
-      { label:'Market Growth (Est.)', val:`${totalGrowth>=0?'+':''}£${fmtNum(Math.round(totalGrowth),0)}`, sub:'portfolio gain above contributions', cls: totalGrowth>=0?'green':'red' },
+      { label:'Months of Data', val:monthsOfData, sub:'Saved entries', cls:'gold' },
+      { label:'Total Contributed', val:`£${fmtNum(Math.round(totalPersonalContrib+totalEmployerContrib),0)}`, sub:`Avg £${fmtNum(Math.round(avgMonthly),0)}/mo`, cls:'white' },
+      { label:'Market Growth (Est.)', val:`${totalGrowth>=0?'+':''}£${fmtNum(Math.round(totalGrowth),0)}`, sub:'Portfolio gain above contributions', cls: totalGrowth>=0?'green':'red' },
     ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
     document.getElementById('analyse-history-insight').textContent = `Based on ${monthsOfData} saved entries from ${firstEntry?.date||'—'} to ${latestEntry?.date||'—'}.`;
   } else {
@@ -17009,16 +17009,16 @@ function renderBudgetPerformance() {
       })[cls] || 'var(--white)';
       const perfCfgs = [
         { label: 'Annual Savings Rate',      val: `${savingsRate.toFixed(1)}%`,
-          sub: `plan was ${planRate.toFixed(1)}%`,
+          sub: `Plan was ${planRate.toFixed(1)}%`,
           cls: savingsRate >= planRate ? 'green' : 'amber' },
         { label: 'Total Saved',              val: `${netActual>=0?'+':''}£${fmtNum(Math.round(Math.abs(netActual)),0)}`,
-          sub: `planned £${fmtNum(Math.round(Math.abs(netPlanned)),0)}`,
+          sub: `Planned £${fmtNum(Math.round(Math.abs(netPlanned)),0)}`,
           cls: netActual >= 0 ? 'green' : 'red' },
         { label: 'Income Variance',          val: `${varIncome>=0?'+':''}£${fmtNum(Math.round(varIncome),0)}`,
-          sub: varIncome >= 0 ? 'above plan' : 'below plan',
+          sub: varIncome >= 0 ? 'Above plan' : 'Below plan',
           cls: varIncome >= 0 ? 'green' : 'red' },
         { label: 'Expense Variance',         val: `${varExp<=0?'+':''}£${fmtNum(Math.round(Math.abs(varExp)),0)}`,
-          sub: varExp <= 0 ? 'under budget' : 'over budget',
+          sub: varExp <= 0 ? 'Under budget' : 'Over budget',
           cls: varExp <= 0 ? 'green' : 'red' },
       ];
       cardsEl.innerHTML = perfCfgs.map(s => `<div class="tax-headline-card">
@@ -17097,7 +17097,7 @@ function renderBudgetPerformance() {
       {
         label: 'Avg Monthly Net',
         val:   `${avgMonthly>=0?'+':''}£${fmtNum(Math.round(avgMonthly),0)}`,
-        sub:   `across ${ann.count} completed month${ann.count!==1?'s':''}`,
+        sub:   `Across ${ann.count} completed month${ann.count!==1?'s':''}`,
         cls:   avgMonthly >= 0 ? 'green' : 'red',
       },
     ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
@@ -17178,7 +17178,7 @@ function renderAnalyseNetWorth() {
   const nwRateLabel     = nwCgtCalc.remainingBasicBand > 0
     ? `${nwCgtCalc.remainingBasicBand > 0 ? '18%–24% split' : '18%'} CGT on gains`
     : '24% CGT on gains';
-  const nwCgtNote       = `CGT on gains above £${fmtNum(nwAllowance,0)} at ${nwMarginalRate}% — all other assets exempt`;
+  const nwCgtNote       = `CGT on Gains Above £${fmtNum(nwAllowance,0)} at ${nwMarginalRate}% · All Other Assets Exempt`;
   const nwGIANote       = `CGT on gains above £${fmtNum(nwAllowance,0)} annual allowance at ${nwMarginalRate}%`;
   const nwGIABarNote    = `${nwMarginalRate}% CGT on gains above £${fmtNum(nwAllowance,0)} allowance`;
 
@@ -17191,9 +17191,9 @@ function renderAnalyseNetWorth() {
       white: 'var(--white)',
     })[cls] || 'var(--white)';
     const cardCfgs = [
-      { label:'Net Worth', val:`\u00a3${fmtNum(Math.round(netWorth),0)}`, sub:'gross assets minus all liabilities', cls:'gold', primary:true },
+      { label:'Net Worth', val:`\u00a3${fmtNum(Math.round(netWorth),0)}`, sub:'Gross assets minus all liabilities', cls:'gold', primary:true },
       { label:'Investment Portfolio', val:`\u00a3${fmtNum(Math.round(totalPortfolio),0)}`, sub:`GIA \u00a3${fmtNum(Math.round(giaVal),0)} \u00b7 ISA \u00a3${fmtNum(Math.round(isaVal),0)} \u00b7 SIPP \u00a3${fmtNum(Math.round(sippVal),0)}`, cls:'white' },
-      { label:'Property Equity', val:`\u00a3${fmtNum(Math.round(propertyEquity),0)}`, sub:'after mortgage \u2014 main residence relief applies', cls:'white' },
+      { label:'Property Equity', val:`\u00a3${fmtNum(Math.round(propertyEquity),0)}`, sub:'After Mortgage · Main Residence Relief Applies', cls:'white' },
       { label:'Tax-Exposed (GIA only)', val:`\u00a3${fmtNum(Math.round(taxableAssets),0)}`, sub:nwCgtNote, cls:'amber' },
     ];
     nwCards.innerHTML = cardCfgs.map(s => {
@@ -17422,9 +17422,9 @@ function renderNetWorth() {
     amber: 'var(--amber)', white: 'var(--white)',
   })[cls] || 'var(--white)';
   const nwSummaryCfgs = [
-    { label:'Net Worth', val:`£${fmtNum(Math.round(netWorth),0)}`, sub:'assets minus all liabilities', cls: netWorth>=0?'gold':'red', primary:true },
-    { label:'Gross Assets', val:`£${fmtNum(Math.round(grossAssets),0)}`, sub:'before liabilities', cls:'white' },
-    { label:'Total Liabilities', val:`£${fmtNum(Math.round(totalLiabilities),0)}`, sub:'mortgage + other debts', cls:'red' },
+    { label:'Net Worth', val:`£${fmtNum(Math.round(netWorth),0)}`, sub:'Assets minus all liabilities', cls: netWorth>=0?'gold':'red', primary:true },
+    { label:'Gross Assets', val:`£${fmtNum(Math.round(grossAssets),0)}`, sub:'Before liabilities', cls:'white' },
+    { label:'Total Liabilities', val:`£${fmtNum(Math.round(totalLiabilities),0)}`, sub:'Mortgage + other debts', cls:'red' },
     { label:'Investment Portfolio', val:`£${fmtNum(Math.round(totalInvestments),0)}`, sub:'GIA + ISA + SIPP', cls:'green' },
   ];
   document.getElementById('nw-summary-cards').innerHTML = nwSummaryCfgs.map(s => {
