@@ -551,6 +551,22 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--red);
   background: rgba(255,69,58,0.08);
 }
+/* Clear All sits next to the segmented .seg-toggle pill in the history
+   controls row. Match the inner highlighted pill (the blue "All" pill)
+   rather than the outer wrapper, since that's what the user visually
+   compares against. The seg-toggle inner pill is ~30px (12px font + 14px
+   padding + 1px border); we mirror that. align-items:center on the parent
+   keeps Clear All vertically centred against the seg-toggle. */
+#history-controls-row > .btn-danger {
+  border-radius: 50px;
+  height: 30px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .btn-edit {
   background: rgba(255,255,255,0.04);
   border: 0.5px solid var(--border);
@@ -718,6 +734,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--muted); font-weight: 500; text-align: right; opacity: 1;
 }
 .col-h.left { text-align: left; }
+.col-h.center { text-align: center; }
 .col-ticker { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
 .col-holding { font-size: 12px; color: var(--muted); line-height: 1.6; letter-spacing: -0.05px; }
 .col-holding .hi { color: var(--white); }
@@ -1960,6 +1977,111 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* RETIREMENT */
 .ret-milestone { }
+
+/* ── Milestone list (M2 timeline pattern) ──────────────────────
+   Replaces the wide 8-column projection table with a vertical
+   timeline list. Each milestone is a row with year+age+phase on
+   the left, pot value plus supporting stats on the right, and a
+   thin progress bar showing journey toward final target. */
+.milestone-list {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255,255,255,0.025);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.milestone-row {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+.milestone-row:last-child { border-bottom: none; }
+.milestone-anchor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.milestone-year {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+  line-height: 1;
+}
+.milestone-meta {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.milestone-body {
+  min-width: 0;
+}
+.milestone-value {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+.milestone-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 7px;
+  flex-wrap: wrap;
+}
+.milestone-stats .stat-pos { color: var(--green); }
+.milestone-stats .stat-gold { color: var(--gold); }
+.milestone-progress {
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.milestone-progress-fill {
+  height: 100%;
+  background: var(--muted2);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* Phase 2 boundary — amber accent line above first P2 row */
+.milestone-row.phase-p2-start {
+  border-top: 2px solid var(--amber);
+}
+/* Phase 3 (coast) boundary — blue-grey accent line */
+.milestone-row.phase-p3-start {
+  border-top: 2px solid #8facc8;
+}
+/* Coast rows get a subtle background tint */
+.milestone-row.phase-p3 {
+  background: rgba(143,172,200,0.04);
+}
+/* Target retirement row — green tint, brighter typography */
+.milestone-row.retirement-target {
+  background: rgba(50,215,75,0.08);
+}
+.milestone-row.retirement-target .milestone-year,
+.milestone-row.retirement-target .milestone-value {
+  color: var(--green);
+}
+.milestone-row.retirement-target .milestone-progress-fill {
+  background: var(--green);
+}
+
 .projection-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .projection-table th {
   font-size: 12px; letter-spacing: -0.05px; text-transform: none;
@@ -2763,6 +2885,86 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   gap: 8px; padding-bottom: 8px;
   border-bottom: 0.5px solid var(--border);
 }
+
+/* Plan card — used for Optimal CGT Sale Plan and Remaining GIA Position
+   tables. Replaces the rigid 6-column grid with a card-based layout that
+   works at any viewport width. Each card has a tinted header strip
+   (ticker + context) above a row of equal-width metric tiles separated
+   by hairline vertical dividers. */
+.plan-card {
+  background: rgba(255,255,255,0.025);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.plan-card:last-child { margin-bottom: 0; }
+.plan-card-header {
+  background: rgba(255,255,255,0.04);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 0.5px solid var(--border);
+}
+.plan-card-ticker {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.1px;
+}
+.plan-card-context {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.5;
+}
+.plan-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.plan-card-metric {
+  text-align: center;
+  padding: 14px 8px;
+  border-right: 0.5px solid var(--border);
+}
+.plan-card-metric:last-child { border-right: none; }
+.plan-card-metric-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+.plan-card-metric-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+  line-height: 1.1;
+}
+.plan-card-metric-value.lg {
+  font-size: 18px;
+}
+.plan-card-totals {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.plan-card-totals-header {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 0.5px solid var(--border);
+}
 .sell-units-input {
   background: var(--recess);
   border: 0.5px solid rgba(255,255,255,0.05);
@@ -2809,6 +3011,38 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .collapsible-chevron { display: none; }
 .collapsible-header { cursor: default; }
 .mobile-always-action { display: none !important; }
+
+/* ── Chevron collapsible sections ───────────────────────────
+   Reusable collapsible component used by Holdings Breakdown,
+   Optimal CGT Sale Plan, and Remaining GIA Position. Unlike the
+   retirement settings pattern (which only collapses on mobile),
+   these collapse at every viewport since the underlying tables
+   are bulky regardless of screen width. Show the chevron and
+   make the header tappable always. */
+.chevron-collapsible .collapsible-chevron {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+  padding: 4px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.chevron-collapsible .collapsible-header {
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.chevron-collapsible.collapsed .collapsible-body {
+  display: none;
+}
+.chevron-collapsible.collapsed .collapsible-chevron {
+  transform: rotate(-90deg);
+}
+.chevron-collapsible:not(.collapsed) .collapsible-chevron {
+  color: var(--gold);
+}
 
 @media (max-width: 768px) {
 
@@ -3111,7 +3345,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     min-height: 44px !important;
     font-size: 14px !important;
   }
-  #soldSharesGrid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  /* Sold Shares form — stack all grids to single column on mobile so labels
+     don't wrap mid-word and placeholders aren't truncated. Each share row
+     is its own card; they stack vertically when only one is present. */
+  #soldFormMetaRow,
+  #soldFormSummaryRow,
+  #soldSharesGrid { grid-template-columns: 1fr !important; gap: 10px !important; }
   #empFundsInput { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
 
   /* ── ALLOC TABLE — single line per row ────────────────────── */
@@ -3514,8 +3753,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
   #history-controls-row > .btn-danger {
     flex-shrink: 0 !important;
-    padding: 6px 12px !important;
-    font-size: 11px !important;
+    padding: 0 12px !important;
   }
 
   /* ── DATA CONTROLS FOOTER — bigger taps on mobile ─────────── */
@@ -4581,6 +4819,58 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     padding: 12px 14px;
   }
 
+  /* Plan card mobile tweak — at the standard mobile breakpoint the
+     header strip stacks ticker above context for breathing room, and
+     the metric tiles get slightly tighter padding. The 4-across grid
+     stays since we want the table-style read on most mobile widths. */
+  .plan-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 14px;
+  }
+  .plan-card-context {
+    text-align: left;
+  }
+  .plan-card-metric {
+    padding: 12px 6px;
+  }
+  .plan-card-metric-label {
+    font-size: 9px;
+  }
+  .plan-card-metric-value {
+    font-size: 13px;
+  }
+  .plan-card-metric-value.lg {
+    font-size: 16px;
+  }
+
+  /* Milestone list mobile tweaks — the year+age column shrinks slightly
+     and the supporting stats stack into a 2x2 grid for predictable
+     wrapping (otherwise flex-wrap breaks at varying points depending on
+     digit counts). */
+  .milestone-row {
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+  .milestone-year {
+    font-size: 13px;
+  }
+  .milestone-meta {
+    font-size: 9px;
+    gap: 5px;
+  }
+  .milestone-value {
+    font-size: 16px;
+  }
+  .milestone-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+    font-size: 9px;
+  }
+
   /* ── SELL CALCULATOR — CGT/ISA remaining-allowance figure ───── */
   /* On desktop the remaining-allowance div uses margin-left:auto to push
      itself flush right beside its inputs. On mobile that flex-wrap puts
@@ -5253,6 +5543,16 @@ body.modal-active .container > footer {
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-history">
 
+  <div class="flex-between mb16" id="history-controls-row">
+    <div class="seg-toggle">
+      <button class="seg-option active" onclick="switchHistoryTab('all',this)"><span>All</span></button>
+      <button class="seg-option" onclick="switchHistoryTab('personal',this)"><span>Personal</span></button>
+      <button class="seg-option" onclick="switchHistoryTab('employer',this)"><span>Employer</span></button>
+      <button class="seg-option" onclick="switchHistoryTab('sold',this)"><span>Sold</span></button>
+    </div>
+    <button class="btn-danger btn-sm" onclick="clearAllHistory()">Clear All</button>
+  </div>
+
   <!-- Add entry form - shows on Personal and Employer tabs -->
   <div class="card card-left mb24" id="historyFormCard" style="display:none">
     <div class="section-label" id="historyFormTitle">Add Personal Entry</div>
@@ -5288,14 +5588,56 @@ body.modal-active .container > footer {
     </div>
   </div>
 
-  <div class="flex-between mb16" id="history-controls-row">
-    <div class="seg-toggle">
-      <button class="seg-option active" onclick="switchHistoryTab('all',this)"><span>All</span></button>
-      <button class="seg-option" onclick="switchHistoryTab('personal',this)"><span>Personal</span></button>
-      <button class="seg-option" onclick="switchHistoryTab('employer',this)"><span>Employer</span></button>
-      <button class="seg-option" onclick="switchHistoryTab('sold',this)"><span>Sold</span></button>
+  <!-- SOLD SHARES FORM (hidden, shown when Sold tab active) -->
+  <div id="soldFormCard" class="card card-left mb24" style="display:none">
+    <div class="section-label mb16">Record Share Sale</div>
+    <div id="soldFormMetaRow" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="input-group">
+        <span class="input-label">Sale Date</span>
+        <input class="text-input" type="date" id="sold-date">
+      </div>
+      <div class="input-group">
+        <span class="input-label">Sold From Wrapper</span>
+        <select class="num-input" id="sold-wrapper" style="text-align:left;cursor:pointer"
+          onchange="_clearSoldFieldManualFlags();recomputeSoldFormAuto();renderSoldShareRows()">
+          <option value="GIA">GIA</option>
+          <option value="ISA">ISA</option>
+          <option value="SIPP">SIPP</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <span class="input-label">Notes (optional)</span>
+        <input class="text-input" type="text" id="sold-notes" placeholder="e.g. Bed & ISA transfer">
+      </div>
     </div>
-    <button class="btn-danger btn-sm" onclick="clearAllHistory()">Clear All</button>
+    <div id="soldSharesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px"></div>
+    <button class="btn-ghost btn-sm mb16" onclick="addSoldShareRow()">+ Add Share</button>
+    <div id="soldFormSummaryRow" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding:12px;background:var(--dark);border-radius:10px">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span class="input-label">CGT Realised on This Sale £</span>
+          <span style="font-size:9px;font-weight:600;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px">AUTO</span>
+        </div>
+        <input class="num-input" type="text" inputmode="decimal" id="sold-cgt-realised" value="0" step="0.01" min="0"
+          oninput="_markSoldFieldManual('sold-cgt-realised')">
+        <div id="sold-cgt-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Auto-calculated from cost basis. Enter sale price and units to populate.</div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span class="input-label">ISA Allowance Used £</span>
+          <label class="check-wrap" style="font-size:9px">
+            <input type="checkbox" id="sold-bed-isa-toggle" onchange="recomputeSoldFormAuto()">
+            <span class="check-label">Bed &amp; ISA?</span>
+          </label>
+        </div>
+        <input class="num-input" type="text" inputmode="decimal" id="sold-isa-used-amount" value="0" step="0.01" min="0"
+          oninput="_markSoldFieldManual('sold-isa-used-amount')">
+        <div id="sold-isa-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Tick "Bed &amp; ISA?" if you're moving these proceeds straight into an ISA.</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-gold" onclick="saveSoldEntry()">Record Sale</button>
+    </div>
   </div>
 
   <!-- Search and date-range filter — narrows the list below by ticker, note, wrapper, or date -->
@@ -5318,58 +5660,6 @@ body.modal-active .container > footer {
   <div id="hist-filter-summary" style="font-size:10px;color:var(--muted);margin-bottom:12px;display:none"></div>
 
   <div id="historyList"></div>
-</div>
-
-<!-- SOLD SHARES FORM (hidden, shown when Sold tab active) -->
-<div id="soldFormCard" class="card card-left mb24" style="display:none">
-  <div class="section-label mb16">Record Share Sale</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
-    <div class="input-group">
-      <span class="input-label">Sale Date</span>
-      <input class="text-input" type="date" id="sold-date">
-    </div>
-    <div class="input-group">
-      <span class="input-label">Sold From Wrapper</span>
-      <select class="num-input" id="sold-wrapper" style="text-align:left;cursor:pointer"
-        onchange="_clearSoldFieldManualFlags();recomputeSoldFormAuto();renderSoldShareRows()">
-        <option value="GIA">GIA</option>
-        <option value="ISA">ISA</option>
-        <option value="SIPP">SIPP</option>
-      </select>
-    </div>
-    <div class="input-group">
-      <span class="input-label">Notes (optional)</span>
-      <input class="text-input" type="text" id="sold-notes" placeholder="e.g. Bed & ISA transfer">
-    </div>
-  </div>
-  <div id="soldSharesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px"></div>
-  <button class="btn-ghost btn-sm mb12" onclick="addSoldShareRow()">+ Add Share</button>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding:12px;background:var(--dark);border-radius:10px">
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span class="input-label">CGT Realised on This Sale £</span>
-        <span style="font-size:9px;font-weight:600;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px">AUTO</span>
-      </div>
-      <input class="num-input" type="text" inputmode="decimal" id="sold-cgt-realised" value="0" step="0.01" min="0"
-        oninput="_markSoldFieldManual('sold-cgt-realised')">
-      <div id="sold-cgt-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Auto-calculated from cost basis. Enter sale price and units to populate.</div>
-    </div>
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span class="input-label">ISA Allowance Used £</span>
-        <label class="check-wrap" style="font-size:9px">
-          <input type="checkbox" id="sold-bed-isa-toggle" onchange="recomputeSoldFormAuto()">
-          <span class="check-label">Bed &amp; ISA?</span>
-        </label>
-      </div>
-      <input class="num-input" type="text" inputmode="decimal" id="sold-isa-used-amount" value="0" step="0.01" min="0"
-        oninput="_markSoldFieldManual('sold-isa-used-amount')">
-      <div id="sold-isa-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Tick "Bed &amp; ISA?" if you're moving these proceeds straight into an ISA.</div>
-    </div>
-  </div>
-  <div class="btn-row">
-    <button class="btn-gold" onclick="saveSoldEntry()">Record Sale</button>
-  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -5573,7 +5863,7 @@ body.modal-active .container > footer {
       <div class="stat-sub" id="ret-progress-note" style="margin-top:6px"></div>
       <div class="gold-divider"></div>
       <div class="section-label mb16">Year by Year Milestones</div>
-      <div style="overflow-x:auto"><table class="projection-table" id="projectionTable"></table></div>
+      <div id="projectionTable"></div>
     </div>
   </div>
 
@@ -6490,15 +6780,9 @@ body.modal-active .container > footer {
   <!-- Bed & ISA results -->
   <div id="bedISAResults" style="display:none;margin-top:16px">
     <div class="card-gold mb16">
-      <div class="flex-between mb8">
-        <div class="section-label" style="margin-bottom:0">Bed &amp; ISA Optimisation Plan</div>
-        <div style="font-size:9px;color:var(--muted);font-style:italic">Maximises ISA transfer within CGT limit</div>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-        Sells GIA holdings and moves proceeds to ISA. Strictly stays within your £3,000 CGT allowance.
-        Holdings at a loss or zero gain are transferred first — free of CGT. Then lowest-gain holdings
-        are used until the CGT limit is reached. If the full £20,000 ISA allowance cannot be used,
-        it means your remaining holdings would all generate gains above the available allowance.
+      <div style="margin-bottom:14px">
+        <div class="section-label" style="margin-bottom:4px">Bed &amp; ISA Optimisation Plan</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">Sells GIA holdings and moves proceeds to ISA. Strictly stays within your £3,000 CGT allowance. Holdings at a loss or zero gain are transferred first, free of CGT. Then lowest-gain holdings are used until the CGT limit is reached. If the full £20,000 ISA allowance cannot be used, it means your remaining holdings would all generate gains above the available allowance.</div>
       </div>
       <div id="bedISAPlan"></div>
     </div>
@@ -6515,24 +6799,45 @@ body.modal-active .container > footer {
     <div class="grid-4 mb24" id="sellSummaryCards"></div>
 
     <!-- Per-holding breakdown -->
-    <div class="card-gold mb16">
-      <div class="section-label mb16">Holdings Breakdown — What You Can Sell</div>
-      <div id="sellHoldingsTable"></div>
+    <div class="card-gold mb16 chevron-collapsible collapsed" data-collapsible="holdings-breakdown">
+      <div class="collapsible-header" onclick="toggleMobileCollapse('holdings-breakdown')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div class="section-label" style="margin-bottom:4px">Holdings Breakdown</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5" id="sellHoldingsSubtitle">Each row shows the maximum units you can sell from that holding to stay within your remaining allowance.</div>
+        </div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+      </div>
+      <div class="collapsible-body" style="margin-top:14px">
+        <div id="sellHoldingsTable"></div>
+      </div>
     </div>
 
     <!-- Optimal sell plan -->
-    <div class="card-gold mb16">
-      <div class="flex-between mb16">
-        <div class="section-label" style="margin-bottom:0">Optimal CGT Sale Plan</div>
-        <div style="font-size:9px;color:var(--muted);font-style:italic">Maximises use of your £3,000 CGT allowance across your GIA holdings</div>
+    <div class="card-gold mb16 chevron-collapsible" data-collapsible="optimal-cgt-plan">
+      <div class="collapsible-header" onclick="toggleMobileCollapse('optimal-cgt-plan')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div class="section-label" style="margin-bottom:4px">Optimal CGT Sale Plan</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5">Maximises use of your £3,000 CGT allowance across your GIA holdings</div>
+        </div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
-      <div id="sellPlan"></div>
+      <div class="collapsible-body" style="margin-top:14px">
+        <div id="sellPlan"></div>
+      </div>
     </div>
 
     <!-- Post-sale position -->
-    <div class="card-gold">
-      <div class="section-label mb16">Remaining GIA Position After Sale</div>
-      <div id="sellPostSale"></div>
+    <div class="card-gold chevron-collapsible" data-collapsible="remaining-gia-position">
+      <div class="collapsible-header" onclick="toggleMobileCollapse('remaining-gia-position')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div class="section-label" style="margin-bottom:4px">Remaining GIA Position After Sale</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5">Your remaining GIA holdings after executing the plan above. The sold units move to your ISA wrapper.</div>
+        </div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+      </div>
+      <div class="collapsible-body" style="margin-top:14px">
+        <div id="sellPostSale"></div>
+      </div>
     </div>
 
   </div>
@@ -8502,7 +8807,7 @@ function _applyMobileCollapseState() {
   // Read saved state. If nothing saved, default both to collapsed (mobile first-run).
   let state = _readCollapseState();
   if (!state) {
-    state = { prices: true, holding: true, retirement: true, 'bgt-cat-summary': true };
+    state = { prices: true, holding: true, retirement: true, 'bgt-cat-summary': true, 'holdings-breakdown': true };
     _writeCollapseState(state);
   } else {
     // Backfill: if user upgraded from a build before retirement was collapsible,
@@ -8515,6 +8820,12 @@ function _applyMobileCollapseState() {
     // collapsed on first encounter so the panel starts tidy on mobile.
     if (state['bgt-cat-summary'] === undefined) {
       state['bgt-cat-summary'] = true;
+      _writeCollapseState(state);
+    }
+    // Backfill for the holdings-breakdown collapsible. Default to collapsed
+    // on first encounter so the bulky per-holding table stays out of the way.
+    if (state['holdings-breakdown'] === undefined) {
+      state['holdings-breakdown'] = true;
       _writeCollapseState(state);
     }
   }
@@ -11816,52 +12127,17 @@ function calculateRetirement() {
   }
   if (oldCoast) oldCoast.style.display = 'none'; // superseded by phase context panel
 
-  // ── Milestone table — IDENTICAL three-phase loop ──────────
+  // ── Milestone list — IDENTICAL three-phase loop ───────────
   const thisYear = new Date().getFullYear();
-  // ── Phase badge ───────────────────────────────────────────
-  const phaseCol = (inP1, inP2, inP3) => {
-    if (inP1) return `<span style="font-size:9px;font-weight:600;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:10px">P1</span>`;
-    if (inP2) return `<span style="font-size:9px;font-weight:600;color:var(--amber);background:rgba(255,159,10,0.12);padding:1px 5px;border-radius:10px">P2</span>`;
-    return `<span style="font-size:9px;font-weight:600;color:#8facc8;background:rgba(143,172,200,0.10);padding:1px 5px;border-radius:10px;letter-spacing:0.5px">COAST</span>`;
+
+  // ── Phase pill (compact, used in the milestone meta line) ──
+  const phasePill = (inP1, inP2, inP3) => {
+    if (inP1) return `<span style="font-size:9px;font-weight:600;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px;letter-spacing:0.3px">P1</span>`;
+    if (inP2) return `<span style="font-size:9px;font-weight:600;color:var(--amber);background:rgba(255,159,10,0.12);padding:1px 6px;border-radius:10px;letter-spacing:0.3px">P2</span>`;
+    return `<span style="font-size:9px;font-weight:600;color:#8facc8;background:rgba(143,172,200,0.10);padding:1px 6px;border-radius:10px;letter-spacing:0.3px">COAST</span>`;
   };
 
-  // ── Yearly Input cell ─────────────────────────────────────
-  // Shows cash actually added to the pot this calendar year.
-  const yearlyInputCell = (inP1, inP2, inP3, yearlyContrib) => {
-    if (inP1) {
-      return `<td>£${fmtNum(Math.round(yearlyContrib),0)}</td>`;
-    }
-    if (inP2) {
-      return `<td style="color:var(--muted)">£${fmtNum(Math.round(yearlyContrib),0)}</td>`;
-    }
-    // Coasting — zero new money, style as the muted-blue zero
-    return `<td class="pt-yearly-zero">£0</td>`;
-  };
-
-  // ── Contributed (cumulative) cell ─────────────────────────
-  // Shows total money put in since Day 1.
-  // Once the coast point is reached the number is frozen — tag it (MAX).
-  const contribCell = (inP1, inP2, inP3, mc) => {
-    if (inP1) {
-      return `<td>£${fmtNum(Math.round(mc),0)}</td>`;
-    }
-    if (inP2) {
-      return `<td style="color:var(--muted)">£${fmtNum(Math.round(mc),0)}</td>`;
-    }
-    // Coasting — cumulative total is frozen at the coast-point value
-    return `<td class="pt-dim">£${fmtNum(Math.round(mc),0)}<span class="pt-capped-tag">MAX</span></td>`;
-  };
-
-  let tableRows = `<thead><tr>
-    <th style="text-align:left">Year</th>
-    <th>Phase</th>
-    <th>Age</th>
-    <th class="pt-new">Yearly Input</th>
-    <th>Value</th>
-    <th>Contributed</th>
-    <th>Growth</th>
-    <th>Monthly Income</th>
-  </tr></thead><tbody>`;
+  let listRows = '';
 
   let mv = currentValue;
   let mc = 0;  // future contributions only (excludes starting pot)
@@ -11885,8 +12161,7 @@ function calculateRetirement() {
     }
 
     if (isMilestone) {
-      // Three-bucket math — see headline note. Growth is the residual after
-      // subtracting the starting pot AND the running future-contribution total.
+      // Three-bucket math — see headline note.
       const g = mv - currentValue - mc;
       let rowIncome;
       if (mode === 'drawdown') {
@@ -11903,28 +12178,54 @@ function calculateRetirement() {
       if (isP2Start) p2DividerShown = true;
       if (isP3Start) p3DividerShown = true;
 
-      const borderStyle = isP2Start
-        ? ' style="border-top:2px solid var(--amber)"'
-        : isP3Start ? ' style="border-top:2px solid #8facc8"' : '';
+      // Progress percentage relative to final nominal pot
+      const pct = finalNominal > 0 ? Math.min(100, mv / finalNominal * 100) : 0;
 
-      // Coast rows get a subtle background tint and bold growth
-      const rowClass    = isRet ? 'retirement' : inP3 ? 'milestone pt-coast' : 'milestone';
-      const growthStyle = inP3 ? 'color:var(--green);font-weight:600' : 'color:var(--green)';
+      // Yearly input label — coast phase shows £0 in the muted blue-grey
+      const yearlyDisplay = inP3
+        ? `<span style="color:#8facc8;font-style:italic">£0/yr</span>`
+        : `£${fmtNum(Math.round(yearlyInput),0)}/yr`;
 
-      tableRows += `<tr class="${rowClass}"${borderStyle}>
-        <td style="text-align:left">${thisYear + y}</td>
-        <td style="text-align:center">${phaseCol(inP1, inP2, inP3)}</td>
-        <td>${age}${isRet ? ' 🎯' : ''}</td>
-        ${yearlyInputCell(inP1, inP2, inP3, yearlyInput)}
-        <td>£${fmtNum(Math.round(mv),0)}</td>
-        ${contribCell(inP1, inP2, inP3, mc)}
-        <td style="${growthStyle}">£${fmtNum(Math.round(g),0)}</td>
-        <td style="color:var(--gold)">£${fmtNum(Math.round(rowIncome),0)}/mo</td>
-      </tr>`;
+      // Contributed label — frozen at coast point with MAX tag
+      const contribDisplay = inP3
+        ? `£${fmtNum(Math.round(mc),0)} contributed <span style="color:#8facc8;font-size:9px;letter-spacing:0.5px">· MAX</span>`
+        : `£${fmtNum(Math.round(mc),0)} contributed`;
+
+      // Row classes — phase tinting + boundary borders + retirement target
+      const rowClasses = [
+        'milestone-row',
+        inP3 ? 'phase-p3' : '',
+        isP2Start ? 'phase-p2-start' : '',
+        isP3Start ? 'phase-p3-start' : '',
+        isRet ? 'retirement-target' : ''
+      ].filter(Boolean).join(' ');
+
+      // Age suffix — target age shows the bullseye marker
+      const ageLabel = isRet ? `Age ${age} · Target` : `Age ${age}`;
+
+      listRows += `<div class="${rowClasses}">
+        <div class="milestone-anchor">
+          <div class="milestone-year">${thisYear + y}</div>
+          <div class="milestone-meta">
+            <span>${ageLabel}</span>
+            ${phasePill(inP1, inP2, inP3)}
+          </div>
+        </div>
+        <div class="milestone-body">
+          <div class="milestone-value">£${fmtNum(Math.round(mv),0)}</div>
+          <div class="milestone-stats">
+            <span>${yearlyDisplay}</span>
+            <span>${contribDisplay}</span>
+            <span class="stat-pos">+£${fmtNum(Math.round(g),0)} growth</span>
+            <span class="stat-gold">£${fmtNum(Math.round(rowIncome),0)}/mo income</span>
+          </div>
+          <div class="milestone-progress"><div class="milestone-progress-fill" style="width:${pct.toFixed(1)}%"></div></div>
+        </div>
+      </div>`;
     }
   }
-  tableRows += '</tbody>';
-  document.getElementById('projectionTable').innerHTML = tableRows;
+
+  document.getElementById('projectionTable').innerHTML = `<div class="milestone-list">${listRows}</div>`;
   document.getElementById('retResults').style.display = 'block';
   saveRetirementInputs();
   // Keep the global result in sync so renderAnalyse always has current figures
@@ -15972,29 +16273,50 @@ function renderBedISA() {
   }
 
   document.getElementById('bedISAPlan').innerHTML =
-    `<div class="sell-plan-thead bedisa-thead" style="grid-template-columns:70px 1fr 70px 100px 120px 90px">
-      <div class="col-h left">Ticker</div>
-      <div class="col-h left">Action</div>
-      <div class="col-h right">Units</div>
-      <div class="col-h right">Gain Realised</div>
-      <div class="col-h right">Proceeds → ISA</div>
-      <div class="col-h right">CGT Cost</div>
-    </div>
-    ${plan.map(p => `<div class="sell-plan-row bedisa-row" style="grid-template-columns:70px 1fr 70px 100px 120px 90px">
-      <div class="col-ticker bedisa-ticker">${p.ticker}</div>
-      <div class="bedisa-action" style="font-size:10px;color:var(--muted);line-height:1.6">Sell @ £${fmtNum(p.currentPrice,2)}<br><span style="color:var(--muted2)">Cost £${fmtNum(p.avgCost,2)}/unit</span></div>
-      <div class="bedisa-units" style="text-align:right;font-size:17px;font-weight:600;color:var(--white)" data-label="Units">${p.unitsSell}</div>
-      <div class="bedisa-gain" style="text-align:right;font-weight:600;color:${p.gainRealised>=0?'var(--green)':'var(--red)'}" data-label="Gain Realised">
-        ${p.gainRealised>=0?'+':''}£${fmtNum(Math.round(Math.abs(p.gainRealised)),0)}</div>
-      <div class="bedisa-proceeds" style="text-align:right;font-weight:600;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(p.proceeds),0)}</div>
-      <div class="bedisa-cgt" style="text-align:right;color:var(--green)" data-label="CGT Cost">£0</div>
+    `${plan.map(p => `<div class="plan-card">
+      <div class="plan-card-header">
+        <div class="plan-card-ticker">${p.ticker}</div>
+        <div class="plan-card-context">Sell at £${fmtNum(p.currentPrice,2)} · Cost £${fmtNum(p.avgCost,2)}/unit</div>
+      </div>
+      <div class="plan-card-metrics">
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Units</div>
+          <div class="plan-card-metric-value lg">${p.unitsSell}</div>
+        </div>
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Gain</div>
+          <div class="plan-card-metric-value" style="color:${p.gainRealised>=0?'var(--green)':'var(--red)'}">${p.gainRealised>=0?'+':''}£${fmtNum(Math.round(Math.abs(p.gainRealised)),0)}</div>
+        </div>
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Proceeds → ISA</div>
+          <div class="plan-card-metric-value" style="color:var(--gold)">£${fmtNum(Math.round(p.proceeds),0)}</div>
+        </div>
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">CGT cost</div>
+          <div class="plan-card-metric-value" style="color:var(--green)">£0</div>
+        </div>
+      </div>
     </div>`).join('')}
-    <div class="bedisa-totals" style="display:grid;grid-template-columns:70px 1fr 70px 100px 120px 90px;gap:8px;padding:12px 0;border-top:1px solid var(--border);margin-top:4px">
-      <div></div><div style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">TOTALS</div><div></div>
-      <div style="text-align:right;font-weight:600;color:${totalGain>=0?'var(--green)':'var(--red)'}" data-label="Gain Realised">
-        ${totalGain>=0?'+':''}£${fmtNum(Math.round(Math.abs(totalGain)),0)}</div>
-      <div style="text-align:right;font-weight:600;color:var(--gold)" data-label="Proceeds → ISA">£${fmtNum(Math.round(totalProceeds),0)}</div>
-      <div style="text-align:right;font-weight:600;color:var(--green)" data-label="CGT Cost">£0</div>
+    <div class="plan-card-totals">
+      <div class="plan-card-totals-header">Totals</div>
+      <div class="plan-card-metrics">
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Holdings</div>
+          <div class="plan-card-metric-value">${plan.length}</div>
+        </div>
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Gain</div>
+          <div class="plan-card-metric-value" style="color:${totalGain>=0?'var(--green)':'var(--red)'}">${totalGain>=0?'+':''}£${fmtNum(Math.round(Math.abs(totalGain)),0)}</div>
+        </div>
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Proceeds → ISA</div>
+          <div class="plan-card-metric-value" style="color:var(--gold)">£${fmtNum(Math.round(totalProceeds),0)}</div>
+        </div>
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">CGT cost</div>
+          <div class="plan-card-metric-value" style="color:var(--green)">£0</div>
+        </div>
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
       <div style="padding:10px 14px;background:var(--dark);border-radius:10px;border-left:3px solid ${unusedCGT<10?'var(--green)':'var(--amber)'}">
@@ -16007,7 +16329,7 @@ function renderBedISA() {
       </div>
     </div>
     ${unusedISA > 50 && unusedCGT < 10 ? `<div style="margin-top:12px;padding:12px 16px;background:rgba(255,159,10,0.16);border:0.5px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8">
-      CGT allowance fully used. To transfer the remaining £${fmtNum(Math.round(unusedISA),0)} to ISA would incur additional CGT at 24% on gains above the allowance. The allowance resets on 6 April ${new Date().getMonth() >= 3 ? new Date().getFullYear()+1 : new Date().getFullYear()} — consider completing the transfer at the start of next tax year.
+      CGT allowance fully used. To transfer the remaining £${fmtNum(Math.round(unusedISA),0)} to ISA would incur additional CGT at 24% on gains above the allowance. The allowance resets on 6 April ${new Date().getMonth() >= 3 ? new Date().getFullYear()+1 : new Date().getFullYear()}, so consider completing the transfer at the start of next tax year.
     </div>` : ''}`;
 
   if (saveSec) saveSec.style.display = 'block';
@@ -16095,30 +16417,36 @@ function renderSellCalculator() {
     `</div>`;
 
   // ── Per-holding breakdown table ──
+  // Update the section subtitle with the current remaining allowance
+  const sub = document.getElementById('sellHoldingsSubtitle');
+  if (sub) sub.textContent = `Each row shows the maximum units you can sell from that holding to stay within your remaining £${fmtNum(remainingAllowance, 0)} allowance. You can adjust the units in the Optimal Plan below.`;
   document.getElementById('sellHoldingsTable').innerHTML = `
-    <div style="font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.7">Each row shows the maximum units you can sell from that holding to stay within your remaining £${fmtNum(remainingAllowance, 0)} allowance. You can adjust the units in the Optimal Plan below.</div>
-    <div class="sell-thead">
-      <div class="col-h left">Ticker</div>
-      <div class="col-h">Units</div>
-      <div class="col-h">Avg Cost</div>
-      <div class="col-h">Price</div>
-      <div class="col-h">Unrealised Gain</div>
-      <div class="col-h">Gain/Unit</div>
-      <div class="col-h">Max Sell</div>
-      <div class="col-h">Proceeds</div>
-    </div>
     ${holdings.map(h => {
-      const gainClass = h.totalGain >= 0 ? 'gain-pos' : 'gain-neg';
+      const gainColor = h.totalGain >= 0 ? 'var(--green)' : 'var(--red)';
       const maxProceeds = h.maxSellableUnits * h.currentPrice;
-      return `<div class="sell-row">
-        <div class="col-ticker">${h.ticker}</div>
-        <div class="col-h" style="text-align:right;color:var(--white);font-weight:600">${h.units}</div>
-        <div class="col-h" style="text-align:right;color:var(--muted)">£${fmtNum(h.avgCost, 2)}</div>
-        <div class="col-h" style="text-align:right;color:var(--white)">£${fmtNum(h.currentPrice, 2)}</div>
-        <div class="col-h ${gainClass}" style="text-align:right;font-weight:600">${h.totalGain >= 0 ? '+' : ''}£${fmtNum(Math.round(h.totalGain), 0)}</div>
-        <div class="col-h" style="text-align:right;color:var(--muted)">£${fmtNum(h.gainPerUnit, 2)}</div>
-        <div class="col-h" style="text-align:right;color:var(--gold);font-weight:600">${h.maxSellableUnits > 0 ? h.maxSellableUnits : '—'}</div>
-        <div class="col-h" style="text-align:right;color:var(--white)">£${fmtNum(Math.round(maxProceeds), 0)}</div>
+      return `<div class="plan-card">
+        <div class="plan-card-header">
+          <div class="plan-card-ticker">${h.ticker}</div>
+          <div class="plan-card-context">£${fmtNum(h.currentPrice, 2)} · Cost £${fmtNum(h.avgCost, 2)}/unit</div>
+        </div>
+        <div class="plan-card-metrics">
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Units held</div>
+            <div class="plan-card-metric-value lg">${h.units}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Unrealised gain</div>
+            <div class="plan-card-metric-value" style="color:${gainColor}">${h.totalGain >= 0 ? '+' : ''}£${fmtNum(Math.round(h.totalGain), 0)}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Max sell</div>
+            <div class="plan-card-metric-value" style="color:var(--gold)">${h.maxSellableUnits > 0 ? h.maxSellableUnits : '—'}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Proceeds</div>
+            <div class="plan-card-metric-value">${h.maxSellableUnits > 0 ? '£' + fmtNum(Math.round(maxProceeds), 0) : '—'}</div>
+          </div>
+        </div>
       </div>`;
     }).join('')}`;
 
@@ -16169,32 +16497,50 @@ function renderSellCalculator() {
       : `<div class="history-empty">Your remaining allowance is £0. No further tax-free gains can be realised this tax year.</div>`;
   } else {
     document.getElementById('sellPlan').innerHTML = `
-      <div class="sell-plan-thead">
-        <div class="col-h left">Ticker</div>
-        <div class="col-h left">Action</div>
-        <div class="col-h">Units to Sell</div>
-        <div class="col-h">Gain Realised</div>
-        <div class="col-h">Proceeds</div>
-        <div class="col-h">Tax Saved</div>
-      </div>
-      ${plan.map(p => `<div class="sell-plan-row">
-        <div class="col-ticker">${p.ticker}</div>
-        <div style="font-size:10px;color:var(--muted);line-height:1.6">
-          Sell at £${fmtNum(p.currentPrice, 2)}<br>
-          <span style="color:var(--muted2)">Cost base £${fmtNum(p.avgCost, 2)}/unit</span>
+      ${plan.map(p => `<div class="plan-card">
+        <div class="plan-card-header">
+          <div class="plan-card-ticker">${p.ticker}</div>
+          <div class="plan-card-context">Sell at £${fmtNum(p.currentPrice, 2)} · Cost £${fmtNum(p.avgCost, 2)}/unit</div>
         </div>
-        <div style="text-align:right;font-size:22px;font-weight:600;color:var(--white)">${p.unitsSell}</div>
-        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--red)">+£${fmtNum(Math.round(p.gainOnSale), 0)}</div>
-        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--white)">£${fmtNum(Math.round(p.proceeds), 0)}</div>
-        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(p.taxSaved), 0)}</div>
+        <div class="plan-card-metrics">
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Units</div>
+            <div class="plan-card-metric-value lg">${p.unitsSell}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Gain</div>
+            <div class="plan-card-metric-value" style="color:var(--red)">+£${fmtNum(Math.round(p.gainOnSale), 0)}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Proceeds</div>
+            <div class="plan-card-metric-value">£${fmtNum(Math.round(p.proceeds), 0)}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Tax saved</div>
+            <div class="plan-card-metric-value" style="color:var(--green)">£${fmtNum(Math.round(p.taxSaved), 0)}</div>
+          </div>
+        </div>
       </div>`).join('')}
-      <div style="display:grid;grid-template-columns:65px 1fr 80px 90px 90px 90px;gap:8px;padding-top:14px;border-top:1px solid var(--border);margin-top:4px">
-        <div></div>
-        <div style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">TOTALS</div>
-        <div></div>
-        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--red)">+£${fmtNum(Math.round(totalGainRealised), 0)}</div>
-        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--white)">£${fmtNum(Math.round(totalProceeds), 0)}</div>
-        <div style="text-align:right;font-size:14px;font-weight:600;color:var(--green)">£${fmtNum(Math.round(totalTaxSaved), 0)}</div>
+      <div class="plan-card-totals">
+        <div class="plan-card-totals-header">Totals</div>
+        <div class="plan-card-metrics">
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Holdings</div>
+            <div class="plan-card-metric-value">${plan.length}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Gain</div>
+            <div class="plan-card-metric-value" style="color:var(--red)">+£${fmtNum(Math.round(totalGainRealised), 0)}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Proceeds</div>
+            <div class="plan-card-metric-value">£${fmtNum(Math.round(totalProceeds), 0)}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Tax saved</div>
+            <div class="plan-card-metric-value" style="color:var(--green)">£${fmtNum(Math.round(totalTaxSaved), 0)}</div>
+          </div>
+        </div>
       </div>
       ${unusedAllowance > 1 ? `
       <div class="cgt-step" style="margin-top:16px;background:rgba(255,159,10,0.14);border-left:3px solid var(--amber)">
@@ -16205,7 +16551,7 @@ function renderSellCalculator() {
         <div class="cgt-step-val" style="color:var(--amber)">£${fmtNum(Math.round(unusedAllowance), 0)} wasted</div>
       </div>` : `
       <div class="cgt-step exempt" style="margin-top:16px">
-        <div class="cgt-step-label">Annual allowance fully utilised — excellent tax efficiency</div>
+        <div class="cgt-step-label">Annual allowance fully utilised, excellent tax efficiency</div>
         <div class="cgt-step-val" style="color:var(--green)">✓ Optimised</div>
       </div>`}`;
   }
@@ -16225,37 +16571,48 @@ function renderSellCalculator() {
   const totalPostGain = postSaleRows.reduce((s, r) => s + r.remainingGain, 0);
 
   document.getElementById('sellPostSale').innerHTML = `
-    <div style="font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.7">Your remaining GIA holdings after executing the plan above. The sold units move to your ISA wrapper.</div>
-    <div class="sell-plan-thead" style="grid-template-columns:65px 1fr 80px 90px 90px 90px">
-      <div class="col-h left">Ticker</div>
-      <div class="col-h left">Status</div>
-      <div class="col-h">Remaining Units</div>
-      <div class="col-h">Market Value</div>
-      <div class="col-h">Cost Base</div>
-      <div class="col-h">Remaining Gain</div>
-    </div>
     ${postSaleRows.map(r => {
-      const gainClass = r.remainingGain >= 0 ? 'gain-pos' : 'gain-neg';
-      return `<div class="sell-plan-row" style="grid-template-columns:65px 1fr 80px 90px 90px 90px">
-        <div class="col-ticker">${r.ticker}</div>
-        <div style="font-size:10px;color:var(--muted);line-height:1.6">
-          ${r.soldUnits > 0
-            ? `<span style="color:var(--green);font-weight:600">${r.soldUnits} units → ISA</span>`
-            : `<span style="color:var(--muted)">No change</span>`}
+      const gainColor = r.remainingGain >= 0 ? 'var(--green)' : 'var(--red)';
+      const statusHtml = r.soldUnits > 0
+        ? `<span style="color:var(--green);font-weight:600">${r.soldUnits} units → ISA</span>`
+        : `<span style="color:var(--muted)">No change</span>`;
+      return `<div class="plan-card">
+        <div class="plan-card-header">
+          <div class="plan-card-ticker">${r.ticker}</div>
+          <div class="plan-card-context">${statusHtml}</div>
         </div>
-        <div style="text-align:right;font-size:17px;font-weight:600;color:var(--white)">${r.remainingUnits}</div>
-        <div style="text-align:right;font-size:13px;font-weight:600;color:var(--gold)">£${fmtNum(Math.round(r.remainingValue), 0)}</div>
-        <div style="text-align:right;font-size:13px;color:var(--muted)">£${fmtNum(Math.round(r.remainingCost), 0)}</div>
-        <div style="text-align:right;font-size:13px;font-weight:600" class="${gainClass}">${r.remainingGain >= 0 ? '+' : ''}£${fmtNum(Math.round(r.remainingGain), 0)}</div>
+        <div class="plan-card-metrics" style="grid-template-columns:repeat(4,1fr)">
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Units</div>
+            <div class="plan-card-metric-value lg">${r.remainingUnits}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Market value</div>
+            <div class="plan-card-metric-value" style="color:var(--gold)">£${fmtNum(Math.round(r.remainingValue), 0)}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Cost base</div>
+            <div class="plan-card-metric-value" style="color:var(--muted)">£${fmtNum(Math.round(r.remainingCost), 0)}</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Remaining gain</div>
+            <div class="plan-card-metric-value" style="color:${gainColor}">${r.remainingGain >= 0 ? '+' : ''}£${fmtNum(Math.round(r.remainingGain), 0)}</div>
+          </div>
+        </div>
       </div>`;
     }).join('')}
-    <div style="display:grid;grid-template-columns:65px 1fr 80px 90px 90px 90px;gap:8px;padding-top:14px;border-top:1px solid var(--border);margin-top:4px">
-      <div></div>
-      <div style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">REMAINING GIA</div>
-      <div></div>
-      <div style="text-align:right;font-size:14px;font-weight:600;color:var(--gold)">£${fmtNum(Math.round(totalPostValue), 0)}</div>
-      <div></div>
-      <div style="text-align:right;font-size:14px;font-weight:600;color:${totalPostGain >= 0 ? 'var(--green)' : 'var(--red)'}">${totalPostGain >= 0 ? '+' : ''}£${fmtNum(Math.round(totalPostGain), 0)}</div>
+    <div class="plan-card-totals">
+      <div class="plan-card-totals-header">Remaining GIA</div>
+      <div class="plan-card-metrics" style="grid-template-columns:1fr 1fr">
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Total value</div>
+          <div class="plan-card-metric-value" style="color:var(--gold)">£${fmtNum(Math.round(totalPostValue), 0)}</div>
+        </div>
+        <div class="plan-card-metric">
+          <div class="plan-card-metric-label">Total gain</div>
+          <div class="plan-card-metric-value" style="color:${totalPostGain >= 0 ? 'var(--green)' : 'var(--red)'}">${totalPostGain >= 0 ? '+' : ''}£${fmtNum(Math.round(totalPostGain), 0)}</div>
+        </div>
+      </div>
     </div>`;
 
   // Store plan reference but no save button on Pull GIA view
