@@ -3962,19 +3962,25 @@ body.privacy-mode-active .portfolio-delta-pill {
      Spacing: zero the cards' built-in mb16/mb24 margins on mobile
      and let the flex container's `gap` control the rhythm. Without
      this, the post-reorder gaps would be inconsistent because the
-     margin-bottoms were sized for the ORIGINAL source order. */
-  #tab-portfolio {
+     margin-bottoms were sized for the ORIGINAL source order.
+
+     CRITICAL: scope to .active so the rule doesn't override
+     .tab-panel { display: none }. ID specificity (1,0,0) beats the
+     base class rule, so an unqualified `#tab-portfolio { display: flex }`
+     forces the portfolio tab to render even when other tabs are active.
+     Adding .active gates the flex layout to the visible state. */
+  #tab-portfolio.active {
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
-  #tab-portfolio > * {
+  #tab-portfolio.active > * {
     margin-bottom: 0 !important;
   }
-  #tab-portfolio > :nth-child(1) { order: 1; }   /* Update Share Prices */
-  #tab-portfolio > :nth-child(3) { order: 2; }   /* Summary (hero) */
-  #tab-portfolio > :nth-child(4) { order: 3; }   /* Portfolio Growth */
-  #tab-portfolio > :nth-child(2) { order: 4; }   /* Add / Update Holding */
+  #tab-portfolio.active > :nth-child(1) { order: 1; }   /* Update Share Prices */
+  #tab-portfolio.active > :nth-child(3) { order: 2; }   /* Summary (hero) */
+  #tab-portfolio.active > :nth-child(4) { order: 3; }   /* Portfolio Growth */
+  #tab-portfolio.active > :nth-child(2) { order: 4; }   /* Add / Update Holding */
   .holding-bar-row {
     grid-template-columns: 76px 1fr 78px 44px !important;
     gap: 8px !important;
