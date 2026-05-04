@@ -3352,6 +3352,14 @@ body.privacy-mode-active .portfolio-delta-pill {
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
 }
+/* When a status banner is the last element in its container (typically
+   the trailing banner in #bgt-main-table after the budget table summary),
+   give it the standard 24px card-to-card bottom margin so the gap to the
+   next top-level card (e.g. This Month pivot strip) matches the rest of
+   the page rhythm. */
+.bgt-status-banner:last-child {
+  margin-bottom: 24px;
+}
 .bgt-status-banner.danger {
   background: rgba(255,69,58,0.14);
   border-color: rgba(255,69,58,0.30);
