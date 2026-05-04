@@ -19019,21 +19019,45 @@ function renderNetWorth() {
     amber: 'var(--amber)', white: 'var(--white)',
   })[cls] || 'var(--white)';
   const nwSummaryCfgs = [
-    { label:'Net Worth', val:`£${fmtNum(Math.round(netWorth),0)}`, sub:'Assets minus all liabilities', cls: netWorth>=0?'gold':'red', primary:true },
-    { label:'Gross Assets', val:`£${fmtNum(Math.round(grossAssets),0)}`, sub:'Before liabilities', cls:'white' },
-    { label:'Total Liabilities', val:`£${fmtNum(Math.round(totalLiabilities),0)}`, sub:'Mortgage + other debts', cls:'red' },
-    { label:'Investment Portfolio', val:`£${fmtNum(Math.round(totalInvestments),0)}`, sub:'GIA + ISA + SIPP', cls:'green' },
+    { key:'net',   label:'Net Worth',           rawVal: netWorth,         sub:'Assets minus all liabilities', cls: netWorth>=0?'gold':'red', primary:true },
+    { key:'gross', label:'Gross Assets',        rawVal: grossAssets,      sub:'Before liabilities',           cls:'white' },
+    { key:'liab',  label:'Total Liabilities',   rawVal: totalLiabilities, sub:'Mortgage + other debts',       cls:'red' },
+    { key:'inv',   label:'Investment Portfolio',rawVal: totalInvestments, sub:'GIA + ISA + SIPP',             cls:'green' },
   ];
-  document.getElementById('nw-summary-cards').innerHTML = nwSummaryCfgs.map(s => {
-    const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
-    const valStyle  = `color:${nwSummaryColourFor(s.cls)}`;
-    const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
-    return `<div class="${cardClass}">
-      <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
-      <div class="tax-headline-card-value" style="${valStyle}">${s.val}</div>
-      <div class="tax-headline-card-sub">${s.sub}</div>
-    </div>`;
-  }).join('');
+  const summaryEl = document.getElementById('nw-summary-cards');
+  // First render: build the card shells. Subsequent renders: only update the
+  // value text (via animateNumber) so figures tween instead of jumping. We
+  // detect first render by checking if the value cell with the canonical
+  // data-nw-key attribute exists yet.
+  const alreadyBuilt = !!summaryEl.querySelector('[data-nw-key]');
+  if (!alreadyBuilt) {
+    summaryEl.innerHTML = nwSummaryCfgs.map(s => {
+      const cardClass = s.primary ? 'tax-headline-card tax-headline-action' : 'tax-headline-card';
+      const valStyle  = `color:${nwSummaryColourFor(s.cls)}`;
+      const lblStyle  = s.primary ? 'text-transform:uppercase;letter-spacing:0.6px' : '';
+      return `<div class="${cardClass}">
+        <div class="tax-headline-card-label" style="${lblStyle}">${s.label}</div>
+        <div class="tax-headline-card-value" data-nw-key="${s.key}" style="${valStyle}">£${fmtNum(Math.round(s.rawVal),0)}</div>
+        <div class="tax-headline-card-sub">${s.sub}</div>
+      </div>`;
+    }).join('');
+    // Seed the _animTarget so the first real animateNumber call has a
+    // proper "from" value baseline.
+    nwSummaryCfgs.forEach(s => {
+      const el = summaryEl.querySelector(`[data-nw-key="${s.key}"]`);
+      if (el) el._animTarget = s.rawVal;
+    });
+  } else {
+    // Subsequent renders: tween each value from its previous to current.
+    // Also update the colour and sub-text in case state has flipped (e.g.
+    // net worth crossing zero changes its class from gold to red).
+    nwSummaryCfgs.forEach(s => {
+      const el = summaryEl.querySelector(`[data-nw-key="${s.key}"]`);
+      if (!el) return;
+      el.style.color = nwSummaryColourFor(s.cls);
+      animateNumber(el, s.rawVal, { prefix: '£', decimals: 0 });
+    });
+  }
 
   // Build segments for pie chart. Each gets a fixed slot in the NW_COLOURS
   // palette so the same asset category always appears in the same colour
@@ -19135,12 +19159,28 @@ function renderNetWorth() {
   // the user actually wants to inspect, and removing the labels gives
   // the chart a cleaner ring shape with the centre-stack reading more
   // prominently.
+  //
+  // The centre value tweens via animateNumber across renders. We cache
+  // the previous total on window._nwLastTotal, do the SVG rebuild
+  // (slices need to redraw because angles shift), then seed the new
+  // <text> element's _animTarget with the previous value before calling
+  // animateNumber with the new total. The format callback applies the
+  // compact-money formatter during the tween.
+  const prevTotal = (typeof window._nwLastTotal === 'number') ? window._nwLastTotal : total;
   const totalDisplay = fmtMoneyCompact(total);
   const centreLabel = `
     <text x="${cx}" y="${cy - 6}" text-anchor="middle" fill="var(--muted)" font-size="9" font-weight="600" letter-spacing="2" style="pointer-events:none">NET WORTH</text>
-    <text x="${cx}" y="${cy + 14}" text-anchor="middle" fill="var(--white)" font-size="16" font-weight="700" style="pointer-events:none">${totalDisplay}</text>`;
+    <text id="nw-pie-centre-value" x="${cx}" y="${cy + 14}" text-anchor="middle" fill="var(--white)" font-size="16" font-weight="700" style="pointer-events:none">${fmtMoneyCompact(prevTotal)}</text>`;
 
   document.getElementById('nw-pie').innerHTML = slicePaths + centreLabel;
+
+  // Now tween the centre value from its previous to current total.
+  const centreValEl = document.getElementById('nw-pie-centre-value');
+  if (centreValEl) {
+    centreValEl._animTarget = prevTotal;
+    animateNumber(centreValEl, total, { format: fmtMoneyCompact });
+  }
+  window._nwLastTotal = total;
 
   // Legend — gradient swatches match the colour rod / bar style used on
   // the portfolio holding rows, so the visual language is consistent.
