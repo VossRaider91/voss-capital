@@ -40,6 +40,10 @@ html { scroll-behavior: smooth; scroll-padding-top: 24px; }
 
   /* Brand mark — was gold; now display white. Accents go through --blue explicitly */
   --gold: rgba(255, 255, 255, 1);
+  /* --yellow is the actual Apple iOS Yellow used in CGT-context backgrounds
+     and accents. Kept separate from --gold which historically resolves to
+     white in this codebase and is used many places to mean a warm white. */
+  --yellow: #FFD60A;
   --gold-light: rgba(255, 255, 255, 0.92);
   --gold-dim: rgba(255, 255, 255, 0.06);
 
@@ -806,7 +810,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   line-height: 1.4;
 }
 .cn-pill.cn-type-personal {
-  color: var(--gold);
+  color: var(--yellow);
   background: rgba(255,214,10,0.14);
   border-color: rgba(255,214,10,0.28);
 }
@@ -1160,13 +1164,169 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-weight: 600;
   letter-spacing: -0.3px;
 }
-.remaining-chip.cgt .remaining-chip-amt { color: var(--gold); }
+.remaining-chip.cgt .remaining-chip-amt { color: var(--yellow); }
 .remaining-chip.isa .remaining-chip-amt { color: var(--green); }
 .remaining-chip.depleted .remaining-chip-amt { color: var(--red) !important; }
 .remaining-chip-lbl {
   font-size: 11px;
   color: rgba(255,255,255,0.55);
   font-weight: 500;
+}
+
+/* ── ALLOWANCE SNAPSHOT CARD ──────────────────────────────────────
+   Read-only visual progress card used on the Sell Calculator page
+   to display CGT and ISA allowance usage. Source of truth is LS.TAX
+   set on the Tax page. Two colour variants (CGT gold, ISA green)
+   with a depleted state that flips to red.
+
+   Layout:
+   ┌──────────────────────────────────────────┐
+   │ HEADER LABEL          STATUS PILL (used) │
+   │                                          │
+   │ £20,000  remaining     of £20,000        │
+   │                                          │
+   │ ▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░  (progress)    │
+   │                                          │
+   │ 0% used                Edit on Tax tab   │
+   └──────────────────────────────────────────┘
+*/
+.allowance-snapshot-card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.allowance-snapshot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.allowance-snapshot-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.allowance-snapshot-pill {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 50px;
+  border: 0.5px solid;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.allowance-snapshot-pill.cgt {
+  background: rgba(255,214,10,0.14);
+  border-color: rgba(255,214,10,0.28);
+  color: var(--yellow);
+}
+.allowance-snapshot-pill.isa {
+  background: rgba(48,209,88,0.14);
+  border-color: rgba(48,209,88,0.28);
+  color: var(--green);
+}
+.allowance-snapshot-pill.depleted {
+  background: rgba(255,69,58,0.14);
+  border-color: rgba(255,69,58,0.32);
+  color: var(--red);
+}
+.allowance-snapshot-figures {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.allowance-snapshot-remaining {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.allowance-snapshot-remaining-amount {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.allowance-snapshot-card[data-snapshot="cgt"] .allowance-snapshot-remaining-amount { color: var(--yellow); }
+.allowance-snapshot-card[data-snapshot="isa"] .allowance-snapshot-remaining-amount { color: var(--green); }
+.allowance-snapshot-card.depleted .allowance-snapshot-remaining-amount { color: var(--red); }
+.allowance-snapshot-remaining-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: 0;
+}
+.allowance-snapshot-total {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-left: auto;
+}
+.allowance-snapshot-total-label {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.allowance-snapshot-total-amount {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.allowance-snapshot-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.allowance-snapshot-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.18s ease;
+  width: 0%;
+}
+.allowance-snapshot-bar-fill.cgt { background: var(--yellow); }
+.allowance-snapshot-bar-fill.isa { background: var(--green); }
+.allowance-snapshot-bar-fill.warn { background: var(--amber); }
+.allowance-snapshot-bar-fill.depleted { background: var(--red); }
+.allowance-snapshot-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+.allowance-snapshot-meta-link {
+  font-style: italic;
+  opacity: 0.75;
+}
+@media (max-width: 700px) {
+  .sell-allowance-snapshot {
+    grid-template-columns: 1fr !important;
+  }
+  .allowance-snapshot-card {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+  .allowance-snapshot-remaining-amount {
+    font-size: 24px;
+  }
+  .allowance-snapshot-figures {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .allowance-snapshot-total {
+    margin-left: 0;
+  }
 }
 
 /* ── RETIREMENT PROGRESS STRIP ───────────────────────────────────
@@ -1282,7 +1442,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .growth-overall-chip.neg {
   background: rgba(255,69,58,0.14);
   border-color: rgba(255,69,58,0.28);
-  color: #ff6961;
+  color: var(--red);
 }
 
 .edit-form {
@@ -1718,7 +1878,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .portfolio-delta-pill.negative {
   background: rgba(255,69,58,0.14);
-  color: #ff6961;
+  color: var(--red);
 }
 .portfolio-delta-pill.neutral {
   background: rgba(255,255,255,0.06);
@@ -2758,6 +2918,73 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-variant-numeric: tabular-nums;
   line-height: 1;
   text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUDGET TRACKER STATUS BANNERS
+   Used for plan-balance warnings and tax provision status.
+   Tinted background lifts the message off the page; icon disc
+   anchors the semantic colour; headline carries the colour
+   while body text uses the standard muted grey for readability.
+   Three variants: .danger (red), .warn (amber), .success (green).
+   ═══════════════════════════════════════════════════════════ */
+.bgt-status-banner {
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 0.5px solid;
+  margin-top: 8px;
+}
+.bgt-status-banner.danger {
+  background: rgba(255,69,58,0.10);
+  border-color: rgba(255,69,58,0.28);
+}
+.bgt-status-banner.warn {
+  background: rgba(255,159,10,0.10);
+  border-color: rgba(255,159,10,0.28);
+}
+.bgt-status-banner.success {
+  background: rgba(48,209,88,0.10);
+  border-color: rgba(48,209,88,0.28);
+}
+.bgt-status-banner-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+.bgt-status-banner.danger  .bgt-status-banner-icon { background: rgba(255,69,58,0.20);  color: var(--red);   }
+.bgt-status-banner.warn    .bgt-status-banner-icon { background: rgba(255,159,10,0.20); color: var(--amber); }
+.bgt-status-banner.success .bgt-status-banner-icon { background: rgba(48,209,88,0.20);  color: var(--green); }
+.bgt-status-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+.bgt-status-banner-headline {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+  line-height: 1.35;
+}
+.bgt-status-banner.danger  .bgt-status-banner-headline { color: var(--red);   }
+.bgt-status-banner.warn    .bgt-status-banner-headline { color: var(--amber); }
+.bgt-status-banner.success .bgt-status-banner-headline { color: var(--green); }
+.bgt-status-banner-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.55;
+}
+.bgt-status-banner-text strong {
+  color: var(--white);
+  font-weight: 600;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -6067,8 +6294,8 @@ body.modal-active .container > footer {
       <input class="num-input" type="text" inputmode="decimal" id="ret-inflation" value="2.5" step="0.5" min="0" max="10">
     </div>
     <div class="card input-group" style="position:relative">
-      <span class="input-label" style="color:var(--gold)">Phase 1 — Full Contributions (Years)</span>
-      <input class="num-input" type="text" inputmode="numeric" id="ret-contrib-years" value="21" step="1" min="0" oninput="onContribYearsChange()" style="border-color:var(--gold)">
+      <span class="input-label" style="color:var(--gold)">Phase 1 — Full Contributions Until Age</span>
+      <input class="num-input" type="text" inputmode="numeric" id="ret-contrib-end-age" value="55" step="1" min="0" oninput="onContribYearsChange()" style="border-color:var(--gold)">
       <div id="ret-coast-badge" style="display:none;position:absolute;top:8px;right:10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--blue);background:rgba(10,132,255,0.16);padding:2px 8px;border-radius:10px">Coast FIRE</div>
       <div style="font-size:9px;color:var(--muted);margin-top:4px" id="ret-contrib-note">Full contributions for whole term</div>
     </div>
@@ -6078,8 +6305,9 @@ body.modal-active .container > footer {
       <div style="font-size:9px;color:var(--muted);margin-top:4px">Leave 0 to skip this phase</div>
     </div>
     <div class="card input-group">
-      <span class="input-label" style="color:var(--amber)">Phase 2 — Step-Down Duration (Years)</span>
-      <input class="num-input" type="text" inputmode="numeric" id="ret-stepdown-years" value="0" step="1" min="0" oninput="onContribYearsChange()">
+      <span class="input-label" style="color:var(--amber)">Phase 2 — Step-Down Until Age</span>
+      <input class="num-input" type="text" inputmode="numeric" id="ret-stepdown-end-age" value="55" step="1" min="0" oninput="onContribYearsChange()">
+      <div style="font-size:9px;color:var(--muted);margin-top:4px">Leave equal to Phase 1 end age to skip</div>
     </div>
     <div class="card input-group">
       <span class="input-label">Withdrawal Strategy</span>
@@ -6367,7 +6595,48 @@ body.modal-active .container > footer {
   <div class="section-label mb8">Net Worth Calculator</div>
   <div class="stat-sub mb24">Your complete financial picture. Investment portfolio values pull automatically from Total Portfolio. All other figures are updated manually.</div>
 
-  <!-- Input sections -->
+  <!-- Net Worth Breakdown — sits at the top so the headline figure and chart
+       are the first things visible. The asset input grid sits below for
+       editing context when a value needs updating. -->
+  <div class="card-gold mb16">
+    <div class="section-label mb16">Net Worth Breakdown</div>
+    <!-- Summary cards sit above the chart -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="nw-summary-cards"></div>
+    <div class="portfolio-chart-wrap">
+      <div>
+        <div style="position:relative;display:inline-block" onmousemove="moveNWPieTooltip(event)">
+          <svg id="nw-pie" viewBox="0 0 260 260" style="width:260px;height:260px;display:block"></svg>
+          <!-- Tooltip — uses the same vc-pie-tooltip class as the portfolio
+               donut so both charts share visual language. Populated on
+               slice hover by showNWPieTip with live ticker / value /
+               percent from window._nwPieData. -->
+          <div id="nw-pie-tooltip" class="vc-pie-tooltip"></div>
+        </div>
+        <div id="nw-legend" style="margin-top:16px"></div>
+      </div>
+      <div style="flex:1">
+        <div id="nw-holdings-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Taxable vs tax-free -->
+  <div class="card-gold mb16">
+    <div class="section-label mb16">Taxable vs Tax-Free</div>
+    <div class="grid-3 mb16" id="nw-tax-cards"></div>
+    <div style="background:var(--dark);border-radius:10px;overflow:hidden;height:10px;margin-bottom:6px">
+      <div id="nw-tax-bar" style="height:100%;background:linear-gradient(90deg,var(--green),var(--amber));transition:width 0.4s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <span id="nw-tax-bar-label-left" style="font-size:9px;color:var(--green)">Tax-Free Assets</span>
+      <span id="nw-tax-bar-label-right" style="font-size:9px;color:var(--amber)">GIA (CGT on gains applies)</span>
+    </div>
+  </div>
+
+  <!-- Assets input grid — sits below the breakdown so editing is a
+       deliberate action and the headline figure stays at the top. -->
+  <div class="section-label mb8" style="margin-top:24px">Assets &amp; Liabilities</div>
+  <div class="stat-sub mb16">Edit individual values here. Changes update the breakdown above instantly.</div>
   <div id="nw-inputs-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
 
     <!-- Property -->
@@ -6435,42 +6704,6 @@ body.modal-active .container > footer {
       <button class="btn-ghost btn-sm mt12" onclick="addNWRow('whiskey')">+ Add Entry</button>
     </div>
 
-  </div>
-
-  <!-- Pie chart and list -->
-  <div class="card-gold mb16">
-    <div class="section-label mb16">Net Worth Breakdown</div>
-    <!-- Summary cards sit above the chart -->
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="nw-summary-cards"></div>
-    <div class="portfolio-chart-wrap">
-      <div>
-        <div style="position:relative;display:inline-block" onmousemove="moveNWPieTooltip(event)">
-          <svg id="nw-pie" viewBox="0 0 260 260" style="width:260px;height:260px;display:block"></svg>
-          <!-- Tooltip — uses the same vc-pie-tooltip class as the portfolio
-               donut so both charts share visual language. Populated on
-               slice hover by showNWPieTip with live ticker / value /
-               percent from window._nwPieData. -->
-          <div id="nw-pie-tooltip" class="vc-pie-tooltip"></div>
-        </div>
-        <div id="nw-legend" style="margin-top:16px"></div>
-      </div>
-      <div style="flex:1">
-        <div id="nw-holdings-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Taxable vs tax-free -->
-  <div class="card-gold mb16">
-    <div class="section-label mb16">Taxable vs Tax-Free</div>
-    <div class="grid-3 mb16" id="nw-tax-cards"></div>
-    <div style="background:var(--dark);border-radius:10px;overflow:hidden;height:10px;margin-bottom:6px">
-      <div id="nw-tax-bar" style="height:100%;background:linear-gradient(90deg,var(--green),var(--amber));transition:width 0.4s"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between">
-      <span id="nw-tax-bar-label-left" style="font-size:9px;color:var(--green)">Tax-Free Assets</span>
-      <span id="nw-tax-bar-label-right" style="font-size:9px;color:var(--amber)">GIA (CGT on gains applies)</span>
-    </div>
   </div>
 </div>
 
@@ -6794,12 +7027,17 @@ body.modal-active .container > footer {
     </div>
 
     <!-- Dividend tax summary -->
-    <div id="divTaxSummary" style="background:var(--dark);border-radius:10px;padding:14px 18px;margin-bottom:12px;display:none">
-      <div style="margin-bottom:12px">
-        <div class="subsection-label" id="divTaxSummaryLabel">Tax Summary <span style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:-0.05px">(<span class="tax-year-label">2026/27</span>)</span></div>
-        <div class="subsection-sub">PAYE, dividend, and net position broken down</div>
+    <div id="divTaxSummary" class="chevron-collapsible collapsed" data-collapsible="tax-breakdown" style="background:var(--dark);border-radius:10px;padding:14px 18px;margin-bottom:12px;display:none">
+      <div class="collapsible-header" onclick="toggleMobileCollapse('tax-breakdown')" style="cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
+        <div style="flex:1;min-width:0">
+          <div class="subsection-label" id="divTaxSummaryLabel">Tax Summary <span style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:-0.05px">(<span class="tax-year-label">2026/27</span>)</span></div>
+          <div class="subsection-sub">PAYE, dividend, and net position broken down</div>
+        </div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
-      <div id="divTaxBreakdown" class="tax-breakdown-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
+      <div class="collapsible-body">
+        <div id="divTaxBreakdown" class="tax-breakdown-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
+      </div>
     </div>
 
     <!-- Bonus tax breakdown — only shown when bonus > 0. Now sits AFTER the
@@ -7046,25 +7284,75 @@ body.modal-active .container > footer {
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-sell">
 
-  <!-- Settings bar -->
-  <div class="card card-left mb24 sell-cgt-settings" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-    <div>
-      <div class="input-label mb8">CGT Annual Allowance</div>
-      <div class="flex-center">
-        <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
-        <input class="budget-input" type="text" inputmode="numeric" id="sell-allowance" value="3000" step="100" style="width:110px">
+  <!-- ── Allowance Snapshot ──
+       Read-only visual cards showing CGT and ISA allowance usage. Source
+       of truth is LS.TAX (set on the Tax page). Hidden inputs preserved
+       so existing sell-calc logic that reads from #sell-allowance,
+       #sell-used, #sell-isa-allowance, #sell-isa-used continues to work
+       without refactoring every reader. -->
+  <input type="hidden" id="sell-allowance" value="3000">
+  <input type="hidden" id="sell-used" value="0">
+  <input type="hidden" id="sell-isa-allowance" value="20000">
+  <input type="hidden" id="sell-isa-used" value="0">
+
+  <div class="sell-allowance-snapshot mb16" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <!-- CGT Allowance card -->
+    <div class="card card-left allowance-snapshot-card" data-snapshot="cgt">
+      <div class="allowance-snapshot-header">
+        <div class="allowance-snapshot-label">CGT Allowance Used</div>
+        <span class="allowance-snapshot-pill cgt" id="sell-cgt-snapshot-status">£0 used</span>
+      </div>
+      <div class="allowance-snapshot-figures">
+        <div class="allowance-snapshot-remaining">
+          <span class="allowance-snapshot-remaining-amount" id="sell-cgt-snapshot-remaining">£3,000</span>
+          <span class="allowance-snapshot-remaining-label">remaining</span>
+        </div>
+        <div class="allowance-snapshot-total">
+          <span class="allowance-snapshot-total-label">of</span>
+          <span class="allowance-snapshot-total-amount" id="sell-cgt-snapshot-total">£3,000</span>
+        </div>
+      </div>
+      <div class="allowance-snapshot-bar">
+        <div class="allowance-snapshot-bar-fill cgt" id="sell-cgt-snapshot-bar" style="width:0%"></div>
+      </div>
+      <div class="allowance-snapshot-meta">
+        <span id="sell-cgt-snapshot-percent">0% used</span>
+        <span class="allowance-snapshot-meta-link">Edit on Tax tab</span>
       </div>
     </div>
-    <div style="height:48px;width:1px;background:var(--border)"></div>
-    <div>
-      <div class="input-label mb8">CGT Already Used This Year</div>
-      <div class="flex-center" style="gap:8px">
-        <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
-        <input class="budget-input" type="text" inputmode="numeric" id="sell-used" value="0" step="100" style="width:110px">
+
+    <!-- ISA Allowance card -->
+    <div class="card card-left allowance-snapshot-card" data-snapshot="isa">
+      <div class="allowance-snapshot-header">
+        <div class="allowance-snapshot-label">ISA Allowance Used</div>
+        <span class="allowance-snapshot-pill isa" id="sell-isa-snapshot-status">£0 used</span>
+      </div>
+      <div class="allowance-snapshot-figures">
+        <div class="allowance-snapshot-remaining">
+          <span class="allowance-snapshot-remaining-amount" id="sell-isa-snapshot-remaining">£20,000</span>
+          <span class="allowance-snapshot-remaining-label">remaining</span>
+        </div>
+        <div class="allowance-snapshot-total">
+          <span class="allowance-snapshot-total-label">of</span>
+          <span class="allowance-snapshot-total-amount" id="sell-isa-snapshot-total">£20,000</span>
+        </div>
+      </div>
+      <div class="allowance-snapshot-bar">
+        <div class="allowance-snapshot-bar-fill isa" id="sell-isa-snapshot-bar" style="width:0%"></div>
+      </div>
+      <div class="allowance-snapshot-meta">
+        <span id="sell-isa-snapshot-percent">0% used</span>
+        <span class="allowance-snapshot-meta-link">Edit on Tax tab</span>
       </div>
     </div>
+
+  </div>
+
+  <!-- Tax Band toggle — sale-specific so it stays here -->
+  <div class="card card-left mb16 sell-cgt-settings">
     <div class="sell-tax-band-wrap">
-      <div class="input-label mb8">Tax Band</div>
+      <div class="input-label mb8">Tax Band for This Sale</div>
       <div class="seg-toggle">
         <label class="seg-option">
           <input type="radio" name="sell-rate" id="sell-basic" value="18">
@@ -7075,40 +7363,12 @@ body.modal-active .container > footer {
           <span>Higher (24%)</span>
         </label>
       </div>
-      <div id="sell-rate-note" style="font-size:9px;margin-top:6px;max-width:240px;line-height:1.5;color:var(--muted)"></div>
-    </div>
-    <div class="margin-left-auto-mobile-reset sell-cgt-chip-wrap" style="margin-left:auto">
-      <div class="remaining-chip cgt">
-        <span class="remaining-chip-amt" id="sell-remaining-allowance">£3,000</span>
-        <span class="remaining-chip-lbl">Remaining CGT Allowance</span>
-      </div>
-    </div>
-  </div>
-  <div class="sell-allowance-row" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-    <div>
-      <div class="input-label mb8">ISA Annual Allowance</div>
-      <div class="flex-center">
-        <span style="font-size:17px;font-weight:600;color:var(--blue)">£</span>
-        <input class="budget-input" type="text" inputmode="numeric" id="sell-isa-allowance" value="20000" step="1000" style="width:120px">
-      </div>
-    </div>
-    <div>
-      <div class="input-label mb8">ISA Already Used This Year</div>
-      <div class="flex-center">
-        <span style="font-size:17px;font-weight:600;color:var(--blue)">£</span>
-        <input class="budget-input" type="text" inputmode="numeric" id="sell-isa-used" value="0" step="100" style="width:120px">
-      </div>
-    </div>
-    <div class="margin-left-auto-mobile-reset" style="margin-left:auto">
-      <div class="remaining-chip isa">
-        <span class="remaining-chip-amt" id="sell-remaining-isa">£20,000</span>
-        <span class="remaining-chip-lbl">Remaining ISA Allowance</span>
-      </div>
+      <div id="sell-rate-note" style="font-size:9px;margin-top:6px;line-height:1.5;color:var(--muted)"></div>
     </div>
   </div>
 
   <!-- Tax year banner -->
-  <div class="card mb24" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div class="card mb16" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>
       <div class="stat-label mb8">Current UK Tax Year</div>
       <div style="font-size:17px;font-weight:600;color:var(--white)" id="sell-tax-year">—</div>
@@ -9156,7 +9416,8 @@ function _applyMobileCollapseState() {
     state = {
       prices: true, holding: true, retirement: true,
       'bgt-cat-summary': true, 'holdings-breakdown': true,
-      'bgt-income': true, 'bgt-tax': true, 'bgt-fixed': true, 'bgt-variable': true
+      'bgt-income': true, 'bgt-tax': true, 'bgt-fixed': true, 'bgt-variable': true,
+      'tax-breakdown': true
     };
     _writeCollapseState(state);
   } else {
@@ -9188,6 +9449,12 @@ function _applyMobileCollapseState() {
         _writeCollapseState(state);
       }
     });
+    // Backfill for the tax breakdown collapsible. Default to collapsed
+    // since the breakdown grid takes a lot of vertical space.
+    if (state['tax-breakdown'] === undefined) {
+      state['tax-breakdown'] = true;
+      _writeCollapseState(state);
+    }
   }
   document.querySelectorAll('[data-collapsible]').forEach(card => {
     const name = card.getAttribute('data-collapsible');
@@ -11937,8 +12204,14 @@ function onContribYearsChange() {
   const currentAge     = parseInt(document.getElementById('ret-age')?.value)||34;
   const targetAge      = parseInt(document.getElementById('ret-target-age')?.value)||55;
   const totalYears     = Math.max(0, targetAge - currentAge);
-  const p1Years        = Math.min(parseInt(document.getElementById('ret-contrib-years')?.value)||totalYears, totalYears);
-  const p2Years        = Math.max(0, Math.min(parseInt(document.getElementById('ret-stepdown-years')?.value)||0, totalYears - p1Years));
+  // Phase 1 input is now an end age. Years derived = endAge - currentAge,
+  // clamped to [0, totalYears]. Phase 2 input is also an end age. Years
+  // derived = phase2EndAge - phase1EndAge, clamped to >= 0 and capped so
+  // P1+P2 don't exceed the total horizon.
+  const p1EndAge       = parseInt(document.getElementById('ret-contrib-end-age')?.value)||targetAge;
+  const p2EndAge       = parseInt(document.getElementById('ret-stepdown-end-age')?.value)||p1EndAge;
+  const p1Years        = Math.max(0, Math.min(p1EndAge - currentAge, totalYears));
+  const p2Years        = Math.max(0, Math.min(p2EndAge - (currentAge + p1Years), totalYears - p1Years));
   const p2Amt          = parseFloat(document.getElementById('ret-stepdown-amount')?.value)||0;
   const hasStepdown    = p2Years > 0 && p2Amt > 0;
   const coastYrs       = Math.max(0, totalYears - p1Years - p2Years);
@@ -11948,13 +12221,13 @@ function onContribYearsChange() {
   if (badge) badge.style.display = coastYrs > 0 ? 'block' : 'none';
   if (note) {
     if (hasStepdown && coastYrs > 0)
-      note.textContent = `P1: ${p1Years}yr full → P2: ${p2Years}yr at £${p2Amt}/mo → P3: ${coastYrs}yr coasting`;
+      note.textContent = `P1: ${p1Years}yr full to age ${currentAge+p1Years} → P2: ${p2Years}yr at £${p2Amt}/mo to age ${currentAge+p1Years+p2Years} → P3: ${coastYrs}yr coasting`;
     else if (hasStepdown)
-      note.textContent = `P1: ${p1Years}yr full → P2: ${p2Years}yr at £${p2Amt}/mo`;
+      note.textContent = `P1: ${p1Years}yr full to age ${currentAge+p1Years} → P2: ${p2Years}yr at £${p2Amt}/mo to age ${currentAge+p1Years+p2Years}`;
     else if (coastYrs > 0)
-      note.textContent = `Full contributions ${p1Years} yrs, then coasting ${coastYrs} yrs`;
+      note.textContent = `Full contributions ${p1Years} yrs to age ${currentAge+p1Years}, then coasting ${coastYrs} yrs`;
     else
-      note.textContent = 'Full contributions for whole term';
+      note.textContent = `Full contributions for whole term to age ${targetAge}`;
     note.style.color = coastYrs > 0 || hasStepdown ? 'var(--gold)' : 'var(--muted)';
   }
   // Persist before recomputing so reloads keep the user's phase configuration
@@ -12065,6 +12338,16 @@ function saveRetirementInputs() {
   // Without this read, every save would wipe LS.RETIREMENT.freedom and the
   // Freedom Number inputs would revert to the HTML defaults on next render.
   const existing = lsGet(LS.RETIREMENT, {}) || {};
+
+  // Phase end ages are the canonical schema as of v20. Years values are
+  // derived from age deltas so that as the user ages, the years remaining
+  // count down naturally rather than staying frozen.
+  const currentAge   = parseInt(document.getElementById('ret-age')?.value)||34;
+  const p1EndAge     = parseInt(document.getElementById('ret-contrib-end-age')?.value)||55;
+  const p2EndAge     = parseInt(document.getElementById('ret-stepdown-end-age')?.value)||p1EndAge;
+  const p1YearsDerived = Math.max(0, p1EndAge - currentAge);
+  const p2YearsDerived = Math.max(0, p2EndAge - p1EndAge);
+
   lsSet(LS.RETIREMENT, {
     ...existing,
     dob:             document.getElementById('ret-dob')?.value || '',
@@ -12076,9 +12359,11 @@ function saveRetirementInputs() {
     monthly:         sc('ret-monthly')  || 0,
     current:         sc('ret-current')  || 0,
     inflation:       document.getElementById('ret-inflation')?.value,
-    contribYears:    document.getElementById('ret-contrib-years')?.value,
+    contribEndAge:   p1EndAge,
+    stepdownEndAge:  p2EndAge,
+    contribYears:    p1YearsDerived,    // legacy compatibility
     stepdownAmount:  sc('ret-stepdown-amount') || 0,
-    stepdownYears:   parseInt(document.getElementById('ret-stepdown-years')?.value) || 0,
+    stepdownYears:   p2YearsDerived,    // legacy compatibility
     withdrawalMode:  _retWithdrawalMode,
   });
   calculateGlobalRetirement();
@@ -12108,27 +12393,43 @@ function loadRetirementInputs() {
   if (s.current)   document.getElementById('ret-current').value   = s.current;
   if (s.inflation) document.getElementById('ret-inflation').value = s.inflation;
 
-  // Step-down fields
+  // Step-down fields. Schema migration: prefer end ages, fall back to
+  // duration-based legacy fields for users coming from v19 or earlier.
   const sdAmt = document.getElementById('ret-stepdown-amount');
-  const sdYrs = document.getElementById('ret-stepdown-years');
   if (sdAmt && s.stepdownAmount !== undefined) sdAmt.value = s.stepdownAmount;
-  if (sdYrs && s.stepdownYears  !== undefined) sdYrs.value = s.stepdownYears;
 
   // Withdrawal mode
   if (s.withdrawalMode) setWithdrawalMode(s.withdrawalMode);
 
-  // Restore contrib years — default to full term if not saved
-  const cyEl = document.getElementById('ret-contrib-years');
+  // Restore Phase 1 end age (canonical) or derive from legacy contribYears
+  const currentAgeForLoad = parseInt(s.age)||34;
+  const targetAgeForLoad  = parseInt(s.targetAge)||55;
+  const cyEl = document.getElementById('ret-contrib-end-age');
   if (cyEl) {
-    if (s.contribYears !== undefined && s.contribYears !== null) {
-      cyEl.value = s.contribYears;
+    if (s.contribEndAge !== undefined && s.contribEndAge !== null) {
+      cyEl.value = s.contribEndAge;
+    } else if (s.contribYears !== undefined && s.contribYears !== null) {
+      // Migrate: convert duration into end age
+      cyEl.value = currentAgeForLoad + parseInt(s.contribYears);
     } else {
-      cyEl.value = Math.max(0, (parseInt(s.targetAge)||55) - (parseInt(s.age)||34));
+      cyEl.value = targetAgeForLoad;
+    }
+  }
+  // Restore Phase 2 end age (canonical) or derive from legacy stepdownYears
+  const sdEnd = document.getElementById('ret-stepdown-end-age');
+  if (sdEnd) {
+    if (s.stepdownEndAge !== undefined && s.stepdownEndAge !== null) {
+      sdEnd.value = s.stepdownEndAge;
+    } else if (s.stepdownYears !== undefined && s.stepdownYears !== null) {
+      const p1End = parseInt(cyEl?.value)||targetAgeForLoad;
+      sdEnd.value = p1End + parseInt(s.stepdownYears);
+    } else {
+      sdEnd.value = parseInt(cyEl?.value)||targetAgeForLoad;
     }
     onContribYearsChange();
   }
 
-  const inputIds = ['ret-dob','ret-target-age','ret-growth','ret-personal','ret-employer','ret-current','ret-inflation','ret-stepdown-amount','ret-stepdown-years','ret-contrib-years'];
+  const inputIds = ['ret-dob','ret-target-age','ret-growth','ret-personal','ret-employer','ret-current','ret-inflation','ret-stepdown-amount','ret-stepdown-end-age','ret-contrib-end-age'];
   inputIds.forEach(id => {
     document.getElementById(id)?.addEventListener('input', () => {
       // Group 0: DOB — recompute derived age first, then treat like an age change
@@ -12136,9 +12437,10 @@ function loadRetirementInputs() {
         _refreshAgeFromDOB();
         const age  = parseInt(document.getElementById('ret-age')?.value)||34;
         const tgt  = parseInt(document.getElementById('ret-target-age')?.value)||55;
-        const cyv  = parseInt(document.getElementById('ret-contrib-years')?.value)||0;
-        const full = Math.max(0, tgt - age);
-        if (cyv >= full - 1) document.getElementById('ret-contrib-years').value = full;
+        const p1   = parseInt(document.getElementById('ret-contrib-end-age')?.value)||tgt;
+        // Clamp Phase 1 end age to the [age, target] window
+        if (p1 > tgt) document.getElementById('ret-contrib-end-age').value = tgt;
+        if (p1 < age) document.getElementById('ret-contrib-end-age').value = age;
         onContribYearsChange();     // saves and recalculates
         return;
       }
@@ -12148,17 +12450,15 @@ function loadRetirementInputs() {
         calculateRetirement();      // refreshes the projection live
         return;
       }
-      // Group 2: target age / stepdown — onContribYearsChange handles save and recalc
+      // Group 2: target age — also nudges Phase 1 end age if it now exceeds target
       if (id === 'ret-target-age') {
-        const age  = parseInt(document.getElementById('ret-age')?.value)||34;
         const tgt  = parseInt(document.getElementById('ret-target-age')?.value)||55;
-        const cyv  = parseInt(document.getElementById('ret-contrib-years')?.value)||0;
-        const full = Math.max(0, tgt - age);
-        if (cyv >= full - 1) document.getElementById('ret-contrib-years').value = full;
+        const p1   = parseInt(document.getElementById('ret-contrib-end-age')?.value)||tgt;
+        if (p1 > tgt) document.getElementById('ret-contrib-end-age').value = tgt;
         onContribYearsChange();
         return;
       }
-      if (id === 'ret-stepdown-amount' || id === 'ret-stepdown-years' || id === 'ret-contrib-years') {
+      if (id === 'ret-stepdown-amount' || id === 'ret-stepdown-end-age' || id === 'ret-contrib-end-age') {
         onContribYearsChange();
         return;
       }
@@ -12193,11 +12493,17 @@ function calculateGlobalRetirement() {
   const inflationRate = parseFloat(s.inflation)/ 100 || 0.025;
   const totalYears    = Math.max(0, targetAge - currentAge);
 
-  const p1YearsRaw  = parseInt(s.contribYears)    ?? totalYears;
-  const p1Years     = Math.min(Math.max(0, p1YearsRaw), totalYears);
-  const p2YearsRaw  = parseInt(s.stepdownYears)   || 0;
+  // v20 schema: end ages are canonical. Fall back to legacy contribYears
+  // for users who haven't yet re-saved their settings since the upgrade.
+  const p1EndAge    = (s.contribEndAge !== undefined && s.contribEndAge !== null)
+    ? parseInt(s.contribEndAge)
+    : (currentAge + (parseInt(s.contribYears) ?? totalYears));
+  const p2EndAge    = (s.stepdownEndAge !== undefined && s.stepdownEndAge !== null)
+    ? parseInt(s.stepdownEndAge)
+    : (p1EndAge + (parseInt(s.stepdownYears) || 0));
+  const p1Years     = Math.max(0, Math.min(p1EndAge - currentAge, totalYears));
   const p2Amount    = parseFloat(s.stepdownAmount) || 0;
-  const p2Years     = Math.min(Math.max(0, p2YearsRaw), totalYears - p1Years);
+  const p2Years     = Math.max(0, Math.min(p2EndAge - (currentAge + p1Years), totalYears - p1Years));
   const p3Years     = Math.max(0, totalYears - p1Years - p2Years);
   const hasStepdown = p2Years > 0 && p2Amount > 0;
   const hasCoast    = p3Years > 0;
@@ -12278,11 +12584,11 @@ function calculateRetirement() {
   const inflationRate = parseFloat(document.getElementById('ret-inflation').value)/100||0.025;
   const totalYears    = Math.max(0, targetAge - currentAge);
 
-  // ── Phase durations ──────────────────────────────────────
-  const p1YearsRaw  = parseInt(document.getElementById('ret-contrib-years')?.value) ?? totalYears;
-  const p1Years     = Math.min(Math.max(0, p1YearsRaw), totalYears);
-  const p2YearsRaw  = parseInt(document.getElementById('ret-stepdown-years')?.value) || 0;
-  const p2Years     = Math.min(Math.max(0, p2YearsRaw), totalYears - p1Years);
+  // ── Phase durations (derived from end ages, v20 schema) ─────
+  const p1EndAge    = parseInt(document.getElementById('ret-contrib-end-age')?.value) || targetAge;
+  const p2EndAge    = parseInt(document.getElementById('ret-stepdown-end-age')?.value) || p1EndAge;
+  const p1Years     = Math.max(0, Math.min(p1EndAge - currentAge, totalYears));
+  const p2Years     = Math.max(0, Math.min(p2EndAge - (currentAge + p1Years), totalYears - p1Years));
   const p2Amount    = parseFloat(document.getElementById('ret-stepdown-amount')?.value) || 0;
   const p3Years     = Math.max(0, totalYears - p1Years - p2Years);
   const hasStepdown = p2Years > 0 && p2Amount > 0;
@@ -14777,15 +15083,28 @@ function _mirrorSellAllowanceToCgt() {
 function saveTaxSettings() {
   // Strip commas from all comma-formatted inputs before saving to localStorage
   const stripComma = id => parseFloat((document.getElementById(id)?.value||'').replace(/,/g,'')) || 0;
+
+  // CGT-used and ISA-used are stored as the SUM of a manual baseline
+  // (user-entered value representing pre-app realisations) and history-
+  // derived totals (live recomputed from sold entries). When the user
+  // edits the visible field, derive the baseline by subtracting the
+  // history component so the manual portion persists across reloads.
+  const enteredCgtUsed = stripComma('cgt-used') || 0;
+  const enteredIsaUsed = stripComma('sell-isa-used') || 0;
+  _setCgtUsedBaselineFromInput(enteredCgtUsed);
+  _setIsaUsedBaselineFromInput(enteredIsaUsed);
+
+  // Read back so we persist the canonical totals (baseline + history)
+  const taxAfter = lsGet(LS.TAX, {});
+
   lsSet(LS.TAX, {
+    ...taxAfter,
     allowance:    stripComma('cgt-allowance') || 3000,
     income:       parseFloat(document.getElementById('cgt-income')?.value) || 100000,
     paye:         stripComma('inc-paye') || 12570,
     dividends:    stripComma('inc-dividends') || 87430,
     bonus:        stripComma('inc-bonus') || 0,
-    used:         stripComma('cgt-used') || 0,
     isaAllowance: stripComma('sell-isa-allowance') || 20000,
-    isaUsed:      stripComma('sell-isa-used') || 0,
     priorLiability: stripComma('tax-prior-liability') || 0,
   });
   // Cascade to every derived view — Analyse uses tax settings for its CGT
@@ -15858,21 +16177,24 @@ function renderTaxTab() {
     totalGIACost += p.totalCost;
     totalGIAGain += unrealisedGain;
     return { ticker, units: p.units, avgCost: p.avgCost, totalCost: p.totalCost, currentPrice, marketValue, unrealisedGain };
-  });
+  }).sort((a, b) => b.marketValue - a.marketValue);
+  // Sorted by market value descending so the largest holdings sit at the top
+  // and the order naturally re-sorts as live prices move. Important for tax
+  // planning: bigger positions are more material to CGT decisions.
 
   // ── ISA rows for display ──
   const isaRows = isaHoldings.map(h => {
     const currentPrice = h.price || 0;
     const marketValue = h.shares * currentPrice;
     return { ...h, currentPrice, marketValue };
-  });
+  }).sort((a, b) => b.marketValue - a.marketValue);
 
   // ── SIPP rows for display ──
   const sippRows = sippHoldings.map(h => {
     const currentPrice = h.price || 0;
     const marketValue = h.shares * currentPrice;
     return { ...h, currentPrice, marketValue };
-  });
+  }).sort((a, b) => b.marketValue - a.marketValue);
 
   // ── Total portfolio value — same calculation as Portfolio Overview and Analyse Portfolio ──
   const totalPortValue = totalGIAValue + totalISAValue + totalSIPPValue;
@@ -16275,25 +16597,77 @@ function _ukTaxYearStartTimestamp(now) {
 
 function _recomputeTaxAllowancesFromHistory() {
   // Walks LS.HISTORY, sums cgtRealised and isaUsedAmount from sold entries
-  // within the current UK tax year. Writes both totals to LS.TAX and
-  // refreshes every visible input that mirrors them. Returns the totals.
+  // within the current UK tax year, and adds those to the user's manual
+  // baselines (LS.TAX.usedBaseline and isaUsedBaseline) which represent
+  // CGT or ISA realised OUTSIDE this app earlier in the tax year. The sum
+  // is what the user sees in every input mirror.
+  //
+  // v20: split from a single overwriting `used` field so the user's manual
+  // entry no longer gets clobbered by every reload. Old `used`/`isaUsed`
+  // schema is migrated on first read.
+  //
+  // v20.1: tax-year rollover. Each manual baseline carries a tax-year
+  // stamp (usedBaselineTaxYear, isaUsedBaselineTaxYear). When today's tax
+  // year differs from the stamp, the baseline is from a previous tax year
+  // — reset it to zero so the new year's allowance starts fresh. Sync-
+  // safe because LS.TAX is auto-synced and the check is read-time.
   const history = lsGet(LS.HISTORY, []);
   const tyStart = _ukTaxYearStartTimestamp(new Date());
+  const currentTaxYear = getCurrentTaxYearLabel();
 
-  let cgtUsed = 0;
-  let isaUsed = 0;
+  let cgtFromHistory = 0;
+  let isaFromHistory = 0;
 
   history.forEach(entry => {
     if (entry.type !== 'sold') return;
     if ((entry.timestamp || 0) < tyStart) return;
-    cgtUsed += parseFloat(entry.cgtRealised) || 0;
-    isaUsed += parseFloat(entry.isaUsedAmount) || 0;
+    cgtFromHistory += parseFloat(entry.cgtRealised) || 0;
+    isaFromHistory += parseFloat(entry.isaUsedAmount) || 0;
   });
 
-  // Persist canonical totals to LS.TAX
+  // Read existing baselines, migrating from old schema if needed
   const tax = lsGet(LS.TAX, {});
-  tax.used    = cgtUsed;
-  tax.isaUsed = isaUsed;
+  if (tax.usedBaseline === undefined) {
+    // Migration: if there's an old `used` value with no sold entries, treat
+    // it as the baseline so the user's previously-saved value isn't lost
+    tax.usedBaseline = (parseFloat(tax.used) || 0) - cgtFromHistory;
+    if (tax.usedBaseline < 0) tax.usedBaseline = 0;
+    tax.usedBaselineTaxYear = currentTaxYear;
+  }
+  if (tax.isaUsedBaseline === undefined) {
+    tax.isaUsedBaseline = (parseFloat(tax.isaUsed) || 0) - isaFromHistory;
+    if (tax.isaUsedBaseline < 0) tax.isaUsedBaseline = 0;
+    tax.isaUsedBaselineTaxYear = currentTaxYear;
+  }
+
+  // ── Tax-year rollover ──
+  // If a baseline's stamp differs from today's tax year, the baseline
+  // belongs to a previous tax year. Reset to zero and stamp the new year.
+  // Stamps that are missing (e.g. for users who upgraded before this
+  // logic landed) default to the current tax year so nothing gets wiped
+  // unexpectedly on first run after the upgrade.
+  if (tax.usedBaselineTaxYear === undefined) {
+    tax.usedBaselineTaxYear = currentTaxYear;
+  } else if (tax.usedBaselineTaxYear !== currentTaxYear) {
+    tax.usedBaseline = 0;
+    tax.usedBaselineTaxYear = currentTaxYear;
+  }
+  if (tax.isaUsedBaselineTaxYear === undefined) {
+    tax.isaUsedBaselineTaxYear = currentTaxYear;
+  } else if (tax.isaUsedBaselineTaxYear !== currentTaxYear) {
+    tax.isaUsedBaseline = 0;
+    tax.isaUsedBaselineTaxYear = currentTaxYear;
+  }
+
+  const cgtUsedTotal = (parseFloat(tax.usedBaseline) || 0) + cgtFromHistory;
+  const isaUsedTotal = (parseFloat(tax.isaUsedBaseline) || 0) + isaFromHistory;
+
+  // Persist canonical totals to LS.TAX so any non-DOM reader gets the
+  // same value (Analyse, Bed & ISA helper, etc).
+  tax.used    = cgtUsedTotal;
+  tax.isaUsed = isaUsedTotal;
+  tax.cgtFromHistory = cgtFromHistory;
+  tax.isaFromHistory = isaFromHistory;
   lsSet(LS.TAX, tax);
 
   // Refresh every visible input mirror without overwriting the field the
@@ -16304,12 +16678,32 @@ function _recomputeTaxAllowancesFromHistory() {
     if (document.activeElement === el) return;
     el.value = val > 0 ? val.toFixed(decimals) : '0';
   };
-  setIfNotFocused('cgt-used',               cgtUsed, 2);
-  setIfNotFocused('sell-used',              cgtUsed, 2);
-  setIfNotFocused('sell-isa-used',          isaUsed, 2);
-  setIfNotFocused('isa-tracker-used-input', isaUsed, 0);
+  setIfNotFocused('cgt-used',               cgtUsedTotal, 2);
+  setIfNotFocused('sell-used',              cgtUsedTotal, 2);
+  setIfNotFocused('sell-isa-used',          isaUsedTotal, 2);
+  setIfNotFocused('isa-tracker-used-input', isaUsedTotal, 0);
 
-  return { cgtUsed, isaUsed };
+  return { cgtUsed: cgtUsedTotal, isaUsed: isaUsedTotal };
+}
+
+// When the user manually edits any of the CGT-used / ISA-used inputs,
+// derive the baseline as (entered total) − (history total) so the manual
+// component persists while the history-derived component remains live.
+function _setCgtUsedBaselineFromInput(enteredTotal) {
+  const tax = lsGet(LS.TAX, {});
+  const fromHistory = parseFloat(tax.cgtFromHistory) || 0;
+  tax.usedBaseline = Math.max(0, (parseFloat(enteredTotal) || 0) - fromHistory);
+  tax.usedBaselineTaxYear = getCurrentTaxYearLabel();
+  tax.used = (parseFloat(tax.usedBaseline) || 0) + fromHistory;
+  lsSet(LS.TAX, tax);
+}
+function _setIsaUsedBaselineFromInput(enteredTotal) {
+  const tax = lsGet(LS.TAX, {});
+  const fromHistory = parseFloat(tax.isaFromHistory) || 0;
+  tax.isaUsedBaseline = Math.max(0, (parseFloat(enteredTotal) || 0) - fromHistory);
+  tax.isaUsedBaselineTaxYear = getCurrentTaxYearLabel();
+  tax.isaUsed = (parseFloat(tax.isaUsedBaseline) || 0) + fromHistory;
+  lsSet(LS.TAX, tax);
 }
 
 
@@ -16489,32 +16883,76 @@ function initSellCalculator() {
 }
 
 function updateSellRemainingAllowance() {
-  const allowance = parseFloat((document.getElementById('sell-allowance')?.value||'').replace(/,/g,'')) || 3000;
-  const used = parseFloat((document.getElementById('sell-used')?.value||'').replace(/,/g,'')) || 0;
-  const remaining = Math.max(0, allowance - used);
-  const el = document.getElementById('sell-remaining-allowance');
-  if (el) {
-    el.textContent = `£${fmtNum(remaining, 0)}`;
-    // Toggle "depleted" state on the chip wrapper when allowance hits zero
-    // — flips the gold tint to red. Inner span keeps remaining-chip-amt
-    // class so styling stays consistent; only the parent chip gets the
-    // state modifier. parentNode is the .remaining-chip wrapper.
-    const chipWrap = el.closest('.remaining-chip');
-    if (chipWrap) {
-      chipWrap.classList.toggle('depleted', remaining === 0);
-    }
-  }
-  const isaAllowance = parseFloat((document.getElementById('sell-isa-allowance')?.value||'').replace(/,/g,'')) || 20000;
-  const isaUsed = parseFloat((document.getElementById('sell-isa-used')?.value||'').replace(/,/g,'')) || 0;
+  // v20: source of truth is LS.TAX (set on the Tax page). The hidden
+  // #sell-allowance / #sell-used / #sell-isa-allowance / #sell-isa-used
+  // inputs are kept in sync from LS.TAX so existing readers downstream
+  // (renderSellCalculator, Bed & ISA logic) continue to work without
+  // refactoring.
+  const tax = lsGet(LS.TAX, {});
+  const allowance    = parseFloat(tax.allowance)    || 3000;
+  const used         = parseFloat(tax.used)         || 0;
+  const isaAllowance = parseFloat(tax.isaAllowance) || 20000;
+  const isaUsed      = parseFloat(tax.isaUsed)      || 0;
+
+  // Sync the hidden mirrors so existing DOM readers see the canonical values
+  const hide = (id, val) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = val; };
+  hide('sell-allowance',     allowance);
+  hide('sell-used',          used);
+  hide('sell-isa-allowance', isaAllowance);
+  hide('sell-isa-used',      isaUsed);
+
+  const remaining    = Math.max(0, allowance - used);
   const isaRemaining = Math.max(0, isaAllowance - isaUsed);
-  const isaEl = document.getElementById('sell-remaining-isa');
-  if (isaEl) {
-    isaEl.textContent = `£${fmtNum(isaRemaining, 0)}`;
-    const chipWrap = isaEl.closest('.remaining-chip');
-    if (chipWrap) {
-      chipWrap.classList.toggle('depleted', isaRemaining === 0);
-    }
+
+  // ── New snapshot card visuals (v20) ──
+  const cgtPct = allowance > 0 ? (used / allowance) * 100 : 0;
+  const isaPct = isaAllowance > 0 ? (isaUsed / isaAllowance) * 100 : 0;
+
+  // CGT card
+  const cgtCard      = document.querySelector('.allowance-snapshot-card[data-snapshot="cgt"]');
+  const cgtRemaining = document.getElementById('sell-cgt-snapshot-remaining');
+  const cgtTotal     = document.getElementById('sell-cgt-snapshot-total');
+  const cgtBar       = document.getElementById('sell-cgt-snapshot-bar');
+  const cgtPercent   = document.getElementById('sell-cgt-snapshot-percent');
+  const cgtStatus    = document.getElementById('sell-cgt-snapshot-status');
+  if (cgtRemaining) cgtRemaining.textContent = `£${fmtNum(remaining, 0)}`;
+  if (cgtTotal)     cgtTotal.textContent     = `£${fmtNum(allowance, 0)}`;
+  if (cgtBar) {
+    cgtBar.style.width = `${Math.min(100, cgtPct).toFixed(1)}%`;
+    cgtBar.classList.remove('cgt', 'warn', 'depleted');
+    if (cgtPct >= 100)      cgtBar.classList.add('depleted');
+    else if (cgtPct >= 75)  cgtBar.classList.add('warn');
+    else                    cgtBar.classList.add('cgt');
   }
+  if (cgtPercent) cgtPercent.textContent = `${cgtPct.toFixed(0)}% used`;
+  if (cgtStatus) {
+    cgtStatus.textContent = `£${fmtNum(used, 0)} used`;
+    cgtStatus.classList.toggle('depleted', remaining === 0);
+  }
+  if (cgtCard) cgtCard.classList.toggle('depleted', remaining === 0);
+
+  // ISA card
+  const isaCard      = document.querySelector('.allowance-snapshot-card[data-snapshot="isa"]');
+  const isaRemaining_ = document.getElementById('sell-isa-snapshot-remaining');
+  const isaTotal     = document.getElementById('sell-isa-snapshot-total');
+  const isaBar       = document.getElementById('sell-isa-snapshot-bar');
+  const isaPercent   = document.getElementById('sell-isa-snapshot-percent');
+  const isaStatus    = document.getElementById('sell-isa-snapshot-status');
+  if (isaRemaining_) isaRemaining_.textContent = `£${fmtNum(isaRemaining, 0)}`;
+  if (isaTotal)      isaTotal.textContent      = `£${fmtNum(isaAllowance, 0)}`;
+  if (isaBar) {
+    isaBar.style.width = `${Math.min(100, isaPct).toFixed(1)}%`;
+    isaBar.classList.remove('isa', 'warn', 'depleted');
+    if (isaPct >= 100)      isaBar.classList.add('depleted');
+    else if (isaPct >= 90)  isaBar.classList.add('warn');
+    else                    isaBar.classList.add('isa');
+  }
+  if (isaPercent) isaPercent.textContent = `${isaPct.toFixed(0)}% used`;
+  if (isaStatus) {
+    isaStatus.textContent = `£${fmtNum(isaUsed, 0)} used`;
+    isaStatus.classList.toggle('depleted', isaRemaining === 0);
+  }
+  if (isaCard) isaCard.classList.toggle('depleted', isaRemaining === 0);
 }
 
 function showSellView(view) {
@@ -17449,7 +17887,7 @@ function renderAnalyse() {
     const gain = mv - p.totalCost;
     totalGIAGain += gain;
     return { ticker, units: p.units, avgCost: p.avgCost, totalCost: p.totalCost, marketValue: mv, gain };
-  });
+  }).sort((a, b) => b.marketValue - a.marketValue);
   const income = parseFloat(taxSettings.income) || 100000;
   const cgtCalc = calculateCGTRate(income, totalGIAGain, remainingCGT);
 
@@ -17838,8 +18276,13 @@ function renderBudgetPerformance() {
         catTotals[cat].actual  += parseFloat(actual[cat])  || 0;
       });
     });
+    // Investment Deposit is excluded from highlights because the under/over
+    // logic inverts for it. Spending less than planned on investing is a
+    // failure to invest (not "best controlled"); spending more is positive
+    // (not "biggest overspend"). It belongs in retirement progress reporting,
+    // not budget discipline highlights.
     const catRows = Object.entries(catTotals)
-      .filter(([,v]) => v.planned > 0 || v.actual > 0)
+      .filter(([cat, v]) => cat !== 'Investment Deposit' && (v.planned > 0 || v.actual > 0))
       .map(([cat, v]) => ({ cat, planned:v.planned, actual:v.actual, variance: v.actual - v.planned }));
 
     const overspend  = [...catRows].sort((a,b) => b.variance - a.variance)[0];
@@ -19354,6 +19797,13 @@ function _runDailyRefresh() {
   // in disclaimers and headings so they roll over on 6 April.
   try { refreshTaxYearLabels(); } catch (e) {}
 
+  // Tax allowance baselines — checks whether today's tax year still matches
+  // the stamps on LS.TAX.usedBaselineTaxYear and isaUsedBaselineTaxYear.
+  // On 6 April this triggers the rollover that resets manual baselines to
+  // zero so the new year's allowance starts fresh. Inputs visible on the
+  // Tax tab also get re-mirrored from the recomputed totals.
+  try { if (typeof _recomputeTaxAllowancesFromHistory === 'function') _recomputeTaxAllowancesFromHistory(); } catch (e) {}
+
   // Header date — refreshes the date pill next to LIVE in the lockup so
   // an open tab shows today's date after midnight rollover.
   // Header date — refreshes the date pill next to LIVE in the lockup so
@@ -19662,34 +20112,52 @@ function _renderBgtMainTable(state) {
   const netPlan = tIP - tTP - tEP, netAct = tIA - tTA - tEA;
 
   // Planned-deficit warning takes precedence — render as a separate red
-  // banner above the standard narrative so the user can't miss it
+  // banner above the standard narrative so the user can't miss it.
+  // Uses the bgt-status-banner component family for visual consistency
+  // with the tax provision banner below.
   const planDeficitWarning = netPlan < 0
-    ? `<div style="margin-top:12px;padding:10px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:var(--red);line-height:1.6;border-left:2px solid var(--red)">
-         <span style="font-weight:600">⚠ Plan does not balance</span> Your planned outgoings (tax + expenses) exceed planned income by £${fmtNum(Math.abs(netPlan),0)}.
-         Either add missing income (e.g. dividends to the Dividend Salary row), reduce planned outgoings, or accept the gap will need to come from savings.
+    ? `<div class="bgt-status-banner danger">
+         <div class="bgt-status-banner-icon">!</div>
+         <div class="bgt-status-banner-body">
+           <div class="bgt-status-banner-headline">Plan does not balance</div>
+           <div class="bgt-status-banner-text">Planned outgoings exceed planned income by <strong>£${fmtNum(Math.abs(netPlan),0)}</strong>. Either add missing income (e.g. dividends to the Dividend Salary row), reduce planned outgoings, or accept the gap will come from savings.</div>
+         </div>
        </div>`
     : '';
 
   // Tax provision status — uses the same simple model as the Tax tab.
+  // Three states (on track, slightly off, behind) rendered through the
+  // shared bgt-status-banner component. Copy keeps "for tax" / "on tax"
+  // in every headline so the banner is self-explanatory regardless of
+  // which colour state is showing.
   const taxStatusHtml = (() => {
     const thisYear = window._selfAssessmentLiability || 0;
     if (thisYear < 0.01) return '';
     const recommended = Math.ceil((thisYear / 12) * 1.1 / 50) * 50;
     const provisioned = parseFloat(actual['Tax Provision']) || 0;
     const shortfall   = recommended - provisioned;
-    let statusColour, statusIcon, statusText;
+    const recStr      = `£${fmtNum(Math.round(recommended),0)}/mo`;
+    const shortStr    = `£${fmtNum(Math.round(shortfall),0)}`;
+    let variant, icon, headline, body;
     if (shortfall <= 0) {
-      statusColour = 'var(--green)'; statusIcon = '✓';
-      statusText = `On track for tax · provisioning £${fmtNum(Math.round(provisioned),0)}/mo against £${fmtNum(Math.round(recommended),0)}/mo recommendation`;
+      variant  = 'success'; icon = '✓';
+      headline = 'On track for tax';
+      body     = `Hitting the <strong>${recStr}</strong> target!`;
     } else if (shortfall < recommended * 0.25) {
-      statusColour = 'var(--amber)'; statusIcon = '⚠';
-      statusText = `Slightly under-provisioned · £${fmtNum(Math.round(shortfall),0)} short of the £${fmtNum(Math.round(recommended),0)}/mo recommendation`;
+      variant  = 'warn'; icon = '!';
+      headline = 'Slightly off for tax';
+      body     = `<strong>${shortStr}</strong> short of ${recStr} target.`;
     } else {
-      statusColour = 'var(--red)'; statusIcon = '⚠';
-      statusText = `Under-provisioned for tax · £${fmtNum(Math.round(shortfall),0)} short of the £${fmtNum(Math.round(recommended),0)}/mo recommendation. Top up the Tax Provision row this month.`;
+      variant  = 'danger'; icon = '!';
+      headline = 'Behind on tax';
+      body     = `<strong>${shortStr}</strong> short of ${recStr} target · top up this month.`;
     }
-    return `<div style="margin-top:8px;padding:8px 14px;background:var(--dark);border-radius:10px;font-size:10px;color:${statusColour};line-height:1.6;border-left:2px solid ${statusColour}">
-      <span style="font-weight:600">${statusIcon}</span> ${statusText}
+    return `<div class="bgt-status-banner ${variant}">
+      <div class="bgt-status-banner-icon">${icon}</div>
+      <div class="bgt-status-banner-body">
+        <div class="bgt-status-banner-headline">${headline}</div>
+        <div class="bgt-status-banner-text">${body}</div>
+      </div>
     </div>`;
   })();
 
