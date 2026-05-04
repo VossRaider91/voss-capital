@@ -300,15 +300,15 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .card-left::before { content: ''; }
 .section-label {
   font-size: 17px; letter-spacing: -0.4px; text-transform: none;
-  color: var(--white); font-weight: 600; margin-bottom: 14px;
+  color: #ffffff; font-weight: 700; margin-bottom: 14px;
 }
 /* Subsection label — smaller uppercase variant used for secondary
    headings beneath main section-labels. Replaces the bespoke inline
    "9px/3px-letter-spacing" styles that were duplicated in many places. */
 .subsection-label {
   font-size: 15px;
-  font-weight: 600;
-  color: var(--white);
+  font-weight: 700;
+  color: #ffffff;
   letter-spacing: -0.2px;
   line-height: 1.3;
 }
@@ -578,9 +578,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.20),
     inset 0 -1px 0 rgba(0,0,0,0.16),
-    0 4px 14px rgba(10,132,255,0.30);
+    0 2px 8px rgba(10,132,255,0.15);
 }
-.btn-gold:hover { background: var(--blue-bright); box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -1px 0 rgba(0,0,0,0.16), 0 6px 18px rgba(10,132,255,0.40); }
+.btn-gold:hover { background: var(--blue-bright); box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -1px 0 rgba(0,0,0,0.16), 0 4px 12px rgba(10,132,255,0.20); }
 .btn-gold:active { transform: scale(0.98); }
 .btn-ghost {
   background: rgba(10,132,255,0.18); color: var(--blue);
@@ -597,6 +597,35 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .btn-ghost:hover { background: rgba(10,132,255,0.24); border-color: var(--blue); }
 .btn-sm { padding: 8px 14px; font-size: 12px; letter-spacing: -0.1px; border-radius: 10px; min-height: 32px; }
+
+/* Budget pivot strip buttons — View History and Complete Month must
+   render as a matched pair, never lopsided. Same min-width, same
+   padding, centred text, identical box geometry. The longer-string
+   button ("Complete Month →") sets the natural floor and the shorter
+   one ("📋 View History") matches it. On mobile they each take exactly
+   half of the action cluster via flex:1 so they always share width. */
+.bgt-pivot-btn {
+  min-width: 160px;
+  padding: 10px 18px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  .bgt-pivot-actions {
+    width: 100%;
+    flex-wrap: nowrap !important;
+  }
+  .bgt-pivot-actions .bgt-pivot-btn {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+  }
+}
 .btn-danger {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.10);
@@ -680,8 +709,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 
 .stat-label {
-  font-size: 11px; letter-spacing: -0.05px; text-transform: none;
-  color: var(--muted); font-weight: 500; opacity: 1;
+  font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.78); font-weight: 700; opacity: 1;
 }
 .stat-val {
   font-size: 28px; font-weight: 600; color: var(--white);
@@ -717,12 +746,26 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 #drift-alert-banner {
   display: none; margin-bottom: 16px;
   padding: 12px 18px;
-  background: var(--card);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid var(--amber);
-  border-left: 1px solid var(--amber);
-  border-radius: 12px;
+  background: rgba(255,159,10,0.10);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgba(255,159,10,0.28);
+  border-left: 3px solid var(--amber);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 8px 24px rgba(0,0,0,0.30);
+  position: relative;
+}
+#drift-alert-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 3px; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,159,10,0.30) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 #drift-alert-banner.active { display: block; }
 .drift-alert-title {
@@ -797,43 +840,79 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 .fund-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 .fund-meta .fund-layer {
-  font-size: 12px; letter-spacing: -0.05px; text-transform: none;
-  color: var(--muted); font-weight: 500; margin-bottom: 4px;
+  font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.78); font-weight: 700; margin-bottom: 4px;
 }
 .fund-meta .fund-name {
-  font-size: 17px; font-weight: 600; color: var(--white);
+  font-size: 18px; font-weight: 700; color: #ffffff;
   margin-bottom: 2px; letter-spacing: -0.3px;
 }
-.fund-meta .fund-full { font-size: 12px; color: var(--muted); letter-spacing: -0.05px; }
+.fund-meta .fund-full { font-size: 12px; color: rgba(255,255,255,0.78); letter-spacing: -0.05px; font-weight: 500; }
 .fund-inputs-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: end; }
 
 /* ALLOCATION TABLE */
 .alloc-table { width: 100%; }
 .alloc-thead {
-  display: grid; grid-template-columns: 60px 1fr 110px 90px 70px 75px 80px;
-  gap: 8px; padding-bottom: 8px; border-bottom: 0.5px solid var(--border);
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 12px; padding: 0 4px 10px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.12);
 }
 .alloc-row {
-  display: grid; grid-template-columns: 60px 1fr 110px 90px 70px 75px 80px;
-  gap: 8px; align-items: center; padding: 11px 0;
-  border-bottom: 0.5px solid var(--border);
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 12px; align-items: center; padding: 16px 4px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
 }
 .alloc-row:last-child { border-bottom: none; }
 .alloc-row.skipped { opacity: 0.55; }
+.alloc-fund-cell {
+  display: flex; flex-direction: column; gap: 3px;
+  min-width: 0;
+}
+.alloc-fund-meta {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: -0.05px;
+  font-variant-numeric: tabular-nums;
+}
+.alloc-units-cell {
+  text-align: right;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.4px;
+  line-height: 1;
+}
+.alloc-units-suffix {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+.alloc-amount-cell {
+  text-align: right;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.4px;
+  line-height: 1;
+}
 .col-units { font-size: 17px; font-weight: 600; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
 .col-h {
-  font-size: 12px; letter-spacing: -0.05px; text-transform: none;
-  color: var(--muted); font-weight: 500; text-align: right; opacity: 1;
+  font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.78); font-weight: 700; text-align: right; opacity: 1;
 }
 .col-h.left { text-align: left; }
 .col-h.center { text-align: center; }
-.col-ticker { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
-.col-holding { font-size: 12px; color: var(--muted); line-height: 1.6; letter-spacing: -0.05px; }
-.col-holding .hi { color: var(--white); }
-.col-pct { text-align: right; font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; }
-.col-buf { font-size: 11px; color: var(--muted); text-align: right; line-height: 1.5; }
-.col-amt { font-size: 13px; font-weight: 500; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
-.col-deploy { font-size: 18px; font-weight: 600; color: var(--white); text-align: right; letter-spacing: -0.4px; font-variant-numeric: tabular-nums; }
+.col-ticker { font-size: 14px; font-weight: 700; color: #ffffff; letter-spacing: -0.1px; }
+.col-holding { font-size: 12px; color: rgba(255,255,255,0.78); line-height: 1.6; letter-spacing: -0.05px; font-weight: 500; }
+.col-holding .hi { color: #ffffff; font-weight: 700; }
+.col-pct { text-align: right; font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; font-weight: 600; }
+.col-buf { font-size: 11px; color: rgba(255,255,255,0.78); text-align: right; line-height: 1.5; }
+.col-amt { font-size: 13px; font-weight: 700; color: #ffffff; text-align: right; font-variant-numeric: tabular-nums; }
+.col-deploy { font-size: 18px; font-weight: 700; color: #ffffff; text-align: right; letter-spacing: -0.4px; font-variant-numeric: tabular-nums; }
 .pct-good { color: var(--green); }
 .pct-warn { color: var(--amber); }
 .pct-bad { color: var(--red); }
@@ -2555,9 +2634,15 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .chart-canvas-wrap { overflow-x: auto; }
 
-/* TOAST */
+/* TOAST
+   Positioned top-centre rather than bottom-right because mobile webviews
+   (iOS in-app browsers, Claude artifact viewer) clip anything within the
+   bottom 60-100px of the visible area for their own UI chrome. Top-centre
+   sits clear of the sticky live/synced header and is fully visible at
+   every viewport. Slides in from above with the same opacity transition. */
 .save-toast {
-  position: fixed; bottom: 24px; right: 24px;
+  position: fixed; top: 24px; left: 50%;
+  transform: translateX(-50%) translateY(-12px);
   background: rgba(48,209,88,0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -2565,11 +2650,13 @@ body.privacy-mode-active .portfolio-delta-pill {
   padding: 12px 20px; border-radius: 12px;
   font-size: 13px; font-weight: 600;
   letter-spacing: -0.1px;
-  opacity: 0; transition: opacity 0.3s;
+  text-align: center;
+  max-width: calc(100vw - 32px);
+  opacity: 0; transition: opacity 0.3s, transform 0.3s;
   pointer-events: none; z-index: 9999;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
-.save-toast.show { opacity: 1; }
+.save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* CHECKBOX */
 .check-wrap { display: flex; align-items: center; gap: 6px; cursor: pointer; }
@@ -3553,25 +3640,38 @@ body.privacy-mode-active .portfolio-delta-pill {
    the action card naturally. */
 .tax-headline-card {
   background: rgba(60,60,68,0.30);
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 14px;
   padding: 14px 16px;
   position: relative;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14), inset 0 -0.5px 0 rgba(0,0,0,0.16);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 8px 24px rgba(0,0,0,0.30);
+}
+.tax-headline-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 .tax-headline-card-label {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.78);
   letter-spacing: -0.05px;
   margin-bottom: 4px;
 }
 .tax-headline-card-value {
   font-size: 24px;
-  font-weight: 600;
-  color: var(--white);
+  font-weight: 700;
+  color: #ffffff;
   line-height: 1.1;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
@@ -3603,7 +3703,14 @@ body.privacy-mode-active .portfolio-delta-pill {
   border: 1px solid rgba(10,132,255,0.34);
   border-left: 3px solid var(--blue);
   padding: 16px 16px 16px 18px;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20), inset 0 -0.5px 0 rgba(0,0,0,0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 4px 12px rgba(10,132,255,0.10);
+}
+.tax-headline-card.tax-headline-action::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(168,212,255,0.30) 50%, transparent 100%);
+  left: 3px;
 }
 .tax-headline-card.tax-headline-action .tax-headline-card-label {
   color: #a8d4ff;
@@ -3753,11 +3860,11 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-radius: 14px;
   padding: 14px 18px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
   box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
 }
-.cgt-step-label { font-size: 13px; color: var(--muted); letter-spacing: -0.05px; font-weight: 500; }
+.cgt-step-label { font-size: 13px; color: rgba(255,255,255,0.87); letter-spacing: -0.05px; font-weight: 600; }
 .cgt-step-val {
   font-size: 17px; font-weight: 600; color: var(--white);
   font-variant-numeric: tabular-nums; letter-spacing: -0.3px;
@@ -3890,6 +3997,92 @@ body.privacy-mode-active .portfolio-delta-pill {
   font-size: 14px;
   left: 10px;
 }
+
+/* Additional Funds row — every input (Ticker, Units Held, Price, Buffer %)
+   must render with the same outer black box dimensions so the row reads as
+   a clean uniform grid. The £ pseudo on the Price input is overlaid as a
+   non-displacing absolute element inside the box. All inputs share the same
+   height, padding, and border-radius. */
+.extra-fund-row .text-input,
+.extra-fund-row .num-input,
+.extra-fund-row .pound-wrap > .num-input {
+  height: 44px !important;
+  padding: 0 14px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.extra-fund-row .pound-wrap > .num-input {
+  padding-left: 28px !important;
+}
+.extra-fund-row .pound-wrap::before {
+  font-size: 14px;
+  left: 12px;
+  color: var(--blue);
+}
+
+/* Mobile redesign — at <=700px the four inline inputs become a 2x2 grid
+   so each input has enough horizontal room to display digits clearly
+   while typing. The Value display and Remove button move to their own
+   third row spanning the full width. All four input boxes remain
+   geometrically identical (same height, padding, border-radius). */
+@media (max-width: 700px) {
+  .extra-fund-row {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 12px !important;
+  }
+  .extra-fund-row .input-group:nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 2; }
+  .extra-fund-row .input-group:nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2; }
+  .extra-fund-row .input-group:nth-child(3) { grid-column: 1 / 2; grid-row: 2 / 3; }
+  .extra-fund-row .input-group:nth-child(4) { grid-column: 2 / 3; grid-row: 2 / 3; }
+  /* Value display + Remove button share row 3 spanning full width */
+  .extra-fund-row > div:nth-child(5) {
+    grid-column: 1 / 2 !important;
+    grid-row: 3 / 4 !important;
+    align-items: flex-start !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    padding-top: 8px !important;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .extra-fund-row > div:nth-child(5) > span:first-child {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .extra-fund-row > div:nth-child(5) > span:last-child {
+    padding: 0 !important;
+  }
+  .extra-fund-row > button:last-child {
+    grid-column: 2 / 3 !important;
+    grid-row: 3 / 4 !important;
+    margin-bottom: 0 !important;
+    margin-top: 8px !important;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 8px !important;
+    align-self: stretch;
+    justify-self: end;
+  }
+  /* Inputs stay full-row-cell width and identical height/padding */
+  .extra-fund-row .text-input,
+  .extra-fund-row .num-input,
+  .extra-fund-row .pound-wrap > .num-input {
+    height: 48px !important;
+    font-size: 15px !important;
+    padding: 0 14px !important;
+  }
+  .extra-fund-row .pound-wrap > .num-input {
+    padding-left: 32px !important;
+  }
+  .extra-fund-row .pound-wrap::before {
+    font-size: 16px;
+    left: 14px;
+  }
+}
 /* Add Holding form — the price input keeps the £ glyph but at smaller
    size to match the 44px row height with no padding/sizing surprises. */
 .add-holding-grid .pound-wrap > .num-input {
@@ -3971,8 +4164,8 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .plan-card-ticker {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--white);
+  font-weight: 700;
+  color: #ffffff;
   letter-spacing: -0.1px;
 }
 .plan-card-context {
@@ -4001,8 +4194,8 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .plan-card-metric-value {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--white);
+  font-weight: 700;
+  color: #ffffff;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.1px;
   line-height: 1.1;
@@ -4026,7 +4219,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.20),
     inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 12px 32px rgba(10,132,255,0.20);
+    0 4px 12px rgba(10,132,255,0.10);
 }
 .plan-card.is-hero::before {
   background: linear-gradient(90deg, transparent 0%, rgba(168,212,255,0.30) 50%, transparent 100%);
@@ -4070,12 +4263,12 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .plan-card-headline {
   font-size: 36px;
-  font-weight: 500;
-  color: var(--white);
+  font-weight: 600;
+  color: #ffffff;
   line-height: 1;
   letter-spacing: -1px;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 24px rgba(255,255,255,0.20);
+  text-shadow: 0 0 8px rgba(255,255,255,0.10);
   margin-bottom: 6px;
 }
 .plan-card-headline-sub {
@@ -4099,8 +4292,8 @@ body.privacy-mode-active .portfolio-delta-pill {
 .plan-card-totals-header {
   padding: 10px 16px;
   font-size: 11px;
-  font-weight: 600;
-  color: var(--white);
+  font-weight: 700;
+  color: #ffffff;
   letter-spacing: 1px;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(255,255,255,0.10);
@@ -4131,9 +4324,6 @@ body.privacy-mode-active .portfolio-delta-pill {
   .nav-tab .nav-icon svg { width:16px; height:16px; }
   .fund-inputs-grid { grid-template-columns: repeat(2, 1fr); }
   .stat-grid.g4 { grid-template-columns: repeat(2, 1fr); }
-  .alloc-thead, .alloc-row { grid-template-columns: 55px 1fr 90px 80px; }
-  .alloc-thead .col-h:nth-child(4), .alloc-thead .col-h:nth-child(5),
-  .alloc-row .col-buf, .alloc-row .col-amt { display: none; }
   .history-funds { grid-template-columns: repeat(2, 1fr); }
   .portfolio-chart-wrap { grid-template-columns: 1fr; }
   .holding-row { grid-template-columns: 14px 16px 55px 1fr 60px; }
@@ -4210,6 +4400,17 @@ body.privacy-mode-active .portfolio-delta-pill {
     -webkit-backdrop-filter: blur(40px) saturate(200%);
     border-bottom: 1px solid rgba(255,255,255,0.10);
   }
+  /* When the mobile nav is open, hide the header's bottom border so it
+     does not cut a grey line across the joint where the pill meets the
+     expanded dropdown. Also shrink the header's bottom padding to zero
+     so the pill's bottom edge sits flush with the header's bottom edge,
+     eliminating the dark strip that would otherwise show between the
+     pill and the dropdown (the dropdown sits ABOVE z-90 header content,
+     so any header padding below the pill renders as a visible gap). */
+  body.mobile-nav-active .vc-header {
+    border-bottom-color: transparent;
+    padding-bottom: 0 !important;
+  }
 
   /* Hide the desktop nav grid; show the collapsing mobile nav instead */
   .nav-tabs {
@@ -4241,32 +4442,42 @@ body.privacy-mode-active .portfolio-delta-pill {
   }
   .nav-tabs.mobile-nav-open {
     display: grid !important;
-    /* Anchor to the bottom of the sticky header via position:fixed so the menu
-       opens in place wherever the user is on the page. Earlier approaches
-       (sticky with hardcoded top:90px, then normal-flow under header) both
-       failed: the first broke on different notch heights, the second meant
-       the menu opened above the fold and required scrolling to the top.
-       --vc-mobile-nav-top is set by toggleMobileNav() each time the menu
-       opens, reading the real header height from the DOM. */
+    /* Anchor to the bottom of the PILL itself (set via --vc-mobile-nav-top
+       in toggleMobileNav) so the dropdown appears to emerge directly from
+       the pill rather than from the sticky header above it. The pill sits
+       14px from each viewport edge (header has 14px horizontal padding),
+       so the dropdown matches that exact horizontal extent for visual
+       continuity. Top is offset by -1px so the dropdown overlaps the
+       pill's bottom border by 1px, hiding the seam between the two so
+       they read as one continuous element. */
     position: fixed !important;
-    top: var(--vc-mobile-nav-top, 90px) !important;
-    left: 8px !important;
-    right: 8px !important;
-    z-index: 89 !important;  /* below sync banners, above page content */
+    top: calc(var(--vc-mobile-nav-top, 90px) - 2px) !important;
+    left: 14px !important;
+    right: 14px !important;
+    z-index: 89 !important;  /* below the sticky header so the pill stays on top; the header's bottom border becomes transparent when nav is open via body.mobile-nav-active */
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
     margin: 0 !important;
-    padding: 10px 14px 14px;
-    background: rgba(13,13,13,0.92);
+    padding: 14px 12px 14px;
+    background: rgba(10,132,255,0.10);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 0 0 18px 18px;
+    border: 1px solid rgba(10,132,255,0.32);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
     box-shadow:
-      inset 0 -1px 0 rgba(0,0,0,0.30),
       0 16px 36px rgba(0,0,0,0.45);
     max-height: calc(100vh - var(--vc-mobile-nav-top, 90px) - 20px);
     overflow-y: auto;
+    transform-origin: top center;
+    animation: vcMobileNavExpand 0.28s cubic-bezier(0.32, 0.72, 0.35, 1) both;
+  }
+  @keyframes vcMobileNavExpand {
+    from { opacity: 0; transform: translateY(-12px) scaleY(0.85); }
+    to   { opacity: 1; transform: translateY(0) scaleY(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-tabs.mobile-nav-open { animation: none; }
   }
 
   /* The collapsed pill that lives in the sticky header */
@@ -4324,6 +4535,9 @@ body.privacy-mode-active .portfolio-delta-pill {
   #mobile-nav-pill.open {
     background: rgba(10,132,255,0.16);
     border-color: rgba(10,132,255,0.32);
+    border-bottom-color: transparent;
+    border-radius: 12px 12px 0 0;
+    box-shadow: none;
   }
   #mobile-nav-pill.open .pill-label {
     color: var(--blue-bright);
@@ -4571,14 +4785,19 @@ body.privacy-mode-active .portfolio-delta-pill {
   #soldSharesGrid { grid-template-columns: 1fr !important; gap: 10px !important; }
   #empFundsInput { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
 
-  /* ── ALLOC TABLE — single line per row ────────────────────── */
+  /* ── ALLOC TABLE — three-column layout: Fund / Units / £ Amount ── */
   .alloc-thead, .alloc-row {
-    grid-template-columns: 50px 1fr 70px 70px !important;
-    gap: 4px;
-    font-size: 11px;
+    grid-template-columns: 1.4fr 1fr 1fr !important;
+    gap: 8px !important;
   }
-  .alloc-thead .col-h:nth-child(4), .alloc-thead .col-h:nth-child(5),
-  .alloc-row .col-buf, .alloc-row .col-amt { display: none; }
+  .alloc-row {
+    padding: 14px 4px !important;
+  }
+  .alloc-fund-cell .col-ticker { font-size: 13px !important; }
+  .alloc-fund-meta { font-size: 10px !important; }
+  .alloc-units-cell { font-size: 19px !important; }
+  .alloc-units-suffix { font-size: 9px !important; }
+  .alloc-amount-cell { font-size: 19px !important; }
 
   /* ── HOLDING ROWS ─────────────────────────────────────────── */
   .holding-row {
@@ -4656,13 +4875,8 @@ body.privacy-mode-active .portfolio-delta-pill {
     grid-column: 1 / -1;
   }
 
-  /* ── TOAST — reposition to centre-bottom on mobile ────────── */
-  .save-toast {
-    bottom: calc(24px + env(safe-area-inset-bottom)) !important;
-    right: 50% !important;
-    transform: translateX(50%) !important;
-    text-align: center;
-  }
+  /* ── TOAST — top-centre rules now live in the base CSS so the same
+     positioning applies at every viewport. No mobile override needed. ── */
 
   /* ── MORTGAGE PLANNER PANEL ───────────────────────────────── */
   #mortgage-planner-panel {
@@ -5274,9 +5488,9 @@ body.privacy-mode-active .portfolio-delta-pill {
   .tax-row > div:nth-child(2) {
     grid-column: 2 / 3 !important;
     grid-row: 1 / 2 !important;
-    font-size: 10px !important;
-    font-weight: 500 !important;
-    color: rgba(255,255,255,0.5) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: rgba(255,255,255,0.78) !important;
     text-align: right !important;
     align-self: baseline;
     width: auto !important;
@@ -5340,10 +5554,10 @@ body.privacy-mode-active .portfolio-delta-pill {
   .tax-row > div:nth-child(7)::before {
     display: block;
     font-size: 9px;
-    color: rgba(255,255,255,0.45);
+    color: rgba(255,255,255,0.78);
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 2px;
   }
   .tax-row > div:nth-child(6)::before { content: 'Gain'; }
@@ -5556,17 +5770,20 @@ body.privacy-mode-active .portfolio-delta-pill {
   /* ── CALCULATOR — Fund Holdings & Prices header row ────────── */
   /* The heading sits next to three Pull from buttons; on mobile the
      buttons squash the heading text to wrap awkwardly. Stack instead. */
-  .fund-holdings-header {
+  .fund-holdings-header,
+  .fund-holdings-actions {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
   }
-  .fund-holdings-header > div:last-child {
+  .fund-holdings-header > div:last-child,
+  .fund-holdings-actions {
     display: grid !important;
     grid-template-columns: 1fr 1fr 1fr !important;
     gap: 6px !important;
   }
-  .fund-holdings-header .pull-wrapper-btn {
+  .fund-holdings-header .pull-wrapper-btn,
+  .fund-holdings-actions .pull-wrapper-btn {
     font-size: 11px !important;
     padding: 8px 4px !important;
     min-height: 38px;
@@ -6674,97 +6891,115 @@ body.modal-active .container > footer {
     <div style="font-size:9px;color:var(--muted);margin-top:8px">These holdings have exceeded your <span id="drift-alert-limit"></span>% drift limit. Run the calculator below to generate a rebalancing plan.</div>
   </div>
 
-  <!-- Active account selector -->
-  <div class="card mb16 active-account-card" style="display:flex;align-items:center;gap:12px;border-left:2px solid rgba(10,132,255,0.4);padding:10px 20px">
-    <div class="input-label" style="white-space:nowrap;color:var(--gold);font-size:9px;letter-spacing:3px">ACTIVE ACCOUNT</div>
-    <select id="activeWrapper" onchange="onWrapperChange(this.value)" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:11px;font-weight:600;padding:5px 10px;outline:none;cursor:pointer">
-      <option value="GIA">GIA — General Investment Account</option>
-      <option value="SIPP">SIPP — Self Invested Pension</option>
-      <option value="ISA">ISA — Individual Savings Account</option>
-    </select>
-    <div style="font-size:9px;color:var(--muted);font-style:italic">All calculations, pulls and saves will use this account</div>
+  <!-- Active account selector — wrapped in a section-label card to match
+       the design language used across Tax, Retirement, Analyse. -->
+  <div class="card card-left mb24">
+    <div class="section-label" style="margin-bottom:4px">Active Account</div>
+    <div class="stat-sub" style="margin-bottom:14px">All calculations, pulls and saves on this page will use the wrapper selected below.</div>
+    <div class="active-account-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <select id="activeWrapper" onchange="onWrapperChange(this.value)" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;outline:none;cursor:pointer">
+        <option value="GIA">GIA — General Investment Account</option>
+        <option value="SIPP">SIPP — Self Invested Pension</option>
+        <option value="ISA">ISA — Individual Savings Account</option>
+      </select>
+    </div>
   </div>
 
-  <!-- Budget row -->
-  <div class="card card-left mb24 calc-controls-row" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-    <div style="flex-shrink:0">
-      <div class="input-label mb8">Monthly Budget</div>
-      <div class="flex-center">
-        <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
-        <input class="budget-input" type="text" inputmode="numeric" id="budget" value="2700" step="50">
+  <!-- Budget & Rules — wraps the monthly budget input, drift limit, and
+       the three deployment rule checkboxes in a single section-label card. -->
+  <div class="card card-left mb24">
+    <div class="section-label" style="margin-bottom:4px">Budget &amp; Rules</div>
+    <div class="stat-sub" style="margin-bottom:14px">How much you're deploying this month, the drift threshold that triggers rebalancing, and the rules that govern overspend behaviour.</div>
+    <div class="calc-controls-row" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="flex-shrink:0">
+        <div class="input-label mb8">Monthly Budget</div>
+        <div class="flex-center">
+          <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
+          <input class="budget-input" type="text" inputmode="numeric" id="budget" value="2700" step="50">
+        </div>
+      </div>
+      <div style="height:48px;width:1px;background:var(--border);flex-shrink:0"></div>
+      <div style="flex-shrink:0">
+        <div class="input-label mb8">Drift Limit %</div>
+        <div class="flex-center">
+          <input class="budget-input" type="text" inputmode="decimal" id="driftLimit" value="5" step="0.5" min="0" max="100" style="width:80px">
+        </div>
+      </div>
+      <div style="height:48px;width:1px;background:var(--border);flex-shrink:0"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+        <label class="check-wrap">
+          <input type="checkbox" id="chk-reduce" checked>
+          <span class="check-label">Reduce Deployment</span>
+        </label>
+        <label class="check-wrap">
+          <input type="checkbox" id="chk-hard">
+          <span class="check-label">Hard Limit (skip fund)</span>
+        </label>
+        <label class="check-wrap">
+          <input type="checkbox" id="chk-overspend" checked>
+          <span class="check-label">Allow Overspend (2%)</span>
+          <span id="budgetNote" style="font-size:9px;color:var(--gold);margin-left:8px;font-weight:600"></span>
+        </label>
+        <div id="driftNote" style="font-size:9px;color:var(--amber);display:none"></div>
+      </div>
+      <div style="margin-left:auto;flex-shrink:0"></div>
+    </div>
+  </div>
+
+  <!-- Fund Holdings & Prices — wrapped in a section-label card. The paste
+       row and pull buttons live in the header; the funds grid renders below. -->
+  <div class="card card-left mb24">
+    <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="section-label" style="margin-bottom:2px">Fund Holdings &amp; Prices</div>
+        <div class="stat-sub">Current units held and live prices for each fund. Pull from a wrapper to refresh held units, or paste prices to bulk-update.</div>
+      </div>
+      <div class="fund-holdings-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-GIA" onclick="pullFromWrapper('GIA', this)">Pull from GIA</button>
+        <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-SIPP" onclick="pullFromWrapper('SIPP', this)">Pull from SIPP</button>
+        <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-ISA" onclick="pullFromWrapper('ISA', this)">Pull from ISA</button>
       </div>
     </div>
-    <div style="height:48px;width:1px;background:var(--border);flex-shrink:0"></div>
-    <div style="flex-shrink:0">
-      <div class="input-label mb8">Drift Limit %</div>
-      <div class="flex-center">
-        <input class="budget-input" type="text" inputmode="decimal" id="driftLimit" value="5" step="0.5" min="0" max="100" style="width:80px">
+
+    <!-- Paste price import — same format as Total Portfolio page -->
+    <div class="calc-paste-row" style="display:flex;gap:10px;align-items:center;margin-top:14px;margin-bottom:12px">
+      <input class="text-input" type="text" id="calc-price-paste"
+        placeholder="Paste prices — e.g. VWRP £133.26 VUAG £101.82 (spaces optional)"
+        style="flex:1;font-size:11px">
+      <button class="btn-ghost btn-sm" onclick="parseCalcPrices()">Paste &amp; Fill</button>
+    </div>
+    <div id="calcPasteResult" style="font-size:10px;margin-bottom:8px;display:none"></div>
+    <div id="auto-refresh-countdown-calc" style="font-size:10px;color:var(--muted);margin-bottom:0;font-weight:500;letter-spacing:-0.05px;opacity:0.7"></div>
+  </div>
+
+  <!-- Layered Strategy — wrapped in its own section-label card. The strategy
+       editor button sits in the header; the funds grid renders below. -->
+  <div class="card card-left mb24">
+    <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="section-label" style="margin-bottom:2px">Layered Strategy</div>
+        <div class="stat-sub">Targets must sum to 100%. Edits apply to future buy calculations only. Your existing holdings stay untouched.</div>
+      </div>
+      <div class="section-header-action">
+        <button class="btn-ghost btn-sm" onclick="openEditLayersModal()">Edit Layers</button>
       </div>
     </div>
-    <div style="height:48px;width:1px;background:var(--border);flex-shrink:0"></div>
-    <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
-      <label class="check-wrap">
-        <input type="checkbox" id="chk-reduce" checked>
-        <span class="check-label">Reduce Deployment</span>
-      </label>
-      <label class="check-wrap">
-        <input type="checkbox" id="chk-hard">
-        <span class="check-label">Hard Limit (skip fund)</span>
-      </label>
-      <label class="check-wrap">
-        <input type="checkbox" id="chk-overspend" checked>
-        <span class="check-label">Allow Overspend (2%)</span>
-        <span id="budgetNote" style="font-size:9px;color:var(--gold);margin-left:8px;font-weight:600"></span>
-      </label>
-      <div id="driftNote" style="font-size:9px;color:var(--amber);display:none"></div>
-    </div>
-    <div style="margin-left:auto;flex-shrink:0"></div>
+    <div id="fundsGrid"></div>
   </div>
 
-  <!-- Fund cards -->
-  <div class="flex-between fund-holdings-header" style="margin-bottom:14px">
-    <div class="section-label" style="margin-bottom:0">Fund Holdings &amp; Prices</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-GIA" onclick="pullFromWrapper('GIA', this)">Pull from GIA</button>
-      <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-SIPP" onclick="pullFromWrapper('SIPP', this)">Pull from SIPP</button>
-      <button class="btn-ghost btn-sm pull-wrapper-btn" id="pullBtn-ISA" onclick="pullFromWrapper('ISA', this)">Pull from ISA</button>
+  <!-- Additional funds — tracked for visibility, not part of allocation -->
+  <div class="card card-left mb24">
+    <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="section-label" style="margin-bottom:2px">Additional Funds</div>
+        <div class="stat-sub">These funds are tracked for visibility and history. They do not participate in drift correction or target allocation.</div>
+      </div>
+      <div class="section-header-action">
+        <button class="btn-ghost btn-sm" onclick="addAdditionalFund()">+ Add Fund</button>
+      </div>
     </div>
+    <div id="additionalFundsGrid"></div>
   </div>
-
-  <!-- Paste price import — same format as Total Portfolio page -->
-  <div class="calc-paste-row" style="display:flex;gap:10px;align-items:center;margin-top:16px;margin-bottom:16px;padding-top:14px;border-top:1px solid var(--border)">
-    <input class="text-input" type="text" id="calc-price-paste"
-      placeholder="Paste prices — e.g. VWRP £133.26 VUAG £101.82 (spaces optional)"
-      style="flex:1;font-size:11px">
-    <button class="btn-ghost btn-sm" onclick="parseCalcPrices()">Paste &amp; Fill</button>
-  </div>
-  <div id="calcPasteResult" style="font-size:10px;margin-bottom:12px;display:none"></div>
-  <div id="auto-refresh-countdown-calc" style="font-size:10px;color:var(--muted);margin-bottom:12px;font-weight:500;letter-spacing:-0.05px;opacity:0.7"></div>
-
-  <!-- Layered Strategy header — Edit Layers opens the modal that mutates FUNDS -->
-  <div class="section-header-paired" style="padding-top:14px;border-top:1px solid var(--border)">
-    <div class="section-header-text">
-      <div class="subsection-label">Layered Strategy</div>
-      <div class="stat-sub" style="font-style:italic;margin-top:6px">Targets must sum to 100%.<br>Edits apply to future buy calculations only.<br>Your existing holdings stay untouched.</div>
-    </div>
-    <div class="section-header-action">
-      <button class="btn-ghost btn-sm" onclick="openEditLayersModal()">Edit Layers</button>
-    </div>
-  </div>
-
-  <div id="fundsGrid" class="mb16"></div>
-
-  <!-- Additional funds section -->
-  <div class="section-header-paired">
-    <div class="section-header-text">
-      <div class="subsection-label">Additional Funds</div>
-      <div class="stat-sub" style="font-style:italic;margin-top:6px">These funds are tracked for visibility and history.<br>They do not participate in drift correction or target allocation.</div>
-    </div>
-    <div class="section-header-action">
-      <button class="btn-ghost btn-sm" onclick="addAdditionalFund()">+ Add Fund</button>
-    </div>
-  </div>
-  <div id="additionalFundsGrid" class="mb16"></div>
 
   <div id="lastPullWrapper" style="display:none"></div>
 
@@ -6773,7 +7008,7 @@ body.modal-active .container > footer {
   </div>
 
   <div id="calcResults" style="display:none">
-    <div class="card-gold mb16">
+    <div class="card-gold mb24">
       <div class="section-label">Portfolio Summary</div>
       <div class="mb16" id="calcSummary"></div>
       <div class="gold-divider"></div>
@@ -6781,12 +7016,8 @@ body.modal-active .container > footer {
       <div class="alloc-table">
         <div class="alloc-thead">
           <div class="col-h left">Fund</div>
-          <div class="col-h left">Current Holding</div>
-          <div class="col-h">% Before → After</div>
-          <div class="col-h">Buffered Price</div>
-          <div class="col-h">Units Buying</div>
+          <div class="col-h">Units</div>
           <div class="col-h">£ Amount</div>
-          <div class="col-h" style="color:var(--gold)">Deploy</div>
         </div>
         <div id="allocRows"></div>
       </div>
@@ -6826,19 +7057,50 @@ body.modal-active .container > footer {
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-history">
 
-  <div class="flex-between mb16" id="history-controls-row">
-    <div class="seg-toggle">
-      <button class="seg-option active" onclick="switchHistoryTab('all',this)"><span>All</span></button>
-      <button class="seg-option" onclick="switchHistoryTab('personal',this)"><span>Personal</span></button>
-      <button class="seg-option" onclick="switchHistoryTab('employer',this)"><span>Employer</span></button>
-      <button class="seg-option" onclick="switchHistoryTab('sold',this)"><span>Sold</span></button>
+  <!-- Filter & Search — wrapped in a card with section-label to match
+       the design language used across Tax, Retirement, Analyse. -->
+  <div class="card card-left mb24">
+    <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="section-label" style="margin-bottom:2px">Entry Log</div>
+        <div class="stat-sub">Browse and filter every contribution and sale recorded in your portfolio.</div>
+      </div>
+      <button class="btn-danger btn-sm" onclick="clearAllHistory()">Clear All</button>
     </div>
-    <button class="btn-danger btn-sm" onclick="clearAllHistory()">Clear All</button>
+
+    <div class="flex-between mb12" id="history-controls-row" style="margin-top:14px">
+      <div class="seg-toggle">
+        <button class="seg-option active" onclick="switchHistoryTab('all',this)"><span>All</span></button>
+        <button class="seg-option" onclick="switchHistoryTab('personal',this)"><span>Personal</span></button>
+        <button class="seg-option" onclick="switchHistoryTab('employer',this)"><span>Employer</span></button>
+        <button class="seg-option" onclick="switchHistoryTab('sold',this)"><span>Sold</span></button>
+      </div>
+    </div>
+
+    <!-- Search and date-range filter — narrows the list below by ticker, note, wrapper, or date -->
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-top:14px;align-items:end" id="history-filter-bar">
+      <div class="input-group">
+        <span class="input-label">Search Ticker, Note, Wrapper</span>
+        <input class="text-input" type="text" id="hist-search" placeholder="e.g. VWRP, ISA, bonus" oninput="renderHistory(getHistoryActiveFilter())">
+      </div>
+      <div class="input-group">
+        <span class="input-label">From Date</span>
+        <input class="text-input" type="month" id="hist-date-from" onchange="renderHistory(getHistoryActiveFilter())">
+      </div>
+      <div class="input-group">
+        <span class="input-label">To Date</span>
+        <input class="text-input" type="month" id="hist-date-to" onchange="renderHistory(getHistoryActiveFilter())">
+      </div>
+      <button class="btn-ghost btn-sm" onclick="clearHistoryFilters()" style="height:34px">Reset</button>
+    </div>
+
+    <div id="hist-filter-summary" style="font-size:10px;color:var(--muted);margin-top:10px;display:none"></div>
   </div>
 
   <!-- Add entry form - shows on Personal and Employer tabs -->
   <div class="card card-left mb24" id="historyFormCard" style="display:none">
-    <div class="section-label" id="historyFormTitle">Add Personal Entry</div>
+    <div class="section-label" id="historyFormTitle" style="margin-bottom:4px">Add Personal Entry</div>
+    <div class="stat-sub" style="margin-bottom:14px">Manually log a contribution. The date, wrapper, and per-fund unit counts feed your portfolio totals and history chart.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
       <div class="input-group">
         <span class="input-label">Entry Date</span>
@@ -6873,7 +7135,8 @@ body.modal-active .container > footer {
 
   <!-- SOLD SHARES FORM (hidden, shown when Sold tab active) -->
   <div id="soldFormCard" class="card card-left mb24" style="display:none">
-    <div class="section-label mb16">Record Share Sale</div>
+    <div class="section-label" style="margin-bottom:4px">Record Share Sale</div>
+    <div class="stat-sub" style="margin-bottom:14px">Log a sale from any wrapper. CGT realised auto-calculates from your Section 104 cost basis. Tick Bed & ISA if you're moving the proceeds straight into an ISA.</div>
     <div id="soldFormMetaRow" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
       <div class="input-group">
         <span class="input-label">Sale Date</span>
@@ -6923,25 +7186,6 @@ body.modal-active .container > footer {
     </div>
   </div>
 
-  <!-- Search and date-range filter — narrows the list below by ticker, note, wrapper, or date -->
-  <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:16px;align-items:end" id="history-filter-bar">
-    <div class="input-group">
-      <span class="input-label">Search Ticker, Note, Wrapper</span>
-      <input class="text-input" type="text" id="hist-search" placeholder="e.g. VWRP, ISA, bonus" oninput="renderHistory(getHistoryActiveFilter())">
-    </div>
-    <div class="input-group">
-      <span class="input-label">From Date</span>
-      <input class="text-input" type="month" id="hist-date-from" onchange="renderHistory(getHistoryActiveFilter())">
-    </div>
-    <div class="input-group">
-      <span class="input-label">To Date</span>
-      <input class="text-input" type="month" id="hist-date-to" onchange="renderHistory(getHistoryActiveFilter())">
-    </div>
-    <button class="btn-ghost btn-sm" onclick="clearHistoryFilters()" style="height:34px">Reset</button>
-  </div>
-
-  <div id="hist-filter-summary" style="font-size:10px;color:var(--muted);margin-bottom:12px;display:none"></div>
-
   <div id="historyList"></div>
 </div>
 
@@ -6958,10 +7202,13 @@ body.modal-active .container > footer {
     <a href="#ret-current-position" data-anchor="ret-current-position">Current Pot</a>
     <a href="#ret-freedom-card" data-anchor="ret-freedom-card">Freedom Number</a>
   </nav>
-  <div data-collapsible="retirement" class="ret-settings-collapsible chevron-collapsible mb16" id="ret-settings-section">
+  <div data-collapsible="retirement" class="card card-left ret-settings-collapsible chevron-collapsible mb24" id="ret-settings-section">
     <div class="collapsible-header" onclick="toggleMobileCollapse('retirement')">
       <div class="flex-between" style="margin-bottom:0">
-        <div class="section-label" style="margin-bottom:0">Retirement Settings</div>
+        <div>
+          <div class="section-label" style="margin-bottom:2px">Retirement Settings</div>
+          <div class="stat-sub">Inputs that drive your projection: age, growth rate, contributions, phases, and withdrawal strategy.</div>
+        </div>
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
       <div id="ret-settings-summary" style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:500;letter-spacing:-0.05px"></div>
@@ -7047,7 +7294,7 @@ body.modal-active .container > footer {
   </div>
 
   <div id="retResults" style="display:none">
-    <div class="card-gold mb16">
+    <div class="card-gold mb24">
       <div class="section-label">Retirement Projection</div>
       <!-- Hero card — projected value at retirement with inflation-adjusted sub-line. -->
       <div class="plan-card is-hero">
@@ -7178,7 +7425,7 @@ body.modal-active .container > footer {
   <!-- ═══════════════════════════════════════════
        CURRENT POSITION — always visible, updates on every sync
   ═══════════════════════════════════════════ -->
-  <div class="card-gold mb16" id="ret-current-position" style="display:none">
+  <div class="card-gold mb24" id="ret-current-position" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Current Portfolio — Compound Growth Only</div>
@@ -7259,7 +7506,7 @@ body.modal-active .container > footer {
   <!-- ═══════════════════════════════════════════
        FREEDOM NUMBER — the pot needed to make work optional
   ═══════════════════════════════════════════ -->
-  <div class="card-gold mb16" id="ret-freedom-card">
+  <div class="card-gold mb24" id="ret-freedom-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Freedom Number</div>
@@ -7378,7 +7625,7 @@ body.modal-active .container > footer {
   <!-- Net Worth Breakdown — sits at the top so the headline figure and chart
        are the first things visible. The asset input grid sits below for
        editing context when a value needs updating. -->
-  <div class="card-gold mb16">
+  <div class="card-gold mb24">
     <div class="section-label mb16">Net Worth Breakdown</div>
     <!-- Summary cards sit above the chart -->
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="nw-summary-cards"></div>
@@ -7401,7 +7648,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Taxable vs tax-free -->
-  <div class="card-gold mb16">
+  <div class="card-gold mb24">
     <div class="section-label mb16">Taxable vs Tax-Free</div>
     <div class="grid-3 mb16" id="nw-tax-cards"></div>
     <div style="background:rgba(0,0,0,0.40);box-shadow:inset 0 1px 2px rgba(0,0,0,0.30);border-radius:10px;overflow:hidden;height:10px;margin-bottom:6px">
@@ -7418,7 +7665,7 @@ body.modal-active .container > footer {
        is what users look at. The .chevron-collapsible class works at every
        viewport (Standing Order 0.25). First-run state seeded as collapsed
        in _applyMobileCollapseState. -->
-  <div class="chevron-collapsible collapsed mb16" data-collapsible="nw-assets-liabilities" id="nw-assets-section">
+  <div class="card card-left chevron-collapsible collapsed mb24" data-collapsible="nw-assets-liabilities" id="nw-assets-section">
     <div class="collapsible-header" onclick="toggleMobileCollapse('nw-assets-liabilities')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
         <div>
@@ -7509,19 +7756,8 @@ body.modal-active .container > footer {
   <!-- LIVE VIEW (current month) -->
   <div id="bgt-live-view">
 
-    <!-- Month header bar -->
-    <div class="card card-left mb24" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <div>
-        <div class="section-label" style="margin-bottom:2px">Monthly Budget Tracker</div>
-        <div class="stat-sub" id="bgt-month-label">— Loading</div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <button class="btn-ghost btn-sm" onclick="openBgtHistory()">📋 View History</button>
-        <button class="btn-gold btn-sm" onclick="completeBgtMonth()">Complete Month →</button>
-      </div>
-    </div>
-
-    <!-- Quick Add bar -->
+    <!-- Quick Add bar — page opens here directly. No top header so the
+         user lands straight on the action they're most likely to take. -->
     <div class="card mb24">
       <div class="section-label mb12">Quick Add Expense</div>
       <div class="bgt-quick-add">
@@ -7550,6 +7786,23 @@ body.modal-active .container > footer {
     <!-- Main budget table -->
     <div id="bgt-main-table"></div>
 
+    <!-- Monthly pivot strip — month label on the left, navigation actions
+         on the right. Sits between the budget table and the analysis
+         section so the user adds expenses first, then navigates from here.
+         Both action buttons share identical width via min-width and flex:1
+         on mobile so they read as a matched pair, never lopsided. -->
+    <div class="card card-left mb24 bgt-pivot-strip" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:16px 20px">
+      <div style="min-width:0;flex:1 1 auto;display:flex;align-items:baseline;flex-wrap:wrap;gap:8px">
+        <span class="section-label" style="margin-bottom:0">This Month</span>
+        <span style="color:rgba(255,255,255,0.40);font-size:13px;font-weight:600">·</span>
+        <span class="stat-sub" id="bgt-month-label" style="font-size:13px">— Loading</span>
+      </div>
+      <div class="bgt-pivot-actions" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex-shrink:0">
+        <button class="btn-ghost btn-sm bgt-pivot-btn" onclick="openBgtHistory()">📋 View History</button>
+        <button class="btn-gold btn-sm bgt-pivot-btn" onclick="completeBgtMonth()">Complete Month →</button>
+      </div>
+    </div>
+
     <!-- Live Monthly Breakdown — % of income per category -->
     <div id="bgt-breakdown-panel"></div>
 
@@ -7560,7 +7813,7 @@ body.modal-active .container > footer {
     <div id="bgt-averages-panel"></div>
 
     <!-- Transaction History (collapsible) -->
-    <div class="card mt12" style="margin-top:16px">
+    <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
         <div class="section-label" style="margin-bottom:0">Transaction History</div>
         <div style="display:flex;gap:12px;align-items:center">
@@ -7595,7 +7848,7 @@ body.modal-active .container > footer {
 
     <!-- Detail panel — shown when a month is selected -->
     <div id="bgt-hist-detail" style="display:none">
-      <div class="card-gold mb16">
+      <div class="card-gold mb24">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
           <div class="section-label" id="bgt-hist-detail-title" style="margin-bottom:0">—</div>
           <div style="font-size:9px;color:var(--muted)">Changes are saved automatically</div>
@@ -7700,7 +7953,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Summary -->
-  <div class="card-gold mb16" style="position:relative">
+  <div class="card-gold mb24" style="position:relative">
     <!-- Privacy toggle — hides £ figures across the Portfolio Overview.
          State persists in LS.UI.privacyMode and auto-syncs across devices.
          Absolute-positioned in the top-right corner of this card. -->
@@ -7768,8 +8021,17 @@ body.modal-active .container > footer {
   ═══════════════════════════════════════════════════════════ -->
 
   <!-- Income Tax Calculator -->
-  <div class="card card-left mb24">
-    <div class="section-label mb16">Income Tax Calculator</div>
+  <div class="card card-left chevron-collapsible mb24" data-collapsible="income-tax">
+    <div class="collapsible-header" onclick="toggleMobileCollapse('income-tax')" style="cursor:pointer">
+      <div class="flex-between" style="margin-bottom:0">
+        <div style="flex:1;min-width:0">
+          <div class="section-label" style="margin-bottom:4px">Income Tax Calculator</div>
+          <div class="stat-sub" id="inc-tax-summary">PAYE + dividends + bonus → projected total income and tax position</div>
+        </div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+      </div>
+    </div>
+    <div class="collapsible-body" style="margin-top:16px">
 
     <!-- Income inputs row — inputs only, no summary boxes inline. Each
          input is wrapped together with its trailing separator so the
@@ -7856,13 +8118,14 @@ body.modal-active .container > footer {
     <!-- Bonus tax breakdown — only shown when bonus > 0. Now sits AFTER the
          main breakdown above as a supplementary view, since it's
          conditional and only relevant when a bonus is entered. -->
-    <div id="bonusTaxSummary" style="background:rgba(10,132,255,0.18);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;padding:14px 18px;margin-bottom:0;display:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.20),0 12px 32px rgba(10,132,255,0.20)">
+    <div id="bonusTaxSummary" style="background:rgba(10,132,255,0.18);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;padding:14px 18px;margin-bottom:0;display:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.20),0 4px 12px rgba(10,132,255,0.10)">
       <div style="margin-bottom:12px">
         <div style="font-size:13px;font-weight:600;color:#a8d4ff;letter-spacing:-0.1px">Tax on Bonus</div>
         <div style="font-size:10px;color:rgba(199,226,255,0.7);margin-top:2px">How your bonus is taxed on top of your salary</div>
       </div>
       <div id="bonusTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
     </div>
+    </div><!-- /collapsible-body -->
   </div>
 
   <!-- Tax Provision Planner — pulled out into its own card so it gets the
@@ -7928,7 +8191,7 @@ body.modal-active .container > footer {
        Now contains: CGT settings (allowance + used) at the top, holdings
        table (Section 104 Pool) in the middle, CGT calculation breakdown
        at the bottom. Three subsections, one card. -->
-  <div class="card-gold mb16">
+  <div class="card-gold mb24">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">GIA — General Investment Account</div>
       <span class="tax-status-pill tax-status-cgt">CGT Applies</span>
@@ -7988,7 +8251,7 @@ body.modal-active .container > footer {
   <!-- ISA — Individual Savings Account
        Combined card: allowance tracker (allowance / used / remaining)
        AT THE TOP, then holdings table below. One wrapper, one card. -->
-  <div class="card-gold mb16">
+  <div class="card-gold mb24">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">ISA — Individual Savings Account</div>
       <span class="tax-status-pill tax-status-exempt">Tax Exempt</span>
@@ -8047,7 +8310,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- SIPP — Self Invested Personal Pension -->
-  <div class="card-gold mb16">
+  <div class="card-gold mb24">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">SIPP — Self Invested Personal Pension</div>
       <span class="tax-status-pill tax-status-exempt">Tax Exempt</span>
@@ -8056,7 +8319,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Tax Year CSV Export — for self-assessment / record keeping -->
-  <div class="card card-left mb16" id="tax-csv-export-card">
+  <div class="card card-left mb24" id="tax-csv-export-card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Tax Year Export</div>
@@ -8085,10 +8348,10 @@ body.modal-active .container > footer {
 
   <!-- Untagged warning -->
   <div id="untaggedWarning" style="display:none">
-    <div class="card mb16" style="border-color:var(--amber)">
+    <div class="card card-left mb24" style="border-color:rgba(255,159,10,0.28);border-left:3px solid var(--amber)">
       <div style="margin-bottom:12px">
-        <div class="subsection-label" style="color:var(--amber)">Holdings Without a Wrapper Tag</div>
-        <div class="subsection-sub">These holdings have no wrapper assigned and are excluded from CGT calculations. Go to Total Portfolio and add them with a wrapper, or tag them below.</div>
+        <div class="section-label" style="color:var(--amber);margin-bottom:4px">Holdings Without a Wrapper Tag</div>
+        <div class="stat-sub">These holdings have no wrapper assigned and are excluded from CGT calculations. Go to Total Portfolio and add them with a wrapper, or tag them below.</div>
       </div>
       <div id="untaggedList"></div>
     </div>
@@ -8113,7 +8376,10 @@ body.modal-active .container > footer {
   <input type="hidden" id="sell-isa-allowance" value="20000">
   <input type="hidden" id="sell-isa-used" value="0">
 
-  <div class="sell-allowance-snapshot mb16" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div class="card card-left mb24">
+    <div class="section-label" style="margin-bottom:4px">Allowances at a Glance</div>
+    <div class="stat-sub" style="margin-bottom:14px">Live CGT and ISA allowance usage for the current tax year. Edit on the Tax tab.</div>
+    <div class="sell-allowance-snapshot" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
     <!-- CGT Allowance card -->
     <div class="card card-left allowance-snapshot-card" data-snapshot="cgt">
@@ -8165,12 +8431,14 @@ body.modal-active .container > footer {
       </div>
     </div>
 
+    </div>
   </div>
 
   <!-- Tax Band toggle — sale-specific so it stays here -->
-  <div class="card card-left mb16 sell-cgt-settings">
+  <div class="card card-left mb24 sell-cgt-settings">
+    <div class="section-label" style="margin-bottom:4px">Tax Band for This Sale</div>
+    <div class="stat-sub" style="margin-bottom:14px">Auto-selected from your taxable income on the Tax tab. Override here if needed.</div>
     <div class="sell-tax-band-wrap">
-      <div class="input-label mb8">Tax Band for This Sale</div>
       <div class="seg-toggle">
         <label class="seg-option">
           <input type="radio" name="sell-rate" id="sell-basic" value="18">
@@ -8187,7 +8455,7 @@ body.modal-active .container > footer {
 
   <!-- Tax year banner — plan-card with the two key tax-year metrics
        and the primary actions docked in the header strip. -->
-  <div class="plan-card mb16">
+  <div class="plan-card mb24">
     <div class="plan-card-header" style="flex-wrap:wrap;gap:10px">
       <span class="plan-card-ticker">UK Tax Year</span>
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
@@ -8209,14 +8477,14 @@ body.modal-active .container > footer {
 
   <!-- Bed & ISA results -->
   <div id="bedISAResults" style="display:none;margin-top:16px">
-    <div class="card-gold mb16">
+    <div class="card-gold mb24">
       <div style="margin-bottom:14px">
         <div class="section-label" style="margin-bottom:4px">Bed &amp; ISA Optimisation Plan</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.6">Sells GIA holdings and moves proceeds to ISA. Strictly stays within your £3,000 CGT allowance. Holdings at a loss or zero gain are transferred first, free of CGT. Then lowest-gain holdings are used until the CGT limit is reached. If the full £20,000 ISA allowance cannot be used, it means your remaining holdings would all generate gains above the available allowance.</div>
+        <div class="stat-sub">Sells GIA holdings and moves proceeds to ISA. Strictly stays within your £3,000 CGT allowance. Holdings at a loss or zero gain are transferred first, free of CGT. Then lowest-gain holdings are used until the CGT limit is reached. If the full £20,000 ISA allowance cannot be used, it means your remaining holdings would all generate gains above the available allowance.</div>
       </div>
       <div id="bedISAPlan"></div>
     </div>
-    <div id="bedISASaveSection" style="display:none;margin-top:4px;margin-bottom:16px;padding:14px 18px;background:rgba(10,132,255,0.18);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.20),0 12px 32px rgba(10,132,255,0.20)">
+    <div id="bedISASaveSection" style="display:none;margin-top:4px;margin-bottom:16px;padding:14px 18px;background:rgba(10,132,255,0.18);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.20),0 4px 12px rgba(10,132,255,0.10)">
       <button class="btn-gold" onclick="saveSellPlanToHistory()" style="margin-right:12px">✓ Sell &amp; Save to History</button>
       <span class="bedisa-save-helper" style="font-size:9px;color:rgba(199,226,255,0.7)">Records the sale in Monthly History, removes units from your GIA, and updates CGT used this year</span>
     </div>
@@ -8229,11 +8497,11 @@ body.modal-active .container > footer {
     <div class="mb24" id="sellSummaryCards"></div>
 
     <!-- Per-holding breakdown -->
-    <div class="card-gold mb16 chevron-collapsible collapsed" data-collapsible="holdings-breakdown">
+    <div class="card-gold mb24 chevron-collapsible collapsed" data-collapsible="holdings-breakdown">
       <div class="collapsible-header" onclick="toggleMobileCollapse('holdings-breakdown')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="flex:1;min-width:0">
           <div class="section-label" style="margin-bottom:4px">Holdings Breakdown</div>
-          <div style="font-size:11px;color:var(--muted);line-height:1.5" id="sellHoldingsSubtitle">Each row shows the maximum units you can sell from that holding to stay within your remaining allowance.</div>
+          <div class="stat-sub" id="sellHoldingsSubtitle">Each row shows the maximum units you can sell from that holding to stay within your remaining allowance.</div>
         </div>
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
@@ -8243,11 +8511,11 @@ body.modal-active .container > footer {
     </div>
 
     <!-- Optimal sell plan -->
-    <div class="card-gold mb16 chevron-collapsible" data-collapsible="optimal-cgt-plan">
+    <div class="card-gold mb24 chevron-collapsible" data-collapsible="optimal-cgt-plan">
       <div class="collapsible-header" onclick="toggleMobileCollapse('optimal-cgt-plan')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="flex:1;min-width:0">
           <div class="section-label" style="margin-bottom:4px">Optimal CGT Sale Plan</div>
-          <div style="font-size:11px;color:var(--muted);line-height:1.5">Maximises use of your £3,000 CGT allowance across your GIA holdings</div>
+          <div class="stat-sub">Maximises use of your £3,000 CGT allowance across your GIA holdings.</div>
         </div>
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
@@ -8261,7 +8529,7 @@ body.modal-active .container > footer {
       <div class="collapsible-header" onclick="toggleMobileCollapse('remaining-gia-position')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="flex:1;min-width:0">
           <div class="section-label" style="margin-bottom:4px">Remaining GIA Position After Sale</div>
-          <div style="font-size:11px;color:var(--muted);line-height:1.5">Your remaining GIA holdings after executing the plan above. The sold units move to your ISA wrapper.</div>
+          <div class="stat-sub">Your remaining GIA holdings after executing the plan above. The sold units move to your ISA wrapper.</div>
         </div>
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
@@ -8281,8 +8549,11 @@ body.modal-active .container > footer {
 <div class="tab-panel" id="tab-analyse">
 
   <!-- Last updated banner -->
-  <div class="card mb24" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-left:2px solid rgba(10,132,255,0.4)">
-    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600">Portfolio Analysis — Live Data</div>
+  <div class="card card-left mb24" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="section-label" style="margin-bottom:2px">Portfolio Analysis</div>
+      <div class="stat-sub">Live data driven from your latest holdings, prices, and net worth inputs.</div>
+    </div>
     <div style="font-size:10px;color:var(--muted)" id="analyse-last-updated">—</div>
   </div>
 
@@ -8431,7 +8702,7 @@ body.modal-active .container > footer {
     <div class="tax-zone-line"></div>
   </div>
 
-  <div class="card-gold mb16">
+  <div class="card-gold mb24">
     <div class="section-label">Mortgage Strategic Planner</div>
     <div class="stat-sub mb16">Plan early-payment scenarios, compare interest costs against investing the difference, and model your remaining mortgage term.</div>
     <button class="btn-gold" onclick="openMortgagePlanner()" style="width:100%;padding:18px;font-size:17px;font-weight:600;letter-spacing:-0.2px">
@@ -8446,10 +8717,10 @@ body.modal-active .container > footer {
 <div class="tab-panel mp-panel" id="mortgage-planner-panel">
 
   <!-- Header -->
-  <div class="card card-left mb24 mp-header" style="border-left-color:var(--blue);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div class="card card-left mb24 mp-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>
-      <div class="subsection-label eyebrow" style="color:var(--blue);margin-bottom:4px">Mortgage Strategic Planner</div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px">Analyse Financial Position → Mortgage Planner</div>
+      <div class="section-label" style="margin-bottom:2px">Mortgage Strategic Planner</div>
+      <div class="stat-sub">Analyse Financial Position → Mortgage Planner</div>
     </div>
     <button class="mp-btn-back" onclick="closeMortgagePlanner()">← Back to Analysis</button>
   </div>
@@ -8459,7 +8730,8 @@ body.modal-active .container > footer {
 
   <!-- Inputs -->
   <div class="card-gold mb24">
-    <div class="section-label mb16">Mortgage Inputs</div>
+    <div class="section-label" style="margin-bottom:4px">Mortgage Inputs</div>
+    <div class="stat-sub" style="margin-bottom:16px">Your current mortgage position. Edits recalculate the projection and amortisation table below in real time.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:20px">
       <div class="mp-input-group" data-pound>
         <label class="mp-input-label" for="mp-balance">Current Balance</label>
@@ -8484,8 +8756,8 @@ body.modal-active .container > footer {
     </div>
     <div class="gold-divider"></div>
     <div style="margin-bottom:14px">
-      <div class="subsection-label eyebrow" style="color:var(--blue);margin-bottom:4px" id="mp-future-heading">Future Projections</div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px;line-height:1.5" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
+      <div class="subsection-label" id="mp-future-heading" style="margin-bottom:4px">Future Projections</div>
+      <div class="stat-sub" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">
       <div class="mp-input-group">
@@ -8500,11 +8772,14 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Scenario comparison cards -->
-  <div class="section-label mb16">Three-Path Comparison</div>
-  <div class="grid-4 mb24" id="mp-scenario-cards"></div>
+  <div class="card-gold mb24">
+    <div class="section-label" style="margin-bottom:4px">Three-Path Comparison</div>
+    <div class="stat-sub" style="margin-bottom:16px">Compare staying on your current rate, switching at the projected date, and overpaying through to completion.</div>
+    <div class="grid-4" id="mp-scenario-cards"></div>
+  </div>
 
   <!-- Amortisation table -->
-  <div class="card-gold mb16">
+  <div class="card-gold mb24">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
       <div class="section-label" style="margin-bottom:0">Full Amortisation Schedule</div>
       <div style="display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);letter-spacing:-0.05px">
@@ -9636,35 +9911,46 @@ function _startAutoRefreshCountdown() {
 // day the current total becomes the baseline; every subsequent render
 // that day computes today's gain as currentTotal - baseline.
 //
-// Stored as JSON: { date: 'YYYY-MM-DD', baseline: number, lastSeen: number }
+// Stored as JSON keyed by scope ('all' | 'personal' | 'employer' | 'isa'):
+// { date: 'YYYY-MM-DD', baseline: number, lastSeen: number }
 const PORTFOLIO_DAILY_BASELINE_KEY = 'rma_portfolio_daily_baseline';
 
-function _getPortfolioDailyBaseline(currentTotal) {
-  // Returns { baseline, isNewDay, gain } or null on first ever call
+function _getPortfolioDailyBaseline(currentTotal, scope = 'all') {
+  // Returns { baseline, isNewDay, gain }
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  let stored = null;
+  let allStored = {};
   try {
     const raw = localStorage.getItem(PORTFOLIO_DAILY_BASELINE_KEY);
-    if (raw) stored = JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Backwards-compat: original schema stored a single { date, baseline, lastSeen }
+      // at the top level. Detect and migrate to scoped form on first read.
+      if (parsed && typeof parsed === 'object' && 'date' in parsed && 'baseline' in parsed) {
+        allStored = { all: parsed };
+      } else if (parsed && typeof parsed === 'object') {
+        allStored = parsed;
+      }
+    }
   } catch (e) {}
 
-  // First ever load OR the stored entry is from a previous calendar day:
-  // freeze TODAY'S baseline at the current total. This means the first
-  // render of the day shows £0 / 0% gain (correct — no movement yet),
-  // and subsequent renders within the day show the delta from open.
+  const stored = allStored[scope];
+
+  // First ever load for this scope OR the stored entry is from a previous
+  // calendar day: freeze TODAY'S baseline at the current total. This means
+  // the first render of the day shows £0 / 0% gain (correct — no movement
+  // yet), and subsequent renders within the day show the delta from open.
   if (!stored || stored.date !== today) {
     const fresh = { date: today, baseline: currentTotal, lastSeen: currentTotal };
-    try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(fresh)); } catch (e) {}
+    allStored[scope] = fresh;
+    try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(allStored)); } catch (e) {}
     return { baseline: currentTotal, gain: 0, gainPct: 0, isNewDay: true };
   }
 
-  // Same day — compute gain from baseline. Update lastSeen so we have a
-  // record of the most recent render for any future "since last refresh"
-  // visualisations.
+  // Same day — compute gain from baseline. Update lastSeen.
   const gain = currentTotal - stored.baseline;
   const gainPct = stored.baseline > 0 ? (gain / stored.baseline) * 100 : 0;
-  const updated = { date: today, baseline: stored.baseline, lastSeen: currentTotal };
-  try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(updated)); } catch (e) {}
+  allStored[scope] = { date: today, baseline: stored.baseline, lastSeen: currentTotal };
+  try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(allStored)); } catch (e) {}
   return { baseline: stored.baseline, gain, gainPct, isNewDay: false };
 }
 
@@ -9673,21 +9959,44 @@ function _getPortfolioDailyBaseline(currentTotal) {
 // the portfolio total was a moment ago so the gain figure reflects only
 // the price-update delta rather than including any pre-existing drift.
 //
-// If we're already mid-day with a baseline set, this is a no-op (we keep
-// the original baseline so today's gain accumulates across price updates).
-// If today's baseline doesn't exist yet (e.g. first load of the day +
-// first price update), we set it to the pre-update total so the upcoming
-// "after" render shows the correct delta from the pre-update state.
-function _anchorPortfolioBaseline(preUpdateTotal) {
+// Anchors all four scopes (all/personal/employer/isa) using the snapshot
+// values passed in. If a scope baseline already exists for today, leaves
+// it alone — first anchor of the day wins so deltas accumulate across
+// price updates within the same day.
+function _anchorPortfolioBaseline(scopedTotals) {
+  // Backwards-compat: callers may pass a single number for total-portfolio
+  // anchoring under the legacy schema. Wrap it as { all: total } so the
+  // new path handles it uniformly.
+  if (typeof scopedTotals === 'number') {
+    scopedTotals = { all: scopedTotals };
+  }
+  if (!scopedTotals || typeof scopedTotals !== 'object') return;
+
   const today = new Date().toISOString().slice(0, 10);
-  let stored = null;
+  let allStored = {};
   try {
     const raw = localStorage.getItem(PORTFOLIO_DAILY_BASELINE_KEY);
-    if (raw) stored = JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && 'date' in parsed && 'baseline' in parsed) {
+        allStored = { all: parsed };
+      } else if (parsed && typeof parsed === 'object') {
+        allStored = parsed;
+      }
+    }
   } catch (e) {}
-  if (stored && stored.date === today) return; // already anchored today
-  const fresh = { date: today, baseline: preUpdateTotal, lastSeen: preUpdateTotal };
-  try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(fresh)); } catch (e) {}
+
+  let mutated = false;
+  Object.entries(scopedTotals).forEach(([scope, val]) => {
+    if (typeof val !== 'number' || !isFinite(val)) return;
+    const existing = allStored[scope];
+    if (existing && existing.date === today) return; // already anchored
+    allStored[scope] = { date: today, baseline: val, lastSeen: val };
+    mutated = true;
+  });
+  if (mutated) {
+    try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(allStored)); } catch (e) {}
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -10259,12 +10568,19 @@ function toast(msg='Saved') {
 // sticky header — works regardless of scroll position.
 // ════════════════════════════════════════════════════════
 function _setMobileNavTopVar() {
-  // Read the real bottom edge of the sticky header so the expanded grid
-  // sits flush beneath it. The header's bottom changes with safe-area-inset
-  // (notch padding) so we can't hardcode a number.
-  const header = document.querySelector('.vc-header');
-  if (!header) return;
-  const bottom = header.getBoundingClientRect().bottom;
+  // Read the real bottom edge of the mobile nav pill so the expanded grid
+  // appears to emerge from the pill itself (Apple-style continuous element)
+  // rather than from the sticky header bar above it. Falls back to the
+  // header's bottom if the pill isn't visible (desktop).
+  const pill = document.getElementById('mobile-nav-pill');
+  let bottom;
+  if (pill && pill.offsetParent !== null) {
+    bottom = pill.getBoundingClientRect().bottom;
+  } else {
+    const header = document.querySelector('.vc-header');
+    if (!header) return;
+    bottom = header.getBoundingClientRect().bottom;
+  }
   document.documentElement.style.setProperty('--vc-mobile-nav-top', `${Math.max(0, Math.round(bottom))}px`);
 }
 
@@ -11140,14 +11456,20 @@ function applyPriceUpdates(opts = {}) {
   snapshotState('Update prices');
   const portfolio = lsGet(LS.PORTFOLIO, []);
 
-  // Anchor today's gain baseline at the PRE-update portfolio total so
+  // Anchor today's gain baseline at the PRE-update portfolio totals so
   // the gain figure shows just the price-update delta rather than
   // collapsing to zero (because the baseline gets re-set to the new
   // total on a new day's first render). Only takes effect on the first
   // price update of a new day; subsequent updates within the same day
-  // keep the existing baseline.
-  const preUpdateTotal = portfolio.reduce((s,h) => s + h.shares * (h.price || 0), 0);
-  _anchorPortfolioBaseline(preUpdateTotal);
+  // keep the existing baseline. Anchors all four scopes individually so
+  // the delta pill on each wrapper tab works the same way.
+  const _scopedPre = {
+    all: portfolio.reduce((s,h) => s + h.shares * (h.price || 0), 0),
+    personal: portfolio.filter(h => (h.wrapper === 'GIA' || (!h.wrapper && h.type !== 'employer')) && h.wrapper !== 'ISA' && h.wrapper !== 'SIPP').reduce((s,h) => s + h.shares * (h.price || 0), 0),
+    employer: portfolio.filter(h => h.wrapper === 'SIPP' || h.type === 'employer').reduce((s,h) => s + h.shares * (h.price || 0), 0),
+    isa: portfolio.filter(h => h.wrapper === 'ISA').reduce((s,h) => s + h.shares * (h.price || 0), 0),
+  };
+  _anchorPortfolioBaseline(_scopedPre);
 
   let updated = 0;
 
@@ -11861,18 +12183,22 @@ function calculate() {
     const newVal = f.currentVal + deployedRounded;
     const newPct = projAfter>0 ? newVal/projAfter*100 : 0;
     const currentPct = currentPortVal>0 ? (f.currentVal/currentPortVal*100).toFixed(1) : '0.0';
-    const diff = Math.abs(newPct - f.normTarget*100);
-    const pctClass = diff<=1.5?'pct-good':diff<=3?'pct-warn':'pct-bad';
-    const beforeAfter = currentPortVal>0 ? `${currentPct}% → ${newPct.toFixed(1)}%` : `→ ${newPct.toFixed(1)}%`;
-    const skipNote = f.skipped ? `<div class="badge badge-skip" style="margin-top:3px">Hard Limit · Skipped</div>` : f.reducedBy>0 ? `<div style="font-size:9px;color:var(--amber);margin-top:3px">Reduced ${f.reducedBy.toFixed(0)}% by drift rule</div>` : '';
+    const skipNote = f.skipped
+      ? `<div style="font-size:10px;color:var(--red);margin-top:3px;font-weight:600">Hard Limit · Skipped</div>`
+      : f.reducedBy>0
+        ? `<div style="font-size:10px;color:var(--amber);margin-top:3px;font-weight:600">Reduced ${f.reducedBy.toFixed(0)}% by drift rule</div>`
+        : '';
+    const metaLine = f.currentShares>0
+      ? `${f.currentShares} units · £${fmtNum(f.currentVal,0)} · ${currentPct}%`
+      : 'No current holdings';
     return `<div class="alloc-row${f.skipped?' skipped':''}">
-      <div><div class="col-ticker">${f.ticker}</div>${skipNote}</div>
-      <div class="col-holding">${f.currentShares>0?`${f.currentShares} units<br><span class="hi">£${fmtNum(f.currentVal,0)}</span> (${currentPct}%)`:'<span style="color:var(--muted)">No holdings</span>'}</div>
-      <div class="col-pct ${pctClass}">${beforeAfter}<br><span style="font-size:9px;color:var(--muted)">Tgt ${(f.normTarget*100).toFixed(0)}%</span></div>
-      <div class="col-buf">£${_formatPriceDisplay(f.price) || f.price.toFixed(2)}<br><span style="color:var(--gold);font-size:9px">+${f.buffer}% on £${_formatPriceDisplay(f.rawPrice) || f.rawPrice.toFixed(2)}</span></div>
-      <div class="col-units">${f.shares > 0 ? f.shares : '—'}</div>
-      <div class="col-amt">£${fmtNum(f.shares*f.rawPrice,0)}</div>
-      <div class="col-deploy">£${deployedRounded}</div>
+      <div class="alloc-fund-cell">
+        <div class="col-ticker">${f.ticker}</div>
+        <div class="alloc-fund-meta">${metaLine}</div>
+        ${skipNote}
+      </div>
+      <div class="alloc-units-cell">${f.shares > 0 ? f.shares : '—'}<span class="alloc-units-suffix">${f.shares > 0 ? 'units' : ''}</span></div>
+      <div class="alloc-amount-cell">£${fmtNum(deployedRounded,0)}</div>
     </div>`;
   }).join('');
 
@@ -12014,13 +12340,13 @@ function _renderMonthVsMonth() {
 
     return `
       <tr style="border-bottom:1px solid rgba(42,42,42,0.5)">
-        <td style="padding:8px 12px;text-align:left;color:var(--white);font-weight:600">${_esc(ticker)}</td>
-        <td style="padding:8px 12px;text-align:right;color:var(--muted)">${fmtNum(l.units, 0)} → <span style="color:var(--white)">${fmtNum(t.units, 0)}</span></td>
-        <td style="padding:8px 12px;text-align:right;color:${unitColour};font-weight:600">${fmtSigned(unitDelta)}</td>
-        <td style="padding:8px 12px;text-align:right;color:var(--muted)">${lPct.toFixed(1)}% → <span style="color:var(--white)">${tPct.toFixed(1)}%</span></td>
-        <td style="padding:8px 12px;text-align:right;color:${pctColour};font-weight:600">${fmtSignedPct(pctDelta)}</td>
-        <td style="padding:8px 12px;text-align:right;color:var(--muted)">£${fmtNum(l.price, 2)} → <span style="color:var(--white)">£${fmtNum(t.price, 2)}</span></td>
-        <td style="padding:8px 12px;text-align:right;color:${priceColour};font-weight:600">${fmtSignedMoney(priceDelta)}</td>
+        <td style="padding:8px 12px;text-align:left;color:#ffffff;font-weight:700">${_esc(ticker)}</td>
+        <td style="padding:8px 12px;text-align:right;color:rgba(255,255,255,0.78)">${fmtNum(l.units, 0)} → <span style="color:#ffffff;font-weight:700">${fmtNum(t.units, 0)}</span></td>
+        <td style="padding:8px 12px;text-align:right;color:${unitColour};font-weight:700">${fmtSigned(unitDelta)}</td>
+        <td style="padding:8px 12px;text-align:right;color:rgba(255,255,255,0.78)">${lPct.toFixed(1)}% → <span style="color:#ffffff;font-weight:700">${tPct.toFixed(1)}%</span></td>
+        <td style="padding:8px 12px;text-align:right;color:${pctColour};font-weight:700">${fmtSignedPct(pctDelta)}</td>
+        <td style="padding:8px 12px;text-align:right;color:rgba(255,255,255,0.78)">£${fmtNum(l.price, 2)} → <span style="color:#ffffff;font-weight:700">£${fmtNum(t.price, 2)}</span></td>
+        <td style="padding:8px 12px;text-align:right;color:${priceColour};font-weight:700">${fmtSignedMoney(priceDelta)}</td>
       </tr>`;
   }).join('');
 
@@ -12073,13 +12399,13 @@ function _renderMonthVsMonth() {
       <table style="width:100%;border-collapse:collapse;font-size:11px">
         <thead style="background:var(--card2)">
           <tr>
-            <th style="padding:8px 12px;text-align:left;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Fund</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Units</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Δ</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Allocation</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Δ</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Price</th>
-            <th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;opacity:0.7">Δ</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;font-weight:700">Fund</th>
+            <th style="padding:8px 12px;text-align:right;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;font-weight:700">Units</th>
+            <th style="padding:8px 12px;text-align:right;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;font-weight:700">Δ</th>
+            <th style="padding:8px 12px;text-align:right;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;font-weight:700">Allocation</th>
+            <th style="padding:8px 12px;text-align:right;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;font-weight:700">Δ</th>
+            <th style="padding:8px 12px;text-align:right;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;font-weight:700">Price</th>
+            <th style="padding:8px 12px;text-align:right;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;font-weight:700">Δ</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -12620,7 +12946,7 @@ function renderAdditionalFunds() {
 
   grid.innerHTML = extra.map((f, i) => `
     <div class="fund-card mb12" style="padding:14px 18px">
-      <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+      <div class="extra-fund-row" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto auto;gap:10px;align-items:end">
         <div class="input-group">
           <span class="input-label">Ticker</span>
           <input class="text-input" type="text" value="${f.ticker}" style="text-transform:uppercase;font-weight:600"
@@ -12641,9 +12967,9 @@ function renderAdditionalFunds() {
           <input class="num-input" type="text" inputmode="decimal" value="${f.buffer||2.5}" step="0.5" min="0" max="10"
             onchange="updateExtraFund(${i},'buffer',this.value)">
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;min-width:60px">
           <span class="input-label">Value</span>
-          <span style="font-size:13px;font-weight:600;color:var(--gold);padding:8px 0">
+          <span style="font-size:13px;font-weight:700;color:#ffffff;padding:8px 0;font-variant-numeric:tabular-nums">
             £${fmtNum(Math.round((f.held||0)*(f.price||0)),0)}
           </span>
         </div>
@@ -14748,10 +15074,15 @@ function updateHoldingInline(id, field, val) {
   if (h) {
     // If this is a price edit, capture pre-edit total and anchor today's
     // baseline so the gain pill reflects this edit's impact rather than
-    // re-zeroing.
+    // re-zeroing. Anchors all four scopes individually.
     if (field === 'price') {
-      const preTotal = portfolio.reduce((s,p) => s + p.shares * (p.price || 0), 0);
-      _anchorPortfolioBaseline(preTotal);
+      const _preScoped = {
+        all: portfolio.reduce((s,p) => s + p.shares * (p.price || 0), 0),
+        personal: portfolio.filter(p => (p.wrapper === 'GIA' || (!p.wrapper && p.type !== 'employer')) && p.wrapper !== 'ISA' && p.wrapper !== 'SIPP').reduce((s,p) => s + p.shares * (p.price || 0), 0),
+        employer: portfolio.filter(p => p.wrapper === 'SIPP' || p.type === 'employer').reduce((s,p) => s + p.shares * (p.price || 0), 0),
+        isa: portfolio.filter(p => p.wrapper === 'ISA').reduce((s,p) => s + p.shares * (p.price || 0), 0),
+      };
+      _anchorPortfolioBaseline(_preScoped);
     }
 
     h[field] = parseFloat(val)||0;
@@ -14797,15 +15128,20 @@ function renderPortfolio(filter='all') {
     metaTextEl.textContent = `${filtered.length} Holding${filtered.length===1?'':'s'} · ${uniqueTickers} Ticker${uniqueTickers===1?'':'s'}`;
   }
 
-  // Today's gain pill — only renders the pill when filter is 'all' since
-  // the daily baseline tracks the whole portfolio, not subsets. For
-  // filtered views (Personal, Employer, ISA) the pill hides.
+  // Today's gain pill — renders for all four scopes (All / Personal /
+  // Employer / ISA). Each scope has its own daily baseline so the pill
+  // accurately reflects movement in just that wrapper's holdings.
   const deltaPill = document.getElementById('portfolio-delta-pill');
   if (deltaPill) {
-    if (filter === 'all' && totalVal > 0) {
-      const daily = _getPortfolioDailyBaseline(totalVal);
+    if (totalVal > 0) {
+      const scopeKey = filter === 'all' ? 'all'
+                     : filter === 'personal' ? 'personal'
+                     : filter === 'employer' ? 'employer'
+                     : filter === 'isa' ? 'isa'
+                     : 'all';
+      const daily = _getPortfolioDailyBaseline(totalVal, scopeKey);
       if (daily.isNewDay) {
-        // First render of a new day — no movement to show yet
+        // First render of a new day for this scope — no movement to show yet
         deltaPill.style.display = 'none';
       } else {
         deltaPill.style.display = 'inline-flex';
@@ -14816,7 +15152,7 @@ function renderPortfolio(filter='all') {
         const gainAbs = Math.abs(Math.round(daily.gain));
         const pctStr = Math.abs(daily.gainPct) >= 0.005 ? ` (${sign}${daily.gainPct.toFixed(2)}%)` : '';
         deltaPill.textContent = `${arrow} ${sign}£${fmtNum(gainAbs, 0)}${pctStr} Today`;
-        deltaPill.title = `Baseline: £${fmtNum(Math.round(daily.baseline), 0)} at start of day`;
+        deltaPill.title = `Baseline: £${fmtNum(Math.round(daily.baseline), 0)} at start of day · scope: ${scopeKey}`;
       }
     } else {
       deltaPill.style.display = 'none';
@@ -15948,6 +16284,12 @@ function updateIncomeTotal() {
       ? `PA reduced to £${fmtNum(effectivePA,0)} · taxable: £${fmtNum(Math.round(taxableIncome),0)}`
       : `After £${fmtNum(FULL_PA,0)} PA · taxable: £${fmtNum(Math.round(taxableIncome),0)}`;
     totalSubEl.textContent = paNote;
+  }
+
+  // Chevron summary line — shows the headline figures when the card is collapsed
+  const chevSummary = document.getElementById('inc-tax-summary');
+  if (chevSummary) {
+    chevSummary.textContent = `Total income £${fmtNum(Math.round(grossTotal),0)} · Tax code ${taxCode} · ${effectivePA < FULL_PA ? `PA £${fmtNum(effectivePA,0)}` : `Full £${fmtNum(FULL_PA,0)} PA`}`;
   }
 
   const trapEl = document.getElementById('inc-pa-trap-flag');
@@ -19699,30 +20041,30 @@ function renderAnalyseNetWorth() {
 
     nwBreak.innerHTML = `
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px">
-        <div class="stat-label mb8">Asset Breakdown</div>
+        <div class="stat-label mb8" style="color:#ffffff;font-weight:700">Asset Breakdown</div>
         ${rows.map(r=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
             <div style="flex:1;min-width:0">
-              <span style="font-size:10px;color:var(--muted)">${r.icon} ${r.label}</span>
-              ${r.note ? `<span style="color:var(--muted2);font-size:9px;margin-left:4px">(${r.note})</span>` : ''}
-              <span style="margin-left:6px;font-size:9px;padding:1px 5px;border-radius:10px;font-weight:600;letter-spacing:0.5px;background:${r.taxFree?'rgba(48,209,88,0.14)':'rgba(255,69,58,0.14)'};border:0.5px solid ${r.taxFree?'rgba(48,209,88,0.28)':'rgba(255,69,58,0.28)'};color:${r.taxFree?'var(--green)':'#ff6961'}">
+              <span style="font-size:12px;color:#ffffff;font-weight:600">${r.icon} ${r.label}</span>
+              ${r.note ? `<span style="color:rgba(255,255,255,0.55);font-size:10px;margin-left:4px">(${r.note})</span>` : ''}
+              <span style="margin-left:6px;font-size:9px;padding:1px 5px;border-radius:10px;font-weight:700;letter-spacing:0.5px;background:${r.taxFree?'rgba(48,209,88,0.14)':'rgba(255,69,58,0.14)'};border:0.5px solid ${r.taxFree?'rgba(48,209,88,0.28)':'rgba(255,69,58,0.28)'};color:${r.taxFree?'var(--green)':'#ff6961'}">
                 ${r.taxFree?'TAX-FREE':'CGT APPLIES'}
               </span>
             </div>
-            <span style="font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;margin-left:12px">\u00a3${fmtNum(Math.round(r.val),0)}</span>
+            <span style="font-size:13px;font-weight:700;color:#ffffff;white-space:nowrap;margin-left:12px;font-variant-numeric:tabular-nums">\u00a3${fmtNum(Math.round(r.val),0)}</span>
           </div>`).join('')}
         ${liabilities > 0 ? `
           <div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:4px;border-top:1px solid var(--border)">
-            <span style="font-size:10px;color:var(--red)">\u26a0 Other Liabilities</span>
-            <span style="font-size:12px;font-weight:600;color:var(--red)">-\u00a3${fmtNum(Math.round(liabilities),0)}</span>
+            <span style="font-size:12px;color:var(--red);font-weight:600">\u26a0 Other Liabilities</span>
+            <span style="font-size:13px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums">-\u00a3${fmtNum(Math.round(liabilities),0)}</span>
           </div>` : ''}
         <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:2px solid var(--border)">
-          <span style="font-size:10px;font-weight:600;color:var(--white);letter-spacing:1px">NET WORTH</span>
-          <span style="font-size:15px;font-weight:600;color:var(--gold)">\u00a3${fmtNum(Math.round(netWorth),0)}</span>
+          <span style="font-size:11px;font-weight:700;color:#ffffff;letter-spacing:1px">NET WORTH</span>
+          <span style="font-size:17px;font-weight:700;color:#ffffff;font-variant-numeric:tabular-nums">\u00a3${fmtNum(Math.round(netWorth),0)}</span>
         </div>
       </div>
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px">
-        <div class="stat-label mb16">Tax Exposure</div>
+        <div class="stat-label mb16" style="color:#ffffff;font-weight:700">Tax Exposure</div>
         <div class="plan-card mb14">
           <div class="plan-card-header">
             <span class="plan-card-ticker">CGT Exposure Split</span>
@@ -19732,12 +20074,12 @@ function renderAnalyseNetWorth() {
             <div class="plan-card-metric">
               <div class="plan-card-metric-label">Tax-Free</div>
               <div class="plan-card-metric-value lg green" data-balance-sensitive>£${fmtNum(Math.round(taxFreeAssets),0)}</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">${taxFreePct.toFixed(1)}% of assets · ISA, SIPP, property, cash</div>
+              <div style="margin-top:4px;font-size:10px;color:rgba(255,255,255,0.78);font-weight:500">${taxFreePct.toFixed(1)}% of assets · ISA, SIPP, property, cash</div>
             </div>
             <div class="plan-card-metric">
               <div class="plan-card-metric-label">GIA · CGT Applies</div>
               <div class="plan-card-metric-value lg amber" data-balance-sensitive>£${fmtNum(Math.round(taxableAssets),0)}</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">${nwGIABarNote}</div>
+              <div style="margin-top:4px;font-size:10px;color:rgba(255,255,255,0.78);font-weight:500">${nwGIABarNote}</div>
             </div>
           </div>
           <div style="padding:0 16px 14px">
@@ -21501,9 +21843,6 @@ function _renderBgtMainTable(state) {
     </div>
     ${planDeficitWarning}
     ${taxStatusHtml}
-    <div style="margin-top:8px;font-size:9px;color:var(--muted);line-height:1.5">
-      <span style="color:var(--green);font-weight:600">✓</span> next to a category means it's recurring (planned and actual auto-fill each new month). <span style="color:var(--amber);font-weight:600">↻</span> means planned-only — the planned value carries forward but the actual resets so you can enter the real spend. Tap the icon to toggle.
-    </div>
   `;
 
   // Cascade: keep all the analytics panels in sync with every edit
@@ -21632,7 +21971,7 @@ function _renderBgtYtdPanel(state) {
 
   // ── Render ──
   el.innerHTML = `
-    <div class="card mb16" style="margin-top:16px">
+    <div class="card mb24">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
           <div class="section-label" style="margin-bottom:2px">Annual Year-to-Date · ${activeYear}</div>
@@ -21810,7 +22149,7 @@ function _renderBgtBreakdownPanel(state) {
   const savedColour  = savedPct >= 20 ? 'var(--green)' : savedPct >= 10 ? 'var(--amber)' : 'var(--red)';
 
   el.innerHTML = `
-    <div class="card mb16" style="margin-top:16px">
+    <div class="card mb24">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
           <div class="section-label" style="margin-bottom:2px">Monthly Breakdown · ${state.activeMonth || ''}</div>
@@ -21874,7 +22213,7 @@ function _renderBgtAveragesPanel(state) {
   const taxRows     = taxCats.map(renderRow).join('');
 
   el.innerHTML = `
-    <div class="card mb16" style="margin-top:16px">
+    <div class="card mb24">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
           <div class="section-label" style="margin-bottom:2px">Historical Averages</div>
