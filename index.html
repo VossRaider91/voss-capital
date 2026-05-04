@@ -460,16 +460,19 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .full { grid-column: 1 / -1; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .flex-center { display: flex; align-items: center; gap: 10px; }
-.mb8 { margin-bottom: 8px; }
+.mb4  { margin-bottom: 4px; }
+.mb8  { margin-bottom: 8px; }
+.mb12 { margin-bottom: 12px; }
 .mb16 { margin-bottom: 16px; }
 .mb24 { margin-bottom: 24px; }
+.mt8  { margin-top: 8px; }
 .mt12 { margin-top: 12px; }
 
 /* DISCLAIMER */
 .disclaimer { font-size: 12px; color: var(--muted2); line-height: 1.6; margin-top: 12px; letter-spacing: -0.05px; }
 
 /* INPUTS */
-.input-group { display: flex; flex-direction: column; gap: 5px; }
+.input-group { display: flex; flex-direction: column; gap: 8px; }
 .input-label {
   font-size: 12px; letter-spacing: -0.05px; text-transform: none;
   color: var(--muted); font-weight: 500; opacity: 1;
@@ -3514,6 +3517,35 @@ body.privacy-mode-active .portfolio-delta-pill {
 .gain-pos { color: var(--green); }
 .gain-neg { color: var(--red); }
 
+/* ── ANALYSE — Asset Breakdown rows: pill on its own line ────────
+   The inline pill pattern (label + note + pill all on one row) looked
+   clean in narrow widths but got squashed on desktop where the pill
+   had to share horizontal space with long descriptive notes. Apply
+   the wrap-pill-onto-own-line pattern at every viewport so the pill
+   always sits below the description, full row width, label left.
+
+   :not(.tax-headline-card) scopes strictly to the Asset Breakdown
+   card so the same selectors don't hit the Tax Exposure card sitting
+   in the same #analyse-nw-breakdown parent. */
+#analyse-nw-breakdown > div > div:not(.tax-headline-card) {
+  padding: 8px 0 !important;
+}
+#analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px 6px !important;
+  align-items: center !important;
+}
+#analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child > span {
+  line-height: 1.4 !important;
+}
+#analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child > span:nth-child(3) {
+  flex-basis: 100% !important;
+  margin-left: 0 !important;
+  margin-top: 4px !important;
+  width: fit-content !important;
+}
+
 /* ── UNIFIED £-PILL TREATMENT (every viewport) ─────────────────────
    Inputs that should display a nested £ symbol are wrapped in a
    <div class="pound-wrap"> via build-time retrofit_pound_v2.py or by
@@ -5681,28 +5713,8 @@ body.privacy-mode-active .portfolio-delta-pill {
   }
 
   /* ── ANALYSE — Asset Breakdown rows wrap cleanly ────────────── */
-  /* :not(.tax-headline-card) clauses scope this strictly to the
-     Asset Breakdown card. Without them, the same selectors also hit the
-     Tax Exposure card sitting next to it (same #analyse-nw-breakdown
-     parent), turning .tax-headline-action into a flex-wrap row. */
-  #analyse-nw-breakdown > div > div:not(.tax-headline-card) {
-    padding: 8px 0 !important;
-  }
-  #analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 4px 6px !important;
-    align-items: center !important;
-  }
-  #analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child > span {
-    line-height: 1.4 !important;
-  }
-  #analyse-nw-breakdown > div > div:not(.tax-headline-card) > div:first-child > span:nth-child(3) {
-    flex-basis: 100% !important;
-    margin-left: 0 !important;
-    margin-top: 4px !important;
-    width: fit-content !important;
-  }
+  /* MOVED to universal scope above so the same wrap-pill-onto-own-line
+     pattern applies on desktop too. Kept this comment for breadcrumb. */
 
   /* ── ANALYSE — Net Worth Overview stacks vertically on mobile ── */
   /* Desktop has Asset Breakdown + Tax Exposure side-by-side. On mobile
@@ -18835,7 +18847,7 @@ function renderAnalyseNetWorth() {
         </div>
       </div>
       <div style="background:var(--dark);border-radius:10px;padding:14px">
-        <div class="stat-label mb12">Tax Exposure</div>
+        <div class="stat-label mb16">Tax Exposure</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
           <div class="tax-headline-card tax-headline-action" style="display:block !important;text-align:left !important">
             <div class="tax-headline-card-label" style="display:block !important;text-align:left !important;text-transform:uppercase;letter-spacing:0.6px;width:100%;margin:0 0 4px 0">Tax-Free Assets</div>
