@@ -1884,6 +1884,64 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   background: rgba(255,255,255,0.06);
   color: var(--muted);
 }
+
+/* ── PRIVACY MODE TOGGLE ──────────────────────────────────────────
+   Pill button that hides £ figures across the Portfolio Overview.
+   Off state: standard chip tint. On state: blue accent (matches the
+   chevron-collapsible active treatment used elsewhere in the app).
+   When privacy mode is active, every element tagged with
+   data-balance-sensitive has its text replaced with bullet dots via
+   _applyPrivacyMode(). The original value is preserved on a
+   data-real-value attribute so toggling back restores instantly. */
+.privacy-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.privacy-toggle-corner {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 3;
+}
+.privacy-toggle-btn {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.14);
+  padding: 7px 14px 7px 12px;
+  border-radius: 50px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: -0.05px;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.privacy-toggle-btn:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.20);
+}
+.privacy-toggle-btn.active {
+  background: rgba(10,132,255,0.16);
+  border-color: rgba(10,132,255,0.32);
+  color: var(--blue);
+}
+.privacy-toggle-btn .privacy-toggle-icon-on,
+.privacy-toggle-btn.active .privacy-toggle-icon-off { display: none; }
+.privacy-toggle-btn.active .privacy-toggle-icon-on { display: inline-flex; }
+/* When an element is masked, dim its colour so the bullets read as
+   "deliberately obscured" rather than emphasised. JS swaps the text
+   content; CSS handles the colour cue. */
+body.privacy-mode-active [data-balance-sensitive] {
+  color: rgba(255,255,255,0.40) !important;
+}
+body.privacy-mode-active .portfolio-delta-pill {
+  background: rgba(255,255,255,0.06) !important;
+}
 .portfolio-hero-arc {
   display: flex; align-items: center; justify-content: center;
   min-width: 0;
@@ -3873,10 +3931,50 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
     gap: 18px !important;
     padding: 4px 0 18px 0 !important;
   }
+  .portfolio-hero-meta {
+    padding-right: 130px;
+  }
+  .privacy-toggle-corner {
+    top: 14px;
+    right: 14px;
+  }
   .portfolio-hero-arc svg {
     max-width: 320px;
     margin: 0 auto;
   }
+  /* Mobile-only reorder: the "Add / Update Holding" card is rarely
+     used on mobile — push it below "Portfolio Growth" so the chart
+     and overview (the daily-use content) sit nearer the top. We
+     flip the tab panel to flex-column on mobile and override the
+     natural source order via CSS `order`. Desktop stays as normal
+     block flow so the existing layout is untouched.
+
+     Source order of #tab-portfolio direct children:
+       1 = Update Share Prices   (data-collapsible="prices")
+       2 = Add / Update Holding  (data-collapsible="holding")
+       3 = Summary card          (.card-gold with hero + holdings list)
+       4 = Portfolio Growth card (.card-gold with growth chart)
+
+     Target mobile order: prices → summary → growth → holding.
+     Use nth-child against source position (nth-of-type was wrong
+     because it counts all div children, not just .card-gold ones).
+
+     Spacing: zero the cards' built-in mb16/mb24 margins on mobile
+     and let the flex container's `gap` control the rhythm. Without
+     this, the post-reorder gaps would be inconsistent because the
+     margin-bottoms were sized for the ORIGINAL source order. */
+  #tab-portfolio {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #tab-portfolio > * {
+    margin-bottom: 0 !important;
+  }
+  #tab-portfolio > :nth-child(1) { order: 1; }   /* Update Share Prices */
+  #tab-portfolio > :nth-child(3) { order: 2; }   /* Summary (hero) */
+  #tab-portfolio > :nth-child(4) { order: 3; }   /* Portfolio Growth */
+  #tab-portfolio > :nth-child(2) { order: 4; }   /* Add / Update Holding */
   .holding-bar-row {
     grid-template-columns: 76px 1fr 78px 44px !important;
     gap: 8px !important;
@@ -6906,14 +7004,22 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Summary -->
-  <div class="card-gold mb16">
+  <div class="card-gold mb16" style="position:relative">
+    <!-- Privacy toggle — hides £ figures across the Portfolio Overview.
+         State persists in LS.UI.privacyMode and auto-syncs across devices.
+         Absolute-positioned in the top-right corner of this card. -->
+    <button class="privacy-toggle-btn privacy-toggle-corner" id="privacy-toggle-btn" onclick="togglePrivacyMode()" type="button" aria-pressed="false">
+      <svg class="privacy-toggle-icon-off" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <svg class="privacy-toggle-icon-on" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      <span class="privacy-toggle-label">Privacy mode</span>
+    </button>
     <!-- Top hero strip: total value + today's gain pill on the left, compact arc on the right -->
     <div class="portfolio-hero">
       <div class="portfolio-hero-meta">
         <div class="stat-label mb4">Total Portfolio Value</div>
-        <div class="stat-val xl gold" id="totalPortfolioValue">£0</div>
+        <div class="stat-val xl gold" id="totalPortfolioValue" data-balance-sensitive>£0</div>
         <div class="portfolio-hero-substats">
-          <span class="portfolio-delta-pill" id="portfolio-delta-pill" style="display:none"></span>
+          <span class="portfolio-delta-pill" id="portfolio-delta-pill" data-balance-sensitive style="display:none"></span>
           <span class="portfolio-hero-meta-text" id="portfolio-hero-meta-text">0 holdings</span>
         </div>
       </div>
@@ -7885,6 +7991,7 @@ const LS = {
   HL_DD_DAY: 'rma_hl_dd_day_v1',
   HL_DD_DISMISSALS: 'rma_hl_dd_dismissals_v1',
   PRICE_HISTORY: 'rma_price_history_v1',
+  UI: 'rma_ui_v1',
 };
 
 // Standalone localStorage key for the "last price update" timestamp shown
@@ -8943,8 +9050,93 @@ function lsSet(key, val) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// CROSS-DEVICE SYNC LAYER (Supabase)
+// PRIVACY MODE — Portfolio Overview balance hiding
 // ════════════════════════════════════════════════════════════════════
+// State persists in LS.UI.privacyMode. Auto-syncs across devices via the
+// existing LS.UI sync plumbing. Only changes when the user clicks the
+// toggle — never auto-resets.
+//
+// Mechanism: every element on the Portfolio Overview that displays a £
+// figure carries the data-balance-sensitive attribute. _applyPrivacyMode
+// walks all such elements and either:
+//   off → restores the real value from data-real-value (if previously
+//         masked), or leaves the current text alone (if never masked)
+//   on  → reads the current text into data-real-value (preserving the
+//         original) and replaces text content with bullet dots
+//
+// Because the swap is text-content only (not a re-render), toggling is
+// instant and doesn't trigger any layout recalculation beyond what
+// changing the string demands.
+
+function _privacyModeIsActive() {
+  const ui = lsGet(LS.UI, {}) || {};
+  return !!ui.privacyMode;
+}
+
+function _maskFor(realText) {
+  // Build a bullet string sized to roughly mirror the real text. Numbers
+  // and the £ glyph each become a bullet; commas become a thinner gap.
+  // For tiny strings (single-character values), pad to 4 bullets so the
+  // mask reads as "deliberately obscured" rather than a dropped character.
+  if (!realText) return '••••';
+  const stripped = String(realText).replace(/[,\s]/g, '');
+  const len = Math.max(4, stripped.length);
+  return '•'.repeat(len);
+}
+
+function _applyPrivacyMode() {
+  const active = _privacyModeIsActive();
+  document.body.classList.toggle('privacy-mode-active', active);
+
+  // Toggle button visual state and label
+  const btn = document.getElementById('privacy-toggle-btn');
+  if (btn) {
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    const lbl = btn.querySelector('.privacy-toggle-label');
+    if (lbl) lbl.textContent = active ? 'Privacy mode on' : 'Privacy mode';
+  }
+
+  // Mask or restore every sensitive element
+  document.querySelectorAll('[data-balance-sensitive]').forEach(el => {
+    if (active) {
+      // Only capture the original value the first time we mask, OR if the
+      // current text isn't already a bullet string (which would mean it's
+      // been re-rendered while privacy was on — capture the new real value).
+      const current = el.textContent || '';
+      const isAlreadyMasked = /^[•\s]+$/.test(current);
+      if (!isAlreadyMasked) {
+        el.dataset.realValue = current;
+      }
+      el.textContent = _maskFor(el.dataset.realValue || current);
+    } else {
+      // Restore from saved real value if we have it. If not (e.g. the
+      // element was rendered fresh while privacy was off and never had
+      // its real value captured), the current text IS the real value so
+      // leave it alone.
+      if (el.dataset.realValue !== undefined) {
+        el.textContent = el.dataset.realValue;
+      }
+    }
+  });
+}
+
+function togglePrivacyMode() {
+  const ui = lsGet(LS.UI, {}) || {};
+  ui.privacyMode = !ui.privacyMode;
+  lsSet(LS.UI, ui);
+  _applyPrivacyMode();
+}
+
+// Public hook for any renderer that updates a sensitive element. Call
+// after writing fresh values so the mask gets re-applied if privacy is
+// currently on. Cheap — early-returns if privacy is off.
+function _refreshPrivacyMask() {
+  if (!_privacyModeIsActive()) return;
+  _applyPrivacyMode();
+}
+
+
 // Architecture: offline-first localStorage with a Supabase mirror.
 // Every lsSet writes to localStorage immediately (zero latency, works
 // offline) then queues a debounced push to Supabase. Every 10 seconds
@@ -9065,6 +9257,13 @@ function _vossSyncRehydrateUi() {
     _recomputeTaxAllowancesFromHistory();
     calculateGlobalRetirement();
     renderCurrentPosition();
+
+    // Apply persisted privacy mode state. Reads from LS.UI.privacyMode
+    // (auto-synced across devices), updates the toggle button visual,
+    // and masks any data-balance-sensitive elements that have already
+    // been rendered. Per-tab renders also call _refreshPrivacyMask after
+    // they finish so newly-rendered elements get the same treatment.
+    _applyPrivacyMode();
 
     // Re-render whichever tab is currently active
     const active = document.querySelector('.nav-tab.active');
@@ -13898,7 +14097,7 @@ function renderPortfolio(filter='all') {
             <span class="hcard-type-meta">${typeMeta}</span>
           </div>
         </div>
-        <div class="hcard-total">£${fmtNum(Math.round(h.value),0)}</div>
+        <div class="hcard-total" data-balance-sensitive>£${fmtNum(Math.round(h.value),0)}</div>
       </div>
       <div class="hcard-pills">
         <div class="hcard-units-pill">${h.shares} units</div>
@@ -13971,7 +14170,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600">New Holdings</div>
-          <div style="font-size:9px;color:var(--muted);padding-right:12px">From monthly history. Ticked by default so they feed the calculator's drift and rebalancing.<br>% shown relative to new holdings only · Total: £${fmtNum(Math.round(newTotal),0)}</div>
+          <div style="font-size:9px;color:var(--muted);padding-right:12px">From monthly history. Ticked by default so they feed the calculator's drift and rebalancing.<br>% shown relative to new holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span></div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${newSectionId}')" id="btn-${newSectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
       </div>
@@ -13985,7 +14184,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div>
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600;color:var(--muted)">Legacy Holdings</div>
-          <div style="font-size:9px;color:var(--muted2);padding-right:12px">Pre-calculator holdings. Unticked by default so the calculator doesn't try to rebalance against your historical positions.<br>% shown relative to legacy holdings only · Total: £${fmtNum(Math.round(legacyTotal),0)}</div>
+          <div style="font-size:9px;color:var(--muted2);padding-right:12px">Pre-calculator holdings. Unticked by default so the calculator doesn't try to rebalance against your historical positions.<br>% shown relative to legacy holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span></div>
         </div>
         <button class="btn-ghost btn-sm" onclick="toggleSection('${legacySectionId}')" id="btn-${legacySectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
       </div>
@@ -14002,10 +14201,14 @@ function renderPortfolio(filter='all') {
     `<div class="legend-item">
       <div class="legend-color" style="background:${p.colour}"></div>
       <span class="legend-label">${p.ticker}</span>
-      <span class="legend-val">£${fmtNum(Math.round(p.value),0)}</span>
+      <span class="legend-val" data-balance-sensitive>£${fmtNum(Math.round(p.value),0)}</span>
       <span class="legend-pct">${p.pct.toFixed(1)}%</span>
     </div>`
   ).join('');
+
+  // Re-apply privacy mask now that fresh elements have been rendered.
+  // No-op if privacy mode is off.
+  _refreshPrivacyMask();
 }
 
 function toggleSection(id) {
@@ -14121,9 +14324,14 @@ function showPieTip(i) {
   // Live read from _pieData — refreshed on every renderPieChart call,
   // so prices update immediately when holdings or prices change.
   tip.style.display = 'block';
+  // Privacy-aware: when privacy mode is on, hide the £ figure but keep
+  // the ticker label and percentage visible since percentages don't
+  // reveal absolute balances.
+  const privacyOn = typeof _privacyModeIsActive === 'function' && _privacyModeIsActive();
+  const valueDisplay = privacyOn ? '••••••' : `£${fmtNum(Math.round(seg.value),0)}`;
   tip.innerHTML = `
     <span class="vc-pie-tip-ticker" style="color:${seg.colour}">${seg.ticker}</span>
-    <span class="vc-pie-tip-value">£${fmtNum(Math.round(seg.value),0)}</span>
+    <span class="vc-pie-tip-value"${privacyOn ? ' style="color:rgba(255,255,255,0.40)"' : ''}>${valueDisplay}</span>
     <span class="vc-pie-tip-pct">${seg.pct.toFixed(1)}%</span>`;
 }
 
@@ -14530,6 +14738,26 @@ function animateNumber(el, target, opts = {}) {
   const format   = typeof opts.format === 'function' ? opts.format : null;
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const formatVal = (v) => format ? format(v) : `${prefix}${fmtNum(v, decimals)}${suffix}`;
+
+  // Privacy mode short-circuit: if the element is balance-sensitive and
+  // privacy mode is active, store the real target value in data-real-value
+  // so toggling off restores correctly, but never write the real number to
+  // textContent — that would flash the value during the tween. The mask
+  // stays in place via _applyPrivacyMode.
+  if (el.hasAttribute('data-balance-sensitive') &&
+      typeof _privacyModeIsActive === 'function' && _privacyModeIsActive()) {
+    el._animTarget = target;
+    el.dataset.realValue = formatVal(target);
+    // Make sure the visible text is currently masked. If for any reason
+    // it isn't (e.g. element was just rendered fresh and hasn't had the
+    // mask applied yet), do that now.
+    const current = el.textContent || '';
+    if (!/^[•\s]+$/.test(current)) {
+      el.textContent = _maskFor(el.dataset.realValue);
+    }
+    return;
+  }
+
   if (el._animFrame) { cancelAnimationFrame(el._animFrame); el._animFrame = null; }
   let from;
   if (typeof el._animTarget === 'number' && isFinite(el._animTarget)) {
