@@ -1339,10 +1339,20 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    scrolling, with the active section highlighted via .is-active set
    by IntersectionObserver. Hidden below 1100px where the 900px content
    column leaves no room for a side rail. */
+/* Floating section anchor nav for the retirement tab. Sticky on the
+   left side of the content column with smooth-scroll anchors and
+   IntersectionObserver-driven active highlighting. Only shows on
+   genuinely wide viewports (≥1300px) where there's actual room beside
+   the 900px content column for a 160px-wide rail with breathing space.
+   Math: 900 (content) + 160 (nav width) + 40 (left margin) + 200 (gap
+   between nav and content edge) ≈ 1300px floor. Below 1300px it's
+   hidden because the `left` calc would fall back to the 20px floor
+   which lands inside the content area, overlapping the first inputs
+   at the top of the retirement page. */
 .ret-anchor-nav {
   display: none;
 }
-@media (min-width: 1100px) {
+@media (min-width: 1300px) {
   .ret-anchor-nav {
     display: flex;
     flex-direction: column;
@@ -3483,8 +3493,105 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-color: rgba(48,209,88,0.28);
   background: rgba(48,209,88,0.14);
 }
+/* Graded variants: as the CGT allowance gets used up, the Less row
+   colour shifts from green (plenty left) to amber (most used) to red
+   (fully depleted). Matches the threshold convention used by
+   .allowance-snapshot-card on the Sell Calculator. */
+.cgt-step.exempt.warn {
+  border-color: rgba(255,159,10,0.28);
+  background: rgba(255,159,10,0.14);
+}
+.cgt-step.exempt.warn .cgt-step-val {
+  color: var(--amber) !important;
+}
+.cgt-step.exempt.depleted {
+  border-color: rgba(255,69,58,0.32);
+  background: rgba(255,69,58,0.14);
+}
+.cgt-step.exempt.depleted .cgt-step-val {
+  color: var(--red) !important;
+}
 .gain-pos { color: var(--green); }
 .gain-neg { color: var(--red); }
+
+/* ── UNIFIED £-PILL TREATMENT (every viewport) ─────────────────────
+   Inputs that should display a nested £ symbol are wrapped in a
+   <div class="pound-wrap"> via build-time retrofit_pound_v2.py or by
+   render functions. The wrapper hugs only the input (no sibling helper
+   text), so positioning the £ pseudo at top:50% always centres against
+   the input regardless of what's around it.
+
+   This block applies at every viewport so the £ is visible inside money
+   inputs site-wide. The mobile media query at line 4647 onwards then
+   overrides sizing (52px chunky pill for phones).
+
+   EXCLUSIONS: the calculator's per-fund cards (.fund-inputs-grid),
+   the Update Share Prices grid (#priceUpdaterGrid), and the Add Holding
+   row (.add-holding-grid) are dense layouts where a tall pill would
+   unbalance the row. They opt out via overrides further down. */
+.pound-wrap {
+  position: relative;
+  display: block;
+}
+.pound-wrap > .num-input,
+.pound-wrap > .mp-input {
+  padding-left: 30px !important;
+  height: 44px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  border-radius: 10px !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+.pound-wrap::before {
+  content: "£";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--blue);
+  line-height: 1;
+  pointer-events: none;
+  z-index: 2;
+}
+/* Read-only inputs (Outstanding Mortgage with 🔒 auto badge) get the
+   muted treatment so the £ matches the input's de-emphasised look. */
+.pound-wrap:has(> input[readonly])::before {
+  color: var(--muted);
+}
+/* Calculator fund cards keep a slightly more compact look (smaller font,
+   tighter padding) but the £ pseudo still shows in their currency cells
+   (Price, Trade Fee). Non-£ cells in these grids (Units Held, Buffer %,
+   Target %) aren't wrapped in .pound-wrap so they stay clean. */
+.fund-inputs-grid .pound-wrap > .num-input,
+#priceUpdaterGrid .pound-wrap > .num-input {
+  padding-left: 26px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+}
+.fund-inputs-grid .pound-wrap::before,
+#priceUpdaterGrid .pound-wrap::before {
+  font-size: 14px;
+  left: 10px;
+}
+/* Add Holding form — the price input keeps the £ glyph but at smaller
+   size to match the 44px row height with no padding/sizing surprises. */
+.add-holding-grid .pound-wrap > .num-input {
+  padding-left: 30px !important;
+  padding-right: 14px !important;
+  height: 44px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 44px !important;
+  border-radius: 10px !important;
+}
+.add-holding-grid .pound-wrap::before {
+  font-size: 16px;
+  left: 14px;
+}
 
 /* SELL CALCULATOR */
 .sell-thead {
@@ -6292,23 +6399,23 @@ body.modal-active .container > footer {
     <div id="soldFormSummaryRow" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding:12px;background:var(--dark);border-radius:10px">
       <div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span class="input-label">CGT Realised on This Sale £</span>
+          <span class="input-label">CGT Realised on This Sale</span>
           <span style="font-size:9px;font-weight:600;letter-spacing:1px;color:var(--gold);background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:10px">AUTO</span>
         </div>
-        <input class="num-input" type="text" inputmode="decimal" id="sold-cgt-realised" value="0" step="0.01" min="0"
-          oninput="_markSoldFieldManual('sold-cgt-realised')">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="sold-cgt-realised" value="0" step="0.01" min="0"
+          oninput="_markSoldFieldManual('sold-cgt-realised')"></div>
         <div id="sold-cgt-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Auto-calculated from cost basis. Enter sale price and units to populate.</div>
       </div>
       <div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span class="input-label">ISA Allowance Used £</span>
+          <span class="input-label">ISA Allowance Used</span>
           <label class="check-wrap" style="font-size:9px">
             <input type="checkbox" id="sold-bed-isa-toggle" onchange="recomputeSoldFormAuto()">
             <span class="check-label">Bed &amp; ISA?</span>
           </label>
         </div>
-        <input class="num-input" type="text" inputmode="decimal" id="sold-isa-used-amount" value="0" step="0.01" min="0"
-          oninput="_markSoldFieldManual('sold-isa-used-amount')">
+        <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="sold-isa-used-amount" value="0" step="0.01" min="0"
+          oninput="_markSoldFieldManual('sold-isa-used-amount')"></div>
         <div id="sold-isa-note" style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">Tick "Bed &amp; ISA?" if you're moving these proceeds straight into an ISA.</div>
       </div>
     </div>
@@ -6352,8 +6459,8 @@ body.modal-active .container > footer {
     <a href="#ret-current-position" data-anchor="ret-current-position">Current Pot</a>
     <a href="#ret-freedom-card" data-anchor="ret-freedom-card">Freedom Number</a>
   </nav>
-  <div data-collapsible="retirement" class="ret-settings-collapsible mb16" id="ret-settings-section">
-    <div class="collapsible-header" onclick="toggleMobileCollapse('retirement')" style="cursor:pointer">
+  <div data-collapsible="retirement" class="ret-settings-collapsible chevron-collapsible mb16" id="ret-settings-section">
+    <div class="collapsible-header" onclick="toggleMobileCollapse('retirement')">
       <div class="flex-between" style="margin-bottom:0">
         <div class="section-label" style="margin-bottom:0">Retirement Settings</div>
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
@@ -6378,19 +6485,19 @@ body.modal-active .container > footer {
       <input class="num-input" type="text" inputmode="decimal" id="ret-growth" value="7" step="0.5" min="1" max="20">
     </div>
     <div class="card input-group" data-pound>
-      <span class="input-label">Your Monthly Contribution £</span>
+      <span class="input-label">Your Monthly Contribution</span>
       <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-personal" value="2700" step="100"></div>
     </div>
     <div class="card input-group" data-pound>
-      <span class="input-label">Employer Monthly Contribution £</span>
+      <span class="input-label">Employer Monthly Contribution</span>
       <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-employer" value="0" step="100" oninput="updateRetTotal()"></div>
     </div>
     <div class="card input-group" data-pound>
-      <span class="input-label">Total Monthly Contributions £</span>
+      <span class="input-label">Total Monthly Contributions</span>
       <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-monthly" value="2700" step="100" style="color:var(--gold);font-weight:600" readonly></div>
     </div>
     <div class="card input-group" data-pound>
-      <span class="input-label">Current Portfolio Value £</span>
+      <span class="input-label">Current Portfolio Value</span>
       <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-current" value="0" step="1000"></div>
     </div>
     <div class="card input-group">
@@ -6404,7 +6511,7 @@ body.modal-active .container > footer {
       <div style="font-size:9px;color:var(--muted);margin-top:4px" id="ret-contrib-note">Full contributions for whole term</div>
     </div>
     <div class="card input-group" style="position:relative" data-pound>
-      <span class="input-label" style="color:var(--amber)">Phase 2 — Step-Down Amount £/mo</span>
+      <span class="input-label" style="color:var(--amber)">Phase 2 — Step-Down Monthly Amount</span>
       <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-stepdown-amount" value="0" step="100" min="0" oninput="onContribYearsChange()"></div>
       <div style="font-size:9px;color:var(--muted);margin-top:4px">Leave 0 to skip this phase</div>
     </div>
@@ -6628,7 +6735,7 @@ body.modal-active .container > footer {
     <!-- Inputs row -->
     <div class="grid-3 mb16">
       <div class="input-group" data-pound>
-        <span class="input-label">Annual Spending Required £</span>
+        <span class="input-label">Annual Spending Required</span>
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="ret-fn-spending" value="42,000" oninput="onFreedomInputChange()"></div>
         <span class="stat-sub">Your target lifestyle in today's money</span>
       </div>
@@ -6737,77 +6844,91 @@ body.modal-active .container > footer {
     </div>
   </div>
 
-  <!-- Assets input grid — sits below the breakdown so editing is a
-       deliberate action and the headline figure stays at the top. -->
-  <div class="section-label mb8" style="margin-top:24px">Assets &amp; Liabilities</div>
-  <div class="stat-sub mb16">Edit individual values here. Changes update the breakdown above instantly.</div>
-  <div id="nw-inputs-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-
-    <!-- Property -->
-    <div class="card-gold">
-      <div class="section-label mb16" style="color:var(--amber)">Property</div>
-      <div class="input-group mb12" data-pound>
-        <span class="input-label">Primary Residence — Current Value £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-house-value" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
-      </div>
-      <div class="input-group mb12" data-pound>
-        <span class="input-label">Outstanding Mortgage £ <span style="color:var(--blue);font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;margin-left:4px">🔒 auto</span></span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-mortgage" value="0" readonly tabindex="-1" style="opacity:0.75;cursor:not-allowed"></div>
-        <div style="font-size:9px;color:var(--muted);margin-top:4px;font-style:italic">Update outstanding balance in the Mortgage Strategic Planner — it updates here automatically.</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
-        <span class="stat-sub">Net Property Equity</span>
-        <span style="font-weight:600;color:var(--gold)" id="nw-equity-display">£0</span>
+  <!-- Assets & Liabilities — set-and-forget section, collapsed by default
+       on both desktop and mobile. Editing here is rare; the breakdown above
+       is what users look at. The .chevron-collapsible class works at every
+       viewport (Standing Order 0.25). First-run state seeded as collapsed
+       in _applyMobileCollapseState. -->
+  <div class="chevron-collapsible collapsed mb16" data-collapsible="nw-assets-liabilities" id="nw-assets-section">
+    <div class="collapsible-header" onclick="toggleMobileCollapse('nw-assets-liabilities')" style="cursor:pointer">
+      <div class="flex-between" style="margin-bottom:0">
+        <div>
+          <div class="section-label" style="margin-bottom:4px">Assets &amp; Liabilities</div>
+          <div class="stat-sub" style="margin-bottom:0">Edit individual values here. Changes update the breakdown above instantly.</div>
+        </div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
     </div>
+    <div class="collapsible-body" style="margin-top:16px">
+      <div id="nw-inputs-grid" class="nw-inputs-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
-    <!-- Investments & Cash -->
-    <div class="card-gold">
-      <div class="section-label mb16" style="color:var(--green)">Cash &amp; Other Investments</div>
-      <div class="input-group mb12" data-pound>
-        <span class="input-label">Cash at Bank £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-cash" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
-      </div>
-      <div class="input-group mb12" data-pound>
-        <span class="input-label">Crypto (total current value) £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-crypto" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
-      </div>
-      <div class="input-group mb12" data-pound>
-        <span class="input-label">Business Equity (est. value) £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-business" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
-      </div>
-      <div class="input-group mb12" data-pound>
-        <span class="input-label">Other Assets £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-other" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
-      </div>
-      <div class="input-group" data-pound>
-        <span class="input-label">Other Liabilities (loans, credit) £</span>
-        <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-liabilities" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
+        <!-- Property -->
+        <div class="card-gold">
+          <div class="section-label mb16" style="color:var(--amber)">Property</div>
+          <div class="input-group mb12" data-pound>
+            <span class="input-label">Primary Residence — Current Value</span>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-house-value" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
+          </div>
+          <div class="input-group mb12" data-pound>
+            <span class="input-label">Outstanding Mortgage <span style="color:var(--blue);font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;margin-left:4px">🔒 auto</span></span>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-mortgage" value="0" readonly tabindex="-1" style="opacity:0.75;cursor:not-allowed"></div>
+            <div style="font-size:9px;color:var(--muted);margin-top:4px;font-style:italic">Update outstanding balance in the Mortgage Strategic Planner. It updates here automatically.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
+            <span class="stat-sub">Net Property Equity</span>
+            <span style="font-weight:600;color:var(--gold)" id="nw-equity-display">£0</span>
+          </div>
+        </div>
+
+        <!-- Investments & Cash -->
+        <div class="card-gold">
+          <div class="section-label mb16" style="color:var(--green)">Cash &amp; Other Investments</div>
+          <div class="input-group mb12" data-pound>
+            <span class="input-label">Cash at Bank</span>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-cash" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
+          </div>
+          <div class="input-group mb12" data-pound>
+            <span class="input-label">Crypto (total current value)</span>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-crypto" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
+          </div>
+          <div class="input-group mb12" data-pound>
+            <span class="input-label">Business Equity (est. value)</span>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-business" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
+          </div>
+          <div class="input-group mb12" data-pound>
+            <span class="input-label">Other Assets</span>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-other" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
+          </div>
+          <div class="input-group" data-pound>
+            <span class="input-label">Other Liabilities (loans, credit)</span>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-liabilities" value="0" step="100" min="0" oninput="renderNetWorth()"></div>
+          </div>
+        </div>
+
+        <!-- Cars -->
+        <div class="card-gold">
+          <div class="section-label mb16" style="color:var(--blue)">Investment Cars</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+            <span class="input-label">Cost Basis</span>
+            <span class="input-label">Current Value</span>
+          </div>
+          <div id="nw-cars-rows"></div>
+          <button class="btn-ghost btn-sm mt12" onclick="addNWRow('cars')">+ Add Car</button>
+        </div>
+
+        <!-- Whiskey -->
+        <div class="card-gold">
+          <div class="section-label mb16" style="color:var(--amber)">Whiskey Investments</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+            <span class="input-label">Cost Basis</span>
+            <span class="input-label">Current Value</span>
+          </div>
+          <div id="nw-whiskey-rows"></div>
+          <button class="btn-ghost btn-sm mt12" onclick="addNWRow('whiskey')">+ Add Entry</button>
+        </div>
+
       </div>
     </div>
-
-    <!-- Cars -->
-    <div class="card-gold">
-      <div class="section-label mb16" style="color:var(--blue)">Investment Cars</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-        <span class="input-label">Cost Basis £</span>
-        <span class="input-label">Current Value £</span>
-      </div>
-      <div id="nw-cars-rows"></div>
-      <button class="btn-ghost btn-sm mt12" onclick="addNWRow('cars')">+ Add Car</button>
-    </div>
-
-    <!-- Whiskey -->
-    <div class="card-gold">
-      <div class="section-label mb16" style="color:var(--amber)">Whiskey Investments</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-        <span class="input-label">Cost Basis £</span>
-        <span class="input-label">Current Value £</span>
-      </div>
-      <div id="nw-whiskey-rows"></div>
-      <button class="btn-ghost btn-sm mt12" onclick="addNWRow('whiskey')">+ Add Entry</button>
-    </div>
-
   </div>
 </div>
 
@@ -6846,7 +6967,7 @@ body.modal-active .container > footer {
           </select>
         </div>
         <div class="input-group" data-pound>
-          <span class="input-label">Amount £</span>
+          <span class="input-label">Amount</span>
           <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="bgt-qa-amount" value="" step="0.01" min="0" placeholder="0.00"></div>
         </div>
         <div class="input-group">
@@ -6985,7 +7106,7 @@ body.modal-active .container > footer {
         <input class="num-input" type="text" inputmode="numeric" id="new-shares" value="0" step="1" min="0">
       </div>
       <div class="input-group" data-pound>
-        <span class="input-label">Price £ (optional)</span>
+        <span class="input-label">Price (optional)</span>
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="new-price" value="0" step="0.001" min="0"></div>
       </div>
       <div class="input-group">
@@ -7087,7 +7208,7 @@ body.modal-active .container > footer {
          mobile via .income-input-sep so we don't get orphaned + signs. -->
     <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px">
       <div>
-        <div class="input-label mb8">PAYE Salary £</div>
+        <div class="input-label mb8">PAYE Salary</div>
         <div style="font-size:9px;color:transparent;margin-bottom:4px;user-select:none">—</div>
         <div class="flex-center">
           <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
@@ -7096,7 +7217,7 @@ body.modal-active .container > footer {
       </div>
       <div class="income-input-sep" style="font-size:22px;color:var(--muted);padding-top:28px">+</div>
       <div>
-        <div class="input-label mb8">Dividend Income £</div>
+        <div class="input-label mb8">Dividend Income</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px">First £500 is tax-free</div>
         <div class="flex-center">
           <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
@@ -7105,7 +7226,7 @@ body.modal-active .container > footer {
       </div>
       <div class="income-input-sep" style="font-size:22px;color:var(--muted);padding-top:28px">+</div>
       <div>
-        <div class="input-label mb8">Bonus £</div>
+        <div class="input-label mb8">Bonus</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Select how it's paid</div>
         <div class="flex-center">
           <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
@@ -7177,7 +7298,7 @@ body.modal-active .container > footer {
 
     <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px">
       <div>
-        <div class="input-label mb8">Last Filed Return — Total Liability £ <span id="tax-prior-year-label" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(2024/25)</span></div>
+        <div class="input-label mb8">Last Filed Return — Total Liability <span id="tax-prior-year-label" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(2024/25)</span></div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:8px">From the most recent return you've filed · drives this year's POAs</div>
         <div class="flex-center" style="gap:8px">
           <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
@@ -7750,7 +7871,7 @@ body.modal-active .container > footer {
     <div class="section-label mb16">Mortgage Inputs</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:20px">
       <div class="mp-input-group" data-pound>
-        <label class="mp-input-label" for="mp-balance">Current Balance £</label>
+        <label class="mp-input-label" for="mp-balance">Current Balance</label>
         <div class="pound-wrap"><input class="mp-input" type="text" inputmode="decimal" id="mp-balance" value="309,413.81" oninput="mpRecalc()"></div>
       </div>
       <div class="mp-input-group">
@@ -7762,11 +7883,11 @@ body.modal-active .container > footer {
         <input class="mp-input" type="text" inputmode="numeric" id="mp-term" value="219" step="1" min="1" oninput="mpRecalc()">
       </div>
       <div class="mp-input-group" data-pound>
-        <label class="mp-input-label" for="mp-payment">Monthly Payment £</label>
+        <label class="mp-input-label" for="mp-payment">Monthly Payment</label>
         <div class="pound-wrap"><input class="mp-input" type="text" inputmode="decimal" id="mp-payment" value="2,026.53" oninput="mpRecalc()"></div>
       </div>
       <div class="mp-input-group" data-pound>
-        <label class="mp-input-label" for="mp-overpay">Monthly Overpayment £</label>
+        <label class="mp-input-label" for="mp-overpay">Monthly Overpayment</label>
         <div class="pound-wrap"><input class="mp-input" type="text" inputmode="decimal" id="mp-overpay" value="0" oninput="mpRecalc()"></div>
       </div>
     </div>
@@ -9622,7 +9743,8 @@ function _applyMobileCollapseState() {
       prices: true, holding: true, retirement: true,
       'bgt-cat-summary': true, 'holdings-breakdown': true,
       'bgt-income': true, 'bgt-tax': true, 'bgt-fixed': true, 'bgt-variable': true,
-      'tax-breakdown': true
+      'tax-breakdown': true,
+      'nw-assets-liabilities': true
     };
     _writeCollapseState(state);
   } else {
@@ -9658,6 +9780,13 @@ function _applyMobileCollapseState() {
     // since the breakdown grid takes a lot of vertical space.
     if (state['tax-breakdown'] === undefined) {
       state['tax-breakdown'] = true;
+      _writeCollapseState(state);
+    }
+    // Backfill for the Net Worth Assets & Liabilities section. Default to
+    // collapsed since it's set-and-forget editing — once entered the values
+    // rarely change, and the breakdown above is what the user looks at.
+    if (state['nw-assets-liabilities'] === undefined) {
+      state['nw-assets-liabilities'] = true;
       _writeCollapseState(state);
     }
   }
@@ -9876,12 +10005,12 @@ function renderSoldShareRows() {
         ${unitsWarn}
       </div>
       <div class="input-group" data-pound>
-        <span class="input-label">Sale Price £</span>
+        <span class="input-label">Sale Price</span>
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${r.price||0}" step="0.001" min="0"
           oninput="_onSoldRowPriceChange(${i}, this.value)"></div>
       </div>
       <div class="input-group" data-pound>
-        <span class="input-label">Avg Cost £ ${costIndicator}</span>
+        <span class="input-label">Avg Cost ${costIndicator}</span>
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${r.avgCost ? r.avgCost.toFixed(4) : 0}" step="0.001" min="0"
           oninput="_onSoldRowAvgCostChange(${i}, this.value)"></div>
         ${costNote}
@@ -10317,9 +10446,9 @@ function buildPriceUpdater() {
   });
 
   grid.innerHTML = tickers.map(t => `
-    <div class="input-group">
-      <span class="input-label">${t.ticker} £${t.totalValue > 0 ? ' · £' + fmtNum(Math.round(t.totalValue), 0) : ''}</span>
-      <input class="num-input" type="text" inputmode="decimal" id="priceinput_${t.ticker}" value="${t.price > 0 ? _formatPriceDisplay(t.price) : ''}" step="0.001" min="0" placeholder="Enter price">
+    <div class="input-group" data-pound>
+      <span class="input-label">${t.ticker}${t.totalValue > 0 ? ' · £' + fmtNum(Math.round(t.totalValue), 0) : ''}</span>
+      <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="priceinput_${t.ticker}" value="${t.price > 0 ? _formatPriceDisplay(t.price) : ''}" step="0.001" min="0" placeholder="Enter price"></div>
     </div>`).join('');
 
   // Restore in-progress edits AFTER the grid has been rebuilt
@@ -10640,7 +10769,7 @@ function buildFundCards() {
           <input class="num-input" type="text" inputmode="numeric" id="held_${f.id}" value="${held}" step="1" min="0">
         </div>
         <div class="input-group" data-pound>
-          <span class="input-label">Price £</span>
+          <span class="input-label">Price</span>
           <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="price_${f.id}" value="${price}" step="0.001" min="0.01"></div>
         </div>
         <div class="input-group">
@@ -10652,7 +10781,7 @@ function buildFundCards() {
           <input class="num-input" type="text" inputmode="numeric" id="target_${f.id}" value="${target}" step="1" min="1" max="99">
         </div>
         <div class="input-group" data-pound>
-          <span class="input-label">Trade Fee £</span>
+          <span class="input-label">Trade Fee</span>
           <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="fee_${f.id}" value="0" step="0.01" min="0" placeholder="0.00"></div>
         </div>
         <div class="input-group" style="justify-content:flex-end">
@@ -11829,7 +11958,7 @@ function renderAdditionalFunds() {
             onchange="updateExtraFund(${i},'held',this.value)">
         </div>
         <div class="input-group" data-pound>
-          <span class="input-label">Price £</span>
+          <span class="input-label">Price</span>
           <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${f.price||0}" step="0.001" min="0"
             onchange="updateExtraFund(${i},'price',this.value)"></div>
         </div>
@@ -11938,7 +12067,7 @@ function buildEmpFundsInput() {
         <input class="num-input" type="text" inputmode="numeric" id="emp_${f.id}" value="0" step="1" min="0">
       </div>
       <div class="input-group" data-pound>
-        <span class="input-label">${f.ticker} Price £</span>
+        <span class="input-label">${f.ticker} Price</span>
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="empprice_${f.id}" value="0" step="0.001" min="0"></div>
       </div>
     </div>`).join('');
@@ -11963,7 +12092,7 @@ function renderHistoryExtraFunds() {
             oninput="historyExtraFunds[${i}].units=parseFloat(this.value)||0">
         </div>
         <div class="input-group" data-pound>
-          <span class="input-label">Price £</span>
+          <span class="input-label">Price</span>
           <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="extraprice_${i}" value="${f.price||0}" step="0.001" min="0"
             oninput="historyExtraFunds[${i}].price=parseFloat(this.value)||0"></div>
         </div>
@@ -12258,11 +12387,11 @@ function renderHistory(filter='all') {
             </select>
           </div>
           <div class="input-group" data-pound>
-            <span class="input-label">Portfolio Value £</span>
+            <span class="input-label">Portfolio Value</span>
             <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_val_${entry.id}" value="${entry.portfolioValue||0}"></div>
           </div>
           <div class="input-group" data-pound>
-            <span class="input-label">Budget £</span>
+            <span class="input-label">Budget</span>
             <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_budget_${entry.id}" value="${entry.budget||0}"></div>
           </div>
         </div>
@@ -12273,7 +12402,7 @@ function renderHistory(filter='all') {
               <input class="num-input" type="text" inputmode="numeric" id="edit_units_${entry.id}_${f.ticker}" value="${f.held}" step="1" min="0">
             </div>
             <div class="input-group" data-pound>
-              <span class="input-label">${f.ticker} Price £</span>
+              <span class="input-label">${f.ticker} Price</span>
               <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="edit_price_${entry.id}_${f.ticker}" value="${_formatPriceDisplay(f.price||0) || (f.price||0)}" step="0.001" min="0"></div>
             </div>
           `).join('')}
@@ -14130,7 +14259,7 @@ function renderPortfolio(filter='all') {
       <div class="portfolio-edit-grid">
         <div class="input-group"><span class="input-label">Units</span>
           <input class="num-input" type="text" inputmode="numeric" id="pedit_shares_${h.id}" value="${h.shares}" step="1" min="0"></div>
-        <div class="input-group" data-pound><span class="input-label">Price £</span>
+        <div class="input-group" data-pound><span class="input-label">Price</span>
           <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="pedit_price_${h.id}" value="${_formatPriceDisplay(h.price||0) || '0'}" step="0.001" min="0"></div></div>
         <div class="input-group"><span class="input-label">Wrapper</span>
           <select class="num-input" id="pedit_wrapper_${h.id}" style="text-align:left;cursor:pointer">
@@ -16508,14 +16637,29 @@ function renderTaxTab() {
   }
 
   // ── CGT breakdown steps ──
+  // Compute depletion state for the "Less" row colour grading. As the
+  // allowance gets used up, the row tint shifts green → amber → red so
+  // it doesn't read as "everything's fine" when the allowance is gone.
+  // Thresholds match the allowance snapshot card on Sell Calculator.
+  const allowancePctUsed = allowance > 0 ? (usedAllowance / allowance) * 100 : 0;
+  let exemptState = '';
+  let exemptValColour = 'var(--green)';
+  if (allowancePctUsed >= 100) {
+    exemptState = ' depleted';
+    exemptValColour = 'var(--red)';
+  } else if (allowancePctUsed >= 75) {
+    exemptState = ' warn';
+    exemptValColour = 'var(--amber)';
+  }
+
   document.getElementById('cgtBreakdown').innerHTML = `
     <div class="cgt-step">
       <div class="cgt-step-label">Total unrealised gain across all GIA holdings</div>
       <div class="cgt-step-val ${totalGIAGain >= 0 ? 'gain-pos' : 'gain-neg'}">${totalGIAGain >= 0 ? '+' : ''}£${fmtNum(Math.round(totalGIAGain),0)}</div>
     </div>
-    <div class="cgt-step exempt">
+    <div class="cgt-step exempt${exemptState}">
       <div class="cgt-step-label">Less: CGT annual allowance (${usedAllowance > 0 ? `£${fmtNum(allowance,0)} less £${fmtNum(usedAllowance,0)} already used` : `full £${fmtNum(allowance,0)}`})</div>
-      <div class="cgt-step-val" style="color:var(--green)">-£${fmtNum(remainingAllowance,0)}</div>
+      <div class="cgt-step-val" style="color:${exemptValColour}">-£${fmtNum(remainingAllowance,0)}</div>
     </div>
     <div class="cgt-step highlight">
       <div class="cgt-step-label">Taxable gain (after allowance)</div>
@@ -18800,13 +18944,13 @@ function renderNWRows(type) {
   el.innerHTML = nwRows[type].map((r, i) => `
     <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center">
       <div class="pound-wrap">
-        <input class="num-input" type="text" inputmode="numeric" value="${(r.cost||0)>999?(r.cost||0).toLocaleString('en-GB'):r.cost||0}" step="100" min="0" placeholder="Cost £"
+        <input class="num-input" type="text" inputmode="numeric" value="${(r.cost||0)>999?(r.cost||0).toLocaleString('en-GB'):r.cost||0}" step="100" min="0" placeholder="Cost"
           onfocus="this.value=this.value.replace(/,/g,'')"
           onblur="const n=parseFloat(this.value.replace(/,/g,''))||0;if(n>999)this.value=n.toLocaleString('en-GB')"
           oninput="nwRows['${type}'][${i}].cost=parseFloat(this.value.replace(/,/g,''))||0;renderNetWorth()">
       </div>
       <div class="pound-wrap">
-        <input class="num-input" type="text" inputmode="numeric" value="${(r.value||0)>999?(r.value||0).toLocaleString('en-GB'):r.value||0}" step="100" min="0" placeholder="Value £"
+        <input class="num-input" type="text" inputmode="numeric" value="${(r.value||0)>999?(r.value||0).toLocaleString('en-GB'):r.value||0}" step="100" min="0" placeholder="Value"
           onfocus="this.value=this.value.replace(/,/g,'')"
           onblur="const n=parseFloat(this.value.replace(/,/g,''))||0;if(n>999)this.value=n.toLocaleString('en-GB')"
           oninput="nwRows['${type}'][${i}].value=parseFloat(this.value.replace(/,/g,''))||0;renderNetWorth()">
