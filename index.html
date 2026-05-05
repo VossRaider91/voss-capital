@@ -4012,6 +4012,33 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-perf-table td:first-child { text-align: left; color: var(--white); font-weight: 500; }
 .bgt-perf-table tr.bgt-perf-total td { color: var(--white); font-weight: 600; border-top: 0.5px solid var(--border2); }
 
+/* Mobile: tighten so 4 columns fit on a 380px viewport without numeric
+   columns wrapping mid-figure. Variance figures like +£2,545 are the
+   widest content and must stay on one line. The Category column gets
+   the leftover; "Total Income" / "Net Position" are short enough to fit
+   without wrapping at this size. */
+@media (max-width: 700px) {
+  .bgt-perf-table { font-size: 11px; }
+  .bgt-perf-table th,
+  .bgt-perf-table td {
+    padding: 8px 6px;
+    letter-spacing: -0.2px;
+  }
+  .bgt-perf-table th:first-child,
+  .bgt-perf-table td:first-child {
+    padding-left: 0;
+    white-space: nowrap;
+  }
+  .bgt-perf-table th:last-child,
+  .bgt-perf-table td:last-child {
+    padding-right: 0;
+  }
+  .bgt-perf-table th:not(:first-child),
+  .bgt-perf-table td:not(:first-child) {
+    white-space: nowrap;
+  }
+}
+
 /* Historical Averages "This month £X" overTag — sits inline next to the
    category name on desktop, but on narrow screens drops onto its own line
    so phrases like "This month £2,700.00 ↑" don't wrap mid-word in the
@@ -5996,30 +6023,36 @@ body.privacy-mode-active .portfolio-delta-pill {
     float: none !important;
   }
 
-  /* Cell 6 (unrealised gain) — left footer, 12px coloured */
+  /* Cell 6 (unrealised gain) — left footer, 11px coloured.
+     Forced nowrap so larger figures (e.g. £22,614+) stay on one line
+     and the cell handles any rare overflow rather than wrapping. */
   .tax-row > div:nth-child(6) {
     grid-column: 1 / 2 !important;
     grid-row: 3 / 4 !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
     text-align: left !important;
     margin: 8px 0 0 !important;
     padding: 0 !important;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px !important;
+    white-space: nowrap !important;
     width: auto !important;
     float: none !important;
   }
 
-  /* Cell 7 (est. CGT) — right footer, 12px coloured */
+  /* Cell 7 (est. CGT) — right footer, 11px coloured */
   .tax-row > div:nth-child(7) {
     grid-column: 2 / 3 !important;
     grid-row: 3 / 4 !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
     text-align: right !important;
     margin: 8px 0 0 !important;
     padding: 0 !important;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px !important;
+    white-space: nowrap !important;
     width: auto !important;
     float: none !important;
     color: #ff6961 !important;
@@ -20399,7 +20432,7 @@ function renderBudgetPerformance() {
       : (v >= 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"');
     const varStr = (v, isExp) => {
       const prefix = isExp ? (v<=0?'✓ -£':'✗ +£') : (v>=0?'+£':'-£');
-      return prefix + fmtNum(Math.round(Math.abs(v)));
+      return prefix + fmtNum(Math.round(Math.abs(v)), 0);
     };
     const tblEl = document.getElementById('analyse-budget-perf-table');
     if (tblEl) tblEl.innerHTML = `
