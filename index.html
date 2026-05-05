@@ -3824,16 +3824,6 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-status-banner:last-child {
   margin-bottom: 16px;
 }
-/* When the hero "Monthly Net Position" card is the last child of
-   #bgt-main-table (i.e. no plan-deficit warning and no tax-status banner
-   are rendering — the all-clear state), it must carry the same 16px
-   bottom margin a banner would, so the gap to the "This Month" pivot
-   strip below stays consistent with the rest of the page rhythm. The
-   .plan-card base only provides 8px, which made the strip feel cramped
-   once the success-state tax banner was removed. */
-#bgt-main-table .plan-card.is-hero:last-child {
-  margin-bottom: 16px;
-}
 .bgt-status-banner.danger {
   background: rgba(255,69,58,0.14);
   border-color: rgba(255,69,58,0.30);
@@ -22716,12 +22706,23 @@ function _renderBgtMainTable(state) {
     </div>`;
   })();
 
+  // The hero card's bottom margin depends on whether a banner follows it.
+  // When a banner renders, the banner provides its own gap to the next
+  // section. When no banner renders (all-clear state), the hero card itself
+  // must carry the 16px bottom margin to keep the page rhythm consistent.
+  // We compute it here rather than relying on a CSS :last-child rule because
+  // template literals leave trailing whitespace text nodes after the hero
+  // div even when planDeficitWarning and taxStatusHtml are empty strings —
+  // those text nodes break :last-child matching, leaving the hero with only
+  // .plan-card's base 8px margin and the "This Month" strip feeling cramped.
+  const heroBottomMargin = (planDeficitWarning || taxStatusHtml) ? '8px' : '16px';
+
   document.getElementById('bgt-main-table').innerHTML = `
     ${sectionCard('Income','bgt-section-income',BGT_INCOME,true,false,'bgt-income')}
     ${sectionCard('Tax Provision','bgt-section-tax',BGT_TAX,false,false,'bgt-tax')}
     ${sectionCard('Fixed Expenses','bgt-section-fixed',BGT_FIXED,false,false,'bgt-fixed')}
     ${sectionCard('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true,'bgt-variable')}
-    <div class="plan-card is-hero" style="margin-top:8px">
+    <div class="plan-card is-hero" style="margin-top:8px;margin-bottom:${heroBottomMargin}">
       <div class="plan-card-header">
         <span class="plan-card-ticker">${netAct>=0?'✓':'⚠'} Monthly Net Position</span>
         <span class="plan-card-context">${netAct>=0 ? 'In the black' : 'Spending more than coming in'}</span>
