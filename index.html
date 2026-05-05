@@ -464,15 +464,29 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   gap: 14px;
   margin: 8px 0 24px;
 }
+/* Mirrored gradient fade: the left bar fades from transparent (page edge)
+   to white (toward the centred label); the right bar mirrors that — white
+   at the label, fading to transparent at the page edge. The label thus
+   sits at the visual peak of contrast and the lines feather softly into
+   the page background, giving the divider a refined Apple-native feel
+   rather than a hard utilitarian rule. Updated 5 May 2026 from the gold
+   solid-tint version to a neutral white treatment, applied app-wide
+   wherever .tax-zone-divider is used (Tax page, Analyse Financial
+   Position page, Budget Tracker, and any future zone divider). */
 .tax-zone-line {
   flex: 1;
   height: 0.5px;
-  background: rgba(255,214,10,0.22);
+}
+.tax-zone-line:first-child {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.30) 100%);
+}
+.tax-zone-line:last-child {
+  background: linear-gradient(90deg, rgba(255,255,255,0.30) 0%, transparent 100%);
 }
 .tax-zone-label {
   font-size: 10px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--white);
   text-transform: uppercase;
   letter-spacing: 1.4px;
   white-space: nowrap;
@@ -8458,6 +8472,19 @@ body.modal-active .container > footer {
 
     <!-- Main budget table -->
     <div id="bgt-main-table"></div>
+
+    <!-- Summaries & Averages section divider. Marks the visual handover
+         from live-month entry (income / tax / expenses / net position
+         above) to the analytical surfaces below (this month's pivot
+         actions, monthly breakdown, year-to-date, historical averages,
+         transaction history). Uses the standard .tax-zone-divider so
+         it inherits the same fade-gradient look as every other zone
+         break in the app. -->
+    <div class="tax-zone-divider">
+      <div class="tax-zone-line"></div>
+      <div class="tax-zone-label">Summaries &amp; Averages</div>
+      <div class="tax-zone-line"></div>
+    </div>
 
     <!-- Monthly pivot strip — month label on the left, navigation actions
          on the right. Sits between the budget table and the analysis
@@ -22706,23 +22733,12 @@ function _renderBgtMainTable(state) {
     </div>`;
   })();
 
-  // The hero card's bottom margin depends on whether a banner follows it.
-  // When a banner renders, the banner provides its own gap to the next
-  // section. When no banner renders (all-clear state), the hero card itself
-  // must carry the 16px bottom margin to keep the page rhythm consistent.
-  // We compute it here rather than relying on a CSS :last-child rule because
-  // template literals leave trailing whitespace text nodes after the hero
-  // div even when planDeficitWarning and taxStatusHtml are empty strings —
-  // those text nodes break :last-child matching, leaving the hero with only
-  // .plan-card's base 8px margin and the "This Month" strip feeling cramped.
-  const heroBottomMargin = (planDeficitWarning || taxStatusHtml) ? '8px' : '16px';
-
   document.getElementById('bgt-main-table').innerHTML = `
     ${sectionCard('Income','bgt-section-income',BGT_INCOME,true,false,'bgt-income')}
     ${sectionCard('Tax Provision','bgt-section-tax',BGT_TAX,false,false,'bgt-tax')}
     ${sectionCard('Fixed Expenses','bgt-section-fixed',BGT_FIXED,false,false,'bgt-fixed')}
     ${sectionCard('Variable Expenses','bgt-section-variable',BGT_VARIABLE,false,true,'bgt-variable')}
-    <div class="plan-card is-hero" style="margin-top:8px;margin-bottom:${heroBottomMargin}">
+    <div class="plan-card is-hero" style="margin-top:8px">
       <div class="plan-card-header">
         <span class="plan-card-ticker">${netAct>=0?'✓':'⚠'} Monthly Net Position</span>
         <span class="plan-card-context">${netAct>=0 ? 'In the black' : 'Spending more than coming in'}</span>
