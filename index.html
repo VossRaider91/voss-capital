@@ -13940,13 +13940,13 @@ function renderHistory(filter='all') {
       </div>`;
     }
 
-    const allFiltered = filter==='all' ? history : history.filter(e=>e.type===filter);
-    const prev = allFiltered[idx+1];
-    const growthVal = prev&&entry.portfolioValue&&prev.portfolioValue ? entry.portfolioValue-prev.portfolioValue : null;
-    const growthPct = growthVal!==null&&prev.portfolioValue>0 ? growthVal/prev.portfolioValue*100 : null;
-    const growthHtml = growthVal !== null
-      ? `<div class="cn-vs-prev ${growthVal>=0?'pos':'neg'}">${growthVal>=0?'↑ +':'↓ -'}£${fmtNum(Math.abs(growthVal),0)} (${growthPct>=0?'+':''}${growthPct?.toFixed(1)}%) vs previous</div>`
-      : '';
+    // vs-previous pill removed: cross-wrapper comparisons are misleading
+    // (e.g. a fresh ISA entry compared against the previous SIPP entry
+    // captures both the new contribution and any market drift between
+    // saves), and same-wrapper comparisons still conflate contributions
+    // with market growth. The Portfolio Overview's +£ Today pill and the
+    // growth chart already show genuine portfolio growth properly.
+    const growthHtml = '';
     // Type pill — Personal (gold tint) or Employer (blue tint)
     const typeLabel = entry.type==='employer'
       ? `<span class="cn-pill cn-type-employer">Employer</span>`
