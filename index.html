@@ -12411,10 +12411,16 @@ function calculate() {
     maxDriftFund = data.reduce((a,b) => Math.abs(a.overweight)>Math.abs(b.overweight)?a:b);
     maxDriftVal = Math.abs(maxDriftFund.overweight);
   } else {
-    // No prior holdings: compute projected drift after this purchase
+    // No prior holdings: compute projected drift after this purchase using
+    // RAW cost as both numerator and denominator. This matches the alloc
+    // card percentages (which also use raw cost) so Max Drift agrees with
+    // the per-fund "after %" shown on the cards. Previously this divided
+    // raw share value by buffer-inclusive total, inflating the drift.
+    const totalRaw = bestAlloc.reduce((s,f) => s + f.shares * f.rawPrice, 0);
+    const projAfterRawDrift = currentPortVal + totalRaw;
     const projDriftData = bestAlloc.map(f => {
       const projVal = f.shares * f.rawPrice;
-      const projPct = projAfter > 0 ? (projVal / projAfter * 100) : 0;
+      const projPct = projAfterRawDrift > 0 ? (projVal / projAfterRawDrift * 100) : 0;
       const drift = projPct - f.normTarget * 100;
       return { ...f, drift };
     });
