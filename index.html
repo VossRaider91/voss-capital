@@ -12456,11 +12456,12 @@ function calculate() {
       </div>
     </div>`;
 
-  // ── Allocation rows v2 ──────────────────────────────────────────
-  // Per-fund cards: Units and £ Deploy as the headline figures, with
-  // before/after/target percentages as small contextual labels and
-  // buffer info (rate + reserved amount) inline per row. Replaces the
-  // earlier flat 3-column table plus separate Buffer Pot section.
+  // Per-fund cards: percentages reflect ACTUAL economic position (raw cost
+  // of shares acquired) not buffered cost. Buffer is reserved cash that may
+  // or may not get spent on the trade, so it shouldn't inflate the share-of-
+  // portfolio figure. Max Drift uses the same convention so the two displays
+  // agree.
+  const projAfterRaw = currentPortVal + bestAlloc.reduce((s,f) => s + f.shares * f.rawPrice, 0);
   let totalBuf = 0;
   const allocCardsHtml = bestAlloc.map(f => {
     const deployed = f.shares * f.price;
@@ -12470,8 +12471,8 @@ function calculate() {
     totalBuf += bufferReserved;
 
     const currentPct = currentPortVal > 0 ? (f.currentVal / currentPortVal * 100) : 0;
-    const newVal = f.currentVal + deployedRounded;
-    const newPct = projAfter > 0 ? (newVal / projAfter * 100) : 0;
+    const newVal = f.currentVal + rawCost;
+    const newPct = projAfterRaw > 0 ? (newVal / projAfterRaw * 100) : 0;
     const targetPct = f.target || 0;
     const deltaVsTarget = newPct - targetPct;
     const isSkipped = f.skipped || f.shares <= 0;
