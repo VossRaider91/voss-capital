@@ -4943,6 +4943,24 @@ body.privacy-mode-active .portfolio-delta-pill {
     -webkit-backdrop-filter: none !important;
   }
 
+  /* Lock document scroll while the mobile nav is open. Without this, an
+     overscroll pull (the iOS rubber-band / pull-to-refresh gesture) drags
+     the sticky header — and therefore the pill — downward while the
+     dropdown stays put (it's position:fixed, anchored to the viewport).
+     The pill visually detaches from the dropdown, exposing scrolled page
+     content between them. Disabling overflow on html+body and touch-action
+     on the body stops the gesture from registering at all. The .nav-tabs
+     dropdown has its own overflow-y:auto for tall menus, and that scroll
+     is unaffected because it's a fixed-position child with its own
+     scrolling context. */
+  body.mobile-nav-active {
+    overflow: hidden !important;
+    touch-action: none !important;
+  }
+  html:has(body.mobile-nav-active) {
+    overflow: hidden !important;
+  }
+
   /* Full header-region scrim when the mobile nav is open.
      The header background goes transparent (above) so the pill and the
      dropdown can composite identically and read as one continuous element.
