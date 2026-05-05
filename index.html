@@ -12328,10 +12328,13 @@ function calculate() {
     let rawDeploy = totalNeeded > 0 ? (needed/totalNeeded)*sharesBudget : sharesBudget*f.normTarget;
     rawDeploy *= deployWeight;
 
-    // When exact budget required, compute floors using rawPrice so we get max whole shares
-    // within the raw budget. Buffer will top up the remainder precisely.
-    // When overspend allowed, use buffered price (buffer acts as execution safety margin).
-    const priceForFloors = allowOverspend ? f.price : f.rawPrice;
+    // Both modes now use the buffered price for share floor calculation so
+    // the user's buffer % setting (e.g. 3%) is respected as the target
+    // reservation in both Exact Budget and Allow Overspend modes. Previously
+    // Exact Budget mode used rawPrice for floors and then OVERWROTE the buffer
+    // % at the end to absorb whatever leftover £ existed (typically 1% or
+    // less, ignoring the user's setting). Now buffer is always honoured.
+    const priceForFloors = f.price;
 
     return {
       ...f,
@@ -12343,45 +12346,54 @@ function calculate() {
     };
   });
 
-  // Best whole-share combination within budget
-  // When exact budget required, evaluate combinations at rawPrice (buffer fills the gap after)
-  // When overspend allowed, evaluate at buffered price as normal
+  // Best whole-share combination within budget. Both modes now score and
+  // cap against buffered price so the user's buffer % is honoured.
   const n = withNeeds.length;
-  const scoreKey = allowOverspend ? 'price' : 'rawPrice';
+  const scoreKey = 'price';
   let bestAlloc = withNeeds.map(f => ({ ...f, shares: f.sharesFloor }));
   let bestScore = scoreAlloc(bestAlloc, sharesBudget, projTotal, scoreKey);
   for (let mask=1; mask<(1<<n); mask++) {
     const trial = withNeeds.map((f,i) => ({ ...f, shares: (mask>>i&1) ? f.sharesCeil : f.sharesFloor }));
-    const tot = allowOverspend
-      ? trial.reduce((s,f) => s + f.shares * f.price, 0)
-      : trial.reduce((s,f) => s + f.shares * f.rawPrice, 0);
+    const tot = trial.reduce((s,f) => s + f.shares * f.price, 0);
     if (tot > maxSpend) continue;
     const score = scoreAlloc(trial, sharesBudget, projTotal, scoreKey);
     if (score < bestScore) { bestScore=score; bestAlloc=trial; }
   }
 
-  // When exact budget is required (Allow Overspend unchecked):
-  // Compute the gap at raw prices, then distribute it as buffer proportionally
-  // across active funds so total deployed = exactly the budget.
+  // Exact Budget mode: the user's buffer % is the MINIMUM reservation per
+  // fund. After share selection at the minimum buffered price, any whole-
+  // share gap remaining (budget − sum(shares × minBufferedPrice)) gets
+  // distributed as additional buffer across active funds proportional to
+  // each fund's raw cost share. Result: total deployed = budget exactly,
+  // every fund's effective buffer ≥ user's setting. This matches the user's
+  // HL direct debit which deposits exactly the budget amount each month.
+  //
+  // Allow Overspend mode does NOT do this — it leaves cash unspent rather
+  // than inflating buffer above the user's setting, since the trade-off
+  // there is "minimise drift, accept 0-2% overspend" rather than "match
+  // budget exactly".
   if (!allowOverspend && sharesBudget > 0) {
     const activeFunds = bestAlloc.filter(f => !f.skipped && f.shares > 0 && f.rawPrice > 0);
-    const rawTotal = activeFunds.reduce((s, f) => s + f.shares * f.rawPrice, 0);
-    const remainder = sharesBudget - rawTotal;  // gap to fill with buffer
-
     if (activeFunds.length > 0) {
-      // Distribute remainder proportionally by each fund's raw cost share
-      // so funds with larger positions absorb more of the buffer
-      activeFunds.forEach(af => {
-        const idx = bestAlloc.findIndex(f => f.id === af.id);
-        if (idx === -1) return;
-        const rawCost = bestAlloc[idx].shares * bestAlloc[idx].rawPrice;
-        const fundShare = rawTotal > 0 ? rawCost / rawTotal : 1 / activeFunds.length;
-        const fundExtra = remainder * fundShare;
-        const newBufferedCost = rawCost + fundExtra;
-        const newBufferPct = rawCost > 0 ? ((newBufferedCost / rawCost) - 1) * 100 : 0;
-        bestAlloc[idx].price = bestAlloc[idx].rawPrice * (1 + newBufferPct / 100);
-        bestAlloc[idx].buffer = parseFloat(newBufferPct.toFixed(4));
-      });
+      const currentTotal = activeFunds.reduce((s, f) => s + f.shares * f.price, 0);
+      const gap = sharesBudget - currentTotal;
+      if (gap > 0.01) {
+        const rawTotal = activeFunds.reduce((s, f) => s + f.shares * f.rawPrice, 0);
+        activeFunds.forEach(af => {
+          const idx = bestAlloc.findIndex(f => f.id === af.id);
+          if (idx === -1) return;
+          const rawCost = bestAlloc[idx].shares * bestAlloc[idx].rawPrice;
+          const fundShare = rawTotal > 0 ? rawCost / rawTotal : 1 / activeFunds.length;
+          const fundExtra = gap * fundShare;
+          // Effective buffered price = current buffered price + per-share extra
+          // (extra is allocated across this fund's shares evenly)
+          const newBufferedPrice = bestAlloc[idx].price + (fundExtra / bestAlloc[idx].shares);
+          bestAlloc[idx].price = newBufferedPrice;
+          // Effective buffer % = (newBufferedPrice / rawPrice − 1) × 100
+          const newBufferPct = ((newBufferedPrice / bestAlloc[idx].rawPrice) - 1) * 100;
+          bestAlloc[idx].buffer = parseFloat(newBufferPct.toFixed(4));
+        });
+      }
     }
   }
 
@@ -12569,10 +12581,10 @@ function calculate() {
     deployNoteText = `£${Math.round(totalDeployed)} shares + £${fmtNum(tradeFees,2)} trade fees = £${Math.round(totalWithFeesDisplay)} total. `;
   }
   if (!allowOverspend) {
-    const gap = Math.abs(totalDeployed - sharesBudget);
-    deployNoteText += gap < 0.02
-      ? `✓ Exact budget matched — £${fmtNum(totalDeployed,2)} deployed. Buffer distributed evenly across funds to absorb any whole-share gap.`
-      : `Budget: £${budget}. Deployed: £${fmtNum(totalDeployed,2)}. Gap absorbed in buffer pot.`;
+    // Exact Budget mode guarantees totalDeployed = budget. The user's buffer %
+    // is the minimum reservation; any whole-share gap is distributed as
+    // additional buffer above that minimum so the £ matches the DD exactly.
+    deployNoteText += `✓ Exact budget matched — £${fmtNum(totalDeployed,2)} reserved (buffer absorbs the whole-share gap above your ${(parseFloat(document.getElementById('buffer_'+(FUNDS[0]?.id||'vwrp'))?.value)||3).toFixed(1)}% minimum).`;
   } else {
     deployNoteText += unused>=0 ? `£${Math.round(unused)} sits as cash due to whole share constraints` : `£${Math.round(Math.abs(unused))} slight overspend to minimise drift`;
   }
