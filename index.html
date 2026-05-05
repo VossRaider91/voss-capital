@@ -15364,19 +15364,14 @@ function syncRetirementFromHistory() {
     }
   }
 
-  // Only update personal contribution if user hasn't manually set it (i.e. it's still default)
-  const personal = history.filter(e => (e.type==='personal'||!e.type) && e.portfolioValue>0)
-                          .sort((a,b) => b.timestamp - a.timestamp);
-  const currentPersonal = parseFloat((document.getElementById('ret-personal')?.value||'').replace(/,/g,'')) || 0;
-  if (currentPersonal === 0 || currentPersonal === 2700) {
-    if (personal.length >= 1) {
-      const avgPersonal = personal.slice(0,3).reduce((s,e) => s+(e.budget||0), 0) / Math.min(personal.length, 3);
-      if (avgPersonal > 0) {
-        const retPersonalEl = document.getElementById('ret-personal');
-        if (retPersonalEl) { retPersonalEl.value = Math.round(avgPersonal); flashInput(retPersonalEl); }
-      }
-    }
-  }
+  // ret-personal (Your Monthly Contribution) is intentionally NOT touched here.
+  // The retirement page treats it as a standalone planning input — what the
+  // user wants to model contributing each month. It is no longer derived
+  // from history budgets, calculator output, or any other page. The user
+  // edits it directly on the retirement tab and it persists via
+  // saveRetirementInputs(). Decoupling this prevents history corrections
+  // (e.g. editing prices on a past entry) from silently rewriting the
+  // retirement projection's contribution assumption.
 
   updateRetTotal();
   saveRetirementInputs();
