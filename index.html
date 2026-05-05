@@ -1270,6 +1270,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 2px;
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  .cn-buffer-strip {
+    gap: 6px;
+    padding: 10px;
+  }
+  .cn-buffer-strip-label {
+    font-size: 9px;
+    letter-spacing: 0.3px;
+  }
 }
 .cn-buffer-strip-value {
   color: #ffffff;
