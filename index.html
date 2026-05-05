@@ -11985,6 +11985,7 @@ function buildFundCards() {
     const price = sv ? sv.price : f.defaultPrice;
     const buffer = sv ? sv.buffer : f.defaultBuffer;
     const target = sv ? sv.target : f.target;
+    const fee = sv && sv.fee !== undefined ? sv.fee : 0;
 
     // Pull actual % from portfolio ticked holdings
     const portfolioPct = getPortfolioActualPct(f.ticker);
@@ -12018,7 +12019,7 @@ function buildFundCards() {
         </div>
         <div class="input-group" data-pound>
           <span class="input-label">Trade Fee</span>
-          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="fee_${f.id}" value="0" step="0.01" min="0" placeholder="0.00"></div>
+          <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="fee_${f.id}" value="${fee}" step="0.01" min="0" placeholder="0.00"></div>
         </div>
         <div class="input-group" style="justify-content:flex-end">
           <span class="input-label">&nbsp;</span>
@@ -12083,6 +12084,7 @@ function saveCalcInputs() {
       price: document.getElementById(`price_${f.id}`)?.value || f.defaultPrice,
       buffer: document.getElementById(`buffer_${f.id}`)?.value || f.defaultBuffer,
       target: document.getElementById(`target_${f.id}`)?.value || f.target,
+      fee: document.getElementById(`fee_${f.id}`)?.value || 0,
     }))
   });
 }
@@ -13875,6 +13877,10 @@ function setWithdrawalMode(mode) {
   if (desc) desc.textContent = mode === '4pct'
     ? '4% Rule — withdraw 4% annually, preserving principal indefinitely.'
     : 'Drawdown to 95 — depletes pot to £0 by age 95, with growth during retirement.';
+  // Persist the mode choice so it sticks across reloads even if no other
+  // retirement input is touched after the toggle. saveRetirementInputs()
+  // pulls _retWithdrawalMode from module scope and writes it into LS.RETIREMENT.
+  saveRetirementInputs();
   calculateRetirement();
 }
 
@@ -20517,6 +20523,10 @@ const nwRows = { cars: [], whiskey: [] };
 function addNWRow(type) {
   nwRows[type].push({ cost: 0, value: 0, label: '' });
   renderNWRows(type);
+  // Persist the new row immediately so the row count syncs cross-device
+  // before the user enters any values. Without this, an empty row sits
+  // in nwRows but isn't in LS.NET_WORTH until the first oninput fires.
+  saveNetWorthInputs();
 }
 
 function renderNWRows(type) {
