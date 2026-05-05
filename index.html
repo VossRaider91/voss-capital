@@ -3824,6 +3824,16 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-status-banner:last-child {
   margin-bottom: 16px;
 }
+/* When the hero "Monthly Net Position" card is the last child of
+   #bgt-main-table (i.e. no plan-deficit warning and no tax-status banner
+   are rendering — the all-clear state), it must carry the same 16px
+   bottom margin a banner would, so the gap to the "This Month" pivot
+   strip below stays consistent with the rest of the page rhythm. The
+   .plan-card base only provides 8px, which made the strip feel cramped
+   once the success-state tax banner was removed. */
+#bgt-main-table .plan-card.is-hero:last-child {
+  margin-bottom: 16px;
+}
 .bgt-status-banner.danger {
   background: rgba(255,69,58,0.14);
   border-color: rgba(255,69,58,0.30);
