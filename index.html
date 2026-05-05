@@ -3868,14 +3868,22 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-radius: 14px;
   padding: 14px 18px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
+  gap: 12px;
   backdrop-filter: blur(20px) saturate(200%);
   -webkit-backdrop-filter: blur(20px) saturate(200%);
   box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
 }
-.cgt-step-label { font-size: 13px; color: rgba(255,255,255,0.87); letter-spacing: -0.05px; font-weight: 600; }
+.cgt-step > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cgt-step-label { font-size: 13px; color: rgba(255,255,255,0.87); letter-spacing: -0.05px; font-weight: 600; line-height: 1.4; }
 .cgt-step-val {
   font-size: 17px; font-weight: 600; color: var(--white);
   font-variant-numeric: tabular-nums; letter-spacing: -0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: right;
 }
 .cgt-step.highlight {
   border-color: rgba(10,132,255,0.34);
@@ -3909,6 +3917,21 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .cgt-step.exempt.depleted .cgt-step-val {
   color: var(--red) !important;
+}
+/* Mobile — tighten cgt-step padding and value font-size so labels with
+   longer text don't crowd the value, and the leading +/- sign on the
+   value doesn't get pushed onto its own line. */
+@media (max-width: 700px) {
+  .cgt-step {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .cgt-step-label {
+    font-size: 12px;
+  }
+  .cgt-step-val {
+    font-size: 15px;
+  }
 }
 .gain-pos { color: var(--green); }
 .gain-neg { color: var(--red); }
@@ -4467,10 +4490,10 @@ body.privacy-mode-active .portfolio-delta-pill {
     gap: 8px !important;
     margin: 0 !important;
     padding: 14px 12px 14px;
-    background: rgba(10,132,255,0.10);
+    background: rgba(60, 60, 68, 0.45);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid rgba(10,132,255,0.32);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-top: none;
     border-radius: 0 0 14px 14px;
     box-shadow:
@@ -4538,17 +4561,17 @@ body.privacy-mode-active .portfolio-delta-pill {
   }
   #mobile-nav-pill.open .pill-chevron {
     transform: rotate(180deg);
-    color: var(--blue-bright);
+    color: rgba(255,255,255,0.85);
   }
   #mobile-nav-pill.open {
-    background: rgba(10,132,255,0.16);
-    border-color: rgba(10,132,255,0.32);
+    background: rgba(60, 60, 68, 0.45);
+    border-color: rgba(255, 255, 255, 0.10);
     border-bottom-color: transparent;
     border-radius: 12px 12px 0 0;
     box-shadow: none;
   }
   #mobile-nav-pill.open .pill-label {
-    color: var(--blue-bright);
+    color: var(--white);
   }
 
   /* Mobile nav tab tiles (when expanded) */
