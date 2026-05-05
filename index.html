@@ -4943,6 +4943,39 @@ body.privacy-mode-active .portfolio-delta-pill {
     -webkit-backdrop-filter: none !important;
   }
 
+  /* Full header-region scrim when the mobile nav is open.
+     The header background goes transparent (above) so the pill and the
+     dropdown can composite identically and read as one continuous element.
+     Without a separate scrim that left ALL header content (live status
+     strip, page subtitle line, hide-figures button, anything sticky above
+     the pill) bleeding through behind the pill area. This fixes that by
+     adding a fixed-position scrim that covers the entire viewport region
+     from top down to the bottom edge of the pill. The pill's own
+     background (set in #mobile-nav-pill.open) sits above this scrim so it
+     stays visible and tappable. The scrim sits at z-index 87 — below the
+     existing #mobile-nav-backdrop (88) so the two layer cleanly without a
+     visible seam, and below the dropdown grid (89) and pill (which is
+     higher again via the sticky header). */
+  #mobile-nav-header-scrim {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--vc-mobile-nav-pill-top, var(--vc-mobile-nav-top, 90px));
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    z-index: 87;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+  body.mobile-nav-active #mobile-nav-header-scrim {
+    display: block;
+    opacity: 1;
+  }
+
   /* Hide the desktop nav grid; show the collapsing mobile nav instead */
   .nav-tabs {
     display: none !important;
@@ -7434,6 +7467,7 @@ body.modal-active .container > footer {
      opens. Mobile-only (hidden on desktop). Tap dismisses the nav. The
      pointer-events flip is what makes the click pass through when hidden;
      opacity transitions create the soft fade. -->
+<div id="mobile-nav-header-scrim" onclick="_closeMobileNav()" aria-hidden="true"></div>
 <div id="mobile-nav-backdrop" onclick="_closeMobileNav()" aria-hidden="true"></div>
 
 <div class="nav-tabs">
@@ -11173,11 +11207,18 @@ function _setMobileNavTopVar() {
   const pill = document.getElementById('mobile-nav-pill');
   let bottom;
   if (pill && pill.offsetParent !== null) {
-    bottom = pill.getBoundingClientRect().bottom;
+    const rect = pill.getBoundingClientRect();
+    bottom = rect.bottom;
+    // Also expose the pill's TOP edge so the header-region scrim can stop
+    // exactly above the pill. This keeps the pill compositing directly
+    // against page content (same as the dropdown below) rather than over
+    // the scrim, so they end up visually identical when the nav is open.
+    document.documentElement.style.setProperty('--vc-mobile-nav-pill-top', `${Math.max(0, Math.round(rect.top))}px`);
   } else {
     const header = document.querySelector('.vc-header');
     if (!header) return;
     bottom = header.getBoundingClientRect().bottom;
+    document.documentElement.style.setProperty('--vc-mobile-nav-pill-top', `${Math.max(0, Math.round(bottom))}px`);
   }
   document.documentElement.style.setProperty('--vc-mobile-nav-top', `${Math.max(0, Math.round(bottom))}px`);
 }
