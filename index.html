@@ -14129,7 +14129,13 @@ function saveEditForm(id) {
   // this edit save. portfolioValue thus stays in sync with the edited
   // facts — when you correct VWRP from £134.18 to £134.20 with an extra
   // unit, the entry's portfolio balance reflects that exactly.
-  const livePortfolioValueAfterSync = lsGet(LS.PORTFOLIO, []).reduce((s,h) => s + h.shares*(h.price||0), 0);
+  const portfolioAfterSync = lsGet(LS.PORTFOLIO, []);
+  const livePortfolioValueAfterSync = portfolioAfterSync.reduce((s,h) => s + h.shares*(h.price||0), 0);
+  console.log('[saveEditForm] Portfolio after sync:', portfolioAfterSync.map(h => ({
+    ticker: h.ticker, wrapper: h.wrapper, shares: h.shares, price: h.price,
+    value: h.shares * (h.price || 0), seeded: h.seeded, fromHistory: h.fromHistory
+  })));
+  console.log('[saveEditForm] Sum:', livePortfolioValueAfterSync);
   if (livePortfolioValueAfterSync > 0) {
     const refreshedHistory = lsGet(LS.HISTORY, []);
     const refreshedIdx = refreshedHistory.findIndex(e => e.id === id);
