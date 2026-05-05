@@ -10887,6 +10887,31 @@ async function _vossSyncPull(opts = {}) {
   if (!window._vossSupabase) { _vossSyncSetStatus('disabled'); return; }
   if (_vossSyncInFlight) return;
 
+  // Skip auto-pulls while the user has an edit form, sold form, history form,
+  // strategy editor open, or anywhere a text input is currently focused.
+  // Pulling a remote snapshot triggers _vossSyncApplySnapshot →
+  // _vossSyncRehydrateUi which re-renders the parent containers, destroying
+  // any open form mid-edit. User-initiated pulls (manual sync button) bypass
+  // this guard so the user can always force a refresh if they want.
+  const isUserInitiated = opts.userInitiated === true || opts.initial === true;
+  if (!isUserInitiated) {
+    const formOpen = document.querySelector(
+      '#tab-history .edit-form.open, ' +
+      '#historyFormCard:not([style*="display: none"]):not([style*="display:none"]), ' +
+      '#soldFormCard:not([style*="display: none"]):not([style*="display:none"]), ' +
+      '#strategyEditor:not([style*="display: none"]):not([style*="display:none"])'
+    );
+    const inputFocused = document.activeElement && (
+      document.activeElement.tagName === 'INPUT' ||
+      document.activeElement.tagName === 'TEXTAREA' ||
+      document.activeElement.tagName === 'SELECT'
+    );
+    if (formOpen || inputFocused) {
+      _vossSyncSetStatus('synced');
+      return;
+    }
+  }
+
   _vossSyncInFlight = true;
   _vossSyncSetStatus('syncing');
   const isInitialPull = opts.initial === true;
@@ -14129,13 +14154,7 @@ function saveEditForm(id) {
   // this edit save. portfolioValue thus stays in sync with the edited
   // facts — when you correct VWRP from £134.18 to £134.20 with an extra
   // unit, the entry's portfolio balance reflects that exactly.
-  const portfolioAfterSync = lsGet(LS.PORTFOLIO, []);
-  const livePortfolioValueAfterSync = portfolioAfterSync.reduce((s,h) => s + h.shares*(h.price||0), 0);
-  console.log('[saveEditForm] Portfolio after sync:', portfolioAfterSync.map(h => ({
-    ticker: h.ticker, wrapper: h.wrapper, shares: h.shares, price: h.price,
-    value: h.shares * (h.price || 0), seeded: h.seeded, fromHistory: h.fromHistory
-  })));
-  console.log('[saveEditForm] Sum:', livePortfolioValueAfterSync);
+  const livePortfolioValueAfterSync = lsGet(LS.PORTFOLIO, []).reduce((s,h) => s + h.shares*(h.price||0), 0);
   if (livePortfolioValueAfterSync > 0) {
     const refreshedHistory = lsGet(LS.HISTORY, []);
     const refreshedIdx = refreshedHistory.findIndex(e => e.id === id);
