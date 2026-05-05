@@ -10876,9 +10876,41 @@ function lsSet(key, val) {
   }
 }
 
-// ════════════════════════════════════════════════════════════════════
-// PRIVACY MODE — Portfolio Overview balance hiding
-// ════════════════════════════════════════════════════════════════════
+// Critical-write variant of lsSet. Identical to lsSet for the localStorage
+// write itself, but bypasses the 1.5s debounce on the cross-device sync
+// push so the snapshot reaches Supabase as fast as possible. Used for
+// writes where data loss from "user closes app within 1.5s" is real and
+// material — Quick Add expense, history entry edits/deletes, manual
+// portfolio entries. The cost is one extra Supabase write per call vs.
+// the debounced batching, which is fine for actions the user does a
+// handful of times per session.
+function lsSetImmediate(key, val) {
+  const ok = lsSet(key, val);
+  if (!ok) return false;
+  // Fire push immediately. Cancel any pending debounced push first so we
+  // don't double-fire. The push function itself respects the boot lock,
+  // disabled flag, and in-flight guard, so calling it bare is safe.
+  try {
+    if (typeof _vossSyncPushTimer !== 'undefined' && _vossSyncPushTimer) {
+      clearTimeout(_vossSyncPushTimer);
+      _vossSyncPushTimer = null;
+    }
+    // Mark dirty here too — _vossSyncPush respects the boot lock, and on
+    // a normal user-initiated write the boot lock is already lifted so
+    // _vossSyncPushDebounced (called from inside lsSet) has already set
+    // the dirty marker. Belt and braces in case lsSet's internal call
+    // didn't set it for any reason.
+    if (typeof _vossSyncPushAllowed !== 'undefined' && _vossSyncPushAllowed) {
+      try { localStorage.setItem(VOSS_SYNC_LOCAL_DIRTY_KEY, new Date().toISOString()); } catch (e) {}
+    }
+    if (typeof _vossSyncPush === 'function') _vossSyncPush();
+  } catch (e) {
+    console.warn('[Voss Sync] immediate push failed', e);
+  }
+  return true;
+}
+
+
 // State persists in LS.UI.privacyMode. Auto-syncs across devices via the
 // existing LS.UI sync plumbing. Only changes when the user clicks the
 // toggle — never auto-resets.
@@ -11098,10 +11130,12 @@ function _vossSyncRehydrateUi() {
       const onclick = active.getAttribute('onclick') || '';
       const m = onclick.match(/switchTab\('([^']+)'/);
       if (m) {
-        // Don't actually switch tabs — just re-render the currently-active one
+        // Don't actually switch tabs — just re-render the currently-active one.
+        // For the budget tab specifically, use the soft refresh so the user
+        // doesn't get yanked off the View History sub-view by a periodic pull.
         const tabName = m[1];
         if (tabName === 'portfolio')      renderPortfolio(getPortfolioFilter());
-        else if (tabName === 'budget')    { try { renderBudgetTab(); } catch(e){} }
+        else if (tabName === 'budget')    { try { _renderBgtCurrentView(); } catch(e){} }
         else if (tabName === 'history')   { try { renderHistory(getHistoryActiveFilter()); } catch(e){} }
         else if (tabName === 'tax')       { try { renderTaxTab(); } catch(e){} }
         else if (tabName === 'sell')      { try { renderSellCalculator(); } catch(e){} }
@@ -11227,12 +11261,28 @@ async function _vossSyncPull(opts = {}) {
     const localDirty = localStorage.getItem(VOSS_SYNC_LOCAL_DIRTY_KEY) || '';
     const remoteAt   = data.updated_at || '';
 
-    // Initial pull: ALWAYS apply remote if it exists, regardless of
-    // localDirty status. The localDirty marker on a fresh page load is
-    // meaningless because it could be from boot-time housekeeping that
-    // happened a millisecond ago. We trust the server snapshot as the
-    // canonical state during initial pull.
+    // Initial pull: if we have local-dirty changes that are NEWER than
+    // remote, those are real-user writes from a previous session that
+    // never made it to Supabase (typically because the user closed the
+    // app within the push debounce window). Push them now instead of
+    // overwriting them with the older remote snapshot. The boot lock
+    // (_vossSyncPushAllowed) prevents pre-init housekeeping from setting
+    // localDirty, so if it's set on initial pull, it MUST be from a
+    // genuine prior-session user write that needs preserving.
+    //
+    // If localDirty is absent or older than remote, we trust the server
+    // snapshot as canonical and apply it.
     if (isInitialPull) {
+      if (localDirty && localDirty > remoteAt) {
+        // Don't apply remote — push local up first. Subsequent pulls will
+        // sync naturally. Mark _vossSyncPushAllowed first so the push
+        // actually fires (the boot lock would otherwise drop it).
+        _vossSyncPushAllowed = true;
+        _vossSyncInFlight = false;
+        await _vossSyncPush();
+        _vossSyncRehydrateUi();
+        return;
+      }
       _vossSyncApplySnapshot(data.data || {});
       try { localStorage.setItem(VOSS_SYNC_LAST_REMOTE_KEY, remoteAt); } catch (e) {}
       _vossSyncRehydrateUi();
@@ -22631,6 +22681,41 @@ function renderBudgetTab() {
   document.getElementById('bgt-history-view').style.display = 'none';
 }
 
+// Soft refresh: re-render the budget tab data without forcing the live view
+// back into focus. Used by the sync rehydrate path so a periodic pull
+// (every 10 seconds) doesn't yank the user out of the View History page
+// just because new data arrived. The rule is simple: if the user is
+// currently looking at the history sub-view, refresh that; otherwise
+// refresh the live view. Visibility is never touched here.
+function _renderBgtCurrentView() {
+  const state = bgtLoad();
+  if (!state.activeMonth) state.activeMonth = _bgtCurrentMonth();
+  const monthLabel = document.getElementById('bgt-month-label');
+  if (monthLabel) monthLabel.textContent = state.activeMonth;
+
+  const liveView    = document.getElementById('bgt-live-view');
+  const historyView = document.getElementById('bgt-history-view');
+  const onHistory   = historyView && historyView.style.display !== 'none' &&
+                      liveView    && liveView.style.display    === 'none';
+
+  if (onHistory) {
+    // Re-render the history surface only. Audit log and the history list.
+    // Visibility untouched. Note: if a specific month's detail panel is
+    // currently open, we deliberately don't auto-refresh it — leaving it
+    // alone is safer than risking a partial refresh that flickers or
+    // resets scroll. A user tap on any month re-runs the detail render
+    // against the current state, so stale data self-heals on next click.
+    _renderBgtAudit(state);
+    if (typeof _renderBgtHistList === 'function') _renderBgtHistList();
+  } else {
+    // Live view (or whatever else is up) — refresh the main table and
+    // audit. Don't touch visibility here either; if some other sub-view
+    // overlay is up (e.g. month-complete confirmation), let it stay up.
+    _renderBgtMainTable(state);
+    _renderBgtAudit(state);
+  }
+}
+
 // ── Render helpers ─────────────────────────────────────────
 function _bgtDiffStr(diff) {
   const value = diff >= 0 ? `+£${fmtNum(Math.abs(diff), 2)}` : `-£${fmtNum(Math.abs(diff), 2)}`;
@@ -24031,7 +24116,12 @@ function bgtQuickAdd() {
   if (note) entry.note = note;
   state.audit.push(entry);
 
-  bgtSave(state);
+  // Use lsSetImmediate (not bgtSave / lsSet) so the new expense reaches
+  // Supabase straight away rather than waiting for the 1.5s push debounce.
+  // Without this, closing the app within 1.5s of tapping Add Expense
+  // means the entry never syncs — and on next open, the initial pull
+  // would overwrite our local change with the (older) remote snapshot.
+  lsSetImmediate(LS.BUDGET, state);
   document.getElementById('bgt-qa-amount').value = '';
   if (document.getElementById('bgt-qa-note')) document.getElementById('bgt-qa-note').value = '';
   flashInput('bgt-qa-amount');
