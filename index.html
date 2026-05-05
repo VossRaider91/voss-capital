@@ -462,7 +462,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 8px 0 24px;
+  /* Equal top/bottom margin so the centred label sits at the optical
+     middle of the gap between the cards above and below. The previous
+     8px/24px split made the label hug the upper card and feel imbalanced;
+     16px/16px reads as cleanly centred on every page that uses this
+     pattern (Tax, Analyse, Budget Tracker). */
+  margin: 16px 0;
 }
 /* Mirrored gradient fade: the left bar fades from transparent (page edge)
    to white (toward the centred label); the right bar mirrors that — white
