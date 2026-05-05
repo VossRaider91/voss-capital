@@ -8485,20 +8485,10 @@ body.modal-active .container > footer {
     <!-- Historical Averages — multi-month rolling averages -->
     <div id="bgt-averages-panel"></div>
 
-    <!-- Transaction History (collapsible) -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-        <div class="section-label" style="margin-bottom:0">Transaction History</div>
-        <div style="display:flex;gap:12px;align-items:center">
-          <button class="bgt-collapsible-btn" id="bgt-audit-toggle" onclick="toggleBgtAudit()">▼ Show</button>
-          <button class="btn-ghost btn-sm" onclick="bgtCleanAutoSyncRows()" style="font-size:9px" title="Remove all rows tagged as Auto-sync from Portfolio">Clean Auto-Sync Rows</button>
-          <button class="btn-ghost btn-sm" onclick="bgtClearAudit()" style="font-size:9px">Clear Log</button>
-        </div>
-      </div>
-      <div id="bgt-audit-log" style="display:none;margin-top:14px">
-        <div class="stat-sub">No transactions logged yet.</div>
-      </div>
-    </div>
+    <!-- Transaction History was previously here; moved to View History tab
+         (top of #bgt-history-view) so the granular log sits alongside the
+         historical month browser rather than at the foot of the live tracker.
+         The list, control buttons, and collapse toggle moved as a unit. -->
 
   </div><!-- /bgt-live-view -->
 
@@ -8512,6 +8502,21 @@ body.modal-active .container > footer {
         <div class="stat-sub" id="bgt-hist-subtitle">Select a month below to inspect it</div>
       </div>
       <button class="btn-ghost btn-sm" onclick="closeBgtHistory()">← Back to Current Month</button>
+    </div>
+
+    <!-- Transaction History (relocated 5 May 2026 from #bgt-live-view).
+         Sits at the top of the history page so the granular ledger is the
+         first thing the user sees when reviewing past months. The card now
+         shows the most recent 5 entries by default; an inline "View all N →"
+         button rendered inside #bgt-audit-log toggles the full list. The
+         outer Show/Hide and Clear Log buttons were removed: per-row delete
+         (✕) covers any deletion need, and a single global "clear everything"
+         button next to per-row deletes was an asymmetric foot-gun. -->
+    <div class="card mb16">
+      <div class="section-label" style="margin-bottom:12px">Transaction History</div>
+      <div id="bgt-audit-log">
+        <div class="stat-sub">No transactions logged yet.</div>
+      </div>
     </div>
 
     <!-- Month selector list -->
@@ -23133,6 +23138,21 @@ function _renderBgtAveragesPanel(state) {
 }
 
 // ── Audit log (live month) ─────────────────────────────────
+// Module-level flag: when false (default), the audit card shows only the
+// 5 most recent entries with a "View all N →" button revealing the full
+// list. The full list still caps at 60 (existing behaviour) so the DOM
+// doesn't blow up on a year-long log. Toggled via _bgtToggleAuditExpand
+// which flips this flag and re-renders. Resets to false on tab switch
+// implicitly (state isn't persisted across renders deliberately — every
+// fresh open of the History tab starts collapsed for a clean view).
+let _bgtAuditExpanded = false;
+
+function _bgtToggleAuditExpand() {
+  _bgtAuditExpanded = !_bgtAuditExpanded;
+  const state = bgtLoad();
+  _renderBgtAudit(state);
+}
+
 function _renderBgtAudit(state) {
   const el = document.getElementById('bgt-audit-log');
   if (!el) return;
@@ -23140,11 +23160,29 @@ function _renderBgtAudit(state) {
   if (!audit.length) { el.innerHTML = '<div class="stat-sub">No transactions logged yet.</div>'; return; }
   const len = state.audit.length;
 
+  // How many rows to actually render: 5 collapsed, up to 60 expanded.
+  // The 60 cap exists so a user with a long log doesn't pay the DOM cost
+  // of rendering 200+ rows just to scroll through — the tail can be
+  // accessed via the History Browser's per-month detail view.
+  const visibleCount = _bgtAuditExpanded ? Math.min(audit.length, 60) : Math.min(audit.length, 5);
+  const hiddenCount  = audit.length - visibleCount;
+
+  // Inline expand/collapse button. Only rendered when there's actually
+  // something to expand — if the user has 5 or fewer rows total, the
+  // button would be a no-op so we hide it. When expanded, the button
+  // collapses back. Right-aligned in its own row, sits above the entries.
+  let toggleHtml = '';
+  if (audit.length > 5) {
+    toggleHtml = _bgtAuditExpanded
+      ? `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn-ghost btn-sm" onclick="_bgtToggleAuditExpand()" style="font-size:11px;padding:5px 12px">Show less ↑</button></div>`
+      : `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn-ghost btn-sm" onclick="_bgtToggleAuditExpand()" style="font-size:11px;padding:5px 12px">View all ${audit.length} →</button></div>`;
+  }
+
   // Build category options for the edit form select
   const catOptions = [...BGT_INCOME, ...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE]
     .map(c => `<option value="${c}">${c}</option>`).join('');
 
-  el.innerHTML = audit.slice(0,60).map((e,i) => {
+  const rowsHtml = audit.slice(0, visibleCount).map((e,i) => {
     const origIdx = len - 1 - i;
     const formId  = `bgt-audit-edit-${origIdx}`;
     // Parse the stored date string "28 Apr 12:12" → ISO "YYYY-MM-DD" for the date input
@@ -23190,6 +23228,8 @@ function _renderBgtAudit(state) {
         </div>
       </div>`;
   }).join('');
+
+  el.innerHTML = toggleHtml + rowsHtml;
 }
 
 function bgtToggleAuditEdit(origIdx) {
@@ -23255,9 +23295,19 @@ function openBgtHistory() {
   // a user from leaving April with unsaved changes, returning later, and
   // being confused by a "5 pending edits" badge they don't remember.
   window._bgtHistPendingEdits = {};
+  // Reset the Transaction History card's expanded state so each fresh
+  // entry to View History starts with the clean "recent 5 + view all"
+  // layout, regardless of how it was left last time.
+  _bgtAuditExpanded = false;
+  _renderBgtAudit(bgtLoad());
   _renderBgtHistList();
   document.getElementById('bgt-hist-detail').style.display  = 'none';
   document.getElementById('bgt-hist-subtitle').textContent  = 'Select a month to inspect and edit its figures';
+  // Scroll to top so Transaction History (now at the top of this view) is
+  // immediately visible. Without this, if the user was scrolled deep into
+  // the live tracker before tapping View History, they'd land mid-page
+  // and miss the relocated transaction log entirely.
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function closeBgtHistory() {
