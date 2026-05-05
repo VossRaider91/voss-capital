@@ -917,13 +917,185 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .pct-warn { color: var(--amber); }
 .pct-bad { color: var(--red); }
 
-/* BUFFER TABLE */
-.buf-row {
-  display: grid; grid-template-columns: 60px 1fr 90px 70px;
-  gap: 8px; align-items: center; padding: 9px 0;
-  border-bottom: 0.5px solid var(--border); font-size: 12px;
+/* ═══════════════════════════════════════════════════════════
+   ALLOCATION CARDS — per-fund deployment cards rendered in
+   #allocRowsV2 by computeBuy(). Replaces the old 3-column
+   alloc-table plus the standalone Buffer Pot section. Each
+   card shows: ticker + status pill, before/after/target
+   percentages, drift bar visualising the move, the two
+   headline figures (Units to buy and £ Deploy), and an
+   inline buffer footer (live price + buffer rate + reserved
+   amount). Mobile stacks one card per row; desktop fits two
+   per row in a responsive grid.
+   ═══════════════════════════════════════════════════════════ */
+.alloc-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.08);
 }
-.buf-row:last-child { border-bottom: none; }
+.alloc-card:last-child { margin-bottom: 0; }
+.alloc-card-dim { opacity: 0.65; }
+.alloc-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+.alloc-card-ticker {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  color: var(--white);
+}
+.alloc-card-pcts {
+  font-size: 9px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.3px;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.alloc-card-status {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.alloc-card-driftbar {
+  margin-bottom: 10px;
+}
+.alloc-card-driftbar-track {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.alloc-card-driftbar-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 1.5px;
+  background: rgba(255,255,255,0.45);
+  z-index: 2;
+}
+.alloc-card-driftbar-before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255,255,255,0.30);
+  border-radius: 3px;
+  z-index: 1;
+}
+.alloc-card-driftbar-after {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  z-index: 1;
+}
+.alloc-card-bignums {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.alloc-card-bignum-block.right { text-align: right; }
+.alloc-card-bignum-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+.alloc-card-bignum-value {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.alloc-card-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin-bottom: 8px;
+}
+.alloc-card-foot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  font-size: 11px;
+}
+.alloc-card-foot-cell.right { text-align: right; }
+.alloc-card-foot-label {
+  color: rgba(255,255,255,0.55);
+  margin-right: 4px;
+}
+.alloc-card-foot-value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Combined totals card — Total Deployed + Buffer Pot in one strip */
+.alloc-totals-card {
+  margin-top: 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  padding: 14px 16px;
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+}
+.alloc-totals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.alloc-totals-cell.right { text-align: right; }
+.alloc-totals-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+.alloc-totals-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.alloc-totals-value.gold {
+  color: var(--gold);
+}
+.alloc-totals-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 4px;
+  letter-spacing: 0.2px;
+}
+
+/* Desktop — two cards per row to use the wider canvas */
+@media (min-width: 900px) {
+  #allocRowsV2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  #allocRowsV2 .alloc-card { margin-bottom: 0; }
+}
 
 /* HISTORY */
 .history-card {
@@ -7084,38 +7256,21 @@ body.modal-active .container > footer {
       <div class="section-label">Portfolio Summary</div>
       <div class="mb16" id="calcSummary"></div>
       <div class="gold-divider"></div>
-      <div class="section-label mb16">Actual Allocation With Buffer</div>
-      <div class="alloc-table">
-        <div class="alloc-thead">
-          <div class="col-h left">Fund</div>
-          <div class="col-h">Units</div>
-          <div class="col-h">£ Amount</div>
-        </div>
-        <div id="allocRows"></div>
-      </div>
-      <div class="plan-card-totals" style="margin-top:14px">
-        <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <span style="font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase">Total Deployed (Buffered)</span>
-          <span style="font-size:22px;font-weight:600;color:var(--white);font-variant-numeric:tabular-nums" id="totalDeployedVal" data-balance-sensitive>—</span>
-        </div>
-      </div>
-      <div class="stat-sub" id="deployNote" style="margin-top:6px"></div>
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div class="section-label" style="margin-bottom:4px">Allocation by Fund</div>
+      <div class="stat-sub mb16">Units to buy, £ to deploy, buffer reserved</div>
+      <div id="allocRowsV2"></div>
+
+      <!-- Combined totals card: Total Deployed + Buffer Pot in one strip -->
+      <div class="alloc-totals-card" id="allocTotalsCard"></div>
+      <div class="stat-sub" style="margin-top:10px;padding:0 4px">Buffer absorbs price moves between calculation and trade. The reserved amount sits unused unless prices rise to fill the gap.</div>
+
+      <div class="stat-sub" id="deployNote" style="margin-top:14px"></div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
           <div style="font-size:11px;color:var(--white);font-weight:600;margin-bottom:3px">Ready to save?</div>
           <div class="stat-sub">Saves the recommended units above to Monthly History and updates your portfolio.</div>
         </div>
         <button class="btn-gold" onclick="saveMonthFromAlloc()" style="white-space:nowrap;flex-shrink:0">✓ Save This Month</button>
-      </div>
-      <div class="gold-divider"></div>
-      <div class="section-label mb8">Buffer Pot</div>
-      <div class="stat-sub mb16">The difference between what was reserved at buffered prices and what shares actually cost at live price. This sits in your account unused unless prices rise to fill the gap.</div>
-      <div id="bufferRows"></div>
-      <div class="plan-card-totals" style="margin-top:10px">
-        <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <span style="font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase">Total Buffer Pot</span>
-          <span style="font-size:22px;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums" id="bufferPotTotal" data-balance-sensitive>—</span>
-        </div>
       </div>
 
       <!-- Month vs Month comparison — populated by _renderMonthVsMonth -->
@@ -12248,34 +12403,124 @@ function calculate() {
       </div>
     </div>`;
 
-  // Allocation rows
-  document.getElementById('allocRows').innerHTML = bestAlloc.map(f => {
+  // ── Allocation rows v2 ──────────────────────────────────────────
+  // Per-fund cards: Units and £ Deploy as the headline figures, with
+  // before/after/target percentages as small contextual labels and
+  // buffer info (rate + reserved amount) inline per row. Replaces the
+  // earlier flat 3-column table plus separate Buffer Pot section.
+  let totalBuf = 0;
+  const allocCardsHtml = bestAlloc.map(f => {
     const deployed = f.shares * f.price;
     const deployedRounded = Math.round(deployed);
+    const rawCost = f.shares * f.rawPrice;
+    const bufferReserved = deployed - rawCost;
+    totalBuf += bufferReserved;
+
+    const currentPct = currentPortVal > 0 ? (f.currentVal / currentPortVal * 100) : 0;
     const newVal = f.currentVal + deployedRounded;
-    const newPct = projAfter>0 ? newVal/projAfter*100 : 0;
-    const currentPct = currentPortVal>0 ? (f.currentVal/currentPortVal*100).toFixed(1) : '0.0';
-    const skipNote = f.skipped
-      ? `<div style="font-size:10px;color:var(--red);margin-top:3px;font-weight:600">Hard Limit · Skipped</div>`
-      : f.reducedBy>0
-        ? `<div style="font-size:10px;color:var(--amber);margin-top:3px;font-weight:600">Reduced ${f.reducedBy.toFixed(0)}% by drift rule</div>`
-        : '';
-    const metaLine = f.currentShares>0
-      ? `${f.currentShares} units · £${fmtNum(f.currentVal,0)} · ${currentPct}%`
-      : 'No current holdings';
-    return `<div class="alloc-row${f.skipped?' skipped':''}">
-      <div class="alloc-fund-cell">
-        <div class="col-ticker">${f.ticker}</div>
-        <div class="alloc-fund-meta">${metaLine}</div>
-        ${skipNote}
+    const newPct = projAfter > 0 ? (newVal / projAfter * 100) : 0;
+    const targetPct = f.target || 0;
+    const deltaVsTarget = newPct - targetPct;
+    const isSkipped = f.skipped || f.shares <= 0;
+
+    // Status pill: "At limit" for skipped/reduced, else signed change vs current %
+    const pctChange = newPct - currentPct;
+    let statusPill, statusColour;
+    if (isSkipped || f.reducedBy >= 100) {
+      statusPill = 'At limit';
+      statusColour = 'var(--amber)';
+    } else if (f.reducedBy > 0) {
+      statusPill = `Reduced ${f.reducedBy.toFixed(0)}%`;
+      statusColour = 'var(--amber)';
+    } else if (pctChange >= 0) {
+      statusPill = `+${pctChange.toFixed(1)}%`;
+      statusColour = 'var(--green)';
+    } else {
+      statusPill = `${pctChange.toFixed(1)}%`;
+      statusColour = 'var(--red)';
+    }
+
+    // Drift bar — Before %, After %, target marker
+    const barFillBefore = Math.max(0, Math.min(100, currentPct));
+    const barFillAfter = Math.max(0, Math.min(100, newPct));
+    const targetMarkerPos = Math.max(0, Math.min(100, targetPct));
+    // After-bar colour: green if drift improved or stayed within 1pp of target; amber if still off
+    const onTarget = Math.abs(deltaVsTarget) < 1;
+    const movedTowardTarget = Math.abs(deltaVsTarget) < Math.abs(currentPct - targetPct);
+    const afterBarColour = isSkipped || f.reducedBy >= 50
+      ? 'rgba(255,159,10,0.85)'
+      : (onTarget || movedTowardTarget) ? 'rgba(48,209,88,0.85)' : 'rgba(255,159,10,0.85)';
+
+    const dimClass = isSkipped ? ' alloc-card-dim' : '';
+    const liveColour = isSkipped ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.78)';
+    const bufferAmountColour = isSkipped ? 'rgba(255,255,255,0.30)' : 'var(--gold)';
+    const bigNumColour = isSkipped ? 'rgba(255,255,255,0.30)' : 'var(--white)';
+    const livePrice = _formatPriceDisplay(f.rawPrice) || f.rawPrice.toFixed(2);
+    const bufferRate = f.buffer ? f.buffer : 0;
+    const unitsDisplay = isSkipped ? '—' : f.shares;
+    const poundDisplay = isSkipped ? '£0' : `£${fmtNum(deployedRounded, 0)}`;
+
+    return `<div class="alloc-card${dimClass}">
+      <div class="alloc-card-head">
+        <div>
+          <div class="alloc-card-ticker">${f.ticker}</div>
+          <div class="alloc-card-pcts">${currentPct.toFixed(1)}% → ${newPct.toFixed(1)}% · target ${targetPct.toFixed(0)}%</div>
+        </div>
+        <div class="alloc-card-status" style="color:${statusColour}">${statusPill}</div>
       </div>
-      <div class="alloc-units-cell">${f.shares > 0 ? f.shares : '—'}<span class="alloc-units-suffix">${f.shares > 0 ? 'units' : ''}</span></div>
-      <div class="alloc-amount-cell">£${fmtNum(deployedRounded,0)}</div>
+
+      <div class="alloc-card-driftbar">
+        <div class="alloc-card-driftbar-track">
+          <div class="alloc-card-driftbar-marker" style="left:${targetMarkerPos}%"></div>
+          <div class="alloc-card-driftbar-before" style="width:${barFillBefore}%"></div>
+          <div class="alloc-card-driftbar-after" style="width:${barFillAfter}%;background:${afterBarColour}"></div>
+        </div>
+      </div>
+
+      <div class="alloc-card-bignums">
+        <div class="alloc-card-bignum-block">
+          <div class="alloc-card-bignum-label">Units</div>
+          <div class="alloc-card-bignum-value" style="color:${bigNumColour}">${unitsDisplay}</div>
+        </div>
+        <div class="alloc-card-bignum-block right">
+          <div class="alloc-card-bignum-label">£ Deploy</div>
+          <div class="alloc-card-bignum-value" style="color:${bigNumColour}">${poundDisplay}</div>
+        </div>
+      </div>
+
+      <div class="alloc-card-divider"></div>
+
+      <div class="alloc-card-foot">
+        <div class="alloc-card-foot-cell">
+          <span class="alloc-card-foot-label">Live</span>
+          <span class="alloc-card-foot-value" style="color:${liveColour}">£${livePrice}</span>
+        </div>
+        <div class="alloc-card-foot-cell right">
+          <span class="alloc-card-foot-label">Buffer ${(+bufferRate).toFixed(1)}%</span>
+          <span class="alloc-card-foot-value" style="color:${bufferAmountColour};font-weight:600">${isSkipped ? '+£0' : `+£${fmtNum(bufferReserved, 2)}`}</span>
+        </div>
+      </div>
     </div>`;
   }).join('');
+  document.getElementById('allocRowsV2').innerHTML = allocCardsHtml;
 
-  // Totals
-  document.getElementById('totalDeployedVal').textContent = `£${Math.round(totalDeployed)}`;
+  // Combined totals card — Total Deployed + Buffer Pot in one strip
+  const totalUnits = bestAlloc.reduce((s, f) => s + (f.shares || 0), 0);
+  document.getElementById('allocTotalsCard').innerHTML = `
+    <div class="alloc-totals-grid">
+      <div class="alloc-totals-cell">
+        <div class="alloc-totals-label">Total Deployed</div>
+        <div class="alloc-totals-value">£${fmtNum(Math.round(totalDeployed), 0)}</div>
+        <div class="alloc-totals-sub">${totalUnits} units</div>
+      </div>
+      <div class="alloc-totals-cell right">
+        <div class="alloc-totals-label">Buffer Pot</div>
+        <div class="alloc-totals-value gold">+£${fmtNum(totalBuf, 2)}</div>
+        <div class="alloc-totals-sub">Reserved for price moves</div>
+      </div>
+    </div>`;
+
+  // Deploy note
   const totalWithFeesDisplay = totalDeployed + tradeFees;
   const unused = budget - totalWithFeesDisplay;
   let deployNoteText = '';
@@ -12291,21 +12536,6 @@ function calculate() {
     deployNoteText += unused>=0 ? `£${Math.round(unused)} sits as cash due to whole share constraints` : `£${Math.round(Math.abs(unused))} slight overspend to minimise drift`;
   }
   document.getElementById('deployNote').textContent = deployNoteText;
-
-  // Buffer pot
-  let totalBuf = 0;
-  document.getElementById('bufferRows').innerHTML = bestAlloc.map(f => {
-    const raw = f.shares * f.rawPrice;
-    const buf = f.shares * f.price - raw;
-    totalBuf += buf;
-    return `<div class="buf-row">
-      <div class="col-ticker">${f.ticker}</div>
-      <div style="color:var(--muted)">${f.shares} units × £${_formatPriceDisplay(f.rawPrice) || f.rawPrice.toFixed(2)}</div>
-      <div style="text-align:right;color:var(--white)">£${fmtNum(raw,2)}</div>
-      <div style="text-align:right;color:var(--gold);font-weight:600">+£${fmtNum(buf,2)}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('bufferPotTotal').textContent = `£${fmtNum(totalBuf,2)}`;
 
   // Update retirement current value
   if (currentPortVal>0) { document.getElementById('ret-current').value=Math.round(currentPortVal); saveRetirementInputs(); }
