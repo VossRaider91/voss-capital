@@ -1674,6 +1674,47 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .edit-form.open { display: block; }
 .edit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
 
+/* Edit form per-fund block — replaces the previous flat 4-column grid
+   of "TICKER Units / TICKER Price" pairs which on mobile squashed each
+   input into a quarter-viewport-wide column where prices like "65.86"
+   got cut off as "65.8". Now each ticker becomes a stacked block with
+   the ticker label at the top and the Units / Price inputs side by
+   side beneath. Two ticker blocks fit per row on desktop, one per row
+   on mobile so every input has full breathing room. */
+.edit-funds-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.edit-fund-block {
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.edit-fund-ticker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+}
+.edit-fund-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 700px) {
+  .edit-funds-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
 /* ── REFRESH ICON BUTTON ──────────────────────────────────────────
    Compact circular button used in card headers as a backup manual
    refresh trigger — auto-refresh handles the routine case. Sits next
@@ -3354,11 +3395,11 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 /* When a status banner is the last element in its container (typically
    the trailing banner in #bgt-main-table after the budget table summary),
-   give it the standard 24px card-to-card bottom margin so the gap to the
+   give it the standard 16px card-to-card bottom margin so the gap to the
    next top-level card (e.g. This Month pivot strip) matches the rest of
    the page rhythm. */
 .bgt-status-banner:last-child {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 .bgt-status-banner.danger {
   background: rgba(255,69,58,0.14);
@@ -6924,7 +6965,7 @@ body.modal-active .container > footer {
 
   <!-- Active account selector — wrapped in a section-label card to match
        the design language used across Tax, Retirement, Analyse. -->
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div class="section-label" style="margin-bottom:4px">Active Account</div>
     <div class="stat-sub" style="margin-bottom:14px">All calculations, pulls and saves on this page will use the wrapper selected below.</div>
     <div class="active-account-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -6938,7 +6979,7 @@ body.modal-active .container > footer {
 
   <!-- Budget & Rules — wraps the monthly budget input, drift limit, and
        the three deployment rule checkboxes in a single section-label card. -->
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div class="section-label" style="margin-bottom:4px">Budget &amp; Rules</div>
     <div class="stat-sub" style="margin-bottom:14px">How much you're deploying this month, the drift threshold that triggers rebalancing, and the rules that govern overspend behaviour.</div>
     <div class="calc-controls-row" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
@@ -6979,7 +7020,7 @@ body.modal-active .container > footer {
 
   <!-- Fund Holdings & Prices — wrapped in a section-label card. The paste
        row and pull buttons live in the header; the funds grid renders below. -->
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Fund Holdings &amp; Prices</div>
@@ -7005,7 +7046,7 @@ body.modal-active .container > footer {
 
   <!-- Layered Strategy — wrapped in its own section-label card. The strategy
        editor button sits in the header; the funds grid renders below. -->
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Layered Strategy</div>
@@ -7019,7 +7060,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Additional funds — tracked for visibility, not part of allocation -->
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Additional Funds</div>
@@ -7039,7 +7080,7 @@ body.modal-active .container > footer {
   </div>
 
   <div id="calcResults" style="display:none">
-    <div class="card-gold mb24">
+    <div class="card-gold mb16">
       <div class="section-label">Portfolio Summary</div>
       <div class="mb16" id="calcSummary"></div>
       <div class="gold-divider"></div>
@@ -7090,7 +7131,7 @@ body.modal-active .container > footer {
 
   <!-- Filter & Search — wrapped in a card with section-label to match
        the design language used across Tax, Retirement, Analyse. -->
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div class="flex-between mb12" style="flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Entry Log</div>
@@ -7129,7 +7170,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Add entry form - shows on Personal and Employer tabs -->
-  <div class="card card-left mb24" id="historyFormCard" style="display:none">
+  <div class="card card-left mb16" id="historyFormCard" style="display:none">
     <div class="section-label" id="historyFormTitle" style="margin-bottom:4px">Add Personal Entry</div>
     <div class="stat-sub" style="margin-bottom:14px">Manually log a contribution. The date, wrapper, and per-fund unit counts feed your portfolio totals and history chart.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
@@ -7165,7 +7206,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- SOLD SHARES FORM (hidden, shown when Sold tab active) -->
-  <div id="soldFormCard" class="card card-left mb24" style="display:none">
+  <div id="soldFormCard" class="card card-left mb16" style="display:none">
     <div class="section-label" style="margin-bottom:4px">Record Share Sale</div>
     <div class="stat-sub" style="margin-bottom:14px">Log a sale from any wrapper. CGT realised auto-calculates from your Section 104 cost basis. Tick Bed & ISA if you're moving the proceeds straight into an ISA.</div>
     <div id="soldFormMetaRow" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
@@ -7233,7 +7274,7 @@ body.modal-active .container > footer {
     <a href="#ret-current-position" data-anchor="ret-current-position">Current Pot</a>
     <a href="#ret-freedom-card" data-anchor="ret-freedom-card">Freedom Number</a>
   </nav>
-  <div data-collapsible="retirement" class="card card-left ret-settings-collapsible chevron-collapsible mb24" id="ret-settings-section">
+  <div data-collapsible="retirement" class="card card-left ret-settings-collapsible chevron-collapsible mb16" id="ret-settings-section">
     <div class="collapsible-header" onclick="toggleMobileCollapse('retirement')">
       <div class="flex-between" style="margin-bottom:0">
         <div>
@@ -7325,7 +7366,7 @@ body.modal-active .container > footer {
   </div>
 
   <div id="retResults" style="display:none">
-    <div class="card-gold mb24">
+    <div class="card-gold mb16">
       <div class="section-label">Retirement Projection</div>
       <!-- Hero card — projected value at retirement with inflation-adjusted sub-line. -->
       <div class="plan-card is-hero">
@@ -7456,7 +7497,7 @@ body.modal-active .container > footer {
   <!-- ═══════════════════════════════════════════
        CURRENT POSITION — always visible, updates on every sync
   ═══════════════════════════════════════════ -->
-  <div class="card-gold mb24" id="ret-current-position" style="display:none">
+  <div class="card-gold mb16" id="ret-current-position" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Current Portfolio — Compound Growth Only</div>
@@ -7537,7 +7578,7 @@ body.modal-active .container > footer {
   <!-- ═══════════════════════════════════════════
        FREEDOM NUMBER — the pot needed to make work optional
   ═══════════════════════════════════════════ -->
-  <div class="card-gold mb24" id="ret-freedom-card">
+  <div class="card-gold mb16" id="ret-freedom-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Freedom Number</div>
@@ -7656,7 +7697,7 @@ body.modal-active .container > footer {
   <!-- Net Worth Breakdown — sits at the top so the headline figure and chart
        are the first things visible. The asset input grid sits below for
        editing context when a value needs updating. -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label mb16">Net Worth Breakdown</div>
     <!-- Summary cards sit above the chart -->
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="nw-summary-cards"></div>
@@ -7679,7 +7720,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Taxable vs tax-free -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label mb16">Taxable vs Tax-Free</div>
     <div class="grid-3 mb16" id="nw-tax-cards"></div>
     <div style="background:rgba(0,0,0,0.40);box-shadow:inset 0 1px 2px rgba(0,0,0,0.30);border-radius:10px;overflow:hidden;height:10px;margin-bottom:6px">
@@ -7696,7 +7737,7 @@ body.modal-active .container > footer {
        is what users look at. The .chevron-collapsible class works at every
        viewport (Standing Order 0.25). First-run state seeded as collapsed
        in _applyMobileCollapseState. -->
-  <div class="card card-left chevron-collapsible collapsed mb24" data-collapsible="nw-assets-liabilities" id="nw-assets-section">
+  <div class="card card-left chevron-collapsible collapsed mb16" data-collapsible="nw-assets-liabilities" id="nw-assets-section">
     <div class="collapsible-header" onclick="toggleMobileCollapse('nw-assets-liabilities')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
         <div>
@@ -7789,7 +7830,7 @@ body.modal-active .container > footer {
 
     <!-- Quick Add bar — page opens here directly. No top header so the
          user lands straight on the action they're most likely to take. -->
-    <div class="card mb24">
+    <div class="card mb16">
       <div class="section-label mb12">Quick Add Expense</div>
       <div class="bgt-quick-add">
         <div class="input-group">
@@ -7822,7 +7863,7 @@ body.modal-active .container > footer {
          section so the user adds expenses first, then navigates from here.
          Both action buttons share identical width via min-width and flex:1
          on mobile so they read as a matched pair, never lopsided. -->
-    <div class="card card-left mb24 bgt-pivot-strip" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:16px 20px">
+    <div class="card card-left mb16 bgt-pivot-strip" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:16px 20px">
       <div style="min-width:0;flex:1 1 auto;display:flex;align-items:baseline;flex-wrap:wrap;gap:8px">
         <span class="section-label" style="margin-bottom:0">This Month</span>
         <span style="color:rgba(255,255,255,0.40);font-size:13px;font-weight:600">·</span>
@@ -7864,7 +7905,7 @@ body.modal-active .container > footer {
   <div id="bgt-history-view" style="display:none">
 
     <!-- Header bar -->
-    <div class="card card-left mb24" style="border-left-color:var(--amber);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div class="card card-left mb16" style="border-left-color:var(--amber);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div>
         <div class="section-label" style="color:var(--amber);margin-bottom:2px">History Browser</div>
         <div class="stat-sub" id="bgt-hist-subtitle">Select a month below to inspect it</div>
@@ -7873,13 +7914,13 @@ body.modal-active .container > footer {
     </div>
 
     <!-- Month selector list -->
-    <div class="card mb24" id="bgt-hist-list">
+    <div class="card mb16" id="bgt-hist-list">
       <div class="stat-sub">No months completed yet.</div>
     </div>
 
     <!-- Detail panel — shown when a month is selected -->
     <div id="bgt-hist-detail" style="display:none">
-      <div class="card-gold mb24">
+      <div class="card-gold mb16">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
           <div class="section-label" id="bgt-hist-detail-title" style="margin-bottom:0">—</div>
           <div style="font-size:9px;color:var(--muted)">Changes are saved automatically</div>
@@ -7906,7 +7947,7 @@ body.modal-active .container > footer {
 <div class="tab-panel active" id="tab-portfolio">
 
   <!-- Current price updater -->
-  <div class="card card-left mb24" data-collapsible="prices">
+  <div class="card card-left mb16" data-collapsible="prices">
     <div class="collapsible-header" onclick="toggleMobileCollapse('prices')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
         <div class="section-label" style="margin-bottom:0">Update Current Share Prices</div>
@@ -7943,7 +7984,7 @@ body.modal-active .container > footer {
     </div><!-- /collapsible-body -->
   </div>
 
-  <div class="card card-left mb24" data-collapsible="holding">
+  <div class="card card-left mb16" data-collapsible="holding">
     <div class="flex-between mb16 collapsible-header" onclick="toggleMobileCollapse('holding')">
       <div class="section-label" style="margin-bottom:0">Add / Update Holding</div>
       <span class="collapsible-chevron" aria-hidden="true">⌄</span>
@@ -7984,7 +8025,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Summary -->
-  <div class="card-gold mb24" style="position:relative">
+  <div class="card-gold mb16" style="position:relative">
     <!-- Privacy toggle — hides £ figures across the Portfolio Overview.
          State persists in LS.UI.privacyMode and auto-syncs across devices.
          Absolute-positioned in the top-right corner of this card. -->
@@ -8052,7 +8093,7 @@ body.modal-active .container > footer {
   ═══════════════════════════════════════════════════════════ -->
 
   <!-- Income Tax Calculator -->
-  <div class="card card-left chevron-collapsible mb24" data-collapsible="income-tax">
+  <div class="card card-left chevron-collapsible mb16" data-collapsible="income-tax">
     <div class="collapsible-header" onclick="toggleMobileCollapse('income-tax')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
         <div style="flex:1;min-width:0">
@@ -8162,7 +8203,7 @@ body.modal-active .container > footer {
   <!-- Tax Provision Planner — pulled out into its own card so it gets the
        visual weight it deserves. It's the most actionable item in Zone 1
        (it tells you what to set aside each month for HMRC). -->
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Tax Provision Planner</div>
@@ -8213,7 +8254,7 @@ body.modal-active .container > footer {
        primary action card (what you'd actually owe HMRC), GIA Unrealised
        Gain is supporting context. Total Portfolio Value dropped — it's a
        portfolio-tab metric, not a tax-tab metric. -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label">Tax Position Summary</div>
     <div style="display:flex;flex-direction:column;gap:8px" id="taxSummaryCards"></div>
   </div>
@@ -8222,7 +8263,7 @@ body.modal-active .container > footer {
        Now contains: CGT settings (allowance + used) at the top, holdings
        table (Section 104 Pool) in the middle, CGT calculation breakdown
        at the bottom. Three subsections, one card. -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">GIA — General Investment Account</div>
       <span class="tax-status-pill tax-status-cgt">CGT Applies</span>
@@ -8282,7 +8323,7 @@ body.modal-active .container > footer {
   <!-- ISA — Individual Savings Account
        Combined card: allowance tracker (allowance / used / remaining)
        AT THE TOP, then holdings table below. One wrapper, one card. -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">ISA — Individual Savings Account</div>
       <span class="tax-status-pill tax-status-exempt">Tax Exempt</span>
@@ -8341,7 +8382,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- SIPP — Self Invested Personal Pension -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="flex-between mb16">
       <div class="section-label" style="margin-bottom:0">SIPP — Self Invested Personal Pension</div>
       <span class="tax-status-pill tax-status-exempt">Tax Exempt</span>
@@ -8350,7 +8391,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Tax Year CSV Export — for self-assessment / record keeping -->
-  <div class="card card-left mb24" id="tax-csv-export-card">
+  <div class="card card-left mb16" id="tax-csv-export-card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
       <div>
         <div class="section-label" style="margin-bottom:2px">Tax Year Export</div>
@@ -8379,7 +8420,7 @@ body.modal-active .container > footer {
 
   <!-- Untagged warning -->
   <div id="untaggedWarning" style="display:none">
-    <div class="card card-left mb24" style="border-color:rgba(255,159,10,0.28);border-left:3px solid var(--amber)">
+    <div class="card card-left mb16" style="border-color:rgba(255,159,10,0.28);border-left:3px solid var(--amber)">
       <div style="margin-bottom:12px">
         <div class="section-label" style="color:var(--amber);margin-bottom:4px">Holdings Without a Wrapper Tag</div>
         <div class="stat-sub">These holdings have no wrapper assigned and are excluded from CGT calculations. Go to Total Portfolio and add them with a wrapper, or tag them below.</div>
@@ -8407,7 +8448,7 @@ body.modal-active .container > footer {
   <input type="hidden" id="sell-isa-allowance" value="20000">
   <input type="hidden" id="sell-isa-used" value="0">
 
-  <div class="card card-left mb24">
+  <div class="card card-left mb16">
     <div class="section-label" style="margin-bottom:4px">Allowances at a Glance</div>
     <div class="stat-sub" style="margin-bottom:14px">Live CGT and ISA allowance usage for the current tax year. Edit on the Tax tab.</div>
     <div class="sell-allowance-snapshot" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -8466,7 +8507,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Tax Band toggle — sale-specific so it stays here -->
-  <div class="card card-left mb24 sell-cgt-settings">
+  <div class="card card-left mb16 sell-cgt-settings">
     <div class="section-label" style="margin-bottom:4px">Tax Band for This Sale</div>
     <div class="stat-sub" style="margin-bottom:14px">Auto-selected from your taxable income on the Tax tab. Override here if needed.</div>
     <div class="sell-tax-band-wrap">
@@ -8486,7 +8527,7 @@ body.modal-active .container > footer {
 
   <!-- Tax year banner — plan-card with the two key tax-year metrics
        and the primary actions docked in the header strip. -->
-  <div class="plan-card mb24">
+  <div class="plan-card mb16">
     <div class="plan-card-header" style="flex-wrap:wrap;gap:10px">
       <span class="plan-card-ticker">UK Tax Year</span>
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
@@ -8508,7 +8549,7 @@ body.modal-active .container > footer {
 
   <!-- Bed & ISA results -->
   <div id="bedISAResults" style="display:none;margin-top:16px">
-    <div class="card-gold mb24">
+    <div class="card-gold mb16">
       <div style="margin-bottom:14px">
         <div class="section-label" style="margin-bottom:4px">Bed &amp; ISA Optimisation Plan</div>
         <div class="stat-sub">Sells GIA holdings and moves proceeds to ISA. Strictly stays within your £3,000 CGT allowance. Holdings at a loss or zero gain are transferred first, free of CGT. Then lowest-gain holdings are used until the CGT limit is reached. If the full £20,000 ISA allowance cannot be used, it means your remaining holdings would all generate gains above the available allowance.</div>
@@ -8528,7 +8569,7 @@ body.modal-active .container > footer {
     <div class="mb24" id="sellSummaryCards"></div>
 
     <!-- Per-holding breakdown -->
-    <div class="card-gold mb24 chevron-collapsible collapsed" data-collapsible="holdings-breakdown">
+    <div class="card-gold mb16 chevron-collapsible collapsed" data-collapsible="holdings-breakdown">
       <div class="collapsible-header" onclick="toggleMobileCollapse('holdings-breakdown')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="flex:1;min-width:0">
           <div class="section-label" style="margin-bottom:4px">Holdings Breakdown</div>
@@ -8542,7 +8583,7 @@ body.modal-active .container > footer {
     </div>
 
     <!-- Optimal sell plan -->
-    <div class="card-gold mb24 chevron-collapsible" data-collapsible="optimal-cgt-plan">
+    <div class="card-gold mb16 chevron-collapsible" data-collapsible="optimal-cgt-plan">
       <div class="collapsible-header" onclick="toggleMobileCollapse('optimal-cgt-plan')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="flex:1;min-width:0">
           <div class="section-label" style="margin-bottom:4px">Optimal CGT Sale Plan</div>
@@ -8580,7 +8621,7 @@ body.modal-active .container > footer {
 <div class="tab-panel" id="tab-analyse">
 
   <!-- Last updated banner -->
-  <div class="card card-left mb24" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div class="card card-left mb16" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>
       <div class="section-label" style="margin-bottom:2px">Portfolio Analysis</div>
       <div class="stat-sub">Live data driven from your latest holdings, prices, and net worth inputs.</div>
@@ -8602,14 +8643,14 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Net Worth Overview — promoted to top of the page -->
-  <div class="card-gold mb24" id="analyse-networth-section">
+  <div class="card-gold mb16" id="analyse-networth-section">
     <div class="section-label">Net Worth Overview</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="analyse-nw-cards"></div>
     <div id="analyse-nw-breakdown" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px"></div>
   </div>
 
   <!-- Portfolio Snapshot -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label">Portfolio Snapshot</div>
     <div style="display:flex;flex-direction:column;gap:8px" id="analyse-snapshot"></div>
   </div>
@@ -8627,7 +8668,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Wrapper efficiency -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label">Wrapper Efficiency</div>
     <div class="stat-sub mb16">How much of your portfolio is sheltered in tax-exempt wrappers vs exposed to CGT in your GIA.</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="analyse-wrapper-cards"></div>
@@ -8642,7 +8683,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- CGT health -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label">CGT Health</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="analyse-cgt-cards"></div>
     <div id="analyse-cgt-bar-wrap" style="margin-bottom:8px">
@@ -8659,7 +8700,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Bed & ISA priority list — pulled forward to sit with the wrapper-tax story -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label">Bed &amp; ISA Priority — GIA Holdings</div>
     <div class="stat-sub mb16">Your GIA holdings ranked by CGT drag. The top of this list are your highest priority candidates for your next annual bed and ISA transfer.</div>
     <div id="analyse-bedisa-list"></div>
@@ -8679,7 +8720,7 @@ body.modal-active .container > footer {
 
   <!-- Annual Budget Performance — populated by renderBudgetPerformance() -->
   <div id="analyse-budget-perf-section" style="display:none">
-    <div class="card-gold mb24">
+    <div class="card-gold mb16">
       <div class="section-label">Annual Budget Performance</div>
       <div id="analyse-budget-perf-year-select" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="analyse-budget-perf-cards"></div>
@@ -8696,7 +8737,7 @@ body.modal-active .container > footer {
 
   <!-- Contribution History Summary -->
   <div id="analyse-history-section" style="display:none">
-    <div class="card-gold mb24">
+    <div class="card-gold mb16">
       <div class="section-label">Contribution History Summary</div>
       <div class="grid-3 mb16" id="analyse-history-cards"></div>
       <div id="analyse-history-insight" class="stat-sub" style="font-style:italic"></div>
@@ -8714,7 +8755,7 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Concentration risk -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label">Concentration &amp; Overlap Analysis</div>
     <div class="stat-sub mb16">Your underlying geographic and index exposure across all funds — including overlap between funds tracking similar indices.</div>
     <div id="analyse-concentration"></div>
@@ -8733,7 +8774,7 @@ body.modal-active .container > footer {
     <div class="tax-zone-line"></div>
   </div>
 
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label">Mortgage Strategic Planner</div>
     <div class="stat-sub mb16">Plan early-payment scenarios, compare interest costs against investing the difference, and model your remaining mortgage term.</div>
     <button class="btn-gold" onclick="openMortgagePlanner()" style="width:100%;padding:18px;font-size:17px;font-weight:600;letter-spacing:-0.2px">
@@ -8748,7 +8789,7 @@ body.modal-active .container > footer {
 <div class="tab-panel mp-panel" id="mortgage-planner-panel">
 
   <!-- Header -->
-  <div class="card card-left mb24 mp-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div class="card card-left mb16 mp-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>
       <div class="section-label" style="margin-bottom:2px">Mortgage Strategic Planner</div>
       <div class="stat-sub">Analyse Financial Position → Mortgage Planner</div>
@@ -8760,7 +8801,7 @@ body.modal-active .container > footer {
   <div class="grid-4 mb24" id="mp-summary-cards"></div>
 
   <!-- Inputs -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label" style="margin-bottom:4px">Mortgage Inputs</div>
     <div class="stat-sub" style="margin-bottom:16px">Your current mortgage position. Edits recalculate the projection and amortisation table below in real time.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:20px">
@@ -8803,14 +8844,14 @@ body.modal-active .container > footer {
   </div>
 
   <!-- Scenario comparison cards -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div class="section-label" style="margin-bottom:4px">Three-Path Comparison</div>
     <div class="stat-sub" style="margin-bottom:16px">Compare staying on your current rate, switching at the projected date, and overpaying through to completion.</div>
     <div class="grid-4" id="mp-scenario-cards"></div>
   </div>
 
   <!-- Amortisation table -->
-  <div class="card-gold mb24">
+  <div class="card-gold mb16">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
       <div class="section-label" style="margin-bottom:0">Full Amortisation Schedule</div>
       <div style="display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);letter-spacing:-0.05px">
@@ -13418,23 +13459,24 @@ function renderHistory(filter='all') {
             </select>
           </div>
           <div class="input-group" data-pound>
-            <span class="input-label">Portfolio Value</span>
-            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_val_${entry.id}" value="${entry.portfolioValue||0}"></div>
-          </div>
-          <div class="input-group" data-pound>
-            <span class="input-label">Budget</span>
+            <span class="input-label">Amount Spent</span>
             <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_budget_${entry.id}" value="${entry.budget||0}"></div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+        <div class="edit-funds-grid">
           ${entry.funds.map(f=>`
-            <div class="input-group">
-              <span class="input-label">${f.ticker} Units</span>
-              <input class="num-input" type="text" inputmode="numeric" id="edit_units_${entry.id}_${f.ticker}" value="${f.held}" step="1" min="0">
-            </div>
-            <div class="input-group" data-pound>
-              <span class="input-label">${f.ticker} Price</span>
-              <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="edit_price_${entry.id}_${f.ticker}" value="${_formatPriceDisplay(f.price||0) || (f.price||0)}" step="0.001" min="0"></div>
+            <div class="edit-fund-block">
+              <div class="edit-fund-ticker">${f.ticker}</div>
+              <div class="edit-fund-inputs">
+                <div class="input-group">
+                  <span class="input-label">Units</span>
+                  <input class="num-input" type="text" inputmode="numeric" id="edit_units_${entry.id}_${f.ticker}" value="${f.held}" step="1" min="0">
+                </div>
+                <div class="input-group" data-pound>
+                  <span class="input-label">Price</span>
+                  <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" id="edit_price_${entry.id}_${f.ticker}" value="${_formatPriceDisplay(f.price||0) || (f.price||0)}" step="0.001" min="0"></div>
+                </div>
+              </div>
             </div>
           `).join('')}
         </div>
@@ -13461,7 +13503,9 @@ function saveEditForm(id) {
   const newDate = dateVal ? new Date(dateVal) : new Date(history[idx].timestamp);
   history[idx].timestamp = newDate.getTime();
   history[idx].date = newDate.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  history[idx].portfolioValue = (() => { const v = parseFloat(document.getElementById(`edit_val_${id}`)?.value); return isNaN(v) ? history[idx].portfolioValue : v; })();
+  // Portfolio Value is intentionally not read from the form — it's always
+  // recalculated from the per-fund units × price below so the recorded
+  // value stays consistent with the underlying holdings.
   history[idx].budget = (() => { const v = parseFloat(document.getElementById(`edit_budget_${id}`)?.value); return isNaN(v) ? history[idx].budget : v; })();
 
   // Capture wrapper change
@@ -22002,7 +22046,7 @@ function _renderBgtYtdPanel(state) {
 
   // ── Render ──
   el.innerHTML = `
-    <div class="card mb24">
+    <div class="card mb16">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
           <div class="section-label" style="margin-bottom:2px">Annual Year-to-Date · ${activeYear}</div>
@@ -22180,7 +22224,7 @@ function _renderBgtBreakdownPanel(state) {
   const savedColour  = savedPct >= 20 ? 'var(--green)' : savedPct >= 10 ? 'var(--amber)' : 'var(--red)';
 
   el.innerHTML = `
-    <div class="card mb24">
+    <div class="card mb16">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
           <div class="section-label" style="margin-bottom:2px">Monthly Breakdown · ${state.activeMonth || ''}</div>
@@ -22244,7 +22288,7 @@ function _renderBgtAveragesPanel(state) {
   const taxRows     = taxCats.map(renderRow).join('');
 
   el.innerHTML = `
-    <div class="card mb24">
+    <div class="card mb16">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
           <div class="section-label" style="margin-bottom:2px">Historical Averages</div>
