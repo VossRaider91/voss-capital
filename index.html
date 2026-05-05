@@ -1235,6 +1235,51 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
+/* Per-fund buffer footer — gold tint, hairline divider */
+.cn-holding-mini .buffer-line {
+  font-size: 10px;
+  color: var(--gold, #ffc850);
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+/* Buffer summary strip — sits between the entry headline and the funds grid.
+   Three columns: Actual cost, Buffer reserved, Avg buffer. Tabular-nums for
+   numeric alignment. Eyebrow labels at 10px / weight 700 / uppercase. */
+.cn-buffer-strip {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+}
+.cn-buffer-strip-cell {
+  flex: 1;
+}
+.cn-buffer-strip-cell.right {
+  text-align: right;
+}
+.cn-buffer-strip-label {
+  color: rgba(255,255,255,0.55);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.cn-buffer-strip-value {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.cn-buffer-strip-value.gold {
+  color: var(--gold, #ffc850);
+}
 /* Action buttons — pill-styled, matching the holdings card pattern */
 .cn-action-btn {
   font-size: 11px;
@@ -13699,15 +13744,61 @@ function renderHistory(filter='all') {
     const wrapperClass = entryWrapper === 'ISA' ? 'cn-wrap-isa' : entryWrapper === 'SIPP' ? 'cn-wrap-sipp' : 'cn-wrap-gia';
     const wrapperLabel = `<span class="cn-pill ${wrapperClass}">${entryWrapper}</span>`;
 
+    // Compute per-entry buffer figures. f.value stores raw cost (shares ×
+    // rawPrice) per saveMonthFromAlloc; entry.budget is the £ that was
+    // contributed (the DD amount). Buffer reserved = budget − raw cost.
+    // For legacy entries pre-dating buffer-aware save, budget may equal
+    // raw cost or be undefined — skip the strip in that case.
+    const totalActualCost = (entry.funds || []).reduce((s, f) => s + (f.value || 0), 0);
+    const totalBufferReserved = (entry.budget || 0) - totalActualCost;
+    const showBufferStrip = entry.budget > 0 && totalBufferReserved > 0.5 && totalActualCost > 0;
+    const avgBufferPct = showBufferStrip ? (totalBufferReserved / totalActualCost * 100) : 0;
+
+    // Per-fund buffer apportioned proportionally by raw cost share. Same
+    // logic as the calculator's Phase 2 distribution. Falls back to zero
+    // for legacy entries where buffer wasn't tracked.
+    const fundBuffer = {};
+    if (showBufferStrip) {
+      (entry.funds || []).forEach(f => {
+        const share = totalActualCost > 0 ? (f.value || 0) / totalActualCost : 0;
+        fundBuffer[f.ticker] = totalBufferReserved * share;
+      });
+    }
+
     // Each holding becomes its own mini-card with ticker, units, value/pct, price.
     // Mini-cards use a slightly lighter chrome than the parent so they read as
     // nested rather than competing with the outer card.
-    const fundsHtml = entry.funds.map(f => `<div class="cn-holding-mini">
-      <div class="ticker">${f.ticker}</div>
-      <div class="units-line">${f.held} units</div>
-      <div class="val-line">${f.price>0 ? `£${fmtNum(f.value,0)} <span class="pct">(${f.pct}%)</span>` : '<span style="color:var(--muted2)">No price</span>'}</div>
-      <div class="price-line">@ £${_formatPriceDisplay(parseFloat(f.price||0)) || parseFloat(f.price||0).toFixed(2)}</div>
-    </div>`).join('');
+    const fundsHtml = entry.funds.map(f => {
+      const fb = fundBuffer[f.ticker] || 0;
+      const fbPct = (f.value || 0) > 0 ? (fb / f.value * 100) : 0;
+      const bufferLine = (showBufferStrip && fb > 0.005)
+        ? `<div class="buffer-line">+£${fmtNum(fb, 2)} buffer · ${fbPct.toFixed(1)}%</div>`
+        : '';
+      return `<div class="cn-holding-mini">
+        <div class="ticker">${f.ticker}</div>
+        <div class="units-line">${f.held} units</div>
+        <div class="val-line">${f.price>0 ? `£${fmtNum(f.value,0)} <span class="pct">(${f.pct}%)</span>` : '<span style="color:var(--muted2)">No price</span>'}</div>
+        <div class="price-line">@ £${_formatPriceDisplay(parseFloat(f.price||0)) || parseFloat(f.price||0).toFixed(2)}</div>
+        ${bufferLine}
+      </div>`;
+    }).join('');
+
+    const bufferStripHtml = showBufferStrip
+      ? `<div class="cn-buffer-strip">
+          <div class="cn-buffer-strip-cell">
+            <div class="cn-buffer-strip-label">Actual cost</div>
+            <div class="cn-buffer-strip-value">£${fmtNum(Math.round(totalActualCost), 0)}</div>
+          </div>
+          <div class="cn-buffer-strip-cell">
+            <div class="cn-buffer-strip-label">Buffer reserved</div>
+            <div class="cn-buffer-strip-value gold">+£${fmtNum(Math.round(totalBufferReserved), 0)}</div>
+          </div>
+          <div class="cn-buffer-strip-cell right">
+            <div class="cn-buffer-strip-label">Avg buffer</div>
+            <div class="cn-buffer-strip-value">${avgBufferPct.toFixed(1)}%</div>
+          </div>
+        </div>`
+      : '';
 
     // Derive the contribution amount: prefer entry.budget, fall back to sum of fund values this month
     const contribAmt = entry.budget > 0
@@ -13733,6 +13824,7 @@ function renderHistory(filter='all') {
           <button class="btn-danger btn-sm cn-action-btn cn-action-delete" onclick="deleteHistoryEntry(${entry.id})">Delete</button>
         </div>
       </div>
+      ${bufferStripHtml}
       <div class="history-funds">${fundsHtml}</div>
       <div class="edit-form" id="editform_${entry.id}">
         <div class="edit-grid">
