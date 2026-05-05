@@ -4962,7 +4962,19 @@ body.privacy-mode-active .portfolio-delta-pill {
     top: 0;
     left: 0;
     right: 0;
-    height: var(--vc-mobile-nav-pill-top, var(--vc-mobile-nav-top, 90px));
+    /* Extends down to the BOTTOM of the pill (--vc-mobile-nav-top), not
+       just to its top. The pill itself is positioned at left:14px right:14px
+       inside the header, leaving 14px gutters either side. Without this
+       scrim covering the pill's row, those gutters were a transparent
+       window onto the scrolled page beneath the sticky header — which is
+       why hard card edges appeared at the dropdown's top corners only
+       when scrolled. The scrim now fills the entire region from the top
+       of the viewport down to the dropdown's start, with no transparent
+       windows. The pill composites on top of the scrim; its own 0.45
+       background is opaque enough that the slight tonal difference vs
+       the dropdown (which still composites against the page directly)
+       is imperceptible. */
+    height: var(--vc-mobile-nav-top, 90px);
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -4992,8 +5004,8 @@ body.privacy-mode-active .portfolio-delta-pill {
     top: var(--vc-mobile-nav-top, 90px);
     left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     z-index: 88;
     opacity: 0;
     pointer-events: none;
@@ -5026,11 +5038,33 @@ body.privacy-mode-active .portfolio-delta-pill {
     background: rgba(60, 60, 68, 0.45);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    /* Border setup: only the bottom edge keeps a visible hairline so the
+       rounded bottom corners read crisply. Top has no border (the pill
+       above is the visual anchor). Left and right are transparent because
+       at 0.10 opacity those side hairlines were the source of the sharp
+       vertical edge at the dropdown's top corners. The hairlines start
+       abruptly where the dropdown begins, and once the page scrolls so a
+       portfolio card sits under the header band, the tonal contrast above
+       vs below that start point makes the abrupt edge visually pop. The
+       dropdown's blurred body, dark halo shadow, and the scrim behind
+       all provide more than enough definition for its outline without
+       the side hairlines. */
+    border: 1px solid transparent;
+    border-bottom-color: rgba(255, 255, 255, 0.10);
     border-top: none;
     border-radius: 0 0 14px 14px;
     box-shadow:
-      0 16px 36px rgba(0,0,0,0.45);
+      /* Bottom drop: original card shadow under the dropdown */
+      0 16px 36px rgba(0,0,0,0.45),
+      /* Soft halo: a wide dark glow extending sideways into the 14px
+         gutters either side of the dropdown. The dropdown is positioned
+         left:14px right:14px, so behind those gutters the page's hero
+         card edges sat directly adjacent, producing a faint vertical
+         contrast line right at the dropdown's left/right border. The
+         spread (40px) and blur (60px) extend a soft dark wash outward
+         that washes those edges into the scrim, removing the seam
+         without making the dim layer look heavy elsewhere. */
+      0 0 60px 40px rgba(0,0,0,0.55);
     max-height: calc(100vh - var(--vc-mobile-nav-top, 90px) - 20px);
     overflow-y: auto;
     transform-origin: top center;
@@ -5100,6 +5134,20 @@ body.privacy-mode-active .portfolio-delta-pill {
     background: rgba(60, 60, 68, 0.45);
     border-color: rgba(255, 255, 255, 0.10);
     border-bottom-color: transparent;
+    /* Suppress left/right borders when open so the pill's side edges
+       don't stack with the dropdown's left/right border lines beneath.
+       Without this, both the pill and the dropdown have 1px white-10
+       borders down their sides at exactly the same x coordinates. When
+       the page is scrolled and a portfolio card sits behind the header,
+       the contrast amplifies and the two stacked border lines read as
+       a single hard sharp edge running through the dropdown's top
+       corners next to "Portfolio Overview." Removing the side borders
+       on the pill while keeping the top border keeps the pill visually
+       distinct in its closed state but disappears the seam in the open
+       state. The dropdown's borders provide the visible side lines for
+       the combined pill+dropdown shape. */
+    border-left-color: transparent;
+    border-right-color: transparent;
     border-radius: 12px 12px 0 0;
     box-shadow: none;
   }
