@@ -5182,6 +5182,23 @@ body.privacy-mode-active .portfolio-delta-pill {
   .stat-grid.g2, .stat-grid.g4 { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .history-funds { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .edit-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+  /* ── EDIT FORM INPUTS — clamp to grid cell width on mobile ────────
+     iOS Safari gives <input type="date"> an intrinsic min-content width
+     to fit the calendar UI affordance, which on a 375px viewport pushes
+     the input past the right edge of its grid cell. Forcing min-width:0
+     on the cell + max-width:100% on the input + box-sizing:border-box
+     overrides the intrinsic minimum and keeps every field flush with
+     the parent card padding. Also applied to the pound-wrap inputs to
+     keep all three fields visually consistent. */
+  .edit-grid .input-group { min-width: 0 !important; }
+  .edit-grid .text-input,
+  .edit-grid .num-input,
+  .edit-grid .pound-wrap > .num-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
   .portfolio-chart-wrap { grid-template-columns: 1fr !important; gap: 16px !important; }
   .legend-item { gap: 6px; }
 
@@ -13998,8 +14015,8 @@ function renderHistory(filter='all') {
     const bufferStripHtml = showBufferStrip
       ? `<div class="cn-buffer-strip">
           <div class="cn-buffer-strip-cell">
-            <div class="cn-buffer-strip-label">Actual cost</div>
-            <div class="cn-buffer-strip-value">£${fmtNum(Math.round(totalActualCost), 0)}</div>
+            <div class="cn-buffer-strip-label">Budgeted amount</div>
+            <div class="cn-buffer-strip-value">£${fmtNum(Math.round(entry.budget || 0), 0)}</div>
           </div>
           <div class="cn-buffer-strip-cell">
             <div class="cn-buffer-strip-label">Buffer reserved</div>
@@ -14012,18 +14029,20 @@ function renderHistory(filter='all') {
         </div>`
       : '';
 
-    // Derive the contribution amount: prefer entry.budget, fall back to sum of fund values this month
-    const contribAmt = entry.budget > 0
-      ? entry.budget
-      : (entry.funds || []).reduce((s, f) => s + (f.value || 0), 0);
+    // Headline shows what was actually deployed (sum of fund values), not the budget.
+    // The budget figure has moved into the buffer strip below as "Budgeted amount".
+    // Falls back to entry.budget if no funds recorded yet (e.g. budget logged before allocation).
+    const deployedAmt = (entry.funds || []).reduce((s, f) => s + (f.value || 0), 0);
+    const headlineAmt = deployedAmt > 0 ? deployedAmt : (entry.budget || 0);
+    const headlineLabel = deployedAmt > 0 ? 'Deployed this entry' : 'Budgeted (not yet deployed)';
 
     return `<div class="history-card ${entry.type||'personal'}" id="hcard_${entry.id}">
       <div class="history-top">
         <div style="flex:1;min-width:0">
           <div class="cn-header">${typeLabel}${wrapperLabel}<span class="history-date" style="margin-left:4px">${entry.date}</span></div>
-          ${contribAmt > 0
-            ? `<div class="history-val">£${fmtNum(Math.round(contribAmt), 0)}</div>
-               <div class="history-sub">Contributed this entry</div>`
+          ${headlineAmt > 0
+            ? `<div class="history-val">£${fmtNum(Math.round(headlineAmt), 0)}</div>
+               <div class="history-sub">${headlineLabel}</div>`
             : `<div class="history-val" style="color:var(--muted)">No contribution recorded</div>`}
           ${entry.portfolioValue > 0
             ? `<div class="history-sub" style="margin-top:4px">Portfolio balance: <span style="color:var(--white);font-weight:600">£${fmtNum(Math.round(entry.portfolioValue), 0)}</span></div>`
@@ -14053,7 +14072,7 @@ function renderHistory(filter='all') {
             </select>
           </div>
           <div class="input-group" data-pound>
-            <span class="input-label">Amount Spent</span>
+            <span class="input-label">Budgeted Amount</span>
             <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_budget_${entry.id}" value="${entry.budget||0}"></div>
           </div>
         </div>
