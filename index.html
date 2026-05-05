@@ -1902,6 +1902,64 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .edit-form.open { display: block; }
 .edit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
 
+/* ── DATE PILL (Entry Date in Monthly History edit form) ─────────────
+   The native <input type="date"> on iOS Safari has an intrinsic
+   min-content width to fit the calendar UI affordance, which on a
+   375px viewport pushes the visible black pill past the right edge of
+   its parent grey card. To stop that, the visible pill is now a div
+   we control fully, and the actual <input type="date"> sits on top of
+   it transparently. Tapping anywhere on the pill triggers the native
+   iOS picker; on change, JS rewrites the visible label.
+   The wrap is the positioning context. The display div is what the
+   user sees. The input has opacity 0 + cursor pointer + width 100%
+   so the entire pill becomes the tap target. */
+.date-pill-wrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.date-pill-display {
+  background: var(--recess);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  font-size: 14px; font-weight: 500;
+  padding: 12px 14px;
+  min-height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.date-pill-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  font-size: 16px; /* prevent iOS zoom on focus */
+}
+.date-pill-input:focus + .date-pill-display,
+.date-pill-wrap:has(.date-pill-input:focus) .date-pill-display {
+  border-color: var(--blue);
+  background: rgba(10,132,255,0.06);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.30), inset 0 1px 2px rgba(0,0,0,0.30);
+}
+
 /* Edit form per-fund block — replaces the previous flat 4-column grid
    of "TICKER Units / TICKER Price" pairs which on mobile squashed each
    input into a quarter-viewport-wide column where prices like "65.86"
@@ -14061,7 +14119,10 @@ function renderHistory(filter='all') {
         <div class="edit-grid">
           <div class="input-group">
             <span class="input-label">Entry Date</span>
-            <input class="text-input" type="date" id="edit_date_${entry.id}" value="${new Date(entry.timestamp).toISOString().split('T')[0]}">
+            <div class="date-pill-wrap">
+              <div class="date-pill-display" id="edit_date_display_${entry.id}">${new Date(entry.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+              <input class="date-pill-input" type="date" id="edit_date_${entry.id}" value="${new Date(entry.timestamp).toISOString().split('T')[0]}" oninput="(function(el){const d=new Date(el.value);if(!isNaN(d)){document.getElementById('edit_date_display_${entry.id}').textContent=d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}})(this)">
+            </div>
           </div>
           <div class="input-group">
             <span class="input-label">Account / Wrapper</span>
