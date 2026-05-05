@@ -16338,11 +16338,10 @@ function animateNumber(el, target, opts = {}) {
 // need to render prices without rounding to 2dp.
 function _formatPriceDisplay(price) {
   if (typeof price !== 'number' || isNaN(price) || price <= 0) return '';
-  // Round to 3 decimals to clear floating-point noise, then strip trailing zeros
-  const rounded = Math.round(price * 1000) / 1000;
-  const str = rounded.toString();
-  // toString on integers gives '100' (no decimal); on decimals gives '2.036'
-  return str;
+  // Always show 3 decimal places for maximum pricing accuracy across all
+  // tickers. £134.20 displays as "134.200", £47.598 stays at "47.598",
+  // £2.054 stays at "2.054". Consistent decimal precision everywhere.
+  return price.toFixed(3);
 }
 
 // ── Current UK tax-year label (e.g. "2026/27") ──────────────
