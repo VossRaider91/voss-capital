@@ -22682,9 +22682,12 @@ function _renderBgtMainTable(state) {
     const shortStr    = `£${fmtNum(Math.round(shortfall),0)}`;
     let variant, icon, headline, body;
     if (shortfall <= 0) {
-      variant  = 'success'; icon = '✓';
-      headline = 'On track for tax';
-      body     = `Hitting the <strong>${recStr}</strong> target!`;
+      // "On track for tax" success banner suppressed (5 May 2026) — when
+      // everything is fine the green banner adds no signal, only takes up
+      // vertical space at the top of the Budget Tracker. The warn and
+      // danger variants below still render because those are actionable
+      // alerts the user benefits from seeing prominently.
+      return '';
     } else if (shortfall < recommended * 0.25) {
       variant  = 'warn'; icon = '!';
       headline = 'Slightly off for tax';
