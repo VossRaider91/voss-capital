@@ -16677,35 +16677,90 @@ function renderGrowthChart(type='monthly') {
     return val > 0 ? val : (entry.portfolioValue || 0);
   }
 
-  // Total cost base from seeded legacy holdings
-  const totalCostBase = portfolio.reduce((s,h) => s + (h.totalCost||0), 0);
+  // ── Total Contributed (cost basis) ─────────────────────────────────
+  // Per-entry contribution = units bought that month × price paid that
+  // month, summed across every fund in that entry. The history schema
+  // already records both held (units delta) and price (price at save),
+  // so this is straightforward and exact. We also add seeded legacy
+  // holdings' totalCost ONCE (they exist before any history entry, so
+  // they're treated as the cost basis at point zero — present at every
+  // point on the chart). fromHistory portfolio entries are deliberately
+  // ignored for cost-basis purposes because their totalCost is 0 (sync
+  // never populates it) — using them would under-report.
+  const seededCostBase = portfolio
+    .filter(h => h.seeded)
+    .reduce((s, h) => s + (h.totalCost || 0), 0);
 
   if (history.length < 2) {
     el.innerHTML=`<div class="history-empty" style="padding:24px">Save at least two months of data to see your growth chart.</div>`;
     return;
   }
 
+  // ── Build a chronological event stream of buys AND sells ────────────
+  // Both feed the chart's cumulative units state. Without subtracting sold
+  // units, the chart would over-count holdings forever — and Current Value
+  // would drift above the header's true total. This way the chart stays
+  // reconciled with the header to the penny.
   const sortedHistory = [...history]
-    .filter(e => e.type !== 'sold')
+    .filter(e => e.funds && e.funds.length > 0)
     .sort((a,b) => a.timestamp - b.timestamp);
+  const sortedBuys = sortedHistory.filter(e => e.type !== 'sold');
+
+  // Build per-timestamp lookup of sold deltas keyed by ticker. We don't
+  // emit chart points for sold entries (the chart visualises buy-side
+  // contribution growth); but we apply the sold deltas to cumulativeUnits
+  // at the moment they happened so the running unit count is always
+  // accurate from that point forward.
+  const soldByTimestamp = {};
+  sortedHistory
+    .filter(e => e.type === 'sold')
+    .forEach(e => {
+      soldByTimestamp[e.timestamp] = soldByTimestamp[e.timestamp] || [];
+      (e.funds||[]).forEach(f => {
+        if (!f.ticker) return;
+        soldByTimestamp[e.timestamp].push({ ticker: f.ticker, units: Math.abs(f.held||0) });
+      });
+    });
+  const soldTimestamps = Object.keys(soldByTimestamp).map(Number).sort((a,b)=>a-b);
+
+  // Apply any sold deltas with timestamp ≤ given threshold. Idempotent:
+  // we track which sold entries have been consumed via a Set.
+  const consumedSold = new Set();
+  function applySoldUpTo(threshold, units) {
+    soldTimestamps.forEach(ts => {
+      if (ts <= threshold && !consumedSold.has(ts)) {
+        soldByTimestamp[ts].forEach(({ticker, units: sold}) => {
+          units[ticker] = Math.max(0, (units[ticker]||0) - sold);
+        });
+        consumedSold.add(ts);
+      }
+    });
+  }
 
   let points = [];
   if (type === 'monthly') {
-    // Accumulate cumulative value month by month
-    let cumulativeUnits = {}; // ticker → cumulative units held
-    points = sortedHistory.map(e => {
-      // Update cumulative units from this entry's delta
+    // Accumulate cumulative value AND cumulative cost basis month by month
+    let cumulativeUnits = {};   // ticker → cumulative units held (net of sales)
+    let cumulativeCost  = 0;    // running cost basis from history
+    points = sortedBuys.map(e => {
+      // Apply this buy's units and cost
       (e.funds||[]).forEach(f => {
         cumulativeUnits[f.ticker] = (cumulativeUnits[f.ticker] || 0) + (f.held || 0);
+        // Cost basis contribution = units bought this month × price paid
+        cumulativeCost += (f.held || 0) * (f.price || 0);
       });
-      // Value = cumulative units × current live price
+      // Apply any sales that happened on or before this timestamp
+      applySoldUpTo(e.timestamp, cumulativeUnits);
+      // Value = cumulative units × current live price (so the line moves
+      // when prices change). Plus seeded legacy holdings at current price.
       const cumulativeValue = Object.entries(cumulativeUnits).reduce((s, [ticker, units]) => {
         return s + units * getBestPrice(ticker);
       }, 0);
-      // Also add seeded legacy holdings to the total (always at current price)
       const legacyValue = portfolio.filter(h => h.seeded).reduce((s,h) => s + h.shares * (h.price||0), 0);
       const totalVal = cumulativeValue + legacyValue;
-      const contrib = totalCostBase > 0 ? totalCostBase : (e.budget||0);
+      // Total contributed at this point = seeded legacy cost basis (constant)
+      // plus history-derived running cost up to this entry.
+      const contrib = seededCostBase + cumulativeCost;
       return {
         label: e.date.split(' ').slice(0,2).join(' '),
         fullDate: e.date,
@@ -16716,28 +16771,47 @@ function renderGrowthChart(type='monthly') {
       };
     });
   } else {
-    const byYear = {};
-    sortedHistory.forEach(e => {
-      const yr = new Date(e.timestamp).getFullYear();
-      if (!byYear[yr] || e.timestamp > byYear[yr].timestamp) byYear[yr] = e;
-    });
+    // Yearly: walk every entry chronologically (so cost & sales accumulate
+    // correctly), but only emit a point per year (last buy of year).
     let cumulativeUnits = {};
-    points = Object.keys(byYear).sort().map(yr => {
-      const e = byYear[yr];
+    let cumulativeCost  = 0;
+    let lastBuyTsByYear = {};
+    sortedBuys.forEach(e => { lastBuyTsByYear[new Date(e.timestamp).getFullYear()] = e.timestamp; });
+    sortedBuys.forEach(e => {
       (e.funds||[]).forEach(f => {
         cumulativeUnits[f.ticker] = (cumulativeUnits[f.ticker] || 0) + (f.held||0);
+        cumulativeCost += (f.held || 0) * (f.price || 0);
       });
-      const cumulativeValue = Object.entries(cumulativeUnits).reduce((s,[ticker,units]) => s + units * getBestPrice(ticker), 0);
-      const legacyValue = portfolio.filter(h => h.seeded).reduce((s,h) => s + h.shares*(h.price||0), 0);
-      return {
-        label: yr,
-        fullDate: yr,
-        value: cumulativeValue + legacyValue,
-        contributed: totalCostBase > 0 ? totalCostBase : (e.budget||0),
-        timestamp: e.timestamp,
-        wrapper: e.wrapper || 'GIA',
-      };
+      applySoldUpTo(e.timestamp, cumulativeUnits);
+      const yr = new Date(e.timestamp).getFullYear();
+      if (e.timestamp === lastBuyTsByYear[yr]) {
+        const cumulativeValue = Object.entries(cumulativeUnits).reduce((s,[ticker,units]) => s + units * getBestPrice(ticker), 0);
+        const legacyValue = portfolio.filter(h => h.seeded).reduce((s,h) => s + h.shares*(h.price||0), 0);
+        points.push({
+          label: yr,
+          fullDate: yr,
+          value: cumulativeValue + legacyValue,
+          contributed: seededCostBase + cumulativeCost,
+          timestamp: e.timestamp,
+          wrapper: e.wrapper || 'GIA',
+        });
+      }
     });
+  }
+
+  // ── Reconcile the LATEST point with the header's Total Portfolio Value ──
+  // Header sums `shares × price` across the whole LS.PORTFOLIO. The chart's
+  // cumulative-units approach can drift from this if rounding or unaccounted
+  // adjustments creep in. We force the latest point to exactly match the
+  // header so a finance app never shows two different "right now" totals.
+  // Earlier points keep their cumulative-derived values (they're a faithful
+  // historical reconstruction; the live total is the only one that needs to
+  // be authoritative). Cost basis is left untouched — it's already exact.
+  if (points.length > 0) {
+    const headerTotal = portfolio.reduce((s, h) => s + (h.shares||0) * (h.price||0), 0);
+    if (headerTotal > 0) {
+      points[points.length - 1].value = headerTotal;
+    }
   }
 
   if (points.length < 2) {
