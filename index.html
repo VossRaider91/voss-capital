@@ -14091,9 +14091,33 @@ function saveEditForm(id) {
     return { ...f, held:units, price, value };
   });
 
+  // Recompute per-fund pct against THIS entry's total cost (this is correct —
+  // pct is a within-entry breakdown, not a portfolio-wide share)
   const totalVal = history[idx].funds.reduce((s,f)=>s+f.value,0);
   history[idx].funds.forEach(f => { f.pct = totalVal>0?(f.value/totalVal*100).toFixed(1):'0.0'; });
-  history[idx].portfolioValue = totalVal > 0 ? totalVal : history[idx].portfolioValue;
+
+  // CRITICAL: do NOT overwrite portfolioValue here. portfolioValue is a
+  // historical snapshot of the FULL portfolio worth at save-time (set by
+  // saveMonthFromAlloc and saveMonth). Edits correct the per-fund prices
+  // and units after HL fills, but they should not rewrite that historical
+  // snapshot to "the cost of this entry's buys". Doing so would make the
+  // vs-previous comparison nonsensical (e.g. "down £171,823" when nothing
+  // actually fell — the entry's portfolioValue just got truncated to its
+  // own buy cost).
+  //
+  // Recovery path: if the existing portfolioValue is missing or has been
+  // clobbered by the old buggy edit path (i.e. it equals the entry's own
+  // cost and there are other entries with substantially larger snapshots),
+  // recompute from the live portfolio total like saveMonth does. This
+  // self-heals previously-broken entries the next time they're edited.
+  const existingPV = parseFloat(history[idx].portfolioValue) || 0;
+  const looksClobbered = existingPV > 0 && Math.abs(existingPV - totalVal) < 1;
+  if (existingPV <= 0 || looksClobbered) {
+    const livePortfolioValue = lsGet(LS.PORTFOLIO, []).reduce((s,h) => s + h.shares*(h.price||0), 0);
+    if (livePortfolioValue > totalVal) {
+      history[idx].portfolioValue = livePortfolioValue;
+    }
+  }
 
   lsSet(LS.HISTORY, history);
 
