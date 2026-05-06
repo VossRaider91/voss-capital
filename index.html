@@ -7870,7 +7870,10 @@ body.modal-active .container > footer {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
       <div class="input-group">
         <span class="input-label">Entry Date</span>
-        <input class="text-input" type="date" id="emp-date">
+        <div class="date-pill-wrap">
+          <div class="date-pill-display" id="emp-date-display">Today</div>
+          <input class="date-pill-input" type="date" id="emp-date" onchange="_updateDatePillDisplay('emp-date')">
+        </div>
       </div>
       <div class="input-group">
         <span class="input-label">Account / Wrapper</span>
@@ -7906,7 +7909,10 @@ body.modal-active .container > footer {
     <div id="soldFormMetaRow" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
       <div class="input-group">
         <span class="input-label">Sale Date</span>
-        <input class="text-input" type="date" id="sold-date">
+        <div class="date-pill-wrap">
+          <div class="date-pill-display" id="sold-date-display">Today</div>
+          <input class="date-pill-input" type="date" id="sold-date" onchange="_updateDatePillDisplay('sold-date')">
+        </div>
       </div>
       <div class="input-group">
         <span class="input-label">Sold From Wrapper</span>
@@ -12007,6 +12013,8 @@ function initSoldForm() {
   const today = new Date().toISOString().split('T')[0];
   const el = document.getElementById('sold-date');
   if (el) el.value = today;
+  // Sync the visible pill label — see comment in buildEmpFundsInput.
+  if (typeof _updateDatePillDisplay === 'function') _updateDatePillDisplay('sold-date');
   renderSoldShareRows();
 }
 
@@ -14020,6 +14028,10 @@ let historyExtraFunds = [];
 function buildEmpFundsInput() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('emp-date').value = today;
+  // Sync the visible pill label so it reflects today's date instead of
+  // showing the "Today" placeholder forever. The bare value assignment
+  // doesn't fire onchange, so we call the helper directly.
+  if (typeof _updateDatePillDisplay === 'function') _updateDatePillDisplay('emp-date');
   historyExtraFunds = [];
   renderHistoryExtraFunds();
   document.getElementById('empFundsInput').innerHTML = FUNDS.map(f => `
@@ -14202,6 +14214,29 @@ function _updateMonthPillDisplay(inputId) {
   if (!year || !month) { display.textContent = v; display.classList.remove('empty'); return; }
   const d = new Date(year, month - 1, 1);
   display.textContent = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  display.classList.remove('empty');
+}
+
+// Sibling helper for date pills — same overlay pattern, but for full-date
+// inputs on the Add Personal Entry, Add Employer Contribution, and Record
+// Share Sale forms. Reads the input's YYYY-MM-DD value, formats it as
+// "5 May 2026" via toLocaleDateString, and writes that into the visible
+// display div. Empty value → "Today" placeholder so the user understands
+// they need to pick something. The actual value contract for the save
+// logic is unchanged — input.value is still YYYY-MM-DD.
+function _updateDatePillDisplay(inputId) {
+  const input = document.getElementById(inputId);
+  const display = document.getElementById(inputId + '-display');
+  if (!input || !display) return;
+  const v = input.value; // 'YYYY-MM-DD' or ''
+  if (!v) {
+    display.textContent = 'Today';
+    display.classList.add('empty');
+    return;
+  }
+  const d = new Date(v);
+  if (isNaN(d)) { display.textContent = v; display.classList.remove('empty'); return; }
+  display.textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   display.classList.remove('empty');
 }
 
@@ -24461,6 +24496,31 @@ function init() {
 
   const anyHeld = FUNDS.some(f => parseFloat(document.getElementById(`held_${f.id}`)?.value)>0);
   if (!anyHeld) pullFromWrapper(getActiveWrapper(), document.getElementById(`pullBtn-${getActiveWrapper()}`));
+
+  // Reorder banner slots to sit AFTER the header rather than before it.
+  // Originally the tax-reminder and HL-DD banners lived above the header,
+  // which on mobile meant the nav pill (inside the header) shifted down
+  // when a banner was visible. Opening the dropdown then caused it to
+  // anchor to the pushed-down pill, so the menu opened lower than usual
+  // and felt jarring. Moving the slots below the header keeps them just
+  // as visible — they appear right under the nav pill — while making the
+  // pill's vertical position constant regardless of whether banners are
+  // showing. Done once at boot. Re-renders into the same slot IDs work
+  // as before. Only runs if the slots haven't already been moved (idempotent).
+  try {
+    const header = document.querySelector('.vc-header');
+    const taxSlot = document.getElementById('tax-reminder-banner-slot');
+    const hlSlot  = document.getElementById('hl-dd-reminder-banner-slot');
+    if (header && taxSlot && hlSlot && header.parentNode) {
+      // Insert each slot immediately after the header. insertBefore on
+      // header.nextSibling places the node right after the header in the
+      // DOM order; doing taxSlot first then hlSlot preserves their
+      // relative order (tax above HL).
+      const afterHeader = header.nextSibling;
+      header.parentNode.insertBefore(taxSlot, afterHeader);
+      header.parentNode.insertBefore(hlSlot,  taxSlot.nextSibling);
+    }
+  } catch (e) { /* non-fatal — banners just stay where they were */ }
 
   // Mobile nav: set initial pill label/icon (no-op on desktop)
   _updateMobileNavPill();
