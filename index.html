@@ -13003,6 +13003,27 @@ function calculate() {
         });
       }
     }
+
+    // Hard cap: regardless of how the buffer redistribution above lands due
+    // to floating-point quirks across many multiplications and divisions,
+    // when allow-overspend is OFF the total deployment must NEVER exceed
+    // the budget — not by even a penny. The buffer gap-fill above is
+    // mathematically supposed to land exactly at sharesBudget, but in
+    // practice float arithmetic can produce 2700.0000003 which would
+    // display rounded to 2700.00 (fine) but be technically over budget.
+    // We rescale down proportionally if any drift puts us over. Edge case
+    // only — typically a no-op since the buffer fill targets sharesBudget
+    // exactly.
+    const drifted = bestAlloc.reduce((s, f) => s + f.shares * f.price, 0);
+    if (drifted > sharesBudget && drifted > 0) {
+      const correction = sharesBudget / drifted;
+      bestAlloc.forEach(f => {
+        if (f.shares > 0 && f.rawPrice > 0) {
+          f.price = f.price * correction;
+          f.buffer = parseFloat((((f.price / f.rawPrice) - 1) * 100).toFixed(4));
+        }
+      });
+    }
   }
 
   const totalDeployed = bestAlloc.reduce((s,f) => s+f.shares*f.price, 0);
@@ -13448,14 +13469,91 @@ function pullFromWrapper(wrapper, btn) {
       return { f, additionalUnits, currentHeld, price, targetPct };
     });
 
-    // Step 3: check total spend doesn't exceed budget, trim if needed
-    let totalSpend = recommendations.reduce((s, r) => s + r.additionalUnits * (r.price || 0), 0);
-    if (totalSpend > budget) {
-      // Scale down proportionally
-      const scale = budget / totalSpend;
-      recommendations.forEach(r => {
-        r.additionalUnits = Math.floor(r.additionalUnits * scale);
+    // Step 3: starting from the floored allocation, find the best whole-share
+    // combination that fits within budget. We use the same approach as the
+    // main calculator: floor each fund first, then try every floor/ceil
+    // combination (2^n masks for n funds) and pick the one with the highest
+    // total spend that's still ≤ budget. This typically lands within one
+    // share's price of budget rather than leaving the chunky shortfall the
+    // simple floor produces. Falls back to greedy single-unit additions if
+    // bitmask doesn't quite max out.
+    const n = recommendations.length;
+    if (n > 0) {
+      // Build floor+ceil per fund (skip zero-price funds — can't add to them)
+      const cands = recommendations.map(r => {
+        const price = r.price || 0;
+        return {
+          ref: r,
+          floor: r.additionalUnits,
+          ceil: price > 0 ? r.additionalUnits + 1 : r.additionalUnits,
+          price,
+        };
       });
+
+      // Score function: prefer allocations whose total post-buy distribution
+      // is closest to target percentages. Lower distance = better.
+      function distScore(units) {
+        const totalAfter = currentValue + units.reduce((s, u, i) => s + u * cands[i].price, 0);
+        if (totalAfter <= 0) return Infinity;
+        return cands.reduce((acc, c, i) => {
+          const heldNow = (parseFloat(document.getElementById(`held_${c.ref.f.id}`)?.value) || 0) + units[i];
+          const fundVal = heldNow * c.price;
+          const actualPct = (fundVal / totalAfter) * 100;
+          const target = c.ref.targetPct || 0;
+          return acc + Math.abs(actualPct - target);
+        }, 0);
+      }
+
+      let bestUnits = cands.map(c => c.floor);
+      let bestSpend = bestUnits.reduce((s, u, i) => s + u * cands[i].price, 0);
+      let bestScore = distScore(bestUnits);
+
+      const masks = 1 << n;
+      for (let mask = 1; mask < masks; mask++) {
+        const trial = cands.map((c, i) => (mask >> i) & 1 ? c.ceil : c.floor);
+        const spend = trial.reduce((s, u, i) => s + u * cands[i].price, 0);
+        if (spend > budget) continue; // Pull never overshoots budget — stay strict
+        const score = distScore(trial);
+        if (score < bestScore || (score === bestScore && spend > bestSpend)) {
+          bestScore = score;
+          bestSpend = spend;
+          bestUnits = trial;
+        }
+      }
+
+      // Greedy fill: try adding one more unit to any fund that's still
+      // affordable. Helps when the bitmask floor+ceil pair doesn't reach the
+      // best fit (e.g. when target distribution wants 8 units of fund A but
+      // floor was 7 and ceil 8 — bitmask would already pick 8, but if target
+      // wants 9 the bitmask wouldn't have found it). Loops until no fund can
+      // take another unit within budget.
+      let progress = true;
+      while (progress) {
+        progress = false;
+        // Find fund whose addition most improves the score
+        let bestAddIdx = -1;
+        let bestAddScore = bestScore;
+        cands.forEach((c, i) => {
+          if (c.price <= 0) return;
+          if (bestSpend + c.price > budget) return;
+          const trial = bestUnits.slice();
+          trial[i] += 1;
+          const score = distScore(trial);
+          if (score < bestAddScore) {
+            bestAddScore = score;
+            bestAddIdx = i;
+          }
+        });
+        if (bestAddIdx >= 0) {
+          bestUnits[bestAddIdx] += 1;
+          bestSpend += cands[bestAddIdx].price;
+          bestScore = bestAddScore;
+          progress = true;
+        }
+      }
+
+      // Apply the chosen allocation back onto each recommendation
+      recommendations.forEach((r, i) => { r.additionalUnits = bestUnits[i]; });
     }
 
     // Step 4: fill Units Held with the units to BUY this month only (not cumulative total)
