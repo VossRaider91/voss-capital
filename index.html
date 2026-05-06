@@ -1049,6 +1049,53 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   background: rgba(255,255,255,0.06);
   margin-bottom: 8px;
 }
+/* Holdings row inside an allocation card. Sits between the headline
+   "Units / £ Deploy" pair and the divider above the Live/Buffer footer.
+   Layout: label "Holdings" pinned left, then the value+delta group
+   centred together as one unit ("43 → 56 +13"). The previous layout
+   used space-between which pushed the delta to the right edge of the
+   card, creating a wide gap between the value (centred) and the delta
+   (far right). Now they sit as one tight cluster so the eye reads
+   "43 → 56 +13" as a single fact. nowrap on every cell prevents the
+   figures from breaking onto a second line at narrow viewport widths.
+   tabular-nums aligns digit widths so stacks of fund cards read
+   cleanly. */
+.alloc-card-holdings {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.alloc-card-holdings-label {
+  color: rgba(255,255,255,0.55);
+  flex-shrink: 0;
+}
+.alloc-card-holdings-cluster {
+  flex: 1 1 auto;
+  text-align: right;
+  min-width: 0;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.alloc-card-holdings-value {
+  color: var(--white);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.alloc-card-holdings-arrow {
+  color: rgba(255,255,255,0.40);
+  font-weight: 400;
+  margin: 0 2px;
+}
+.alloc-card-holdings-delta {
+  color: var(--green);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 .alloc-card-foot {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -13172,10 +13219,35 @@ function calculate() {
           <div class="alloc-card-bignum-value" style="color:${bigNumColour}">${unitsDisplay}</div>
         </div>
         <div class="alloc-card-bignum-block right">
-          <div class="alloc-card-bignum-label">£ Deploy</div>
+          <div class="alloc-card-bignum-label">Deploy</div>
           <div class="alloc-card-bignum-value" style="color:${bigNumColour}">${poundDisplay}</div>
         </div>
       </div>
+
+      ${(function(){
+        // Holdings line — shows the user's pre-existing share count, the
+        // post-allocation share count, and the delta. Only renders if the
+        // calculator is going to add shares (skipping skipped funds and
+        // funds with zero buy). currentShares comes from the portfolio
+        // store (set on line 12903 in calculate()), not from the Units
+        // Held DOM input — that input now displays "units to buy this
+        // month", which would double-count if we used it. Result: source
+        // of truth = LS.PORTFOLIO. The line is full-width to avoid
+        // wrapping the figures into awkward positions on either mobile
+        // or desktop. Tabular-nums keeps digit columns aligned across
+        // funds even when the numbers vary in length.
+        if (isSkipped || f.shares <= 0) return '';
+        const cur = Math.round(f.currentShares || 0);
+        const next = cur + f.shares;
+        const delta = f.shares;
+        return `<div class="alloc-card-holdings">
+          <span class="alloc-card-holdings-label">Holdings</span>
+          <span class="alloc-card-holdings-cluster">
+            <span class="alloc-card-holdings-value">${fmtNum(cur, 0)} <span class="alloc-card-holdings-arrow">→</span> ${fmtNum(next, 0)}</span>
+            <span class="alloc-card-holdings-delta">+${fmtNum(delta, 0)}</span>
+          </span>
+        </div>`;
+      })()}
 
       <div class="alloc-card-divider"></div>
 
