@@ -9385,15 +9385,6 @@ body.modal-active .container > footer {
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-analyse">
 
-  <!-- Last updated banner -->
-  <div class="card card-left mb16" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-    <div>
-      <div class="section-label" style="margin-bottom:2px">Portfolio Analysis</div>
-      <div class="stat-sub">Live data driven from your latest holdings, prices, and net worth inputs.</div>
-    </div>
-    <div style="font-size:10px;color:var(--muted)" id="analyse-last-updated">—</div>
-  </div>
-
   <!-- ═══════════════════════════════════════════════════════════
        ZONE 1 — WHERE YOU STAND
        The headline answer to "where do I stand financially?" Net
@@ -20688,8 +20679,16 @@ function renderAnalyse() {
   const taxSettings = lsGet(LS.TAX, {});
   const retSettings = lsGet(LS.RETIREMENT, {});
 
-  document.getElementById('analyse-last-updated').textContent =
-    `Updated ${new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}`;
+  // The "Updated HH:MM" timestamp element was removed from the page when the
+  // Portfolio Analysis intro card was removed (the page now starts directly
+  // with the Where You Stand divider). The JS write was kept defensively in
+  // case the element comes back; the optional chaining + check makes it a
+  // silent no-op when the element isn't present.
+  const lastUpdatedEl = document.getElementById('analyse-last-updated');
+  if (lastUpdatedEl) {
+    lastUpdatedEl.textContent =
+      `Updated ${new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}`;
+  }
 
   // ── Portfolio totals — all from portfolio store, consistent with Portfolio Overview ──
   const totalValue = portfolio.reduce((s,h) => s + h.shares*(h.price||0), 0);
