@@ -13642,7 +13642,7 @@ function pullFromWrapper(wrapper, btn) {
     const totalBuy = recommendations.reduce((s, r) => s + r.additionalUnits * (r.price || 0), 0);
     toast(filled > 0
       ? `Pulled ${wrapper} holdings + recommended buy of £${fmtNum(Math.round(totalBuy), 0)} to hit target %`
-      : `No ${wrapper} holdings yet — showing recommended first buy of £${fmtNum(Math.round(totalBuy), 0)}`
+      : `No ${wrapper} holdings yet — showing recommended first buy`
     );
   } else {
     FUNDS.forEach(f => {
