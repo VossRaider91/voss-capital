@@ -11447,7 +11447,19 @@ function _lsUsageEstimate() {
 }
 
 function getPortfolioFilter() {
-  const activeSubTab = document.querySelector('#tab-portfolio .sub-tabs:first-of-type .sub-tab.active');
+  // The portfolio sub-tab buttons use .seg-option (a newer segmented-pill
+  // control). Earlier this function looked for .sub-tab.active, which is the
+  // legacy class. With no match it silently fell back to 'all' — so when
+  // auto-refresh fired (or any path called renderPortfolio(getPortfolioFilter())),
+  // a user sitting on the SIPP/ISA/GIA filtered view would suddenly get
+  // re-rendered as if they'd clicked 'All', collapsing the % calculations
+  // because the new-holdings total now spans every wrapper. Now we check
+  // both selectors so any active filter (regardless of which control class
+  // the markup uses) is preserved across re-renders.
+  const activeSubTab = document.querySelector(
+    '#tab-portfolio .sub-tabs:first-of-type .sub-tab.active, ' +
+    '#tab-portfolio .seg-toggle .seg-option.active'
+  );
   const filterMap = { 'all':'all', 'personal (gia)':'personal', 'employer (sipp)':'employer', 'isa':'isa' };
   return filterMap[activeSubTab?.textContent?.toLowerCase()?.trim()] || 'all';
 }
@@ -14336,7 +14348,15 @@ function saveManualEntry() {
 // Read the active sub-tab (All / Personal / Employer / Sold) and
 // translate it back to the filter string renderHistory expects.
 function getHistoryActiveFilter() {
-  const activeBtn = document.querySelector('#tab-history .sub-tabs .sub-tab.active');
+  // Same fix as getPortfolioFilter — the history filter buttons also use
+  // .seg-option, so a query for .sub-tab.active returns null and the
+  // function falls back to 'all'. On any auto-render path (sync rehydrate,
+  // periodic re-renders) this would silently reset the user's filter to
+  // All. Selector now matches both legacy .sub-tab and current .seg-option.
+  const activeBtn = document.querySelector(
+    '#tab-history .sub-tabs .sub-tab.active, ' +
+    '#tab-history .seg-toggle .seg-option.active'
+  );
   const label = (activeBtn?.textContent || 'all').toLowerCase().trim();
   return label === 'all' ? 'all' : label;
 }
@@ -14737,7 +14757,7 @@ function saveEditForm(id) {
 
   // Editing a history entry may have changed cgtRealised or isaUsedAmount on a sold entry
   _recomputeTaxAllowancesFromHistory();
-  renderHistory(document.querySelector('#tab-history .sub-tab.active')?.textContent?.toLowerCase()||'all');
+  renderHistory(getHistoryActiveFilter());
   renderGrowthChart(getActiveGrowthTab());
   toast('Entry updated — prices refreshed across all pages');
   // Edit shifted holdings or prices → cascade to every derived view
@@ -14751,7 +14771,7 @@ function deleteHistoryEntry(id) {
   syncPortfolioFromHistory();
   // Recompute tax allowances — deleting a sold entry must remove its CGT/ISA contribution
   _recomputeTaxAllowancesFromHistory();
-  renderHistory(document.querySelector('#tab-history .sub-tab.active')?.textContent?.toLowerCase()||'all');
+  renderHistory(getHistoryActiveFilter());
   // History changes can shift portfolio totals → refresh every derived view
   _refreshAllDerivedViews();
 }
@@ -16122,7 +16142,7 @@ function removePortfolioHolding(id) {
 
     // History changed: rerender history list and trigger downstream cascades
     if (typeof renderHistory === 'function') {
-      try { renderHistory(document.querySelector('#tab-history .sub-tab.active')?.textContent?.toLowerCase() || 'all'); } catch (e) {}
+      try { renderHistory(getHistoryActiveFilter()); } catch (e) {}
     }
     _refreshAllDerivedViews();
     toast(`${target.ticker} removed from ${sourceEntries.length} history entr${sourceEntries.length === 1 ? 'y' : 'ies'}`);
@@ -16327,7 +16347,14 @@ function convertToLegacyHolding(id) {
 }
 
 function getActiveGrowthTab() {
-  const btn = document.querySelector('#tab-portfolio .sub-tabs:last-of-type .sub-tab.active');
+  // Same .sub-tab → .seg-option markup migration as getPortfolioFilter above.
+  // Without the .seg-option fallback the function silently defaults to
+  // 'monthly', which would flip the chart back to Monthly view on every
+  // auto-refresh even if the user had switched to Yearly.
+  const btn = document.querySelector(
+    '#tab-portfolio .sub-tabs:last-of-type .sub-tab.active, ' +
+    '#tab-portfolio .growth-toggle .seg-option.active'
+  );
   return btn?.textContent?.toLowerCase()?.trim() === 'yearly' ? 'yearly' : 'monthly';
 }
 
@@ -20294,7 +20321,7 @@ function saveSellPlanToHistory() {
   if (document.getElementById('tab-tax')?.classList.contains('active')) renderTaxTab();
   // Refresh History tab if open so the sold entry appears straight away
   if (document.getElementById('tab-history')?.classList.contains('active')) {
-    renderHistory(document.querySelector('#tab-history .sub-tab.active')?.textContent?.toLowerCase() || 'all');
+    renderHistory(getHistoryActiveFilter());
   }
 
   const gainMsg = totalGainRealised > 0
