@@ -23719,7 +23719,10 @@ function _renderBgtAudit(state) {
           </div>
           <div>
             <div class="input-label mb4">Date</div>
-            <input class="num-input" type="date" id="bgt-edit-date-${origIdx}" value="${isoDate}" style="font-size:11px;padding:5px 8px;text-align:left">
+            <div class="date-pill-wrap">
+              <div class="date-pill-display" id="bgt-edit-date-display-${origIdx}" style="font-size:11px;min-height:30px;padding:5px 10px">${(function(){const d=new Date(isoDate); return isNaN(d) ? isoDate : d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});})()}</div>
+              <input class="date-pill-input" type="date" id="bgt-edit-date-${origIdx}" value="${isoDate}" oninput="(function(el){const d=new Date(el.value);const disp=document.getElementById('bgt-edit-date-display-${origIdx}');if(disp&&!isNaN(d))disp.textContent=d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});})(this)">
+            </div>
           </div>
         </div>
         <div style="display:flex;gap:8px">
