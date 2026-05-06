@@ -3153,10 +3153,17 @@ body.privacy-mode-active .portfolio-delta-pill {
   color: #a8d4ff;
 }
 .vc-help-tip {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  /* position: fixed so the tooltip escapes any ancestor's overflow:hidden
+     (most notably .card-gold which clips at the card boundary). The tooltip
+     was previously absolute-positioned relative to the help icon, but
+     because the .card-gold ancestor uses overflow:hidden to clip its
+     gradient ::before band and rounded background, any portion of the
+     tooltip that would render below the card's bottom edge was simply
+     cut off — producing the "tooltip opens behind the next card" look.
+     Fixed positioning means the tooltip reads against the viewport,
+     never the card. JS in _positionHelpTip() places it correctly under
+     the icon and chooses an above/below side based on viewport space. */
+  position: fixed;
   width: 280px;
   max-width: calc(100vw - 32px);
   background: rgba(28,28,32,0.96);
@@ -3176,14 +3183,24 @@ body.privacy-mode-active .portfolio-delta-pill {
   opacity: 0;
   visibility: hidden;
   transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
-  z-index: 200;
+  z-index: 9999;
   box-shadow: 0 8px 24px rgba(0,0,0,0.40);
+  /* Default top/left set by JS; provide initial off-screen so it doesn't
+     flash at 0,0 before positioning. */
+  top: -9999px;
+  left: -9999px;
 }
 .vc-help-tip::before {
   content: '';
   position: absolute;
+  /* Tail position is set by JS-applied data attribute (top vs bottom) so
+     the arrow always points at the icon regardless of which side the
+     tooltip lands on. Default to pointing up (tooltip below icon).
+     Horizontal position uses --tail-offset (set by JS in pixels from
+     the tooltip's left edge) so when the tooltip is clamped near the
+     viewport edge, the arrow still points at the icon. */
   top: -5px;
-  left: 50%;
+  left: var(--tail-offset, 50%);
   transform: translateX(-50%) rotate(45deg);
   width: 10px;
   height: 10px;
@@ -3191,12 +3208,20 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-left: 1px solid rgba(255,255,255,0.14);
   border-top: 1px solid rgba(255,255,255,0.14);
 }
+.vc-help-tip[data-placement="above"]::before {
+  /* Tail points down when tooltip is above the icon — flip the arrow. */
+  top: auto;
+  bottom: -5px;
+  border-left: none;
+  border-top: none;
+  border-right: 1px solid rgba(255,255,255,0.14);
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+}
 .vc-help-icon:hover .vc-help-tip,
 .vc-help-icon:focus .vc-help-tip,
 .vc-help-icon:focus-within .vc-help-tip {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
 .vc-help-tip-title {
@@ -3230,27 +3255,14 @@ body.privacy-mode-active .portfolio-delta-pill {
   color: rgba(255,255,255,0.78);
   line-height: 1.5;
 }
-/* On mobile, anchor right edge of viewport so tooltips don't overflow.
-   The icon may sit near the right edge of the card, which would push a
-   center-anchored tooltip off-screen. Instead, pin to the icon's right
-   side and clamp via max-width. The tail moves to match. */
+/* On mobile, JS-driven fixed positioning handles edge clamping —
+   we just narrow the tooltip width slightly so it never gets too
+   wide on small viewports. The previous absolute-positioning
+   right-pin trick is no longer needed. */
 @media (max-width: 700px) {
   .vc-help-tip {
-    left: auto;
-    right: -8px;
-    transform: translateY(4px);
-    width: calc(100vw - 48px);
+    width: calc(100vw - 32px);
     max-width: 320px;
-  }
-  .vc-help-tip::before {
-    left: auto;
-    right: 12px;
-    transform: rotate(45deg);
-  }
-  .vc-help-icon:hover .vc-help-tip,
-  .vc-help-icon:focus .vc-help-tip,
-  .vc-help-icon:focus-within .vc-help-tip {
-    transform: translateY(0);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -24609,6 +24621,163 @@ function bgtInitMonitor() {
   if (needsSave) bgtSave(state);
 }
 
+// ════════════════════════════════════════════════════════════════════
+// HELP TOOLTIP POSITIONING — portal to body to escape ALL ancestors
+// ════════════════════════════════════════════════════════════════════
+// Two layers of clipping had to be defeated:
+//   1. .card-gold uses overflow:hidden to clip its rounded corners and
+//      gradient ::before. Any descendant tooltip got cut off at the
+//      card boundary.
+//   2. .tab-panel.active uses transform:scale(1) + will-change:transform
+//      for the page-enter animation. ANY transformed ancestor breaks
+//      position:fixed — the tooltip, even with fixed positioning,
+//      becomes positioned relative to the transformed ancestor instead
+//      of the viewport. So switching to fixed positioning alone wasn't
+//      enough; the tooltip would still land inside the page somewhere.
+//
+// The fix: when a help icon is hovered/focused, we MOVE the tooltip
+// element to document.body (portal it). Body has no transformed
+// ancestors, no overflow clipping, so fixed positioning works against
+// the actual viewport. On unhover/blur, we move the tooltip back to
+// its original parent so the markup stays semantically correct and
+// future hovers find it where they expect.
+function _positionHelpTip(icon) {
+  const tip = icon._vossTip || icon.querySelector(':scope > .vc-help-tip');
+  if (!tip) return;
+
+  // Portal to body if not already there. Remember original parent so
+  // we can restore on hide.
+  if (tip.parentNode !== document.body) {
+    icon._vossTipOrigParent = tip.parentNode;
+    icon._vossTipOrigNext = tip.nextSibling;
+    document.body.appendChild(tip);
+    icon._vossTip = tip;
+    // Add a marker class so the now-detached tip can still be styled
+    // identically and we can find it later.
+    tip.classList.add('vc-help-tip-portaled');
+    // Mirror the visible state from the icon (CSS hover/focus rules
+    // can no longer reach the tip since it's outside the icon's tree).
+    tip.style.opacity = '1';
+    tip.style.visibility = 'visible';
+    tip.style.pointerEvents = 'auto';
+  }
+
+  const iconRect = icon.getBoundingClientRect();
+  // Read tip dims with the tip rendered but invisible to the user.
+  // Temporarily set position so layout can settle.
+  tip.style.top = '0px';
+  tip.style.left = '0px';
+  const tipWidth = tip.offsetWidth;
+  const tipHeight = tip.offsetHeight;
+
+  const vpW = window.innerWidth;
+  const vpH = window.innerHeight;
+  const margin = 8;
+  const edge = 16;
+
+  // Vertical: prefer below, fall back to above if no room
+  let top, placement;
+  const spaceBelow = vpH - iconRect.bottom;
+  const spaceAbove = iconRect.top;
+  if (spaceBelow >= tipHeight + margin + edge || spaceBelow >= spaceAbove) {
+    top = iconRect.bottom + margin;
+    placement = 'below';
+  } else {
+    top = iconRect.top - tipHeight - margin;
+    placement = 'above';
+  }
+
+  // Horizontal: centre on icon, then clamp to viewport
+  let left = iconRect.left + (iconRect.width / 2) - (tipWidth / 2);
+  if (left < edge) left = edge;
+  if (left + tipWidth > vpW - edge) left = vpW - edge - tipWidth;
+
+  tip.style.top  = `${Math.round(top)}px`;
+  tip.style.left = `${Math.round(left)}px`;
+  tip.setAttribute('data-placement', placement);
+
+  // Tail offset: point the arrow at the icon centre regardless of clamp.
+  const iconCentreX = iconRect.left + (iconRect.width / 2);
+  const tailOffsetPx = iconCentreX - left;
+  const tailMin = 14;
+  const tailMax = tipWidth - 14;
+  const clampedTailOffset = Math.max(tailMin, Math.min(tailMax, tailOffsetPx));
+  tip.style.setProperty('--tail-offset', `${Math.round(clampedTailOffset)}px`);
+}
+
+// Restore tooltip to its original parent and hide it. Called when the
+// icon is no longer hovered/focused. Without this restoration the
+// tooltip would accumulate at body level forever and the next hover
+// wouldn't find it via querySelector(':scope > .vc-help-tip').
+function _hideHelpTip(icon) {
+  const tip = icon._vossTip;
+  if (!tip) return;
+  tip.style.opacity = '0';
+  tip.style.visibility = 'hidden';
+  tip.style.pointerEvents = 'none';
+  // Move back to original parent on next frame (after fade)
+  setTimeout(() => {
+    if (icon._vossTipOrigParent && tip.parentNode === document.body) {
+      try {
+        icon._vossTipOrigParent.insertBefore(tip, icon._vossTipOrigNext);
+      } catch (e) {
+        // Original next sibling may have been removed — append to parent
+        try { icon._vossTipOrigParent.appendChild(tip); } catch (_) {}
+      }
+      tip.classList.remove('vc-help-tip-portaled');
+      // Reset inline styles so CSS rules govern again
+      tip.style.top = '';
+      tip.style.left = '';
+      tip.style.opacity = '';
+      tip.style.visibility = '';
+      tip.style.pointerEvents = '';
+      tip.style.removeProperty('--tail-offset');
+      tip.removeAttribute('data-placement');
+      icon._vossTip = null;
+      icon._vossTipOrigParent = null;
+      icon._vossTipOrigNext = null;
+    }
+  }, 200);
+}
+
+function _initHelpTooltips() {
+  let active = null;
+  document.body.addEventListener('mouseenter', e => {
+    const icon = e.target.closest && e.target.closest('.vc-help-icon');
+    if (!icon) return;
+    if (active && active !== icon) _hideHelpTip(active);
+    active = icon;
+    _positionHelpTip(icon);
+  }, true);
+  document.body.addEventListener('mouseleave', e => {
+    const icon = e.target.closest && e.target.closest('.vc-help-icon');
+    if (!icon) return;
+    if (icon === active) {
+      _hideHelpTip(icon);
+      active = null;
+    }
+  }, true);
+  document.body.addEventListener('focusin', e => {
+    const icon = e.target.closest && e.target.closest('.vc-help-icon');
+    if (!icon) return;
+    if (active && active !== icon) _hideHelpTip(active);
+    active = icon;
+    _positionHelpTip(icon);
+  });
+  document.body.addEventListener('focusout', e => {
+    const icon = e.target.closest && e.target.closest('.vc-help-icon');
+    if (!icon) return;
+    if (icon === active) {
+      _hideHelpTip(icon);
+      active = null;
+    }
+  });
+  // Reposition on scroll/resize while a tooltip is showing.
+  const reposition = () => { if (active) _positionHelpTip(active); };
+  window.addEventListener('scroll', reposition, true);
+  window.addEventListener('resize', reposition);
+}
+
 function init() {
   migrateTickerNames();
   // Load user-customised allocation strategy from LS, replacing the FUNDS
@@ -24806,6 +24975,11 @@ function init() {
     _updateMonthPillDisplay('hist-date-from');
     _updateMonthPillDisplay('hist-date-to');
   }
+
+  // Help tooltips: delegated event listeners that position any "?" icon's
+  // tooltip via fixed positioning so they escape overflow:hidden ancestors
+  // app-wide. One-time setup; works for all current and future help icons.
+  if (typeof _initHelpTooltips === 'function') _initHelpTooltips();
 }
 
 function _initRetirementScrollSpy() {
