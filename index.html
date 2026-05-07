@@ -23322,10 +23322,15 @@ function _renderBgtMainTable(state) {
   // Three states (on track, slightly off, behind) rendered through the
   // shared bgt-status-banner component. Copy keeps "for tax" / "on tax"
   // in every headline so the banner is self-explanatory regardless of
-  // which colour state is showing.
+  // which colour state is showing. Suppressed entirely when the user has
+  // not set any planned tax provision (May 2026) — the warning was firing
+  // on a fresh month before the user had a chance to enter their plan,
+  // which felt nagging. Only surfaces once a planned figure is in.
   const taxStatusHtml = (() => {
     const thisYear = window._selfAssessmentLiability || 0;
     if (thisYear < 0.01) return '';
+    const plannedProvision = parseFloat(planned['Tax Provision']) || 0;
+    if (plannedProvision <= 0) return '';
     const recommended = Math.ceil((thisYear / 12) * 1.1 / 50) * 50;
     const provisioned = parseFloat(actual['Tax Provision']) || 0;
     const shortfall   = recommended - provisioned;
