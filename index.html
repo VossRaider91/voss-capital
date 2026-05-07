@@ -17878,56 +17878,73 @@ function getWrapperForEntry(entry) {
 
 function buildSection104Pool() {
   // Section 104 pool built from personal (GIA) history entries.
-  // Each history entry stores the TOTAL units held at that point in time.
-  // We use the MOST RECENT entry per ticker as the current unit count,
-  // and accumulate the cost base by summing all buy entries chronologically.
+  //
+  // Schema convention (May 2026 fix): each history entry stores `f.held` as
+  // the DELTA — units bought THAT month, not the cumulative running total.
+  // Same convention used by saveMonth(), saveMonthFromAlloc(), and the
+  // Add/Update Holding form. syncPortfolioFromHistory() also treats it as
+  // delta and SUMS across entries to compute current position. This builder
+  // now matches that convention.
+  //
+  // Previously this function had a bug where it used Math.max(0, f.held - prev)
+  // to "derive a delta", treating f.held as cumulative. With the schema
+  // actually being delta-based, that under-counted both units and cost basis.
+  // Affects Bed-and-ISA, GIA holdings table, CGT breakdown, Sell Calculator,
+  // Concentration analysis, Net Worth pool data.
+  //
+  // Section 104 disposal rule: sells reduce units AND reduce the pool's cost
+  // basis at the AVERAGE cost per unit at the time of sale. We process buys
+  // and sells in chronological order so the average cost is correct at each
+  // sell point (HMRC Section 104 mechanics).
   const history = lsGet(LS.HISTORY, []);
   const pool = {};
 
-  // Process entries chronologically oldest first to build running cost base.
-  // Only include GIA-wrapper entries — ISA and SIPP entries must never enter the GIA pool.
-  const personal = history
-    .filter(e => (e.type === 'personal' || !e.type) && (e.wrapper === 'GIA' || !e.wrapper))
+  // GIA-only filter — ISA and SIPP entries must never enter the GIA pool.
+  // Both buy entries (type='personal' or unset) and sell entries (type='sold')
+  // are included so we can apply disposals correctly. Order chronologically.
+  const giaEntries = history
+    .filter(e => (e.wrapper === 'GIA' || (!e.wrapper && e.type !== 'employer'))
+              && (e.type === 'personal' || e.type === 'sold' || !e.type))
     .sort((a, b) => a.timestamp - b.timestamp);
 
-  // Track previous unit count per ticker to calculate the DELTA (units added each month)
-  const prevUnits = {};
-
-  personal.forEach(entry => {
-    entry.funds.forEach(f => {
-      if (!f.held || f.held < 0) return;
-      const ticker = f.ticker;
+  giaEntries.forEach(entry => {
+    const isSell = entry.type === 'sold';
+    (entry.funds || []).forEach(f => {
+      if (!f.ticker) return;
+      const units = parseFloat(f.held) || 0;
       const price = parseFloat(f.price) || 0;
-      const prev = prevUnits[ticker] || 0;
-      const delta = Math.max(0, f.held - prev); // units bought this month
-
+      if (units <= 0) return;
+      const ticker = f.ticker;
       if (!pool[ticker]) pool[ticker] = { units: 0, totalCost: 0 };
 
-      if (delta > 0 && price > 0) {
-        pool[ticker].units += delta;
-        pool[ticker].totalCost += delta * price;
-      } else if (delta > 0 && price === 0) {
-        // Units added but no price — add units, cost unknown
-        pool[ticker].units += delta;
+      if (isSell) {
+        // Section 104 disposal: reduce units and reduce cost basis at the
+        // pool's CURRENT average cost (not the sell price). This is how
+        // HMRC Section 104 pooling works — disposals come out at the
+        // running average, leaving the per-unit avg cost unchanged for
+        // the remaining units.
+        const sellUnits = Math.min(units, pool[ticker].units);
+        if (pool[ticker].units > 0 && sellUnits > 0) {
+          const avgCost = pool[ticker].totalCost / pool[ticker].units;
+          pool[ticker].units -= sellUnits;
+          pool[ticker].totalCost -= sellUnits * avgCost;
+        }
+      } else {
+        // Buy entry: add units and add cost basis at the actual price paid.
+        // If price is missing (legacy edge case), still add units so the
+        // pool reflects holdings, but no cost is added — the avg cost
+        // calc later will reflect the partial cost data.
+        pool[ticker].units += units;
+        if (price > 0) pool[ticker].totalCost += units * price;
       }
-
-      // Always update the running unit count to most recent entry
-      prevUnits[ticker] = f.held;
-      // Ensure pool reflects most recent unit total
-      pool[ticker].units = f.held;
     });
   });
 
-  // Also merge seeded/manual GIA holdings from portfolio (non-history-sourced).
-  // IMPORTANT: for tickers that already exist in the pool from history, the history
-  // unit count already reflects all cumulative new purchases. The seeded legacy holding
-  // represents a SEPARATE pre-calculator position whose units are NOT in history.
-  // We must add both units and cost for seeded tickers that are absent from history,
-  // but for tickers already in the history pool we add only the seeded cost base
-  // (so the full Section 104 pool cost is correct) AND the seeded unit count
-  // (since legacy units are genuinely additional — they were bought before the calculator started).
-  // The key point: pool[ticker].units from Phase 1 is the new holdings unit count only.
-  // Seeded units are always additional and must always be added.
+  // Merge seeded/manual GIA holdings from portfolio (non-history-sourced).
+  // These are pre-app legacy positions whose units and cost basis are NOT
+  // in the history stream, so they're added separately. For tickers that
+  // exist in both buckets (legacy + new history saves), we add both — the
+  // legacy units and cost are genuinely additional, not duplicates.
   const portfolio = lsGet(LS.PORTFOLIO, []);
   portfolio
     .filter(h => (h.wrapper === 'GIA' || (!h.wrapper && (h.type === 'personal' || !h.type))) && !h.fromHistory)
@@ -17935,18 +17952,21 @@ function buildSection104Pool() {
       const ticker = h.ticker;
       const cost = h.totalCost || (h.shares * (h.price || 0));
       if (!pool[ticker]) pool[ticker] = { units: 0, totalCost: 0 };
-      // Always add seeded units — they are pre-calculator legacy units genuinely held
       pool[ticker].units += h.shares;
       pool[ticker].totalCost += cost;
     });
 
-  // Calculate average cost per unit
+  // Calculate average cost per unit. Floating-point safety: clamp tiny
+  // negative cost balances (caused by sells exceeding buys due to legacy
+  // entries with missing prices) to zero rather than producing negative
+  // avg costs that propagate everywhere.
   Object.keys(pool).forEach(ticker => {
     const p = pool[ticker];
+    if (p.totalCost < 0) p.totalCost = 0;
     p.avgCost = p.units > 0 && p.totalCost > 0 ? p.totalCost / p.units : 0;
   });
 
-  // Remove empty entries
+  // Remove tickers with zero or negative remaining units (fully sold off)
   Object.keys(pool).forEach(ticker => {
     if (pool[ticker].units <= 0) delete pool[ticker];
   });
@@ -20216,10 +20236,16 @@ function renderISATracker() {
   // Bar colour: green → amber at 70% → red at 90%
   const barColour = usedPct >= 90 ? 'var(--red)' : usedPct >= 70 ? 'var(--amber)' : 'var(--green)';
 
-  // Status note
+  // Status note. Tax year label uses the canonical "2026/27" format so the
+  // user can see exactly which year the allowance is for. Pre-6-April we're
+  // still in TY (yr-1)/yr; on or after 6 April we've rolled into TY yr/(yr+1).
+  // Previously the ternary at this spot returned the same value on both
+  // branches, which produced a single-year label that was wrong half the year.
+  const tyStartYear = isBeforeApr6 ? yr - 1 : yr;
+  const tyLabel     = `${tyStartYear}/${String(tyStartYear + 1).slice(-2)}`;
   let note;
   if (remaining === 0) {
-    note = `ISA allowance fully used for ${isBeforeApr6 ? yr : yr} — resets 6 April ${resetYear}.`;
+    note = `ISA allowance fully used for ${tyLabel} — resets 6 April ${resetYear}.`;
   } else if (daysLeft <= 30) {
     note = `⚠ Only ${daysLeft} days until the allowance resets on 6 April ${resetYear}. Consider using the remaining £${fmtNum(remaining, 0)} via a Bed & ISA transfer.`;
   } else if (usedPct >= 50) {
@@ -21676,16 +21702,40 @@ function renderAnalyse() {
   // 7. History summary (only if 2+ entries)
   if (monthsOfData >= 2) {
     document.getElementById('analyse-history-section').style.display = 'block';
-    const avgMonthly = monthsOfData > 0 ? (totalPersonalContrib+totalEmployerContrib)/monthsOfData : 0;
+
+    // ── Contribution sum — use actual deployed cost basis (May 2026) ──
+    // The previous calculation used e.budget which includes buffer reserves
+    // (the slack between budgeted amount and actually-deployed amount).
+    // That produced inflated contribution figures. The cost basis we want
+    // is the same one the Portfolio Growth chart uses: per-entry units bought
+    // × price paid that month, summed across funds. e.funds[].value already
+    // stores units × price for the entry, so summing those gives the
+    // canonical deployed cost.
+    const sumFundsValue = e => (e.funds || []).reduce((s,f) => s+(parseFloat(f.value)||0), 0);
+    const personalDeployed = personalHistory.filter(e=>e.type!=='sold').reduce((s,e)=>s+sumFundsValue(e), 0);
+    const employerDeployed = employerHistory.filter(e=>e.type!=='sold').reduce((s,e)=>s+sumFundsValue(e), 0);
+    const totalDeployed    = personalDeployed + employerDeployed;
+    const avgMonthly       = monthsOfData > 0 ? totalDeployed / monthsOfData : 0;
+
     const firstEntry = [...history].sort((a,b)=>a.timestamp-b.timestamp)[0];
     const latestEntry = [...history].sort((a,b)=>b.timestamp-a.timestamp)[0];
-    const startVal = firstEntry?.portfolioValue || 0;
-    const latestVal = latestEntry?.portfolioValue || totalValue;
-    const totalGrowth = latestVal - startVal - (totalPersonalContrib+totalEmployerContrib);
+
+    // ── Market Growth — canonical: current value minus total deployed (May 2026) ──
+    // Previously: latestVal − startVal − contributions, which double-counted
+    // the start value's pre-existing cost (startVal includes contributions
+    // made before the first history entry) and produced wildly wrong growth
+    // figures. Aligning with the Portfolio Growth chart's "current value vs
+    // cost base" model: the gain over and above what was actually deployed
+    // through saved entries is current portfolio value minus total deployed.
+    // Note this still under-reports total portfolio gain when there are
+    // legacy seeded holdings present, because their cost basis lives outside
+    // the history scope; the figure here represents growth on the saved-
+    // entry portion of the portfolio specifically.
+    const totalGrowth = totalValue - totalDeployed;
 
     document.getElementById('analyse-history-cards').innerHTML = [
       { label:'Months of Data', val:monthsOfData, sub:'Saved entries', cls:'gold' },
-      { label:'Total Contributed', val:`£${fmtNum(Math.round(totalPersonalContrib+totalEmployerContrib),0)}`, sub:`Avg £${fmtNum(Math.round(avgMonthly),0)}/mo`, cls:'white' },
+      { label:'Total Contributed', val:`£${fmtNum(Math.round(totalDeployed),0)}`, sub:`Avg £${fmtNum(Math.round(avgMonthly),0)}/mo`, cls:'white' },
       { label:'Market Growth (Est.)', val:`${totalGrowth>=0?'+':''}£${fmtNum(Math.round(totalGrowth),0)}`, sub:'Portfolio gain above contributions', cls: totalGrowth>=0?'green':'red' },
     ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
     document.getElementById('analyse-history-insight').textContent = `Based on ${monthsOfData} saved entries from ${firstEntry?.date||'—'} to ${latestEntry?.date||'—'}.`;
