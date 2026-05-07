@@ -11,22 +11,24 @@
 html { scroll-behavior: smooth; scroll-padding-top: 24px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 :root {
-  /* ── VISION PRO GLASS TOKENS (May 2026) ──────────────────────
-     Lighter, more saturated glass on a pure-black canvas. The card
-     surface is now the bright element instead of the dark element —
-     it catches light from above and the page reads as a black void
-     punctuated by floating panes. */
-  --black: #000000;
-  --dark: #000000;
-  --recess: #000000;
+  /* ── LIQUID MERCURY GLASS TOKENS (May 2026 redesign) ──────────
+     The canvas is a deep blued-graphite void with a soft chrome
+     shimmer pulled from the top. Card surfaces carry a metallic
+     top-down sheen so light reads as catching on brushed steel.
+     Blue is reserved for action; silver carries structure. */
+  --black: #07090d;
+  --dark: #07090d;
+  --recess: #050608;
 
-  /* Vision Pro glass — translucent surfaces that lift off the page */
-  --card: rgba(60, 60, 68, 0.35);
-  --card2: rgba(70, 70, 78, 0.42);
+  /* Liquid Mercury glass — translucent surfaces with a steel tint */
+  --card: rgba(180, 195, 220, 0.06);
+  --card2: rgba(200, 215, 240, 0.10);
+  --card-gradient: linear-gradient(180deg, rgba(225,235,250,0.16) 0%, rgba(160,180,210,0.03) 100%);
+  --card-gradient-strong: linear-gradient(180deg, rgba(230,240,255,0.22) 0%, rgba(160,180,210,0.04) 100%);
 
-  /* Vibrancy borders — slightly stronger so glass edges are crisp */
-  --border: rgba(255, 255, 255, 0.06);
-  --border2: rgba(255, 255, 255, 0.10);
+  /* Mercury borders — silvered hairlines with a hint of blue */
+  --border: rgba(200, 215, 240, 0.10);
+  --border2: rgba(200, 215, 240, 0.20);
 
   /* Functional Apple blue — interactive only */
   --blue: #0A84FF;
@@ -166,7 +168,15 @@ body::before {
   .vc-status { justify-content: center; }
 }
 
-h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; margin-bottom: 6px; letter-spacing: -0.6px; }
+h1 {
+  font-size: 28px; font-weight: 600;
+  background: linear-gradient(135deg, #d8e4f0 0%, #ffffff 40%, #8aa4c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  line-height: 1.1; margin-bottom: 6px; letter-spacing: -0.6px;
+}
 .subtitle { font-size: 12px; color: var(--muted); font-weight: 400; letter-spacing: -0.05px; text-transform: none; }
 
 /* NAV GRID */
@@ -181,7 +191,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-weight: 500;
   cursor: pointer;
   color: var(--muted);
-  background: var(--card);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   border: 1px solid var(--border2);
@@ -189,42 +199,42 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: color 0.18s, border-color 0.18s, background 0.18s, box-shadow 0.18s;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   white-space: nowrap; text-align: center; line-height: 1.3;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(0,0,0,0.24);
 }
 .nav-tab:hover {
   color: var(--white);
-  border-color: rgba(255,255,255,0.16);
-  background: var(--card2);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.18);
+  border-color: rgba(200,215,240,0.30);
+  background: var(--card-gradient-strong);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(0,0,0,0.24);
 }
 .nav-tab.active {
-  color: #a8d4ff;
-  border-color: rgba(10,132,255,0.34);
-  background: rgba(10,132,255,0.18);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), inset 0 -1px 0 rgba(0,0,0,0.18);
+  color: #ffffff;
+  border-color: rgba(220,235,255,0.45);
+  background: linear-gradient(180deg, rgba(220,235,250,0.22) 0%, rgba(180,195,220,0.06) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.30);
 }
 .nav-tab .nav-icon { font-size: 16px; line-height: 1; opacity: 0.65; display:inline-flex; align-items:center; justify-content:center; }
 .nav-tab .nav-icon svg { width:18px; height:18px; display:block; }
-.nav-tab.active .nav-icon { opacity: 1; }
+.nav-tab.active .nav-icon { opacity: 1; color: #ffffff; }
 .sub-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .sub-tab {
   padding: 7px 16px; font-size: 12px;
   letter-spacing: -0.05px; text-transform: none;
   font-weight: 500;
   cursor: pointer; color: var(--muted);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,200,230,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 10px;
   transition: all 0.2s;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
-.sub-tab:hover { color: var(--white); border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.08); }
+.sub-tab:hover { color: var(--white); border-color: rgba(200,215,240,0.28); background: linear-gradient(180deg, rgba(220,235,250,0.12) 0%, rgba(180,200,230,0.05) 100%); }
 .sub-tab.active {
-  color: #a8d4ff;
-  border-color: rgba(10,132,255,0.34);
-  background: rgba(10,132,255,0.18);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20);
+  color: #ffffff;
+  border-color: rgba(220,235,255,0.45);
+  background: linear-gradient(180deg, rgba(220,235,250,0.22) 0%, rgba(180,195,220,0.06) 100%);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.40), 0 2px 6px rgba(0,0,0,0.25);
 }
 .tab-panel { display: none; }
 .tab-panel.active {
@@ -251,7 +261,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* CARDS & LAYOUT */
 .card {
-  background: var(--card);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   border: 1px solid var(--border2);
@@ -259,9 +269,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   padding: 24px;
   position: relative;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 8px 24px rgba(0,0,0,0.30);
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 8px 24px rgba(0,0,0,0.35);
   overflow: hidden;
 }
 .card::before {
@@ -269,35 +279,37 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
 .card-gold {
-  background: var(--card);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   border: 1px solid var(--border2);
-  border-radius: 20px;
+  border-radius: 14px;
   padding: 24px;
   position: relative; overflow: hidden;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 16px 48px rgba(0,0,0,0.40),
-    0 0 0 0.5px rgba(255,255,255,0.04);
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 8px 24px rgba(0,0,0,0.35);
 }
 .card-gold::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.20) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
 .card-left { border-left: none; }
-.card-left::before { content: ''; }
+/* Keep the same top-edge highlight strip as the base .card. Earlier
+   the strip was killed here to create a "flatter" left-aligned variant,
+   but every card across the app should now share the identical chrome
+   recipe — surface, edge, shadow, and highlight. */
 .section-label {
   font-size: 17px; letter-spacing: -0.4px; text-transform: none;
   color: #ffffff; font-weight: 700; margin-bottom: 14px;
@@ -420,9 +432,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   gap: 10px;
   align-items: end;
   padding: 12px 14px;
-  background: rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(200,215,240,0.16);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .edit-layer-row .input-label {
   font-size: 9px;
@@ -503,13 +516,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    The wrapper name (GIA / ISA) is the only section-label; everything
    else inside uses subsection-label + tax-subsection-divider. */
 .tax-subsection {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 10px;
   padding: 14px 16px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .tax-subsection-divider {
   height: 1px;
@@ -541,8 +554,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: var(--muted); font-weight: 500; opacity: 1;
 }
 .num-input, .text-input {
-  background: var(--recess);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(8,12,18,0.7) 0%, rgba(14,20,28,0.6) 100%);
+  border: 1px solid rgba(200,215,240,0.14);
   border-radius: 12px;
   color: var(--white);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
@@ -553,19 +566,19 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   width: 100%;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.2px;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.40);
 }
 .num-input { text-align: right; }
 .text-input { text-align: left; }
-.num-input:hover, .text-input:hover { border-color: rgba(255,255,255,0.14); }
+.num-input:hover, .text-input:hover { border-color: rgba(200,215,240,0.24); }
 .num-input:focus, .text-input:focus {
   border-color: var(--blue);
   background: rgba(10,132,255,0.06);
-  box-shadow: 0 0 0 4px rgba(10,132,255,0.30), inset 0 1px 2px rgba(0,0,0,0.30);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.30), inset 0 1px 2px rgba(0,0,0,0.40);
 }
 .budget-input {
-  background: var(--recess);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(8,12,18,0.7) 0%, rgba(14,20,28,0.6) 100%);
+  border: 1px solid rgba(200,215,240,0.14);
   border-radius: 12px;
   color: var(--white);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
@@ -575,9 +588,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.40);
 }
-.budget-input:hover { border-color: rgba(255,255,255,0.10); }
+.budget-input:hover { border-color: rgba(200,215,240,0.20); }
 .budget-input:focus {
   border-color: var(--blue);
   background: rgba(10,132,255,0.04);
@@ -586,24 +599,26 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* BUTTONS */
 .btn-gold {
-  background: var(--blue); color: #FFFFFF;
+  background: linear-gradient(180deg, #2997FF 0%, #0A84FF 100%);
+  color: #FFFFFF;
   border: none; padding: 10px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 13px; font-weight: 600;
   letter-spacing: -0.2px; text-transform: none;
   cursor: pointer; border-radius: 12px;
-  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s, filter 0.15s;
   white-space: nowrap;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.20),
-    inset 0 -1px 0 rgba(0,0,0,0.16),
-    0 2px 8px rgba(10,132,255,0.15);
+    inset 0 1px 0 rgba(255,255,255,0.34),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 2px 8px rgba(10,132,255,0.20);
 }
-.btn-gold:hover { background: var(--blue-bright); box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -1px 0 rgba(0,0,0,0.16), 0 4px 12px rgba(10,132,255,0.20); }
+.btn-gold:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.20), 0 4px 12px rgba(10,132,255,0.28); }
 .btn-gold:active { transform: scale(0.98); }
 .btn-ghost {
-  background: rgba(10,132,255,0.18); color: var(--blue);
-  border: 1px solid rgba(10,132,255,0.34);
+  background: linear-gradient(180deg, rgba(220,235,250,0.10) 0%, rgba(180,200,230,0.04) 100%);
+  color: var(--white);
+  border: 1px solid rgba(200,215,240,0.22);
   padding: 10px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 13px; font-weight: 600;
@@ -612,9 +627,9 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: all 0.2s; white-space: nowrap;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
 }
-.btn-ghost:hover { background: rgba(10,132,255,0.24); border-color: var(--blue); }
+.btn-ghost:hover { background: linear-gradient(180deg, rgba(220,235,250,0.16) 0%, rgba(180,200,230,0.06) 100%); border-color: rgba(200,215,240,0.34); }
 .btn-sm { padding: 8px 14px; font-size: 12px; letter-spacing: -0.1px; border-radius: 10px; min-height: 32px; }
 
 /* Budget pivot strip buttons — View History and Complete Month must
@@ -646,8 +661,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   }
 }
 .btn-danger {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   color: var(--muted);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 12px; letter-spacing: -0.05px; text-transform: none;
@@ -655,7 +670,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: all 0.2s;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .btn-danger:hover {
   border-color: rgba(255,69,58,0.5);
@@ -679,8 +694,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   justify-content: center;
 }
 .btn-edit {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   color: var(--muted);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 12px; letter-spacing: -0.05px; text-transform: none;
@@ -688,7 +703,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: all 0.2s;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .btn-edit:hover {
   border-color: rgba(10,132,255,0.4);
@@ -706,12 +721,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    pill-card surface so they match the wider pill aesthetic. */
 .grid-3 > .stat,
 .grid-4 > .stat {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 12px;
   padding: 12px 14px;
   gap: 4px;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 
 /* Tax breakdown cells use the same pill-card treatment so each row reads
@@ -719,12 +734,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    automatically so variable sub-text length doesn't create awkward floating
    gaps in the grid. */
 .tax-breakdown-grid > .stat {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 12px;
   padding: 12px 14px;
   gap: 4px;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 
 .stat-label {
@@ -742,12 +757,43 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .stat-val.red { color: var(--red); }
 .stat-val.amber { color: var(--amber); }
 .stat-val.sm { font-size: 22px; letter-spacing: -0.6px; }
-.stat-val.lg { font-size: 36px; letter-spacing: -1px; text-shadow: 0 0 24px rgba(255,255,255,0.16); }
-.stat-val.xl { font-size: 44px; letter-spacing: -1.4px; text-shadow: 0 0 30px rgba(255,255,255,0.20); }
-/* Coloured variants get a coloured glow that matches their hue */
-.stat-val.green.lg, .stat-val.green.xl { text-shadow: 0 0 30px rgba(48,209,88,0.25); }
-.stat-val.red.lg, .stat-val.red.xl { text-shadow: 0 0 30px rgba(255,69,58,0.25); }
-.stat-val.amber.lg, .stat-val.amber.xl { text-shadow: 0 0 30px rgba(255,159,10,0.25); }
+.stat-val.lg {
+  font-size: 36px; letter-spacing: -1px;
+  background: linear-gradient(135deg, #d8e4f0 0%, #ffffff 40%, #8aa4c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: none;
+}
+.stat-val.xl {
+  font-size: 44px; letter-spacing: -1.4px;
+  background: linear-gradient(135deg, #d8e4f0 0%, #ffffff 40%, #8aa4c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: none;
+}
+/* Coloured variants override the chrome gradient — semantic colour wins */
+.stat-val.green.lg, .stat-val.green.xl {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: var(--green);
+  text-shadow: 0 0 30px rgba(48,209,88,0.25);
+}
+.stat-val.red.lg, .stat-val.red.xl {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: var(--red);
+  text-shadow: 0 0 30px rgba(255,69,58,0.25);
+}
+.stat-val.amber.lg, .stat-val.amber.xl {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: var(--amber);
+  text-shadow: 0 0 30px rgba(255,159,10,0.25);
+}
 .stat-sub { font-size: 11px; color: var(--muted); letter-spacing: -0.05px; }
 
 /* BADGES */
@@ -817,7 +863,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* FUND CARDS */
 .fund-card {
-  background: var(--card);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   border: 1px solid var(--border2);
@@ -826,33 +872,33 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   position: relative; overflow: hidden;
   transition: border-color 0.2s, background 0.2s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 8px 24px rgba(0,0,0,0.30);
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 8px 24px rgba(0,0,0,0.35);
 }
 .fund-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
 .fund-card:hover {
-  border-color: rgba(255,255,255,0.16);
-  background: var(--card2);
+  border-color: rgba(200,215,240,0.28);
+  background: var(--card-gradient-strong);
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.18),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 12px 32px rgba(0,0,0,0.40);
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 12px 32px rgba(0,0,0,0.45);
 }
 @media (hover: none) {
   .fund-card:hover {
     transform: none;
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.14),
+      inset 0 1px 0 rgba(255,255,255,0.30),
       inset 0 -1px 0 rgba(0,0,0,0.20),
       0 8px 24px rgba(0,0,0,0.30);
   }
@@ -948,14 +994,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    per row in a responsive grid.
    ═══════════════════════════════════════════════════════════ */
 .alloc-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(220,235,250,0.07) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.14);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 10px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.08);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .alloc-card:last-child { margin-bottom: 0; }
 .alloc-card-dim { opacity: 0.65; }
@@ -1114,12 +1160,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 /* Combined totals card — Total Deployed + Buffer Pot in one strip */
 .alloc-totals-card {
   margin-top: 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 12px;
   padding: 14px 16px;
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .alloc-totals-grid {
   display: grid;
@@ -1165,7 +1212,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 
 /* HISTORY */
 .history-card {
-  background: var(--card);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   border: 1px solid var(--border2);
@@ -1173,14 +1220,14 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   padding: 20px;
   margin-bottom: 10px;
   position: relative; overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.20), 0 8px 24px rgba(0,0,0,0.30);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(0,0,0,0.30), 0 8px 24px rgba(0,0,0,0.35);
 }
 .history-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -1275,10 +1322,11 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 /* Per-holding mini cards inside contribution entry — slightly lighter
    chrome than the parent so they nest cleanly. */
 .cn-holding-mini {
-  background: rgba(255,255,255,0.06);
-  border: 0.5px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 0.5px solid rgba(200,215,240,0.10);
   border-radius: 10px;
   padding: 10px 12px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .cn-holding-mini .ticker {
   font-size: 12px; font-weight: 600; color: var(--white);
@@ -1319,9 +1367,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   gap: 8px;
   margin-bottom: 14px;
   padding: 10px 12px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(220,235,250,0.05) 0%, rgba(180,195,220,0.02) 100%);
+  border: 1px solid rgba(200,215,240,0.12);
   border-radius: 10px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .cn-buffer-strip-cell {
   flex: 1;
@@ -1362,16 +1411,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   font-size: 11px;
   padding: 5px 14px !important;
   border-radius: 50px !important;
-  border: 0.5px solid rgba(255,255,255,0.10) !important;
-  background: rgba(255,255,255,0.04) !important;
+  border: 0.5px solid rgba(200,215,240,0.16) !important;
+  background: linear-gradient(180deg, rgba(220,235,250,0.07) 0%, rgba(180,195,220,0.02) 100%) !important;
   color: rgba(255,255,255,0.7) !important;
   font-weight: 500;
   white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .cn-action-btn:hover {
-  background: rgba(255,255,255,0.07) !important;
-  border-color: rgba(255,255,255,0.16) !important;
+  background: linear-gradient(180deg, rgba(220,235,250,0.12) 0%, rgba(180,195,220,0.04) 100%) !important;
+  border-color: rgba(200,215,240,0.26) !important;
 }
 .cn-action-btn.cn-action-delete {
   color: var(--red) !important;
@@ -1391,11 +1441,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    Universal CSS — works at every width. The 3-column metrics grid
    stays compact on mobile because the figures are short text. */
 .bipri-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 14px;
   padding: 16px 18px;
   margin-bottom: 8px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .bipri-header {
   margin-bottom: 14px;
@@ -1530,10 +1581,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: color 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .seg-toggle .seg-option:has(input:checked) > span {
-  color: #a8d4ff;
-  background: rgba(10,132,255,0.20);
-  border-color: rgba(10,132,255,0.34);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20);
+  color: #ffffff;
+  background: rgba(10,132,255,0.24);
+  border-color: rgba(10,132,255,0.40);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
 }
 /* Button-mode support — for toggles driven by onclick handlers that
    add an .active class, rather than radio inputs. Same visual result;
@@ -1552,10 +1603,10 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   align-items: center;
 }
 .seg-toggle button.seg-option.active > span {
-  color: #a8d4ff;
-  background: rgba(10,132,255,0.20);
-  border-color: rgba(10,132,255,0.34);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20);
+  color: #ffffff;
+  background: rgba(10,132,255,0.24);
+  border-color: rgba(10,132,255,0.40);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
 }
 .seg-toggle button.seg-option:hover:not(.active) > span {
   color: rgba(255,255,255,0.8);
@@ -1564,7 +1615,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   color: rgba(255,255,255,0.8);
 }
 .seg-toggle .seg-option:has(input:checked):hover > span {
-  color: #c5e0ff;
+  color: #ffffff;
 }
 
 /* ── SELL TAB — Tax Band toggle and CGT chip width parity ────────
@@ -1739,21 +1790,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .allowance-snapshot-card[data-snapshot="cgt"] .allowance-snapshot-remaining-amount { color: var(--yellow); }
 .allowance-snapshot-card[data-snapshot="isa"] .allowance-snapshot-remaining-amount { color: var(--green); }
 .allowance-snapshot-card.depleted .allowance-snapshot-remaining-amount { color: var(--red); }
-/* Semantic-tinted glass for the snapshot cards. The base .card class
-   provides the glass surface, blur, and inner highlights; these overrides
-   tint the surface to match the snapshot's category. CGT yellow and ISA
-   green are subtle so the cards still read as glass first; depleted red
-   is more pronounced because it's an alert state. */
+/* Snapshot cards inherit the canonical chrome card surface from .card.
+   Semantic meaning (CGT yellow / ISA green / depleted red) reads through
+   the inner numbers, pills, and progress bars, not the surface itself.
+   This keeps the page-wide chrome uniform across all tabs. */
 .allowance-snapshot-card[data-snapshot="cgt"] {
-  background: rgba(255,214,10,0.10);
   border-color: rgba(255,214,10,0.22);
 }
 .allowance-snapshot-card[data-snapshot="isa"] {
-  background: rgba(48,209,88,0.10);
   border-color: rgba(48,209,88,0.22);
 }
 .allowance-snapshot-card.depleted {
-  background: rgba(255,69,58,0.12) !important;
   border-color: rgba(255,69,58,0.28) !important;
 }
 .allowance-snapshot-remaining-label {
@@ -1888,8 +1935,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 
 .ret-progress-strip {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.18);
   border-radius: 14px;
   padding: 12px 16px;
   margin-bottom: 16px;
@@ -1957,13 +2004,13 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 }
 
 .edit-form {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 14px;
   padding: 14px; margin-top: 12px; display: none;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .edit-form.open { display: block; }
 .edit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -2214,26 +2261,26 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    holding shared a single horizontal flex grid.
 */
 .hcard {
-  background: rgba(60,60,68,0.30);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid var(--border2);
   border-radius: 14px;
   padding: 14px 16px;
   margin-bottom: 8px;
   position: relative;
   overflow: hidden;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 8px 24px rgba(0,0,0,0.30);
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 8px 24px rgba(0,0,0,0.35);
 }
 .hcard::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -2346,8 +2393,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    Matches the .hcard-units-pill / .hcard-price-pill glass family. */
 .holdings-section-balance {
   display: inline-flex; align-items: center;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(220,235,250,0.10) 0%, rgba(180,195,220,0.04) 100%);
+  border: 1px solid rgba(200,215,240,0.20);
   border-radius: 50px;
   padding: 5px 14px;
   font-size: 13px;
@@ -2358,7 +2405,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   white-space: nowrap;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.18);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .holdings-section-balance::first-letter {
   color: var(--blue);
@@ -2368,8 +2415,8 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
 .hcard-units-pill,
 .hcard-price-pill {
   display: inline-flex; align-items: center; gap: 4px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(220,235,250,0.10) 0%, rgba(180,195,220,0.04) 100%);
+  border: 1px solid rgba(200,215,240,0.20);
   border-radius: 50px;
   padding: 5px 12px;
   font-size: 12px;
@@ -2380,7 +2427,7 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   white-space: nowrap;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.18);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .hcard-price-pound {
   color: var(--blue);
@@ -2464,12 +2511,12 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
    4-column grid. Mobile (≤700px): stacks vertically with full-width
    inputs and a buttons row below so nothing gets crushed. */
 .portfolio-edit-form {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 4px;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.10);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .portfolio-edit-grid {
   display: grid;
@@ -2654,17 +2701,17 @@ h1 { font-size: 28px; font-weight: 600; color: var(--white); line-height: 1.1; m
   transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .privacy-toggle-btn:hover {
   background: rgba(255,255,255,0.12);
   border-color: rgba(255,255,255,0.20);
 }
 .privacy-toggle-btn.active {
-  background: rgba(10,132,255,0.18);
-  border-color: rgba(10,132,255,0.34);
-  color: var(--blue);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.24);
+  background: linear-gradient(180deg, rgba(220,235,250,0.22) 0%, rgba(180,195,220,0.06) 100%);
+  border-color: rgba(220,235,255,0.40);
+  color: #ffffff;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .privacy-toggle-btn .privacy-toggle-icon-on,
 .privacy-toggle-btn.active .privacy-toggle-icon-off { display: none; }
@@ -2735,10 +2782,10 @@ body.privacy-mode-active .portfolio-delta-pill {
 .vc-pie-tooltip {
   display: none;
   position: absolute;
-  background: rgba(60,60,68,0.85);
+  background: linear-gradient(180deg, rgba(225,235,250,0.16) 0%, rgba(160,180,210,0.03) 100%);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid rgba(200,215,240,0.22);
   border-radius: 12px;
   padding: 8px 12px;
   font-size: 11px;
@@ -2751,7 +2798,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', sans-serif;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.1px;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.18), 0 8px 24px rgba(0,0,0,0.40);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22), 0 8px 24px rgba(0,0,0,0.40);
 }
 .vc-pie-tooltip .vc-pie-tip-ticker {
   font-weight: 600;
@@ -2860,8 +2907,8 @@ body.privacy-mode-active .portfolio-delta-pill {
   color: var(--muted); font-weight: 500; opacity: 1;
 }
 .mp-input {
-  background: var(--recess);
-  border: 0.5px solid rgba(255,255,255,0.05);
+  background: linear-gradient(180deg, rgba(8,12,18,0.7) 0%, rgba(14,20,28,0.6) 100%);
+  border: 0.5px solid rgba(200,215,240,0.10);
   border-radius: 12px;
   color: var(--white);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
@@ -2872,6 +2919,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   text-align: right; width: 100%;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.2px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.40);
 }
 .mp-input:focus {
   border-color: var(--blue);
@@ -2880,9 +2928,9 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .mp-table-wrap {
   overflow-x: auto; max-height: 420px; overflow-y: auto;
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 12px;
-  background: rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(220,235,250,0.06) 0%, rgba(180,195,220,0.02) 100%);
 }
 .mp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .mp-table th {
@@ -2890,7 +2938,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   color: var(--muted); font-weight: 500;
   padding: 10px 14px; text-align: right;
   position: sticky; top: 0;
-  background: rgba(60,60,68,0.92);
+  background: linear-gradient(180deg, rgba(50,60,80,0.95) 0%, rgba(28,36,52,0.95) 100%);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border-bottom: 1px solid var(--border2);
@@ -2947,8 +2995,8 @@ body.privacy-mode-active .portfolio-delta-pill {
 .milestone-list {
   display: flex;
   flex-direction: column;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.18);
   border-radius: 14px;
   overflow: hidden;
   backdrop-filter: blur(20px);
@@ -3083,10 +3131,11 @@ body.privacy-mode-active .portfolio-delta-pill {
 
 /* CHART */
 .chart-wrap {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 12px;
   padding: 16px; margin-top: 12px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .chart-canvas-wrap { overflow-x: auto; }
 
@@ -3348,6 +3397,19 @@ body.privacy-mode-active .portfolio-delta-pill {
    names still wins via inline-style specificity. */
 #bgt-averages-panel .bgt-thead th { color: var(--white); font-weight: 600; }
 #bgt-averages-panel .bgt-row td:first-child { color: var(--white); font-weight: 600; }
+/* Subtle alternating chrome row tint so the table rows pick up the
+   Mercury surface treatment without overpowering the data. */
+#bgt-averages-panel .bgt-row:nth-child(odd) td {
+  background: linear-gradient(180deg, rgba(220,235,250,0.04) 0%, rgba(180,195,220,0.015) 100%);
+}
+#bgt-averages-panel .bgt-row td:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+#bgt-averages-panel .bgt-row td:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
 
 /* Spending Velocity panel — May 2026 ──
    Compact rows showing pacing for each category group. The white tick
@@ -3432,10 +3494,11 @@ body.privacy-mode-active .portfolio-delta-pill {
    across both new analytics blocks. */
 .alw-stack { display:flex; flex-direction:column; gap:10px; }
 .alw-row {
-  background: rgba(255,255,255,0.025);
-  border: 0.5px solid var(--border);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 0.5px solid rgba(200,215,240,0.16);
   border-radius: 12px;
   padding: 12px 14px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .alw-row-head {
   display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
@@ -3491,8 +3554,8 @@ body.privacy-mode-active .portfolio-delta-pill {
   .bgt-row.bgt-total td:nth-child(3),
   .bgt-row.bgt-total td:nth-child(4),
   #bgt-history-view .bgt-row.bgt-total td:nth-child(5) {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
+    border: 1px solid rgba(200,215,240,0.18);
     border-radius: 50px;
     padding: 8px 16px;
     box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
@@ -3559,8 +3622,8 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-planned-input,
 .bgt-actual-input,
 .bgt-hist-actual-input {
-  background: rgba(255,255,255,0.06);
-  border: 0.5px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 0.5px solid rgba(200,215,240,0.16);
   border-radius: 50px;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   font-size: 13px;
@@ -3573,6 +3636,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   letter-spacing: -0.1px;
   -webkit-appearance: none;
   appearance: none;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
   /* Removes the spinner buttons on type=number inputs so the pill
      stays a clean shape. */
 }
@@ -3592,14 +3656,14 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-hist-actual-input {
   color: var(--white);
   font-weight: 600;
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.14);
+  background: linear-gradient(180deg, rgba(220,235,250,0.10) 0%, rgba(180,195,220,0.04) 100%);
+  border-color: rgba(200,215,240,0.22);
 }
 .bgt-planned-input:hover,
 .bgt-actual-input:hover,
 .bgt-hist-actual-input:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.16);
+  background: linear-gradient(180deg, rgba(220,235,250,0.12) 0%, rgba(180,195,220,0.05) 100%);
+  border-color: rgba(200,215,240,0.28);
 }
 .bgt-planned-input:focus {
   background: rgba(10,132,255,0.08);
@@ -3718,7 +3782,7 @@ body.privacy-mode-active .portfolio-delta-pill {
    fold/unfold. State persists via toggleMobileCollapse.
    ═══════════════════════════════════════════════════════════ */
 .bgt-section-card {
-  background: var(--card);
+  background: var(--card-gradient);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid var(--border2);
@@ -3726,14 +3790,14 @@ body.privacy-mode-active .portfolio-delta-pill {
   overflow: hidden;
   margin-bottom: 8px;
   position: relative;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.20);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(0,0,0,0.30), 0 4px 16px rgba(0,0,0,0.28);
 }
 .bgt-section-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -3839,10 +3903,11 @@ body.privacy-mode-active .portfolio-delta-pill {
 
 /* Individual category row card inside the body */
 .bgt-row-card {
-  background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.05) 0%, rgba(180,195,220,0.02) 100%);
+  border: 1px solid rgba(200,215,240,0.12);
   border-radius: 10px;
   padding: 10px 12px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .bgt-row-card-header {
   display: flex;
@@ -3982,8 +4047,8 @@ body.privacy-mode-active .portfolio-delta-pill {
 
 /* Section totals row inside the body (replaces the table's Total row) */
 .bgt-section-card-totals {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 10px;
   padding: 10px 12px;
   display: flex;
@@ -3993,7 +4058,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   margin-top: 2px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .bgt-section-card-totals-label {
   color: var(--white);
@@ -4014,12 +4079,13 @@ body.privacy-mode-active .portfolio-delta-pill {
 
 /* Monthly Net Position summary card — keeps the existing pill aesthetic */
 .bgt-net-card {
-  background: var(--card);
+  background: var(--card-gradient-strong);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   border: 1px solid rgba(10,132,255,0.34);
+  border-left: 3px solid var(--blue);
   border-radius: 14px;
-  padding: 18px 20px;
+  padding: 18px 20px 18px 18px;
   margin-top: 8px;
   display: flex;
   align-items: center;
@@ -4028,9 +4094,9 @@ body.privacy-mode-active .portfolio-delta-pill {
   position: relative;
   overflow: hidden;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 8px 24px rgba(10,132,255,0.20);
+    inset 0 1px 0 rgba(255,255,255,0.34),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 4px 12px rgba(10,132,255,0.10);
 }
 .bgt-net-card::before {
   content: '';
@@ -4157,25 +4223,38 @@ body.privacy-mode-active .portfolio-delta-pill {
    and the active nav tab aesthetic.
    ═══════════════════════════════════════════════════════════ */
 .bgt-cat-summary-header {
-  background: rgba(10,132,255,0.18);
+  background: var(--card-gradient-strong);
   border: 1px solid rgba(10,132,255,0.34);
+  border-left: 3px solid var(--blue);
   border-radius: 14px;
-  padding: 14px 16px;
+  padding: 14px 16px 14px 14px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   transition: background 0.18s, border-color 0.18s;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
   box-shadow:
-    inset 0 0.5px 0 rgba(255,255,255,0.20),
-    inset 0 -1px 0 rgba(0,0,0,0.18);
+    inset 0 1px 0 rgba(255,255,255,0.34),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 4px 12px rgba(10,132,255,0.10);
+}
+.bgt-cat-summary-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 3px; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(168,212,255,0.40) 50%, transparent 100%);
+  pointer-events: none;
 }
 .bgt-cat-summary-header:hover {
-  background: rgba(10,132,255,0.22);
+  border-color: rgba(10,132,255,0.46);
 }
 .bgt-cat-summary-header .section-label {
-  color: var(--white);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -4251,10 +4330,11 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-edit-btn:hover { color: var(--blue); background: rgba(10,132,255,0.14); }
 .bgt-audit-edit-form {
   display: none; padding: 12px 14px;
-  background: var(--recess);
-  border: 0.5px solid var(--border2);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 0.5px solid rgba(200,215,240,0.16);
   border-radius: 12px;
   margin: 4px 0 8px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .bgt-audit-edit-form.open { display: block; }
 .bgt-audit-edit-grid { display: grid; grid-template-columns: 1fr 110px 1fr 1fr; gap: 10px; align-items: end; margin-bottom: 10px; }
@@ -4280,20 +4360,21 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-month-tile {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 14px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(200,215,240,0.16);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
   border-radius: 12px;
   margin-bottom: 8px; cursor: pointer;
   transition: border-color 0.18s, background 0.18s;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
-.bgt-month-tile:hover { border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.10); }
+.bgt-month-tile:hover { border-color: rgba(200,215,240,0.26); background: linear-gradient(180deg, rgba(220,235,250,0.12) 0%, rgba(180,195,220,0.05) 100%); }
 .bgt-month-tile.bgt-tile-active {
   border-color: rgba(255,159,10,0.42);
-  background: rgba(255,159,10,0.18);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.18);
+  border-left: 3px solid var(--amber);
+  background: var(--card-gradient-strong);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
 }
 .bgt-month-tile-name { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: -0.1px; }
 .bgt-month-tile-stats { display: flex; gap: 20px; font-size: 12px; color: var(--muted); letter-spacing: -0.05px; }
@@ -4309,14 +4390,14 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-year-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.18);
   border-radius: 12px;
   margin-bottom: 6px; cursor: pointer;
   user-select: none; transition: background 0.15s, border-color 0.15s;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .bgt-year-row:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.16); }
 .bgt-year-label {
@@ -4385,17 +4466,19 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-year-pill {
   font-size: 12px; font-weight: 500; letter-spacing: -0.05px;
   padding: 5px 14px; border-radius: 50px;
-  cursor: pointer; border: 0.5px solid var(--border);
-  background: rgba(255,255,255,0.06);
+  cursor: pointer; border: 0.5px solid rgba(200,215,240,0.16);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
   color: var(--muted);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   transition: all 0.15s;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
-.bgt-year-pill:hover { color: var(--white); border-color: var(--border2); background: rgba(255,255,255,0.06); }
+.bgt-year-pill:hover { color: var(--white); border-color: rgba(200,215,240,0.28); background: linear-gradient(180deg, rgba(220,235,250,0.12) 0%, rgba(180,195,220,0.05) 100%); }
 .bgt-year-pill.active {
-  border-color: rgba(10,132,255,0.32);
-  color: #a8d4ff;
-  background: rgba(10,132,255,0.16);
+  border-color: rgba(220,235,255,0.45);
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(220,235,250,0.22) 0%, rgba(180,195,220,0.06) 100%);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.40);
 }
 .bgt-hist-table-read td { color: var(--muted2); font-size: 12px; }
 /* Note: .bgt-hist-actual-input styling is consolidated with .bgt-planned-input
@@ -4412,25 +4495,25 @@ body.privacy-mode-active .portfolio-delta-pill {
    actually takes. The other cards stay neutral so the eye settles on
    the action card naturally. */
 .tax-headline-card {
-  background: rgba(60,60,68,0.30);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid var(--border2);
   border-radius: 14px;
   padding: 14px 16px;
   position: relative;
   overflow: hidden;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 8px 24px rgba(0,0,0,0.30);
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 8px 24px rgba(0,0,0,0.35);
 }
 .tax-headline-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -4444,7 +4527,11 @@ body.privacy-mode-active .portfolio-delta-pill {
 .tax-headline-card-value {
   font-size: 24px;
   font-weight: 700;
-  color: #ffffff;
+  background: linear-gradient(135deg, #d8e4f0 0%, #ffffff 40%, #8aa4c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   line-height: 1.1;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
@@ -4472,21 +4559,21 @@ body.privacy-mode-active .portfolio-delta-pill {
 
 /* Highlighted action card — Set Your Standing Order */
 .tax-headline-card.tax-headline-action {
-  background: rgba(10,132,255,0.18);
+  background: var(--card-gradient-strong);
   border: 1px solid rgba(10,132,255,0.34);
   border-left: 3px solid var(--blue);
   padding: 16px 16px 16px 18px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.20),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.34),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
     0 4px 12px rgba(10,132,255,0.10);
 }
 .tax-headline-card.tax-headline-action::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(168,212,255,0.30) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(168,212,255,0.40) 50%, transparent 100%);
   left: 3px;
 }
 .tax-headline-card.tax-headline-action .tax-headline-card-label {
-  color: #a8d4ff;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
 }
@@ -4495,7 +4582,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   font-size: 28px;
 }
 .tax-headline-card.tax-headline-action .tax-headline-card-sub {
-  color: rgba(199,226,255,0.7);
+  color: rgba(255,255,255,0.78);
 }
 
 /* ── Upcoming HMRC Payments — payment cards ────────────────────
@@ -4513,10 +4600,11 @@ body.privacy-mode-active .portfolio-delta-pill {
   margin-bottom: 14px;
 }
 .hmrc-pmt-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 14px;
   padding: 14px 16px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .hmrc-pmt-top {
   display: flex;
@@ -4539,7 +4627,7 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-radius: 50px;
   border: 1px solid rgba(255,255,255,0.10);
   white-space: nowrap;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .hmrc-pmt-bottom {
   display: flex;
@@ -4628,15 +4716,15 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-bottom: 0.5px solid var(--border);
 }
 .cgt-step {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.16);
   border-radius: 14px;
   padding: 14px 18px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
   gap: 12px;
   backdrop-filter: blur(20px) saturate(200%);
   -webkit-backdrop-filter: blur(20px) saturate(200%);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .cgt-step > :first-child {
   flex: 1 1 auto;
@@ -4652,33 +4740,37 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .cgt-step.highlight {
   border-color: rgba(10,132,255,0.34);
-  background: rgba(10,132,255,0.18);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20);
+  border-left: 3px solid var(--blue);
+  background: var(--card-gradient);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
 }
 .cgt-step.liability {
   border-color: rgba(255,69,58,0.34);
-  background: rgba(255,69,58,0.18);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.18);
+  border-left: 3px solid var(--red);
+  background: var(--card-gradient);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
 }
 .cgt-step.exempt {
   border-color: rgba(48,209,88,0.30);
-  background: rgba(48,209,88,0.18);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.18);
+  border-left: 3px solid var(--green);
+  background: var(--card-gradient);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
 }
 /* Graded variants: as the CGT allowance gets used up, the Less row
    colour shifts from green (plenty left) to amber (most used) to red
-   (fully depleted). Matches the threshold convention used by
-   .allowance-snapshot-card on the Sell Calculator. */
+   (fully depleted). */
 .cgt-step.exempt.warn {
   border-color: rgba(255,159,10,0.30);
-  background: rgba(255,159,10,0.18);
+  border-left: 3px solid var(--amber);
+  background: var(--card-gradient);
 }
 .cgt-step.exempt.warn .cgt-step-val {
   color: var(--amber) !important;
 }
 .cgt-step.exempt.depleted {
   border-color: rgba(255,69,58,0.34);
-  background: rgba(255,69,58,0.18);
+  border-left: 3px solid var(--red);
+  background: var(--card-gradient);
 }
 .cgt-step.exempt.depleted .cgt-step-val {
   color: var(--red) !important;
@@ -4925,38 +5017,38 @@ body.privacy-mode-active .portfolio-delta-pill {
    (ticker + context) above a row of equal-width metric tiles separated
    by hairline vertical dividers. */
 .plan-card {
-  background: rgba(60,60,68,0.30);
+  background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid var(--border2);
   border-radius: 14px;
   overflow: hidden;
   margin-bottom: 8px;
   position: relative;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
-    0 8px 24px rgba(0,0,0,0.30);
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 8px 24px rgba(0,0,0,0.35);
 }
 .plan-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(220,235,255,0.30) 50%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
 .plan-card:last-child { margin-bottom: 0; }
 .plan-card-header {
-  background: rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(200,215,240,0.04) 100%);
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(200,215,240,0.14);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20);
 }
 .plan-card-ticker {
   font-size: 14px;
@@ -4982,11 +5074,11 @@ body.privacy-mode-active .portfolio-delta-pill {
 .plan-card-metric:last-child { border-right: none; }
 .plan-card-metric-label {
   font-size: 10px;
-  color: var(--muted);
+  color: rgba(255,255,255,0.78);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 5px;
-  font-weight: 500;
+  font-weight: 600;
 }
 .plan-card-metric-value {
   font-size: 14px;
@@ -5009,30 +5101,31 @@ body.privacy-mode-active .portfolio-delta-pill {
 /* Hero variant — blue-tinted plan-card for headline summary surfaces.
    Used for "Net Worth", "Projected Value at Retirement", primary KPIs. */
 .plan-card.is-hero {
-  background: rgba(10,132,255,0.18);
+  background: var(--card-gradient-strong);
   border-color: rgba(10,132,255,0.34);
   border-left: 3px solid var(--blue);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.20),
-    inset 0 -1px 0 rgba(0,0,0,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.34),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
     0 4px 12px rgba(10,132,255,0.10);
 }
 .plan-card.is-hero::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(168,212,255,0.30) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(168,212,255,0.40) 50%, transparent 100%);
   left: 3px;
 }
 .plan-card.is-hero .plan-card-header {
-  background: rgba(10,132,255,0.10);
-  border-bottom-color: rgba(10,132,255,0.20);
+  background: linear-gradient(180deg, rgba(10,132,255,0.16) 0%, rgba(10,132,255,0.06) 100%);
+  border-bottom-color: rgba(10,132,255,0.22);
 }
 .plan-card.is-hero .plan-card-ticker {
-  color: #a8d4ff;
+  color: #ffffff;
   font-size: 11px;
   letter-spacing: 0.4px;
   text-transform: uppercase;
+  font-weight: 700;
 }
 .plan-card.is-hero .plan-card-context {
-  color: rgba(168,212,255,0.65);
+  color: rgba(255,255,255,0.78);
 }
 
 /* Warn variant — amber-tinted plan-card for risk/exposure surfaces.
@@ -5042,12 +5135,19 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-left: 3px solid rgba(255,159,10,0.50);
 }
 .plan-card.is-warn::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(255,159,10,0.30) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,159,10,0.40) 50%, transparent 100%);
   left: 3px;
 }
 .plan-card.is-warn .plan-card-header {
-  background: rgba(255,159,10,0.10);
-  border-bottom-color: rgba(255,159,10,0.18);
+  background: linear-gradient(180deg, rgba(255,159,10,0.12) 0%, rgba(255,159,10,0.04) 100%);
+  border-bottom-color: rgba(255,159,10,0.20);
+}
+.plan-card.is-warn .plan-card-ticker {
+  color: #ffffff;
+  font-weight: 700;
+}
+.plan-card.is-warn .plan-card-context {
+  color: rgba(255,255,255,0.78);
 }
 
 /* Hero variant — body padding so headline value sits in nicer rhythm */
@@ -5076,8 +5176,8 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 
 .plan-card-totals {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
+  border: 1px solid rgba(200,215,240,0.18);
   border-radius: 14px;
   margin-top: 12px;
   overflow: hidden;
@@ -5327,7 +5427,7 @@ body.privacy-mode-active .portfolio-delta-pill {
     gap: 8px !important;
     margin: 0 !important;
     padding: 14px 12px 14px;
-    background: rgba(60, 60, 68, 0.45);
+    background: linear-gradient(180deg, rgba(160,170,185,0.45) 0%, rgba(8,10,14,0.85) 100%);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
     /* Border setup: only the bottom edge keeps a visible hairline so the
@@ -5342,7 +5442,7 @@ body.privacy-mode-active .portfolio-delta-pill {
        all provide more than enough definition for its outline without
        the side hairlines. */
     border: 1px solid transparent;
-    border-bottom-color: rgba(255, 255, 255, 0.10);
+    border-bottom-color: rgba(200, 215, 240, 0.20);
     border-top: none;
     border-radius: 0 0 14px 14px;
     box-shadow:
@@ -5375,20 +5475,20 @@ body.privacy-mode-active .portfolio-delta-pill {
     display: flex !important;
     justify-content: space-between;
     align-items: center;
-    background: rgba(60, 60, 68, 0.35);
+    background: var(--card-gradient);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid var(--border2);
     border-radius: 12px;
     padding: 11px 14px;
     margin-top: 10px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
     -webkit-tap-highlight-color: transparent;
-    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14);
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.26);
   }
   #mobile-nav-pill:active {
-    background: rgba(70, 70, 78, 0.45);
+    background: var(--card-gradient-strong);
   }
   #mobile-nav-pill .pill-active {
     display: flex;
@@ -5423,8 +5523,8 @@ body.privacy-mode-active .portfolio-delta-pill {
     color: rgba(255,255,255,0.85);
   }
   #mobile-nav-pill.open {
-    background: rgba(60, 60, 68, 0.45);
-    border-color: rgba(255, 255, 255, 0.10);
+    background: var(--card-gradient-strong);
+    border-color: rgba(200, 215, 240, 0.20);
     border-bottom-color: transparent;
     /* Suppress left/right borders when open so the pill's side edges
        don't stack with the dropdown's left/right border lines beneath.
@@ -5462,25 +5562,25 @@ body.privacy-mode-active .portfolio-delta-pill {
     padding: 11px 8px !important;
     font-size: 11px !important;
     min-height: 56px;
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.10) !important;
+    background: #0a0d12 !important;
+    border: 1px solid rgba(200,215,240,0.20) !important;
     border-radius: 10px !important;
-    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14) !important;
-    color: rgba(255,255,255,0.78) !important;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.10), inset 0 -0.5px 0 rgba(0,0,0,0.40) !important;
+    color: #ffffff !important;
   }
   .nav-tabs.mobile-nav-open .nav-tab:hover {
-    color: var(--white) !important;
-    border-color: rgba(255,255,255,0.16) !important;
-    background: rgba(255,255,255,0.08) !important;
+    color: #ffffff !important;
+    border-color: rgba(200,215,240,0.32) !important;
+    background: #14181f !important;
   }
   .nav-tabs.mobile-nav-open .nav-tab.active {
-    background: rgba(10,132,255,0.18) !important;
-    border-color: rgba(10,132,255,0.34) !important;
-    color: #a8d4ff !important;
-    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.20) !important;
+    background: linear-gradient(180deg, rgba(220,235,250,0.22) 0%, rgba(180,195,220,0.06) 100%) !important;
+    border-color: rgba(220,235,255,0.45) !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.50), inset 0 -0.5px 0 rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.30) !important;
   }
   .nav-tabs.mobile-nav-open .nav-tab.active .nav-icon {
-    color: #a8d4ff !important;
+    color: #ffffff !important;
     opacity: 1 !important;
   }
 
@@ -5572,10 +5672,10 @@ body.privacy-mode-active .portfolio-delta-pill {
     row-gap: 2px;
     align-items: center;
     padding: 12px 14px;
-    background: rgba(255,255,255,0.06);
+    background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.10);
-    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
+    border: 1px solid rgba(200,215,240,0.16);
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
   }
   .grid-3 > .card:has(> .stat) { padding: 0 !important; background: transparent !important; border: none !important; }
   .grid-3 > .stat > .stat-label,
@@ -5919,10 +6019,11 @@ body.privacy-mode-active .portfolio-delta-pill {
      mobile we add a subtle dark surface to the header so it reads
      as a tappable container, especially when collapsed. */
   .ret-settings-collapsible .collapsible-header {
-    background: var(--card);
-    border: 0.5px solid var(--border);
+    background: var(--card-gradient);
+    border: 0.5px solid var(--border2);
     border-radius: 14px;
     padding: 14px 18px;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
   }
   .ret-settings-collapsible .collapsible-header .section-label {
     font-size: 17px !important;
@@ -5992,9 +6093,10 @@ body.privacy-mode-active .portfolio-delta-pill {
     gap: 4px 12px !important;
     padding: 14px 12px !important;
     border-bottom: 0.5px solid var(--border);
-    background: var(--card);
+    background: var(--card-gradient);
     border-radius: 12px;
     margin-bottom: 10px;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
   }
   .bedisa-ticker {
     grid-area: ticker;
@@ -6218,8 +6320,10 @@ body.privacy-mode-active .portfolio-delta-pill {
     gap: 14px !important;
   }
   /* Hide the desktop vertical dividers between Budget / Drift / Checkboxes —
-     they don't make sense in a stacked layout. */
-  .calc-controls-row > div[style*="height:48px"][style*="width:1px"] {
+     they don't make sense in a stacked layout. Match any height variant. */
+  .calc-controls-row > div[style*="width:1px"][style*="background:var(--border)"],
+  .calc-controls-row > div[style*="height:48px"][style*="width:1px"],
+  .calc-controls-row > div[style*="height:60px"][style*="width:1px"] {
     display: none !important;
   }
   /* Each input block (Monthly Budget, Drift Limit) becomes full-width.
@@ -6401,12 +6505,13 @@ body.privacy-mode-active .portfolio-delta-pill {
     gap: 0 !important;
     padding: 12px 14px !important;
     margin: 0 !important;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.10) !important;
+    background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
+    border: 1px solid rgba(200,215,240,0.18) !important;
     border-radius: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+    border-bottom: 1px solid rgba(200,215,240,0.18) !important;
     width: 100% !important;
     box-sizing: border-box;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.30);
   }
 
   /* ── Section 104 row — 7 cells:
@@ -6805,10 +6910,57 @@ body.privacy-mode-active .portfolio-delta-pill {
     column-gap: 8px;
     row-gap: 6px;
     padding: 12px 14px !important;
-    background: var(--card);
-    border: 0.5px solid var(--border);
+    background: var(--card-gradient);
+    border: 0.5px solid var(--border2);
     border-radius: 14px;
     margin-bottom: 8px;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
+  }
+  /* Historical Averages — different table shape (4 cols), so its own
+     mobile card layout: category title spans full width, then the three
+     figure cells (Avg / Months / Total) sit in a row below. */
+  #bgt-averages-panel .bgt-table,
+  #bgt-averages-panel .bgt-table thead,
+  #bgt-averages-panel .bgt-table tbody {
+    display: block;
+    width: 100%;
+  }
+  #bgt-averages-panel .bgt-thead {
+    display: none !important;
+  }
+  #bgt-averages-panel .bgt-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    column-gap: 8px;
+    row-gap: 8px;
+    padding: 12px 14px !important;
+    background: var(--card-gradient) !important;
+    border: 0.5px solid var(--border2) !important;
+    border-radius: 12px !important;
+    margin-bottom: 8px;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
+  }
+  #bgt-averages-panel .bgt-row td {
+    display: block !important;
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  #bgt-averages-panel .bgt-row td:first-child {
+    grid-column: 1 / -1 !important;
+    text-align: left !important;
+    font-size: 13px !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    padding-bottom: 4px !important;
+    border-bottom: 0.5px solid rgba(200,215,240,0.10) !important;
+  }
+  #bgt-averages-panel .bgt-row td:nth-child(2),
+  #bgt-averages-panel .bgt-row td:nth-child(3),
+  #bgt-averages-panel .bgt-row td:nth-child(4) {
+    text-align: right !important;
+    font-size: 12px !important;
+    font-variant-numeric: tabular-nums;
   }
   /* Section header rows still span full width */
   #bgt-main-table tr:has(td.bgt-section-label),
@@ -7003,8 +7155,9 @@ body.privacy-mode-active .portfolio-delta-pill {
   #bgt-main-table .bgt-row.bgt-total,
   #bgt-history-view .bgt-row.bgt-total,
   #bgt-ytd-panel .bgt-row.bgt-total {
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.16);
+    background: var(--card-gradient-strong);
+    border-color: rgba(200,215,240,0.28);
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.34);
   }
   /* Total label cell — override the white !important set above for
      regular rows. Blue text marks the row as a section summary at a
@@ -7032,8 +7185,8 @@ body.privacy-mode-active .portfolio-delta-pill {
   #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(2),
   #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(3),
   #bgt-ytd-panel .bgt-row.bgt-total td:nth-child(4) {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
+    border: 1px solid rgba(200,215,240,0.18);
     border-radius: 50px;
     padding: 8px 14px !important;
     text-align: center !important;
@@ -7079,11 +7232,13 @@ body.privacy-mode-active .portfolio-delta-pill {
     column-gap: 12px !important;
     row-gap: 2px !important;
     align-items: center;
-    background: rgba(10,132,255,0.16);
-    border: 0.5px solid var(--blue) !important;
+    background: var(--card-gradient-strong);
+    border: 1px solid rgba(10,132,255,0.34) !important;
+    border-left: 3px solid var(--blue) !important;
     border-radius: 12px;
     margin-top: 0;
-    padding: 14px 16px !important;
+    padding: 14px 16px 14px 14px !important;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.34), 0 4px 12px rgba(10,132,255,0.10);
   }
   /* Cell 1 = the label cell. Hide its DOM text content (we use a pseudo
      to render the upper-cased clean label), then inject the sub-line via
@@ -7736,7 +7891,7 @@ body.modal-active .container > footer {
 <!-- First-run empty-state import card. Visible only when localStorage has no
      portfolio data. Hides itself once import completes. Lets you load your
      JSON backup with one tap on iPhone instead of scrolling to the footer. -->
-<div id="first-run-import-card" style="display:none;margin:14px 0 18px;padding:18px 18px 16px;background:rgba(60,60,68,0.35);border:1px solid rgba(10,132,255,0.34);border-radius:14px;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -1px 0 rgba(0,0,0,0.20),0 8px 24px rgba(10,132,255,0.10)">
+<div id="first-run-import-card" style="display:none;margin:14px 0 18px;padding:18px 18px 16px;background:linear-gradient(180deg,rgba(220,230,245,0.10) 0%,rgba(180,195,220,0.04) 100%);border:1px solid rgba(10,132,255,0.34);border-radius:14px;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.30),inset 0 -1px 0 rgba(0,0,0,0.30),0 8px 24px rgba(10,132,255,0.10)">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
     <span style="font-size:17px;line-height:1">⬆</span>
     <div style="font-size:15px;font-weight:600;color:var(--white);letter-spacing:-0.2px">Welcome — load your backup</div>
@@ -7855,7 +8010,7 @@ body.modal-active .container > footer {
     <div class="section-label" style="margin-bottom:4px">Active Account</div>
     <div class="stat-sub" style="margin-bottom:14px">All calculations, pulls and saves on this page will use the wrapper selected below.</div>
     <div class="active-account-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <select id="activeWrapper" onchange="onWrapperChange(this.value)" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;outline:none;cursor:pointer">
+      <select id="activeWrapper" onchange="onWrapperChange(this.value)" style="background:linear-gradient(180deg,rgba(220,235,250,0.08) 0%,rgba(180,195,220,0.03) 100%);border:1px solid rgba(200,215,240,0.16);border-radius:10px;color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;outline:none;cursor:pointer;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.22)">
         <option value="GIA">GIA — General Investment Account</option>
         <option value="SIPP">SIPP — Self Invested Pension</option>
         <option value="ISA">ISA — Individual Savings Account</option>
@@ -8122,7 +8277,7 @@ body.modal-active .container > footer {
     </div>
     <div id="soldSharesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px"></div>
     <button class="btn-ghost btn-sm mb16" onclick="addSoldShareRow()">+ Add Share</button>
-    <div id="soldFormSummaryRow" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px">
+    <div id="soldFormSummaryRow" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding:12px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px">
       <div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span class="input-label">CGT Realised on This Sale</span>
@@ -8464,7 +8619,7 @@ body.modal-active .container > footer {
     </div>
 
     <!-- Narrative insight -->
-    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px" id="ret-cp-narrative"></div>
+    <div style="padding:12px 16px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px" id="ret-cp-narrative"></div>
   </div>
 
   <!-- Next Milestone — May 2026 — near-term motivation tile that bridges
@@ -8492,7 +8647,7 @@ body.modal-active .container > footer {
          the eye lands on. The header shows a live summary line so users
          can see their current settings at a glance without expanding. -->
     <div class="chevron-collapsible collapsed mb16" data-collapsible="freedom-inputs" id="ret-fn-inputs-section">
-      <div class="collapsible-header" onclick="toggleMobileCollapse('freedom-inputs')" style="cursor:pointer;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.10)">
+      <div class="collapsible-header" onclick="toggleMobileCollapse('freedom-inputs')" style="cursor:pointer;padding:12px 14px;background:linear-gradient(180deg,rgba(220,235,250,0.10) 0%,rgba(180,195,220,0.04) 100%);border:1px solid rgba(200,215,240,0.18);border-radius:12px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.30)">
         <div class="flex-between" style="margin-bottom:0">
           <div style="min-width:0;flex:1">
             <div style="font-size:11px;font-weight:600;color:var(--white);letter-spacing:-0.1px;margin-bottom:2px">Freedom Settings</div>
@@ -8585,7 +8740,7 @@ body.modal-active .container > footer {
     </div>
 
     <!-- Narrative insight -->
-    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px" id="ret-fn-narrative"></div>
+    <div style="padding:12px 16px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px" id="ret-fn-narrative"></div>
   </div>
 
   <!-- ── NET WORTH CALCULATOR ── -->
@@ -9103,7 +9258,7 @@ body.modal-active .container > footer {
     <!-- Dividend tax summary — lifted to the same glass treatment as plan-cards.
          Stays as a chevron-collapsible because the body is a dynamic breakdown
          grid (varies by tax band), not a fixed metric set. -->
-    <div id="divTaxSummary" class="chevron-collapsible collapsed" data-collapsible="tax-breakdown" style="background:rgba(60,60,68,0.30);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:14px 18px;margin-bottom:12px;display:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.14),inset 0 -1px 0 rgba(0,0,0,0.20),0 8px 24px rgba(0,0,0,0.30)">
+    <div id="divTaxSummary" class="chevron-collapsible collapsed" data-collapsible="tax-breakdown" style="background:linear-gradient(180deg,rgba(220,230,245,0.10) 0%,rgba(180,195,220,0.04) 100%);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(200,215,240,0.20);border-radius:14px;padding:14px 18px;margin-bottom:12px;display:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.30),inset 0 -1px 0 rgba(0,0,0,0.30),0 8px 24px rgba(0,0,0,0.35)">
       <div class="collapsible-header" onclick="toggleMobileCollapse('tax-breakdown')" style="cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--white);letter-spacing:-0.1px" id="divTaxSummaryLabel">Tax Summary <span style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:-0.05px">(<span class="tax-year-label">2026/27</span>)</span></div>
@@ -9119,10 +9274,10 @@ body.modal-active .container > footer {
     <!-- Bonus tax breakdown — only shown when bonus > 0. Now sits AFTER the
          main breakdown above as a supplementary view, since it's
          conditional and only relevant when a bonus is entered. -->
-    <div id="bonusTaxSummary" style="background:rgba(10,132,255,0.18);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;padding:14px 18px;margin-bottom:0;display:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.20),0 4px 12px rgba(10,132,255,0.10)">
+    <div id="bonusTaxSummary" style="background:linear-gradient(180deg,rgba(225,235,250,0.16) 0%,rgba(160,180,210,0.03) 100%);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;padding:14px 18px;margin-bottom:0;display:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),inset 0 -1px 0 rgba(0,0,0,0.30),0 4px 12px rgba(10,132,255,0.10)">
       <div style="margin-bottom:12px">
-        <div style="font-size:13px;font-weight:600;color:#a8d4ff;letter-spacing:-0.1px">Tax on Bonus</div>
-        <div style="font-size:10px;color:rgba(199,226,255,0.7);margin-top:2px">How your bonus is taxed on top of your salary</div>
+        <div style="font-size:13px;font-weight:700;color:#ffffff;letter-spacing:-0.1px">Tax on Bonus</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.78);margin-top:2px">How your bonus is taxed on top of your salary</div>
       </div>
       <div id="bonusTaxBreakdown" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
     </div>
@@ -9485,9 +9640,9 @@ body.modal-active .container > footer {
       </div>
       <div id="bedISAPlan"></div>
     </div>
-    <div id="bedISASaveSection" style="display:none;margin-top:4px;margin-bottom:16px;padding:14px 18px;background:rgba(10,132,255,0.18);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.20),0 4px 12px rgba(10,132,255,0.10)">
+    <div id="bedISASaveSection" style="display:none;margin-top:4px;margin-bottom:16px;padding:14px 18px;background:linear-gradient(180deg,rgba(225,235,250,0.16) 0%,rgba(160,180,210,0.03) 100%);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(10,132,255,0.34);border-left:3px solid var(--blue);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),inset 0 -1px 0 rgba(0,0,0,0.30),0 4px 12px rgba(10,132,255,0.10)">
       <button class="btn-gold" onclick="saveSellPlanToHistory()" style="margin-right:12px">✓ Sell &amp; Save to History</button>
-      <span class="bedisa-save-helper" style="font-size:9px;color:rgba(199,226,255,0.7)">Records the sale in Monthly History, removes units from your GIA, and updates CGT used this year</span>
+      <span class="bedisa-save-helper" style="font-size:9px;color:rgba(255,255,255,0.78)">Records the sale in Monthly History, removes units from your GIA, and updates CGT used this year</span>
     </div>
   </div>
 
@@ -9644,11 +9799,11 @@ body.modal-active .container > footer {
       <div class="section-label">Annual Budget Performance</div>
       <div id="analyse-budget-perf-year-select" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="analyse-budget-perf-cards"></div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px 18px;margin-bottom:16px">
+      <div style="background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px 18px;margin-bottom:16px">
         <div class="section-label mb12" style="color:var(--amber)">Income vs Expenses — Plan vs Actual</div>
         <div id="analyse-budget-perf-table"></div>
       </div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px 18px">
+      <div style="background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px 18px">
         <div class="section-label mb12">Category Highlights</div>
         <div class="grid-3" id="analyse-budget-perf-highlights"></div>
       </div>
@@ -9825,8 +9980,8 @@ body.modal-active .container > footer {
 
 <!-- Backup reminder modal — fires once per month on the 1st (or first visit afterwards) -->
 <div id="backup-reminder-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--card);border:1px solid var(--gold);max-width:480px;width:100%;padding:32px;border-radius:20px;text-align:center;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -1px 0 rgba(0,0,0,0.20),0 16px 48px rgba(0,0,0,0.50);position:relative">
-    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.20) 50%,transparent 100%);pointer-events:none;border-radius:20px 20px 0 0"></div>
+  <div style="background:linear-gradient(180deg,rgba(225,235,250,0.16) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.20);max-width:480px;width:100%;padding:32px;border-radius:20px;text-align:center;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),inset 0 -1px 0 rgba(0,0,0,0.30),0 16px 48px rgba(0,0,0,0.55);position:relative">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(220,235,255,0.40) 50%,transparent 100%);pointer-events:none;border-radius:20px 20px 0 0"></div>
     <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:16px">Monthly Backup Reminder</div>
     <div style="font-size:42px;color:var(--gold);margin-bottom:12px">⬇</div>
     <div style="font-size:17px;color:var(--white);font-weight:500;line-height:1.4;margin-bottom:14px">Time for your monthly backup</div>
@@ -9840,8 +9995,8 @@ body.modal-active .container > footer {
 </div>
 
 <div id="gia-budget-prompt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--card);border:1px solid var(--border2);max-width:460px;width:100%;padding:28px;border-radius:20px;text-align:center;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -1px 0 rgba(0,0,0,0.20),0 16px 48px rgba(0,0,0,0.50);position:relative">
-    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.20) 50%,transparent 100%);pointer-events:none;border-radius:20px 20px 0 0"></div>
+  <div style="background:linear-gradient(180deg,rgba(225,235,250,0.16) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.20);max-width:460px;width:100%;padding:28px;border-radius:20px;text-align:center;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),inset 0 -1px 0 rgba(0,0,0,0.30),0 16px 48px rgba(0,0,0,0.55);position:relative">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(220,235,255,0.40) 50%,transparent 100%);pointer-events:none;border-radius:20px 20px 0 0"></div>
     <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:10px">GIA save complete</div>
     <div style="font-size:17px;color:var(--white);font-weight:600;line-height:1.3;margin-bottom:8px;letter-spacing:-0.3px">Add this to your budget tracker?</div>
     <div id="gia-budget-prompt-body" style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:22px;letter-spacing:-0.05px"></div>
@@ -9862,8 +10017,8 @@ body.modal-active .container > footer {
      buy logic going forward.
      ═══════════════════════════════════════════════════════════ -->
 <div id="edit-layers-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto">
-  <div style="background:var(--card);border:1px solid var(--border2);max-width:920px;width:100%;padding:28px;border-radius:20px;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -1px 0 rgba(0,0,0,0.20),0 16px 48px rgba(0,0,0,0.50);max-height:90vh;overflow-y:auto;position:relative">
-    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.20) 50%,transparent 100%);pointer-events:none"></div>
+  <div style="background:linear-gradient(180deg,rgba(220,230,245,0.10) 0%,rgba(180,195,220,0.04) 100%);border:1px solid rgba(200,215,240,0.20);max-width:920px;width:100%;padding:28px;border-radius:20px;backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),inset 0 -1px 0 rgba(0,0,0,0.30),0 16px 48px rgba(0,0,0,0.55);max-height:90vh;overflow-y:auto;position:relative">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(220,235,255,0.40) 50%,transparent 100%);pointer-events:none"></div>
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:12px">
       <div>
         <div class="subsection-label eyebrow" style="color:var(--blue);margin-bottom:6px">Strategy Editor</div>
@@ -9875,7 +10030,7 @@ body.modal-active .container > footer {
 
     <div id="edit-layers-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px"></div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:10px;margin-bottom:18px;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);border-radius:10px;margin-bottom:18px;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12)">
       <div style="font-size:11px;color:var(--muted);letter-spacing:-0.05px">Total target allocation</div>
       <div id="edit-layers-total" style="font-size:17px;font-weight:600;letter-spacing:-0.2px;font-variant-numeric:tabular-nums">100.0%</div>
     </div>
@@ -12011,7 +12166,7 @@ function renderSoldShareRows() {
     }
 
     return `
-    <div style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px">
+    <div style="background:linear-gradient(180deg,rgba(220,235,250,0.08) 0%,rgba(180,195,220,0.03) 100%);border:1px solid rgba(200,215,240,0.16);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.22)">
       <div class="input-group">
         <span class="input-label">Ticker</span>
         <input class="text-input" type="text" value="${r.ticker}" placeholder="e.g. VWRP"
@@ -13641,7 +13796,7 @@ function _renderMonthVsMonth() {
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);font-style:italic;line-height:1.6">${narrative}</div>`;
+    <div style="margin-top:12px;padding:10px 14px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);font-style:italic;line-height:1.6">${narrative}</div>`;
 }
 
 // ════════════════════════════════════════════════════════
@@ -14390,7 +14545,7 @@ function renderHistoryExtraFunds() {
   if (historyExtraFunds.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(${Math.min(historyExtraFunds.length, 4)},1fr);gap:12px;margin-bottom:8px">` +
     historyExtraFunds.map((f, i) => `
-      <div style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;padding:10px">
+      <div style="display:flex;flex-direction:column;gap:6px;background:linear-gradient(180deg,rgba(220,235,250,0.08) 0%,rgba(180,195,220,0.03) 100%);border:1px solid rgba(200,215,240,0.16);border-radius:10px;padding:10px;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.22)">
         <div class="input-group">
           <span class="input-label">Ticker</span>
           <input class="text-input" type="text" id="extraticker_${i}" value="${f.ticker}" placeholder="e.g. VWRP"
@@ -16272,7 +16427,7 @@ function _renderNextMilestone(currentPot, freedomToday) {
 
       ${futureLabels.length ? `
       <!-- Narrative — what comes next -->
-      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px">
+      <div style="padding:12px 16px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px">
         After ${fmtRound(nextMilestone)}, the next rungs are ${futureLabels.join(', ')}.
       </div>` : ''}
     </div>`;
@@ -18865,15 +19020,16 @@ function _renderSingleTaxReminderBanner(item) {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  // Theme tokens — amber for 7d/3d, red for 1d
-  const tint       = isUrgent ? 'rgba(255, 69, 58, 0.14)' : 'rgba(255, 159, 10, 0.12)';
-  const borderClr  = isUrgent ? 'rgba(255, 69, 58, 0.32)' : 'rgba(255, 159, 10, 0.28)';
+  // Theme tokens — chrome surface with coloured left accent.
+  // Amber for 7d/3d, red for 1d. Text and accents read through colour;
+  // the panel itself stays uniform with the rest of the app.
   const accentClr  = isUrgent ? '#ff453a' : '#ff9f0a';
-  const titleClr   = isUrgent ? '#ffb0ab' : '#ffd28a';
-  const subClr     = isUrgent ? 'rgba(255,176,171,0.8)' : 'rgba(255,210,138,0.8)';
-  const dismissBg  = isUrgent ? 'rgba(255, 69, 58, 0.2)' : 'rgba(255, 159, 10, 0.18)';
-  const dismissBdr = isUrgent ? 'rgba(255, 69, 58, 0.4)' : 'rgba(255, 159, 10, 0.35)';
-  const dismissTxt = titleClr;
+  const borderClr  = isUrgent ? 'rgba(255, 69, 58, 0.32)' : 'rgba(255, 159, 10, 0.28)';
+  const titleClr   = '#ffffff';
+  const subClr     = 'rgba(255,255,255,0.78)';
+  const dismissBg  = isUrgent ? 'rgba(255, 69, 58, 0.18)' : 'rgba(255, 159, 10, 0.16)';
+  const dismissBdr = isUrgent ? 'rgba(255, 69, 58, 0.40)' : 'rgba(255, 159, 10, 0.34)';
+  const dismissTxt = isUrgent ? '#ffb0ab' : '#ffd28a';
 
   // SVG icon — triangle for amber warning, circle for red urgent
   const icon = isUrgent
@@ -18891,11 +19047,11 @@ function _renderSingleTaxReminderBanner(item) {
   const safeLabel = (payment.label || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
   return `
-    <div style="background:${tint};border:0.5px solid ${borderClr};border-left:3px solid ${accentClr};border-radius:12px;padding:12px 14px;margin-bottom:8px">
+    <div style="background:linear-gradient(180deg,rgba(225,235,250,0.16) 0%,rgba(160,180,210,0.03) 100%);border:1px solid ${borderClr};border-left:3px solid ${accentClr};border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.30),inset 0 -0.5px 0 rgba(0,0,0,0.30),0 4px 12px rgba(0,0,0,0.25)">
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
         ${icon}
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:${titleClr};margin:0 0 2px;line-height:1.4;letter-spacing:-0.1px">${headline}</div>
+          <div style="font-size:13px;font-weight:700;color:${titleClr};margin:0 0 2px;line-height:1.4;letter-spacing:-0.1px">${headline}</div>
           <div style="font-size:12px;color:${subClr};margin:0;line-height:1.45">£${fmtNum(Math.round(payment.amount), 0)} · ${payment.label} · ${dateStr}</div>
         </div>
       </div>
@@ -19138,15 +19294,15 @@ function _renderSingleHlDdBanner(item) {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  // Theme tokens — calm blue for 3d, slightly stronger for 1d
-  const tint       = isUrgent ? 'rgba(10, 132, 255, 0.16)' : 'rgba(10, 132, 255, 0.10)';
-  const borderClr  = isUrgent ? 'rgba(10, 132, 255, 0.34)' : 'rgba(10, 132, 255, 0.26)';
+  // Theme tokens — chrome surface with blue accent. Crisper text for
+  // legibility, blue confined to the icon, accent border, and dismiss button.
   const accentClr  = '#0a84ff';
-  const titleClr   = isUrgent ? '#c7e2ff' : '#a8d4ff';
-  const subClr     = isUrgent ? 'rgba(199,226,255,0.8)' : 'rgba(168,212,255,0.78)';
+  const borderClr  = isUrgent ? 'rgba(10, 132, 255, 0.34)' : 'rgba(10, 132, 255, 0.26)';
+  const titleClr   = '#ffffff';
+  const subClr     = 'rgba(255,255,255,0.78)';
   const dismissBg  = isUrgent ? 'rgba(10, 132, 255, 0.22)' : 'rgba(10, 132, 255, 0.18)';
-  const dismissBdr = isUrgent ? 'rgba(10, 132, 255, 0.4)' : 'rgba(10, 132, 255, 0.36)';
-  const dismissTxt = titleClr;
+  const dismissBdr = isUrgent ? 'rgba(10, 132, 255, 0.40)' : 'rgba(10, 132, 255, 0.36)';
+  const dismissTxt = isUrgent ? '#c7e2ff' : '#a8d4ff';
   const fillOpacity = isUrgent ? 0.24 : 0.18;
 
   // Circular info icon — same shape both checkpoints, fill changes
@@ -19156,11 +19312,11 @@ function _renderSingleHlDdBanner(item) {
   </svg>`;
 
   return `
-    <div style="background:${tint};border:0.5px solid ${borderClr};border-left:3px solid ${accentClr};border-radius:12px;padding:12px 14px;margin-bottom:8px">
+    <div style="background:linear-gradient(180deg,rgba(225,235,250,0.16) 0%,rgba(160,180,210,0.03) 100%);border:1px solid ${borderClr};border-left:3px solid ${accentClr};border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.30),inset 0 -0.5px 0 rgba(0,0,0,0.30),0 4px 12px rgba(0,0,0,0.25)">
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
         ${icon}
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:${titleClr};margin:0 0 2px;line-height:1.4;letter-spacing:-0.1px">${headline}</div>
+          <div style="font-size:13px;font-weight:700;color:${titleClr};margin:0 0 2px;line-height:1.4;letter-spacing:-0.1px">${headline}</div>
           <div style="font-size:12px;color:${subClr};margin:0;line-height:1.45">Calculate HL Account · ${dateStr}</div>
         </div>
       </div>
@@ -20613,16 +20769,16 @@ function renderBedISA() {
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-      <div style="padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;border-left:3px solid ${unusedCGT<10?'var(--green)':'var(--amber)'}">
+      <div style="padding:10px 14px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;border-left:3px solid ${unusedCGT<10?'var(--green)':'var(--amber)'}">
         <div class="stat-label mb4">Unused CGT allowance after transfer</div>
         <div style="font-size:22px;font-weight:600;color:${unusedCGT<10?'var(--green)':'var(--amber)'}">£${fmtNum(Math.round(unusedCGT),0)}</div>
       </div>
-      <div style="padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;border-left:3px solid ${unusedISA<50?'var(--green)':'var(--gold)'}">
+      <div style="padding:10px 14px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;border-left:3px solid ${unusedISA<50?'var(--green)':'var(--gold)'}">
         <div class="stat-label mb4">Unused ISA allowance after transfer</div>
         <div style="font-size:22px;font-weight:600;color:${unusedISA<50?'var(--green)':'var(--gold)'}">£${fmtNum(Math.round(unusedISA),0)}</div>
       </div>
     </div>
-    ${unusedISA > 50 && unusedCGT < 10 ? `<div style="margin-top:12px;padding:12px 16px;background:rgba(255,159,10,0.16);border:0.5px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8">
+    ${unusedISA > 50 && unusedCGT < 10 ? `<div style="margin-top:12px;padding:12px 16px;background:linear-gradient(180deg,rgba(225,235,250,0.12) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:rgba(255,255,255,0.78);line-height:1.8;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.22)">
       CGT allowance fully used. To transfer the remaining £${fmtNum(Math.round(unusedISA),0)} to ISA would incur additional CGT at 24% on gains above the allowance. The allowance resets on 6 April ${new Date().getMonth() >= 3 ? new Date().getFullYear()+1 : new Date().getFullYear()}, so consider completing the transfer at the start of next tax year.
     </div>` : ''}`;
 
@@ -21584,7 +21740,7 @@ function renderAnalyse() {
   document.getElementById('analyse-cgt-insight').textContent = cgtInsight;
 
   document.getElementById('analyse-tax-year-reset').innerHTML = daysToReset < 90
-    ? `<div style="padding:10px 14px;background:rgba(255,159,10,0.16);border:0.5px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:var(--amber)">Tax year ends in ${daysToReset} days — consider using remaining CGT allowance before 5 April ${taxYearStart+1}.</div>`
+    ? `<div style="padding:10px 14px;background:linear-gradient(180deg,rgba(225,235,250,0.12) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;font-size:10px;color:#ffffff;font-weight:600;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.22)">Tax year ends in ${daysToReset} days — consider using remaining CGT allowance before 5 April ${taxYearStart+1}.</div>`
     : '';
 
   // 4. Concentration & overlap
@@ -21639,8 +21795,8 @@ function renderAnalyse() {
       </div>
       <div>
         <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:600">Overlap &amp; Risk Notes</div>
-        ${usPct > 70 ? `<div style="padding:10px 14px;background:rgba(255,159,10,0.16);border:0.5px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;margin-bottom:8px;font-size:10px;color:var(--amber)">US exposure is ${usPct.toFixed(0)}% of your portfolio. High concentration in a single market.</div>` : ''}
-        ${overlapWarnings.map(w => `<div style="padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-left:3px solid var(--muted);border-radius:10px;margin-bottom:8px;font-size:10px;color:var(--muted)">${w}</div>`).join('')}
+        ${usPct > 70 ? `<div style="padding:10px 14px;background:linear-gradient(180deg,rgba(225,235,250,0.12) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(255,159,10,0.28);border-left:3px solid var(--amber);border-radius:10px;margin-bottom:8px;font-size:10px;color:#ffffff;font-weight:600;box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.22)">US exposure is ${usPct.toFixed(0)}% of your portfolio. High concentration in a single market.</div>` : ''}
+        ${overlapWarnings.map(w => `<div style="padding:10px 14px;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);border-left:3px solid var(--muted);border-radius:10px;margin-bottom:8px;font-size:10px;color:var(--muted)">${w}</div>`).join('')}
         ${overlapWarnings.length===0 && usPct<=70 ? `<div style="font-size:10px;color:var(--green)">No significant overlap detected between your held funds.</div>` : ''}
         <div style="margin-top:16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600">Unique Indices Tracked</div>
         ${Object.entries(indexExposure).sort((a,b)=>b[1]-a[1]).map(([idx,val])=>`
@@ -22100,7 +22256,7 @@ function renderAnalyseNetWorth() {
     ].filter(r=>r.val>0);
 
     nwBreak.innerHTML = `
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px">
+      <div style="background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px">
         <div class="stat-label mb8" style="color:#ffffff;font-weight:700">Asset Breakdown</div>
         ${rows.map(r=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
@@ -22123,7 +22279,7 @@ function renderAnalyseNetWorth() {
           <span style="font-size:17px;font-weight:700;color:#ffffff;font-variant-numeric:tabular-nums">\u00a3${fmtNum(Math.round(netWorth),0)}</span>
         </div>
       </div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px">
+      <div style="background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px">
         <div class="stat-label mb16" style="color:#ffffff;font-weight:700">Tax Exposure</div>
         <div class="plan-card mb14">
           <div class="plan-card-header">
@@ -24243,7 +24399,7 @@ function _renderBgtBreakdownPanel(state) {
             </div>
           </div>
           <div style="font-size:11px;color:${valColour};font-weight:600;text-align:right;min-width:70px">£${fmtNum(amt, 2)}</div>
-          <div style="font-size:10px;color:${pillColour};font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);padding:3px 8px;border-radius:10px;min-width:50px;text-align:center">${pct.toFixed(1)}%</div>
+          <div style="font-size:10px;color:${pillColour};font-weight:600;background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);padding:3px 8px;border-radius:10px;min-width:50px;text-align:center">${pct.toFixed(1)}%</div>
         </div>`;
     }).join('');
 
@@ -24264,7 +24420,7 @@ function _renderBgtBreakdownPanel(state) {
           <div class="section-label" style="margin-bottom:2px">Monthly Breakdown · ${state.activeMonth || ''}</div>
           <div class="stat-sub">Each category as a % of this month's actual income</div>
         </div>
-        <div class="bgt-saved-tile" style="text-align:right;background:rgba(60,60,68,0.30);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:12px 18px;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.14),inset 0 -1px 0 rgba(0,0,0,0.20),0 8px 24px rgba(0,0,0,0.30)">
+        <div class="bgt-saved-tile" style="text-align:right;background:linear-gradient(180deg,rgba(220,230,245,0.10) 0%,rgba(180,195,220,0.04) 100%);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid rgba(200,215,240,0.20);border-radius:14px;padding:12px 18px;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.30),inset 0 -1px 0 rgba(0,0,0,0.30),0 8px 24px rgba(0,0,0,0.35)">
           <div style="font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:600">Saved This Month</div>
           <div style="font-size:24px;font-weight:600;color:${savedColour};line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums;text-shadow:0 0 12px ${savedPct >= 20 ? 'rgba(48,209,88,0.20)' : savedPct >= 10 ? 'rgba(255,159,10,0.20)' : 'rgba(255,69,58,0.20)'}">${savedPct.toFixed(1)}%</div>
           <div style="font-size:10px;color:var(--muted);margin-top:2px" data-balance-sensitive>£${fmtNum(savedAmount, 2)} of £${fmtNum(totalIncome, 2)}</div>
@@ -24443,7 +24599,9 @@ function _renderBgtAveragesPanel(state) {
       </div>
 
       ${taxRows ? `
-        <div class="section-label" style="margin-bottom:8px;color:var(--red)">Tax Provision</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-left:10px;border-left:3px solid var(--red)">
+          <div class="subsection-label" style="color:#ffffff">Tax Provision</div>
+        </div>
         <table class="bgt-table" style="margin-bottom:16px">
           <thead class="bgt-thead"><tr>
             <th style="text-align:left">Category</th><th>Avg / Month</th><th>Months Tracked</th><th>Total Set Aside</th>
@@ -24452,7 +24610,9 @@ function _renderBgtAveragesPanel(state) {
         </table>` : ''}
 
       ${expenseRows ? `
-        <div class="section-label" style="margin-bottom:8px;color:var(--gold)">Expense Categories</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-left:10px;border-left:3px solid var(--amber)">
+          <div class="subsection-label" style="color:#ffffff">Expense Categories</div>
+        </div>
         <table class="bgt-table" style="margin-bottom:16px">
           <thead class="bgt-thead"><tr>
             <th style="text-align:left">Category</th><th>Avg / Month</th><th>Months Tracked</th><th>Total</th>
@@ -24461,7 +24621,9 @@ function _renderBgtAveragesPanel(state) {
         </table>` : ''}
 
       ${incomeRows ? `
-        <div class="section-label" style="margin-bottom:8px;color:var(--green)">Income Categories</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-left:10px;border-left:3px solid var(--green)">
+          <div class="subsection-label" style="color:#ffffff">Income Categories</div>
+        </div>
         <table class="bgt-table">
           <thead class="bgt-thead"><tr>
             <th style="text-align:left">Category</th><th>Avg / Month</th><th>Months Tracked</th><th>Total</th>
