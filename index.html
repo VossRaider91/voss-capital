@@ -5281,7 +5281,10 @@ body.privacy-mode-active .portfolio-delta-pill {
   }
   .container {
     max-width: 100% !important;
-    padding: 0 12px 80px 12px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-top: 0;
+    padding-bottom: 80px;
   }
 
   /* ── STICKY HEADER ────────────────────────────────────────── */
@@ -5289,8 +5292,11 @@ body.privacy-mode-active .portfolio-delta-pill {
     position: sticky;
     top: 0;
     z-index: 90;
-    margin: 0 -12px 0 -12px;
-    padding: calc(env(safe-area-inset-top) + 8px) 14px 8px 14px !important;
+    margin-left: calc(-1 * max(14px, env(safe-area-inset-left)));
+    margin-right: calc(-1 * max(14px, env(safe-area-inset-right)));
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: calc(env(safe-area-inset-top) + 8px) max(14px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left)) !important;
     background: rgba(13, 13, 13, 0.78);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
@@ -5322,7 +5328,7 @@ body.privacy-mode-active .portfolio-delta-pill {
     left: 0;
     right: 0;
     margin: 0 !important;
-    padding: calc(env(safe-area-inset-top) + 8px) 14px 0 14px !important;
+    padding: calc(env(safe-area-inset-top) + 8px) max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left)) !important;
     border-bottom-color: transparent;
     background: transparent !important;
     backdrop-filter: none !important;
@@ -5433,8 +5439,8 @@ body.privacy-mode-active .portfolio-delta-pill {
        they read as one continuous element. */
     position: fixed !important;
     top: calc(var(--vc-mobile-nav-top, 90px) - 2px) !important;
-    left: 14px !important;
-    right: 14px !important;
+    left: max(14px, env(safe-area-inset-left)) !important;
+    right: max(14px, env(safe-area-inset-right)) !important;
     z-index: 89 !important;  /* below the sticky header so the pill stays on top; the header's bottom border becomes transparent when nav is open via body.mobile-nav-active */
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
