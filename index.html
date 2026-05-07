@@ -14500,7 +14500,7 @@ function renderHistory(filter='all') {
     return;
   }
 
-  el.innerHTML = filtered.map((entry, idx) => {
+  const renderedCards = filtered.map((entry, idx) => {
     // Sold entries get a special card
     if (entry.type === 'sold') {
       const entryWrapper = entry.wrapper || 'GIA';
@@ -14679,7 +14679,82 @@ function renderHistory(filter='all') {
         </div>
       </div>
     </div>`;
-  }).join('');
+  });
+
+  // ── Monthly History month grouping — May 2026 ──
+  // Goal: keep the existing card design exactly as-is, but group past months
+  // into a single collapsible pill so the page stays short. Current month
+  // entries render naked at the top exactly like before. The list is already
+  // sorted newest-first so the first chunk hit by the loop is the current
+  // month. When the user has any active filter (search or date range), we
+  // skip the grouping and render flat — they're actively hunting and need
+  // every entry visible.
+  const filtersActive = !!(search || fromVal || toVal);
+  if (filtersActive) {
+    el.innerHTML = renderedCards.join('');
+  } else {
+    const now = new Date();
+    const currentKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    // monthOrder preserves first-encounter order so the natural newest-first
+    // sequence of `filtered` is reflected in the rendered output.
+    const monthOrder = [];
+    const monthGroups = {};
+    filtered.forEach((entry, i) => {
+      const d = new Date(entry.timestamp);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      if (!monthGroups[key]) {
+        monthOrder.push(key);
+        monthGroups[key] = { entries: [], cards: [], deployed: 0, label: d.toLocaleString('en-GB', { month: 'long', year: 'numeric' }) };
+      }
+      monthGroups[key].entries.push(entry);
+      monthGroups[key].cards.push(renderedCards[i]);
+      // Deployed total — sum of contribution entries' fund values. Mirrors
+      // the per-card "Deployed this entry" headline (line ~14612). Sold
+      // entries count as 0 deployed since they're disposals, not deployments.
+      if (entry.type !== 'sold') {
+        const entryDeployed = (entry.funds || []).reduce((s, f) => s + (f.value || 0), 0);
+        monthGroups[key].deployed += entryDeployed;
+      }
+    });
+    el.innerHTML = monthOrder.map(key => {
+      const g = monthGroups[key];
+      if (key === currentKey) {
+        // Current month — render naked, exactly like the pre-grouping layout
+        return g.cards.join('');
+      }
+      // Past month — wrap in a collapsible pill. Header reads as
+      // "April 2026 · 2 entries · £47,528 deployed". Tap toggles the body.
+      const safeId = `histmonth_${key.replace('-', '_')}`;
+      const entryWord = g.entries.length === 1 ? 'entry' : 'entries';
+      return `<div class="hist-month-group" id="${safeId}-wrap" style="margin-bottom:12px">
+        <button type="button" class="hist-month-header" onclick="toggleHistoryMonth('${safeId}')" id="btn-${safeId}" style="width:100%;background:#161616;border:0.5px solid #2a2a2a;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;color:inherit;font-family:inherit">
+          <div style="flex:1;min-width:0">
+            <div style="color:var(--white);font-size:13px;font-weight:600;margin-bottom:2px">${g.label}</div>
+            <div style="color:var(--muted);font-size:10px">${g.entries.length} ${entryWord} · £${fmtNum(Math.round(g.deployed),0)} deployed</div>
+          </div>
+          <span class="hist-month-chevron" style="color:var(--muted);font-size:12px;flex-shrink:0">▶</span>
+        </button>
+        <div class="hist-month-body" id="${safeId}" style="display:none;margin-top:12px">
+          ${g.cards.join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// Toggle a Monthly History past-month group. Mirrors the toggleSection
+// pattern used on Portfolio Overview: swap the chevron and toggle the body's
+// display. State is not persisted between renders — every renderHistory call
+// resets to collapsed, which matches the user's mental model (the page
+// always opens in a tidy state).
+function toggleHistoryMonth(id) {
+  const body = document.getElementById(id);
+  const btn  = document.getElementById(`btn-${id}`);
+  if (!body || !btn) return;
+  const chevron = btn.querySelector('.hist-month-chevron');
+  const collapsed = body.style.display === 'none';
+  body.style.display = collapsed ? '' : 'none';
+  if (chevron) chevron.textContent = collapsed ? '▼' : '▶';
 }
 
 function toggleEditForm(id) {
@@ -16622,14 +16697,14 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
         <div style="min-width:0;flex:1">
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600">New Holdings</div>
-          <div class="holdings-section-explainer" style="font-size:9px;color:var(--muted);padding-right:12px">From monthly history. Ticked by default so they feed the calculator's drift and rebalancing.<br>% shown relative to new holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span></div>
+          <div class="holdings-section-explainer" style="display:none;font-size:9px;color:var(--muted);padding-right:12px">From monthly history. Ticked by default so they feed the calculator's drift and rebalancing.<br>% shown relative to new holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span class="holdings-section-balance" style="display:none" data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span>
-          <button class="btn-ghost btn-sm" onclick="toggleSection('${newSectionId}')" id="btn-${newSectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
+          <span class="holdings-section-balance" style="display:inline-flex" data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span>
+          <button class="btn-ghost btn-sm" onclick="toggleSection('${newSectionId}')" id="btn-${newSectionId}" style="font-size:9px;padding:4px 10px">▶ Expand</button>
         </div>
       </div>
-      <div id="${newSectionId}">
+      <div id="${newSectionId}" style="display:none">
         ${newGroups.map(g=>renderWrapperGroup(g,false)).join('')}
       </div>
     </div>` : ''}
@@ -16639,14 +16714,14 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
         <div style="min-width:0;flex:1">
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600;color:var(--muted)">Legacy Holdings</div>
-          <div class="holdings-section-explainer" style="font-size:9px;color:var(--muted2);padding-right:12px">Pre-calculator holdings. Unticked by default so the calculator doesn't try to rebalance against your historical positions.<br>% shown relative to legacy holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span></div>
+          <div class="holdings-section-explainer" style="display:none;font-size:9px;color:var(--muted2);padding-right:12px">Pre-calculator holdings. Unticked by default so the calculator doesn't try to rebalance against your historical positions.<br>% shown relative to legacy holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span class="holdings-section-balance" style="display:none" data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span>
-          <button class="btn-ghost btn-sm" onclick="toggleSection('${legacySectionId}')" id="btn-${legacySectionId}" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
+          <span class="holdings-section-balance" style="display:inline-flex" data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span>
+          <button class="btn-ghost btn-sm" onclick="toggleSection('${legacySectionId}')" id="btn-${legacySectionId}" style="font-size:9px;padding:4px 10px">▶ Expand</button>
         </div>
       </div>
-      <div id="${legacySectionId}">
+      <div id="${legacySectionId}" style="display:none">
         ${legacyGroups.map(g=>renderWrapperGroup(g,true)).join('')}
       </div>
     </div>` : ''}`;
@@ -16667,6 +16742,43 @@ function renderPortfolio(filter='all') {
   // Re-apply privacy mask now that fresh elements have been rendered.
   // No-op if privacy mode is off.
   _refreshPrivacyMask();
+
+  // ── Hcard total tween — May 2026 ──
+  // The holdings list innerHTML rebuild snaps every per-card total to the
+  // new value, which makes the manual price update feel snappy but the
+  // silent auto-refresh feel jarring (no animation, just a jump). Run a
+  // post-rebuild pass that:
+  //  1. Reads the previous per-holding value cached on window from the
+  //     last render
+  //  2. Seeds each fresh .hcard-total with _animTarget = previous value
+  //  3. Calls animateNumber so the new total tweens in
+  // This makes both the manual and auto paths feel identical, since both
+  // funnel through renderPortfolio.
+  try {
+    if (!window._lastHcardValues) window._lastHcardValues = new Map();
+    const prevMap = window._lastHcardValues;
+    const newMap = new Map();
+    document.querySelectorAll('#tab-portfolio .hcard').forEach(card => {
+      const id = card.id; // hrow_<holdingId>
+      const valEl = card.querySelector('.hcard-total');
+      if (!valEl) return;
+      // Parse the freshly-written value from textContent so we know the
+      // target without re-deriving it from the data model.
+      const target = parseFloat((valEl.textContent || '').replace(/[^0-9.\-]/g, ''));
+      if (!isFinite(target)) return;
+      newMap.set(id, target);
+      const prev = prevMap.get(id);
+      if (typeof prev === 'number' && isFinite(prev) && prev !== target) {
+        valEl._animTarget = prev;
+        animateNumber(valEl, target, { prefix: '£', decimals: 0 });
+      } else {
+        // First render or unchanged — seed _animTarget so subsequent calls
+        // have a proper baseline.
+        valEl._animTarget = target;
+      }
+    });
+    window._lastHcardValues = newMap;
+  } catch (e) { /* swallow — animation is non-essential */ }
 }
 
 function toggleSection(id) {
