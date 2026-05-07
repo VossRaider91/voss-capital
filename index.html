@@ -5310,11 +5310,24 @@ body.privacy-mode-active .portfolio-delta-pill {
         legibility because the backdrop scrim and status pill chips
         provide their own contrast. */
   body.mobile-nav-active .vc-header {
+    /* When body is scroll-locked (overflow:hidden, set below), sticky
+       positioning loses its scrolling ancestor and the header reverts
+       to its document-flow position — which, if the user opened the
+       nav while scrolled deep, sits offscreen above the viewport.
+       Force fixed positioning so the header (and the pill inside it)
+       stays pinned to the top of the viewport regardless of where the
+       user was scrolled. */
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 0 !important;
+    padding: calc(env(safe-area-inset-top) + 8px) 14px 0 14px !important;
     border-bottom-color: transparent;
-    padding-bottom: 0 !important;
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    z-index: 90;
   }
 
   /* Lock document scroll while the mobile nav is open. Without this, an
@@ -5523,25 +5536,21 @@ body.privacy-mode-active .portfolio-delta-pill {
     color: rgba(255,255,255,0.85);
   }
   #mobile-nav-pill.open {
-    background: var(--card-gradient-strong);
-    border-color: rgba(200, 215, 240, 0.20);
+    /* Hard, explicit positioning so the pill stays anchored at the top
+       of the viewport regardless of scroll position or whether the
+       sticky header behind it has been forced transparent. The pill is
+       its own visible layer above the dropdown. */
+    position: relative;
+    z-index: 91;
+    background: linear-gradient(180deg, rgba(160,170,185,0.85) 0%, rgba(60,70,85,0.85) 100%);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border-color: rgba(200, 215, 240, 0.30);
     border-bottom-color: transparent;
-    /* Suppress left/right borders when open so the pill's side edges
-       don't stack with the dropdown's left/right border lines beneath.
-       Without this, both the pill and the dropdown have 1px white-10
-       borders down their sides at exactly the same x coordinates. When
-       the page is scrolled and a portfolio card sits behind the header,
-       the contrast amplifies and the two stacked border lines read as
-       a single hard sharp edge running through the dropdown's top
-       corners next to "Portfolio Overview." Removing the side borders
-       on the pill while keeping the top border keeps the pill visually
-       distinct in its closed state but disappears the seam in the open
-       state. The dropdown's borders provide the visible side lines for
-       the combined pill+dropdown shape. */
-    border-left-color: transparent;
-    border-right-color: transparent;
+    border-left-color: rgba(200, 215, 240, 0.30);
+    border-right-color: rgba(200, 215, 240, 0.30);
     border-radius: 12px 12px 0 0;
-    box-shadow: none;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.40);
   }
   #mobile-nav-pill.open .pill-label {
     color: var(--white);
