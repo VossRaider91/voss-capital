@@ -3348,6 +3348,131 @@ body.privacy-mode-active .portfolio-delta-pill {
    names still wins via inline-style specificity. */
 #bgt-averages-panel .bgt-thead th { color: var(--white); font-weight: 600; }
 #bgt-averages-panel .bgt-row td:first-child { color: var(--white); font-weight: 600; }
+
+/* Spending Velocity panel — May 2026 ──
+   Compact rows showing pacing for each category group. The white tick
+   on each bar marks the day-of-month percentage so the user can read at
+   a glance whether they're ahead or behind pace. Pills mirror the
+   colour language used elsewhere on the page (income green, tax red,
+   fixed amber, variable blue). On mobile the figure column drops to
+   the next line so the pill never wraps and the pacing tick stays
+   precisely aligned. */
+.bgt-velo-stack { display:flex; flex-direction:column; gap:10px; }
+.bgt-velo-row {
+  background: rgba(255,255,255,0.025);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.bgt-velo-row-head {
+  display:flex; align-items:center; gap:10px; margin-bottom:8px;
+}
+.bgt-velo-row-pill {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 3px 8px; border-radius: 10px;
+  border: 0.5px solid; flex-shrink: 0; white-space: nowrap;
+}
+.bgt-velo-row-fig {
+  font-size: 11px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex: 1; min-width: 0; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; text-align: right;
+}
+.bgt-velo-row-fig-sep { color: var(--muted2); margin: 0 2px; }
+.bgt-velo-row-pct {
+  font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0; min-width: 36px; text-align: right;
+}
+.bgt-velo-bar-track {
+  position: relative;
+  height: 6px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50px;
+  overflow: visible;
+  margin-bottom: 6px;
+}
+.bgt-velo-bar-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  border-radius: 50px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.25);
+  transition: width 0.3s ease;
+}
+.bgt-velo-bar-tick {
+  position: absolute; top: -2px; bottom: -2px;
+  width: 1.5px;
+  background: var(--white);
+  box-shadow: 0 0 4px rgba(255,255,255,0.6);
+  transform: translateX(-0.75px);
+}
+.bgt-velo-row-note {
+  font-size: 10px; color: var(--muted); line-height: 1.4;
+}
+@media (max-width: 600px) {
+  /* On iPhone Air width (~430px) and narrower, stack the figure on its
+     own row so the pacing percentage and pill never compete for space.
+     Pill stays left, percentage stays right, figure drops below. */
+  .bgt-velo-row-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "pill pct" "fig fig";
+    gap: 4px 10px;
+    align-items: center;
+  }
+  .bgt-velo-row-pill { grid-area: pill; }
+  .bgt-velo-row-pct  { grid-area: pct; }
+  .bgt-velo-row-fig  { grid-area: fig; text-align: left; font-size: 10px; }
+}
+
+/* Wrapper Allowances panel — May 2026 ──
+   Sits on the Tax tab beneath the Tax Provision Planner. Four rows:
+   ISA, SIPP (employer-only), CGT exempt, and Dividend Allowance.
+   Same row pattern as the velocity panel for visual consistency
+   across both new analytics blocks. */
+.alw-stack { display:flex; flex-direction:column; gap:10px; }
+.alw-row {
+  background: rgba(255,255,255,0.025);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.alw-row-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.alw-row-pill {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 3px 8px; border-radius: 10px;
+  border: 0.5px solid; flex-shrink: 0; white-space: nowrap;
+}
+.alw-row-fig {
+  font-size: 13px; font-weight: 600; color: var(--white);
+  font-variant-numeric: tabular-nums;
+  flex: 1; min-width: 0; text-align: right; white-space: nowrap;
+}
+.alw-row-fig-cap { color: var(--muted); font-weight: 400; font-size: 10px; }
+.alw-bar-track {
+  position: relative; height: 6px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.alw-bar-fill {
+  height: 100%; border-radius: 50px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.25);
+  transition: width 0.3s ease;
+}
+.alw-row-foot {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: 10px; color: var(--muted);
+}
+.alw-row-foot-warn { color: var(--amber); }
+@media (max-width: 600px) {
+  .alw-row-fig { font-size: 12px; }
+  .alw-row-fig-cap { font-size: 9.5px; }
+}
 .bgt-row:last-child td { border-bottom: none; }
 .bgt-row.bgt-total td {
   font-weight: 600; color: var(--blue);
@@ -8657,6 +8782,12 @@ body.modal-active .container > footer {
     <!-- Annual Year-to-Date panel — populated by _renderBgtYtdPanel -->
     <div id="bgt-ytd-panel"></div>
 
+    <!-- Spending Velocity — May 2026 — pacing snapshot of where the user
+         should be vs where they are by category group at the current point
+         in the month. Sits above Historical Averages so the velocity check
+         comes before the long-run averages context. -->
+    <div id="bgt-velocity-panel"></div>
+
     <!-- Historical Averages — multi-month rolling averages -->
     <div id="bgt-averages-panel"></div>
 
@@ -8866,6 +8997,14 @@ body.modal-active .container > footer {
      TAX WRAPPERS TAB
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-tax">
+
+  <!-- Wrapper Allowances — May 2026 — sits at the very top of the Tax tab
+       so the user sees their allowance usage before drilling into the income
+       tax / CGT / sell mechanics. Tracks ISA, SIPP (employer-only), CGT
+       exempt, and Dividend Allowance across the current UK tax year. Pulls
+       live data from monthly history + budget tracker, so it updates
+       automatically whenever a new entry is saved. -->
+  <div id="wrapper-allowances-output"></div>
 
   <!-- ═══════════════════════════════════════════════════════════
        ZONE 1 — INCOME & TAX OWED
@@ -18984,6 +19123,184 @@ function renderTaxProvisionPlanner() {
   }
 
   out.innerHTML = headlineHtml + scheduleHtml;
+
+  // Cascade — keep the wrapper allowances panel in sync with anything that
+  // changes the underlying tax-year context. The planner is re-rendered on
+  // input changes, prior-year liability edits, and tax tab activation, so
+  // hooking the cascade here covers the realistic update points.
+  try { if (typeof renderWrapperAllowances === 'function') renderWrapperAllowances(); } catch (e) {}
+}
+
+// ── Wrapper Allowances tracker — May 2026 ──
+// Tracks usage of the four wrappers/allowances that matter most to a UK
+// resident shareholder during the tax year:
+//   • ISA — £20,000 cap, sums all ISA-tagged contributions in the current TY
+//   • SIPP — £60,000 cap, sums employer-only SIPP contributions in the current
+//     TY (user has confirmed they will never make personal SIPP contributions)
+//   • CGT exempt — £3,000 cap, reads the cgt-used input the user maintains
+//   • Dividend Allowance — £500 cap, sums Dividend Salary across the TY
+//     (live month from bgtState.actual + any archived months that fall in TY)
+//
+// All four read from existing state. No new inputs. The "implied monthly pace
+// to fill" footnote uses simple linear projection (remaining ÷ months left).
+// Re-renders on every save via renderTaxProvisionPlanner cascade.
+function renderWrapperAllowances() {
+  const out = document.getElementById('wrapper-allowances-output');
+  if (!out) return;
+
+  // ── Tax year boundaries (UK: 6 April → 5 April) ──
+  const today = new Date();
+  const monthIdx = today.getMonth();
+  const dayNum   = today.getDate();
+  const isBeforeApril6 = (monthIdx < 3) || (monthIdx === 3 && dayNum < 6);
+  const tyStartYear = isBeforeApril6 ? today.getFullYear() - 1 : today.getFullYear();
+  const tyStartMs   = new Date(tyStartYear,     3, 6, 0, 0, 0).getTime();
+  const tyEndMs     = new Date(tyStartYear + 1, 3, 6, 0, 0, 0).getTime() - 1;
+  const totalMs     = tyEndMs - tyStartMs + 1;
+  const elapsedMs   = today.getTime() - tyStartMs;
+  const remainingMs = Math.max(0, tyEndMs - today.getTime());
+  const monthsLeft  = Math.max(1, Math.round(remainingMs / (30.44 * 24 * 60 * 60 * 1000)));
+  const daysIn      = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+  const tyLabel     = `${tyStartYear}/${String(tyStartYear + 1).slice(-2)}`;
+
+  // ── ISA — sum all ISA-tagged investment entries in current TY ──
+  const investHistory = (typeof lsGet === 'function' && typeof LS !== 'undefined')
+    ? lsGet(LS.HISTORY, []) : [];
+  let isaUsed = 0;
+  let sippUsed = 0;
+  investHistory.forEach(entry => {
+    if (!entry || !entry.timestamp) return;
+    if (entry.type === 'sold') return; // disposals don't count toward allowances
+    if (entry.timestamp < tyStartMs || entry.timestamp > tyEndMs) return;
+    const wrapper = entry.wrapper || (entry.type === 'employer' ? 'SIPP' : 'GIA');
+    const sum = (entry.funds || []).reduce((s, f) => s + (parseFloat(f.value) || 0), 0);
+    if (wrapper === 'ISA') isaUsed += sum;
+    else if (wrapper === 'SIPP') sippUsed += sum; // employer-only by user contract
+  });
+
+  // ── CGT exempt — read directly from the input the user maintains on this tab ──
+  const cgtAllowanceEl = document.getElementById('cgt-allowance');
+  const cgtUsedEl      = document.getElementById('cgt-used');
+  const cgtAllowance   = cgtAllowanceEl ? (parseFloat(cgtAllowanceEl.value) || 3000) : 3000;
+  const cgtUsed        = cgtUsedEl      ? (parseFloat(cgtUsedEl.value)      || 0)    : 0;
+
+  // ── Dividend Allowance — sum Dividend Salary across the TY ──
+  // Live month from state.actual (treat as falling in the current TY for
+  // simplicity; mirrors how _bgtTaxSavedThisTaxYear handles its live amt).
+  // Archived months parsed from the "Month Year" label.
+  let dividendUsed = 0;
+  try {
+    if (typeof bgtLoad === 'function') {
+      const bgtState = bgtLoad();
+      const liveDiv = parseFloat((bgtState.actual || {})['Dividend Salary']) || 0;
+      if (liveDiv > 0) dividendUsed += liveDiv;
+      const monthMap = { January:0, February:1, March:2, April:3, May:4, June:5, July:6, August:7, September:8, October:9, November:10, December:11 };
+      (bgtState.monthHistory || []).forEach(rec => {
+        const amt = parseFloat((rec.actualSnapshot || {})['Dividend Salary']) || 0;
+        if (amt <= 0) return;
+        const parts = (rec.month || '').split(' ');
+        if (parts.length === 2) {
+          const m = monthMap[parts[0]];
+          const y = parseInt(parts[1]);
+          if (!isNaN(m) && !isNaN(y)) {
+            const recMs = new Date(y, m, 15).getTime();
+            if (recMs >= tyStartMs && recMs <= tyEndMs) dividendUsed += amt;
+          }
+        }
+      });
+    }
+  } catch (e) { /* dividends row stays at 0 if budget data isn't ready */ }
+
+  // ── Caps (UK 2026/27) ──
+  const ISA_CAP        = 20000;
+  const SIPP_CAP       = 60000; // standard annual allowance, user not affected by tapering or MPAA
+  const DIV_CAP        = 500;   // 2026/27 dividend allowance
+
+  // ── Helper: build a single allowance row ──
+  // pillBg/pillBorder/pillFg drive the per-wrapper colour language. Bar fills
+  // amber when over 80% used (gentle warning) and red when fully consumed.
+  // Footnote shows £ remaining left, monthly pace right; pace turns amber when
+  // current pace + months left implies the user will overshoot.
+  const buildRow = (label, used, cap, pillBg, pillBorder, pillFg, options = {}) => {
+    const pct = cap > 0 ? Math.min((used / cap) * 100, 100) : 0;
+    const remaining = Math.max(cap - used, 0);
+    let fillColour = pillFg;
+    if (used >= cap)         fillColour = 'var(--red)';
+    else if (pct >= 80)      fillColour = 'var(--amber)';
+    const pace = remaining / monthsLeft;
+    const paceColour = options.paceWarn && pct >= 80 ? 'alw-row-foot-warn' : '';
+    const remainingLabel = options.remainingLabel || `£${fmtNum(Math.round(remaining), 0)} left`;
+    const paceLabel      = options.paceLabel
+      ? options.paceLabel
+      : (remaining > 0
+          ? `£${fmtNum(Math.round(pace), 0)}/mo to fill by 5 April ${tyStartYear + 1}`
+          : `Filled · no further headroom`);
+    return `
+      <div class="alw-row">
+        <div class="alw-row-head">
+          <div class="alw-row-pill" style="background:${pillBg};color:${pillFg};border-color:${pillBorder}">${label}</div>
+          <div class="alw-row-fig">£${fmtNum(Math.round(used), 0)} <span class="alw-row-fig-cap">/ £${fmtNum(cap, 0)}</span></div>
+        </div>
+        <div class="alw-bar-track">
+          <div class="alw-bar-fill" style="width:${pct.toFixed(1)}%;background:${fillColour}"></div>
+        </div>
+        <div class="alw-row-foot ${paceColour}">
+          <span>${remainingLabel}</span>
+          <span>${paceLabel}</span>
+        </div>
+      </div>`;
+  };
+
+  const isaRow = buildRow(
+    'ISA', isaUsed, ISA_CAP,
+    'rgba(48,209,88,0.10)', 'rgba(48,209,88,0.40)', 'var(--green)',
+    { paceWarn: true }
+  );
+  const sippRow = buildRow(
+    'SIPP', sippUsed, SIPP_CAP,
+    'rgba(10,132,255,0.10)', 'rgba(10,132,255,0.40)', 'var(--blue)',
+    {
+      paceLabel: sippUsed >= SIPP_CAP
+        ? `Filled · no further headroom`
+        : `Employer contributions only · projected based on history`
+    }
+  );
+  const cgtRow = buildRow(
+    'CGT EXEMPT', cgtUsed, cgtAllowance,
+    'rgba(255,159,10,0.10)', 'rgba(255,159,10,0.40)', 'var(--amber)',
+    {
+      remainingLabel: `£${fmtNum(Math.round(Math.max(cgtAllowance - cgtUsed, 0)), 0)} of headroom`,
+      paceLabel: `Realised gains used`,
+      paceWarn: true
+    }
+  );
+  const divRow = buildRow(
+    'DIVIDEND ALLOWANCE', dividendUsed, DIV_CAP,
+    'rgba(159,58,212,0.10)', 'rgba(159,58,212,0.40)', '#9F3AD4',
+    {
+      remainingLabel: `£${fmtNum(Math.round(Math.max(DIV_CAP - dividendUsed, 0)), 0)} of headroom`,
+      paceLabel: dividendUsed >= DIV_CAP
+        ? `Allowance breached · excess taxed at marginal rate`
+        : (dividendUsed >= DIV_CAP * 0.8 ? 'Watch for excess this year' : 'From Dividend Salary entries'),
+      paceWarn: true
+    }
+  );
+
+  out.innerHTML = `
+    <div class="card-gold mb16">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div>
+          <div class="section-label" style="margin-bottom:2px">Wrapper Allowances</div>
+          <div class="stat-sub">${tyLabel} tax year · ${daysIn} days in · ${monthsLeft} month${monthsLeft === 1 ? '' : 's'} remaining</div>
+        </div>
+      </div>
+      <div class="alw-stack">
+        ${isaRow}
+        ${sippRow}
+        ${cgtRow}
+        ${divRow}
+      </div>
+    </div>`;
 }
 
 function calculateCGTRate(income, gain, allowance) {
@@ -22716,6 +23033,7 @@ function _refreshBgtAnalytics() {
   const state = bgtLoad();
   try { _renderBgtYtdPanel(state);       } catch (e) {}
   try { _renderBgtBreakdownPanel(state); } catch (e) {}
+  try { _renderBgtVelocityPanel(state);  } catch (e) {}
   try { _renderBgtAveragesPanel(state);  } catch (e) {}
 }
 
@@ -23394,6 +23712,7 @@ function _renderBgtMainTable(state) {
   // Cascade: keep all the analytics panels in sync with every edit
   _renderBgtYtdPanel(state);
   _renderBgtBreakdownPanel(state);
+  _renderBgtVelocityPanel(state);
   _renderBgtAveragesPanel(state);
 
   // Apply collapsed state to the new section cards
@@ -23708,6 +24027,118 @@ function _renderBgtBreakdownPanel(state) {
         </div>
       </div>
       ${rows || '<div style="font-size:11px;color:var(--muted);font-style:italic;padding:12px 0">No spending recorded for this month yet.</div>'}
+    </div>`;
+}
+
+// ── Spending Velocity — May 2026 ──
+// Pacing check at the current point in the month. For each category group
+// (Tax Provision, Fixed Expenses, Variable Expenses, Income), compares
+// actual-as-percentage-of-planned against day-of-month-as-percentage. The
+// gap is the velocity signal:
+//   - on or under pace → neutral grey bar
+//   - 5+ percentage points ahead of pace → amber (overspend warning)
+//   - over 100% → red (already breached planned budget)
+//   - income at 100% → green (received in full)
+//   - income < pace → amber (delay/missing income concern)
+// Fixed Expenses get a softer treatment — most fixed bills land on day 1
+// of the month so the pacing line doesn't apply the same way; copy explains.
+// Tax Provision is suppressed when planned is 0, mirroring the warning
+// banner suppression on the main table (May 2026).
+function _renderBgtVelocityPanel(state) {
+  const el = document.getElementById('bgt-velocity-panel');
+  if (!el) return;
+
+  const planned = state.planned || {};
+  const actual  = state.actual  || {};
+
+  const today    = new Date();
+  const dayNum   = today.getDate();
+  const daysInMo = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const pacePct  = (dayNum / daysInMo) * 100;
+
+  const sumGroup = (cats, src) => cats.reduce((s, c) => s + (parseFloat(src[c]) || 0), 0);
+  const tIP = sumGroup(BGT_INCOME, planned);
+  const tIA = sumGroup(BGT_INCOME, actual);
+  const tFP = sumGroup(BGT_FIXED, planned);
+  const tFA = sumGroup(BGT_FIXED, actual);
+  const tVP = sumGroup(BGT_VARIABLE, planned);
+  const tVA = sumGroup(BGT_VARIABLE, actual);
+  const tTP = sumGroup(BGT_TAX, planned);
+  const tTA = sumGroup(BGT_TAX, actual);
+
+  // Hide the panel entirely when the user has neither planned nor recorded
+  // anything yet — empty state would just be noise on a blank Budget tab.
+  const anyData = tIP + tIA + tFP + tFA + tVP + tVA + tTP + tTA > 0;
+  if (!anyData) { el.innerHTML = ''; return; }
+
+  // Per-row evaluation. Returns the bar fill colour, the status copy beneath
+  // the bar, and the headline percentage display. Logic differs per row type:
+  //   - expense rows (fixed/variable/tax): pct = actual/planned, on-pace
+  //     comparison drives status
+  //   - income rows: pct = actual/planned with the framing flipped
+  //     (under-pace is a warning, at-pace or above is fine)
+  const evalExpense = (act, plan, opts = {}) => {
+    if (plan <= 0) return null;
+    const pct = (act / plan) * 100;
+    const gap = pct - pacePct; // positive = ahead of pace
+    let colour, copy;
+    if (pct >= 100) { colour = 'var(--red)'; copy = `Over budget by £${fmtNum(Math.round(act - plan), 0)} · ${pct.toFixed(0)}% spent`; }
+    else if (gap > 5) { colour = 'var(--amber)'; copy = `${gap.toFixed(0)} percentage points ahead of pace`; }
+    else if (gap < -5 && opts.noteUnderPace) { colour = 'var(--green)'; copy = `${Math.abs(gap).toFixed(0)} pts under pace · room to spare`; }
+    else { colour = 'var(--muted)'; copy = `On pace · ${pct.toFixed(0)}% spent at day ${dayNum} of ${daysInMo}`; }
+    if (opts.fixedNote) copy = opts.fixedNote;
+    return { pct, colour, copy };
+  };
+  const evalIncome = (act, plan) => {
+    if (plan <= 0) return null;
+    const pct = (act / plan) * 100;
+    let colour, copy;
+    if (pct >= 100) { colour = 'var(--green)'; copy = `Received in full`; }
+    else if (pct >= pacePct - 5) { colour = 'var(--muted)'; copy = `${pct.toFixed(0)}% received · pacing normally`; }
+    else { colour = 'var(--amber)'; copy = `${(pacePct - pct).toFixed(0)} pts behind pace · check for delays`; }
+    return { pct, colour, copy };
+  };
+
+  // Build each row's HTML. The white pacing line at top is a 1.5px tick
+  // overlaid on the bar at the day-of-month percentage. Bar fill widths
+  // are clamped to 100% so over-budget rows still render visually clean.
+  const buildRow = (label, pillBg, pillBorder, pillFg, act, plan, evalResult) => {
+    if (!evalResult) return '';
+    const fillWidth = Math.min(evalResult.pct, 100).toFixed(1);
+    return `
+      <div class="bgt-velo-row">
+        <div class="bgt-velo-row-head">
+          <div class="bgt-velo-row-pill" style="background:${pillBg};color:${pillFg};border-color:${pillBorder}">${label}</div>
+          <div class="bgt-velo-row-fig">£${fmtNum(Math.round(act), 0)} <span class="bgt-velo-row-fig-sep">/</span> £${fmtNum(Math.round(plan), 0)}</div>
+          <div class="bgt-velo-row-pct" style="color:${evalResult.colour}">${evalResult.pct.toFixed(0)}%</div>
+        </div>
+        <div class="bgt-velo-bar-track">
+          <div class="bgt-velo-bar-fill" style="width:${fillWidth}%;background:${evalResult.colour}"></div>
+          <div class="bgt-velo-bar-tick" style="left:${pacePct.toFixed(2)}%"></div>
+        </div>
+        <div class="bgt-velo-row-note">${evalResult.copy}</div>
+      </div>`;
+  };
+
+  const incomeRow   = buildRow('INCOME',           'rgba(58,212,143,0.10)','rgba(58,212,143,0.40)','var(--green)', tIA, tIP, evalIncome(tIA, tIP));
+  const taxRow      = buildRow('TAX PROVISION',    'rgba(224,100,100,0.10)','rgba(224,100,100,0.40)','var(--red)',   tTA, tTP, evalExpense(tTA, tTP));
+  const fixedRow    = buildRow('FIXED EXPENSES',   'rgba(201,127,58,0.10)','rgba(201,127,58,0.40)','var(--amber)',  tFA, tFP, evalExpense(tFA, tFP, { fixedNote: 'Fixed bills typically land on day 1 — High % early in the month is expected' }));
+  const variableRow = buildRow('VARIABLE EXPENSES','rgba(58,143,201,0.10)','rgba(58,143,201,0.40)','var(--blue)',   tVA, tVP, evalExpense(tVA, tVP, { noteUnderPace: true }));
+
+  el.innerHTML = `
+    <div class="card mb16">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div>
+          <div class="section-label" style="margin-bottom:2px">Spending Velocity</div>
+          <div class="stat-sub">Day ${dayNum} of ${daysInMo} · ${pacePct.toFixed(0)}% Through the month · White tick marks where you should be</div>
+        </div>
+      </div>
+      <div class="bgt-velo-stack">
+        ${incomeRow}
+        ${taxRow}
+        ${fixedRow}
+        ${variableRow}
+      </div>
     </div>`;
 }
 
