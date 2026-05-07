@@ -3341,16 +3341,12 @@ body.privacy-mode-active .portfolio-delta-pill {
 }
 .bgt-row td:first-child { text-align: left; color: var(--muted); font-size: 12px; font-weight: 500; }
 /* Historical Averages panel — May 2026 ──
-   The default first-column muted colour reads as too grey alongside the
-   multi-month numbers, making the category names hard to scan. Override
-   to white inside #bgt-averages-panel so the titles pop. Since the JS
-   row-builder sets an inline `color: var(--white)` for non-over-budget
-   rows and `color: var(--amber)` for over-budget rows, both inherit
-   correctly via inline > stylesheet specificity. The reason this rule is
-   needed at all is the parent `.bgt-row td:first-child` rule above sets
-   `var(--muted)` and was the primary muted-grey culprit in the wider
-   context. We bump specificity here (id + class + pseudo) without using
-   !important so amber rows still win on the inline. */
+   Override the default muted colour on column headers and category names
+   so the panel reads cleanly. Scoped to #bgt-averages-panel only — the
+   main budget table, YTD panel, and History view keep their existing
+   muted headers. Inline `color: var(--amber)` on over-budget category
+   names still wins via inline-style specificity. */
+#bgt-averages-panel .bgt-thead th { color: var(--white); font-weight: 600; }
 #bgt-averages-panel .bgt-row td:first-child { color: var(--white); font-weight: 600; }
 .bgt-row:last-child td { border-bottom: none; }
 .bgt-row.bgt-total td {
