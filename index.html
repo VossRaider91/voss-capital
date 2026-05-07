@@ -8467,6 +8467,15 @@ body.modal-active .container > footer {
     <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px" id="ret-cp-narrative"></div>
   </div>
 
+  <!-- Next Milestone — May 2026 — near-term motivation tile that bridges
+       the abstract freedom number with the present moment. Picks the next
+       round-numbered portfolio milestone from a fixed ladder, shows the gap
+       and an estimated time to hit it based on six-month pace, and a
+       "what comes next" line so milestones feel like a ladder rather than
+       isolated targets. Renders inline, hidden if there's no current pot
+       data yet. Updates whenever renderFreedomNumber runs. -->
+  <div id="ret-milestone-output"></div>
+
   <!-- ═══════════════════════════════════════════
        FREEDOM NUMBER — the pot needed to make work optional
   ═══════════════════════════════════════════ -->
@@ -16082,6 +16091,191 @@ function renderFreedomNumber() {
   // Progress bar
   const bar2 = document.getElementById('ret-fn-bar');
   if (bar2) bar2.style.width = `${Math.min(progressPct, 100).toFixed(1)}%`;
+
+  // Cascade: keep the Next Milestone card in sync. Pass the already-computed
+  // currentPot and freedomToday so the milestone card uses the same source-of-
+  // truth pot value the Freedom card just rendered against — no duplication.
+  try { _renderNextMilestone(currentPot, freedomToday); } catch (e) {}
+}
+
+// ── Next Milestone — May 2026 ──
+// Renders the near-term portfolio milestone card above the Freedom Number.
+// Picks the next round-numbered milestone from a fixed ladder and projects
+// the time to hit it using a six-month pace estimator from monthly history.
+//
+// Pace estimator: looks at the most recent 6 personal-history entries with
+// a portfolioValue field, computes the per-month average growth, and projects
+// linearly. This captures both contributions and market growth, so it's a
+// realistic "what's actually happening to the pot" figure rather than a pure
+// contribution rate. Falls back gracefully if history is sparse.
+//
+// Cascade-friendly: takes currentPot and freedomToday as args from the
+// freedom card, so a single source of truth stays consistent across both.
+function _renderNextMilestone(currentPot, freedomToday) {
+  const out = document.getElementById('ret-milestone-output');
+  if (!out) return;
+
+  // Hide entirely if we don't have a meaningful pot or freedom number yet.
+  // Stops the card from rendering during the first paint before inputs settle.
+  if (!isFinite(currentPot) || currentPot <= 0) { out.innerHTML = ''; return; }
+
+  // Milestone ladder — round numbers people actually celebrate. We always
+  // include the user's freedomToday at the end (rounded to nearest £10k for
+  // tidiness) so the ladder eventually meets the freedom card's headline.
+  const baseLadder = [50000, 100000, 150000, 200000, 250000, 300000, 400000, 500000, 750000, 1000000, 1500000, 2000000];
+  const freedomRounded = freedomToday > 0 ? Math.round(freedomToday / 10000) * 10000 : 0;
+  const ladder = [...baseLadder.filter(v => freedomRounded === 0 || v < freedomRounded), freedomRounded].filter(v => v > 0);
+
+  // Find the next milestone strictly above the current pot, plus the one
+  // after that (for the "then" line). If we've passed the top of the ladder,
+  // hide the card — at that point the freedom number itself is the milestone.
+  const nextIdx = ladder.findIndex(v => v > currentPot);
+  if (nextIdx === -1) { out.innerHTML = ''; return; }
+  const nextMilestone = ladder[nextIdx];
+  const futureMilestones = ladder.slice(nextIdx + 1, nextIdx + 4);
+  const gap = Math.max(0, nextMilestone - currentPot);
+  const pctThere = nextMilestone > 0 ? (currentPot / nextMilestone) * 100 : 0;
+
+  // ── Pace estimator from history ──
+  // Read the last 6 most-recent personal entries with a portfolioValue.
+  // If we have fewer than 2 we can't compute a delta, so we skip the
+  // estimate and show "—" for time / month figures.
+  let monthsToGo = null;
+  let monthlyPace = 0;
+  let etaLabel = '—';
+  try {
+    const history = lsGet(LS.HISTORY, [])
+      .filter(e => e && e.timestamp && e.portfolioValue > 0 && (e.type === 'personal' || !e.type))
+      .sort((a, b) => a.timestamp - b.timestamp);
+    if (history.length >= 2) {
+      // Take last 7 so we can compute 6 deltas. If fewer, take what we have.
+      const slice = history.slice(-7);
+      // Average net growth per month between consecutive entries. Each delta
+      // is (newer.portfolioValue - older.portfolioValue) divided by the
+      // number of months between them — gives a per-month rate that's robust
+      // to irregular saving cadence.
+      const deltas = [];
+      for (let i = 1; i < slice.length; i++) {
+        const earlier = slice[i - 1];
+        const later   = slice[i];
+        const deltaVal = later.portfolioValue - earlier.portfolioValue;
+        const deltaMs  = later.timestamp - earlier.timestamp;
+        const deltaMo  = deltaMs / (30.44 * 24 * 60 * 60 * 1000);
+        if (deltaMo > 0.1) deltas.push(deltaVal / deltaMo);
+      }
+      if (deltas.length >= 3) {
+        // Median pace — robust to lump-sum outliers. Mean would let one big
+        // deposit (or one bad market month) drag the projection in either
+        // direction for the next six entries, which gives a misleading ETA.
+        // Median treats the lump as the outlier it is and reflects the
+        // typical month, which is what the user actually wants to see.
+        // Requires at least 3 deltas so the median is statistically
+        // meaningful — with only 1 or 2 prior deltas the value is too
+        // sensitive to a single entry to use as a projection.
+        const sorted = deltas.slice().sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        monthlyPace = sorted.length % 2 === 0
+          ? (sorted[mid - 1] + sorted[mid]) / 2
+          : sorted[mid];
+        if (monthlyPace > 0) {
+          monthsToGo = gap / monthlyPace;
+          // Project the ETA date from today.
+          const eta = new Date();
+          eta.setMonth(eta.getMonth() + Math.round(monthsToGo));
+          etaLabel = eta.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+        }
+      }
+    }
+  } catch (e) { /* swallow — pace fields stay as fallback */ }
+
+  // ── Format helpers for the "then" line ──
+  // Show the next 2-3 milestones as a friendly chain: "£500k · £1m freedom".
+  // Currency formatting: ≥1m → "£Nm", ≥100k → "£Nk", else "£N,NNN".
+  const fmtRound = v => {
+    if (v >= 1000000) return `£${(v / 1000000).toFixed(v % 1000000 === 0 ? 0 : 1)}m`;
+    if (v >= 1000)    return `£${Math.round(v / 1000)}k`;
+    return `£${fmtNum(v, 0)}`;
+  };
+  const futureLabels = futureMilestones.map(v => {
+    if (Math.abs(v - freedomRounded) < 0.5) return `${fmtRound(v)} freedom`;
+    return fmtRound(v);
+  });
+
+  // ── Sub-headline copy ──
+  // Three flavours: known ETA, no historical data, or pace too low / negative.
+  let subCopy;
+  if (monthsToGo !== null && monthsToGo > 0 && monthsToGo < 600) {
+    subCopy = `Likely ${etaLabel} at current pace`;
+  } else if (monthlyPace <= 0) {
+    subCopy = `Pace not yet positive — add an entry this month`;
+  } else {
+    subCopy = `Add a few more months of history to estimate ETA`;
+  }
+
+  // Pace tile copy — show months if known, dash otherwise. We use a compact
+  // representation: "~1 mo" minimum so it never reads "~0 mo" when we
+  // already have an ETA, "~N mo" under 24 months, "~Xy" beyond that.
+  const paceTileVal = monthsToGo !== null && monthsToGo > 0
+    ? (monthsToGo < 24 ? `~${Math.max(1, Math.round(monthsToGo))} mo` : `~${(monthsToGo / 12).toFixed(1)}y`)
+    : '—';
+
+  out.innerHTML = `
+    <div class="card-gold mb16">
+      <div class="flex-between" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="section-label" style="margin-bottom:2px">Next Milestone</div>
+          <div style="font-size:9px;color:var(--muted)">Near-term portfolio target on the way to your freedom number</div>
+        </div>
+        <div style="font-size:9px;color:var(--muted);font-style:italic">Updates with every change</div>
+      </div>
+
+      <!-- Hero — the next milestone is the takeaway -->
+      <div class="plan-card is-hero">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Next Target</span>
+          <span class="plan-card-context">${subCopy}</span>
+        </div>
+        <div class="plan-card-body">
+          <div class="plan-card-headline">${fmtRound(nextMilestone)}</div>
+          <div class="plan-card-headline-sub">£${fmtNum(Math.round(gap), 0)} to go · ${pctThere.toFixed(1)}% of the way there</div>
+        </div>
+      </div>
+
+      <!-- Stats — current pot, progress percentage, pace -->
+      <div class="plan-card">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Where You Are</span>
+          <span class="plan-card-context">Current pot and contribution pace</span>
+        </div>
+        <div class="plan-card-metrics cols-3">
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Now</div>
+            <div class="plan-card-metric-value lg">£${fmtNum(Math.round(currentPot), 0)}</div>
+            <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Today's pot value</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">% There</div>
+            <div class="plan-card-metric-value lg">${pctThere.toFixed(1)}%</div>
+            <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Of the milestone</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Pace</div>
+            <div class="plan-card-metric-value lg green">${paceTileVal}</div>
+            <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">${monthsToGo !== null && monthsToGo > 0 ? 'Typical month, lump sums excluded' : 'Add history to estimate'}</div>
+          </div>
+        </div>
+        <div class="ret-progress-strip" style="padding:0 16px 14px">
+          <div class="progress-wrap mb4"><div class="progress-bar" style="width:${Math.min(pctThere, 100).toFixed(1)}%"></div></div>
+          <div class="stat-sub" style="font-size:10px">${pctThere.toFixed(1)}% of the way to ${fmtRound(nextMilestone)} · £${fmtNum(Math.round(gap), 0)} still to accumulate</div>
+        </div>
+      </div>
+
+      ${futureLabels.length ? `
+      <!-- Narrative — what comes next -->
+      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;font-size:10px;color:var(--muted);line-height:1.8;font-style:italic;margin-top:12px">
+        After ${fmtRound(nextMilestone)}, the next rungs are ${futureLabels.join(', ')}.
+      </div>` : ''}
+    </div>`;
 }
 
 function syncRetirementFromHistory() {
