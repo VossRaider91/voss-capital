@@ -13602,13 +13602,19 @@ function calculate() {
   }).join('');
   document.getElementById('allocRowsV2').innerHTML = allocCardsHtml;
 
-  // Combined totals card — Total Deployed + Buffer Pot in one strip
+  // Combined totals card — Total Deployed + Buffer Pot in one strip.
+  // In Exact Budget mode (Allow Overspend OFF), Total Deployed shows the
+  // full £ leaving the bank (shares cost + trade fees) which equals the
+  // Monthly Budget exactly, matching the HL direct debit. In Allow Overspend
+  // mode, it shows shares cost + fees as actually committed (which may be
+  // up to 2% over budget or slightly under due to whole-share constraints).
   const totalUnits = bestAlloc.reduce((s, f) => s + (f.shares || 0), 0);
+  const totalDeployedDisplay = totalDeployed + tradeFees;
   document.getElementById('allocTotalsCard').innerHTML = `
     <div class="alloc-totals-grid">
       <div class="alloc-totals-cell">
         <div class="alloc-totals-label">Total Deployed</div>
-        <div class="alloc-totals-value">£${fmtNum(Math.round(totalDeployed), 0)}</div>
+        <div class="alloc-totals-value">£${fmtNum(Math.round(totalDeployedDisplay), 0)}</div>
         <div class="alloc-totals-sub">${totalUnits} units</div>
       </div>
       <div class="alloc-totals-cell right">
