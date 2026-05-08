@@ -12951,6 +12951,10 @@ function switchPortfolioTab(type, btn) {
   if (parentTabs) parentTabs.querySelectorAll('.sub-tab, .seg-option').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   renderPortfolio(type);
+  // Refresh the growth chart too — it now scopes its data to the active
+  // wrapper, so a pill change here must trigger a chart re-render.
+  // Wrapped to tolerate the chart card being absent (e.g. legacy markup).
+  try { renderGrowthChart(getActiveGrowthTab()); } catch (e) {}
 }
 
 
@@ -17515,9 +17519,46 @@ function moveNWPieTooltip(e) {
 // GROWTH CHART
 // ════════════════════════════════════════════════════════
 function renderGrowthChart(type='monthly') {
-  const history = lsGet(LS.HISTORY, []).filter(e => e.funds && e.funds.length > 0);
-  const portfolio = lsGet(LS.PORTFOLIO, []);
+  const allHistory = lsGet(LS.HISTORY, []).filter(e => e.funds && e.funds.length > 0);
+  const allPortfolio = lsGet(LS.PORTFOLIO, []);
   const el = document.getElementById('growthChart');
+
+  // ── Wrapper scope ────────────────────────────────────────────────────
+  // Read the active wrapper filter from the same source the holdings
+  // list uses, so the chart and the holdings underneath always agree.
+  // Possible values: 'all', 'personal' (GIA), 'employer' (SIPP), 'isa'.
+  // The chart renders one combined line for 'all' and a wrapper-scoped
+  // line for the others. Cost basis, legacy value, and header total
+  // are all filtered to the active wrapper so the figures are honest.
+  const activeFilter = (typeof getPortfolioFilter === 'function')
+    ? getPortfolioFilter()
+    : 'all';
+  const wrapperPredicate = (() => {
+    if (activeFilter === 'all') return () => true;
+    if (activeFilter === 'isa') return h => (h.wrapper || 'GIA') === 'ISA';
+    if (activeFilter === 'employer') return h => (h.wrapper || (h.type === 'employer' ? 'SIPP' : 'GIA')) === 'SIPP' || h.type === 'employer';
+    // personal (GIA): default bucket — not ISA, not SIPP, not employer-type
+    return h => {
+      const w = h.wrapper || (h.type === 'employer' ? 'SIPP' : 'GIA');
+      return w === 'GIA' && h.type !== 'employer';
+    };
+  })();
+  const historyPredicate = (() => {
+    if (activeFilter === 'all') return () => true;
+    if (activeFilter === 'isa') return e => (e.wrapper || 'GIA') === 'ISA';
+    if (activeFilter === 'employer') return e => (e.wrapper || (e.type === 'employer' ? 'SIPP' : 'GIA')) === 'SIPP' || e.type === 'employer';
+    return e => {
+      const w = e.wrapper || (e.type === 'employer' ? 'SIPP' : 'GIA');
+      return w === 'GIA' && e.type !== 'employer';
+    };
+  })();
+  const wrapperLabel = activeFilter === 'all' ? 'all wrappers'
+    : activeFilter === 'personal' ? 'GIA'
+    : activeFilter === 'employer' ? 'SIPP'
+    : 'ISA';
+
+  const history = allHistory.filter(historyPredicate);
+  const portfolio = allPortfolio.filter(wrapperPredicate);
 
   // Use current portfolio store prices for all entries — always up to date
   // after any price change, inline edit, or new save
@@ -17547,12 +17588,14 @@ function renderGrowthChart(type='monthly') {
   // point on the chart). fromHistory portfolio entries are deliberately
   // ignored for cost-basis purposes because their totalCost is 0 (sync
   // never populates it) — using them would under-report.
+  // Wrapper-scoped: only seeded holdings in the active wrapper count
+  // toward this wrapper's chart's cost base.
   const seededCostBase = portfolio
     .filter(h => h.seeded)
     .reduce((s, h) => s + (h.totalCost || 0), 0);
 
   if (history.length < 2) {
-    el.innerHTML=`<div class="history-empty" style="padding:24px">Save at least two months of data to see your growth chart.</div>`;
+    el.innerHTML=`<div class="history-empty" style="padding:24px">Save at least two months of ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}data to see ${wrapperLabel === 'all wrappers' ? 'your' : "this wrapper's"} growth chart.</div>`;
     return;
   }
 
@@ -17675,7 +17718,7 @@ function renderGrowthChart(type='monthly') {
   }
 
   if (points.length < 2) {
-    el.innerHTML=`<div class="history-empty" style="padding:24px">Not enough data for a ${type} chart yet.</div>`;
+    el.innerHTML=`<div class="history-empty" style="padding:24px">Not enough ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}data for a ${type} chart yet.</div>`;
     return;
   }
 
@@ -17744,7 +17787,7 @@ function renderGrowthChart(type='monthly') {
     <div class="plan-card mb16">
       <div class="plan-card-header">
         <span class="plan-card-ticker">Portfolio Growth</span>
-        <span class="plan-card-context">Current value vs cost base across all wrappers</span>
+        <span class="plan-card-context">Current value vs cost base${wrapperLabel === 'all wrappers' ? ' across all wrappers' : ' in your ' + wrapperLabel + ' wrapper'}</span>
       </div>
       <div class="plan-card-metrics cols-3">
         <div class="plan-card-metric">
