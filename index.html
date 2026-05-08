@@ -20339,15 +20339,18 @@ function _recomputeTaxAllowancesFromHistory() {
 
   // Refresh every visible input mirror without overwriting the field the
   // user is currently editing — they're entitled to finish their typing.
-  const setIfNotFocused = (id, val, decimals = 2) => {
+  // CGT and ISA usage are reported to HMRC in whole pounds; the inputs
+  // display whole-pound values (no .00 trail) so figures like £3,000 fit
+  // comfortably in the standard input width without spillover.
+  const setIfNotFocused = (id, val, decimals = 0) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (document.activeElement === el) return;
     el.value = val > 0 ? val.toFixed(decimals) : '0';
   };
-  setIfNotFocused('cgt-used',               cgtUsedTotal, 2);
-  setIfNotFocused('sell-used',              cgtUsedTotal, 2);
-  setIfNotFocused('sell-isa-used',          isaUsedTotal, 2);
+  setIfNotFocused('cgt-used',               cgtUsedTotal, 0);
+  setIfNotFocused('sell-used',              cgtUsedTotal, 0);
+  setIfNotFocused('sell-isa-used',          isaUsedTotal, 0);
   setIfNotFocused('isa-tracker-used-input', isaUsedTotal, 0);
 
   return { cgtUsed: cgtUsedTotal, isaUsed: isaUsedTotal };
