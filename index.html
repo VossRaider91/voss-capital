@@ -21880,39 +21880,37 @@ function renderAnalyse() {
   if (monthsOfData >= 2) {
     document.getElementById('analyse-history-section').style.display = 'block';
 
-    // ── Contribution sum — use actual deployed cost basis (May 2026) ──
-    // The previous calculation used e.budget which includes buffer reserves
-    // (the slack between budgeted amount and actually-deployed amount).
-    // That produced inflated contribution figures. The cost basis we want
-    // is the same one the Portfolio Growth chart uses: per-entry units bought
-    // × price paid that month, summed across funds. e.funds[].value already
-    // stores units × price for the entry, so summing those gives the
-    // canonical deployed cost.
+    // ── Contribution sum — aligned with the Portfolio Growth chart ──
+    // Total Contributed = legacy seeded holdings cost basis (point-zero
+    // pre-app contributions) + per-history-entry cost (units bought × price
+    // paid, summed). This matches the canonical formula used in
+    // renderGrowthChart so the two cards on different tabs always agree on
+    // the same Market Growth figure. Previously this excluded the seeded
+    // cost basis, which under-reported contributions and inflated growth by
+    // attributing the entire legacy holding value to "growth" when it's
+    // actually pre-existing cost basis.
     const sumFundsValue = e => (e.funds || []).reduce((s,f) => s+(parseFloat(f.value)||0), 0);
     const personalDeployed = personalHistory.filter(e=>e.type!=='sold').reduce((s,e)=>s+sumFundsValue(e), 0);
     const employerDeployed = employerHistory.filter(e=>e.type!=='sold').reduce((s,e)=>s+sumFundsValue(e), 0);
-    const totalDeployed    = personalDeployed + employerDeployed;
-    const avgMonthly       = monthsOfData > 0 ? totalDeployed / monthsOfData : 0;
+    const historyDeployed  = personalDeployed + employerDeployed;
+    const seededCostBase   = portfolio.filter(h => h.seeded).reduce((s,h) => s + (h.totalCost || 0), 0);
+    const totalDeployed    = historyDeployed + seededCostBase;
+    const avgMonthly       = monthsOfData > 0 ? historyDeployed / monthsOfData : 0;
 
     const firstEntry = [...history].sort((a,b)=>a.timestamp-b.timestamp)[0];
     const latestEntry = [...history].sort((a,b)=>b.timestamp-a.timestamp)[0];
 
-    // ── Market Growth — canonical: current value minus total deployed (May 2026) ──
-    // Previously: latestVal − startVal − contributions, which double-counted
-    // the start value's pre-existing cost (startVal includes contributions
-    // made before the first history entry) and produced wildly wrong growth
-    // figures. Aligning with the Portfolio Growth chart's "current value vs
-    // cost base" model: the gain over and above what was actually deployed
-    // through saved entries is current portfolio value minus total deployed.
-    // Note this still under-reports total portfolio gain when there are
-    // legacy seeded holdings present, because their cost basis lives outside
-    // the history scope; the figure here represents growth on the saved-
-    // entry portion of the portfolio specifically.
+    // ── Market Growth — current value minus FULL cost basis ──
+    // Now matches the Portfolio Growth chart exactly: totalValue includes
+    // both legacy and history-derived holdings, and totalDeployed now
+    // includes the seeded cost base, so the difference is genuine market
+    // gain across the entire portfolio rather than a misleading figure that
+    // counted legacy value as growth.
     const totalGrowth = totalValue - totalDeployed;
 
     document.getElementById('analyse-history-cards').innerHTML = [
       { label:'Months of Data', val:monthsOfData, sub:'Saved entries', cls:'gold' },
-      { label:'Total Contributed', val:`£${fmtNum(Math.round(totalDeployed),0)}`, sub:`Avg £${fmtNum(Math.round(avgMonthly),0)}/mo`, cls:'white' },
+      { label:'Total Contributed', val:`£${fmtNum(Math.round(totalDeployed),0)}`, sub:`Avg £${fmtNum(Math.round(avgMonthly),0)}/mo since first entry`, cls:'white' },
       { label:'Market Growth (Est.)', val:`${totalGrowth>=0?'+':''}£${fmtNum(Math.round(totalGrowth),0)}`, sub:'Portfolio gain above contributions', cls: totalGrowth>=0?'green':'red' },
     ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
     document.getElementById('analyse-history-insight').textContent = `Based on ${monthsOfData} saved entries from ${firstEntry?.date||'—'} to ${latestEntry?.date||'—'}.`;
