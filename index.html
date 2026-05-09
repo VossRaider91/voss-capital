@@ -14635,6 +14635,15 @@ function saveManualEntry() {
   funds.forEach(f => { f.pct = totalVal>0 ? (f.value/totalVal*100).toFixed(1) : '0.0'; });
 
   const dateObj = date ? new Date(date) : new Date();
+  // Snapshot the cross-wrapper portfolio balance at save time, not just
+  // this entry's own buy total. The history card shows "Portfolio balance:
+  // £X" and that figure must always represent the FULL portfolio across
+  // every wrapper, otherwise an ISA-only entry shows a misleadingly small
+  // £44k while a cross-wrapper-aware Personal entry shows £216k. The two
+  // engine-level save paths (saveMonth, saveMonthFromAlloc) already do this;
+  // the manual entry path was the outlier.
+  const livePortfolioAtSave = lsGet(LS.PORTFOLIO, []).reduce((s,h) => s + h.shares*(h.price||0), 0);
+  const snapshotPortfolioValue = livePortfolioAtSave > 0 ? livePortfolioAtSave + totalVal : totalVal;
   const history = lsGet(LS.HISTORY, []);
   history.unshift({
     id: Date.now(),
@@ -14642,7 +14651,7 @@ function saveManualEntry() {
     timestamp: dateObj.getTime(),
     type: entryType,
     wrapper,
-    portfolioValue: totalVal,
+    portfolioValue: snapshotPortfolioValue,
     budget: 0,
     notes,
     funds,
@@ -16628,13 +16637,20 @@ function addPortfolioHolding() {
   const now = new Date();
   const entryType = wrapper === 'SIPP' ? 'employer' : 'personal';
   const value = shares * (price || 0);
+  // Cross-wrapper portfolio balance at save time, not just this single
+  // ticker's value — see the matching comment in saveManualEntry. Without
+  // this the history card would render "Portfolio balance: £200" for a
+  // single-ticker manual add when the actual cross-wrapper balance is
+  // tens of thousands.
+  const livePortfolioAtSave = lsGet(LS.PORTFOLIO, []).reduce((s,h) => s + h.shares*(h.price||0), 0);
+  const snapshotPortfolioValue = livePortfolioAtSave > 0 ? livePortfolioAtSave + value : value;
   const historyEntry = {
     id: Date.now(),
     date: now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }),
     timestamp: now.getTime(),
     type: entryType,
     wrapper,
-    portfolioValue: value,
+    portfolioValue: snapshotPortfolioValue,
     budget: 0,
     notes: `Manual addition: ${shares} units ${ticker}`,
     funds: [{ ticker, held: shares, price: price || 0, value, pct: '100.0' }],
