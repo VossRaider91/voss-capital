@@ -10348,7 +10348,7 @@ function renderSparkline(ticker, uid, opts = {}) {
 // and Twelve Data directly for NVDA + USD/GBP FX. Built 1 May 2026.
 //
 // Architecture:
-//   • 8 LSE-listed tickers (VWRP, VUAG, SMGB, XNAQ, KIE, EQQQ, DFNG, BA)
+//   • 7 LSE-listed tickers (VWRP, VUAG, SMGB, XNAQ, KIE, EQQQ, BA)
 //     are fetched from Hargreaves Lansdown via our own Cloudflare Worker
 //     proxy (which has an allowlist for www.hl.co.uk only). The HL page
 //     contains a __NEXT_DATA__ JSON blob with structured sell/buy values
@@ -10384,7 +10384,6 @@ const PRICE_FETCH_CONFIG = {
   XNAQ: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/x/xtrackers-nasdaq-100-ucits-etf-1c-usd' },
   KIE:  { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/k/kier-group-plc-ordinary-1p' },
   EQQQ: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/i/invesco-markets-eqqq-nasdaq-100-ucits-etf' },
-  DFNG: { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/v/vaneck-defense-ucits-etf-a-usd-acc' },
   BA:   { source: 'hl', url: 'https://www.hl.co.uk/shares/shares-search-results/b/bae-systems-plc-ordinary-2.5p' },
   NVDA: { source: 'twelvedata', symbol: 'NVDA' },
 };
@@ -12446,7 +12445,6 @@ function parsePastedPrices() {
   // Fill the price updater grid inputs with parsed values
   const tickerAliases = {
     'BA': ['BA'],
-    'DFNG': ['DFNG'],
   };
 
   let filled = 0;
@@ -12512,7 +12510,7 @@ function parseCalcPrices() {
   // Flexible pattern: TICKER followed by optional whitespace then £ and a decimal number
   // Handles: VWRP£133.26  VWRP £133.26  VWRP  £133.26  BA.£20.16  KIE £2.07
   // Preserves user's decimal precision up to 3 places.
-  const tickerAliases = { 'BA': ['BA','BAE'], 'DFNG': ['DFNG','DFEN'] };
+  const tickerAliases = { 'BA': ['BA','BAE'] };
   const regex = /([A-Z][A-Z0-9.]{0,9})\s*£\s*([\d,]+\.?\d*)/g;
   const parsed = {};
   const parsedRaw = {};
@@ -12551,7 +12549,7 @@ function parseCalcPrices() {
 
   // 2. Sync all parsed prices into portfolio store (same as Total Portfolio update)
   const portfolio = lsGet(LS.PORTFOLIO, []);
-  const aliases = { 'BAE':'BA', 'DFEN':'DFNG' };
+  const aliases = { 'BAE':'BA' };
   portfolio.forEach(h => {
     const ticker = aliases[h.ticker] || h.ticker;
     if (parsed[ticker] !== undefined) {
@@ -12600,8 +12598,12 @@ function buildPriceUpdater() {
   // for the grid input — this is the source of truth and must NOT be
   // overridden by getCurrentPrice's wider cascade (which can pull from
   // calculator DOM or history and silently drift the visible value).
+  // We only consider holdings with shares > 0 — fully-sold positions
+  // (zero units left) drop off the price grid automatically. This keeps
+  // the grid clean once a position is closed.
   const tickerMap = {};
   portfolio.forEach(h => {
+    if (!(h.shares > 0)) return;
     if (!tickerMap[h.ticker]) {
       tickerMap[h.ticker] = { ticker: h.ticker, totalValue: 0, price: 0 };
     }
@@ -17316,6 +17318,13 @@ function renderPortfolio(filter='all') {
     });
     window._lastHcardValues = newMap;
   } catch (e) { /* swallow — animation is non-essential */ }
+
+  // Re-apply persisted open/closed state for New Holdings and Legacy
+  // Holdings sections. Every renderPortfolio() rebuilds the section
+  // markup with display:none baked into the inline style, so without
+  // this hook the auto-refresh price tick would slam the user's open
+  // sections shut every 60 seconds.
+  try { _restoreHoldingsSectionState(); } catch (e) {}
 }
 
 function toggleSection(id) {
@@ -17326,6 +17335,13 @@ function toggleSection(id) {
   const collapsed = el.style.display === 'none';
   el.style.display = collapsed ? '' : 'none';
   btn.textContent = collapsed ? '▼ Collapse' : '▶ Expand';
+  // Remember the new state so the next renderPortfolio() (which may be
+  // triggered by an auto-refresh tick, a price paste, a sync pull, or any
+  // other cascade) can restore it. Without this the section snaps shut
+  // every 60 seconds when the price refresher fires, which is obviously
+  // not what the user wants when they've deliberately opened it.
+  if (!window._vossHoldingsSectionState) window._vossHoldingsSectionState = {};
+  window._vossHoldingsSectionState[id] = collapsed ? 'open' : 'closed';
   // Swap explainer text vs balance pill visibility based on collapse state.
   // When collapsed → hide explainer, show balance pill.
   // When expanded → show explainer, hide balance pill (the explainer already
@@ -17342,6 +17358,29 @@ function toggleSection(id) {
       _applyPrivacyMode();
     }
   }
+}
+
+// Re-apply the persisted open/closed state of the New Holdings and Legacy
+// Holdings sections after a renderPortfolio() cycle. Called from the tail
+// of renderPortfolio. No-op if the state map is empty (first ever render).
+function _restoreHoldingsSectionState() {
+  const state = window._vossHoldingsSectionState;
+  if (!state) return;
+  Object.keys(state).forEach(id => {
+    if (state[id] !== 'open') return;
+    const el  = document.getElementById(id);
+    const btn = document.getElementById(`btn-${id}`);
+    const wrap = document.getElementById(`${id}-wrap`);
+    if (!el || !btn) return;
+    el.style.display = '';
+    btn.textContent = '▼ Collapse';
+    if (wrap) {
+      const explainer = wrap.querySelector('.holdings-section-explainer');
+      const balance   = wrap.querySelector('.holdings-section-balance');
+      if (explainer) explainer.style.display = '';
+      if (balance)   balance.style.display   = 'none';
+    }
+  });
 }
 
 function renderPieChart(svgEl, pieData, totalVal) {
@@ -21245,7 +21284,6 @@ const FUND_META = {
   XNAQ: { name:"Xtrackers Nasdaq 100", indices:["US Tech","Nasdaq 100"], geo:{ US:95, Other:5 }, type:"ETF" },
   SMGB: { name:"VanEck Semiconductors", indices:["US Tech","Semiconductors"], geo:{ US:65, Other:35 }, type:"ETF" },
   EQQQ: { name:"Invesco Nasdaq 100", indices:["US Tech","Nasdaq 100"], geo:{ US:95, Other:5 }, type:"ETF" },
-  DFNG: { name:"VanEck Defense", indices:["Global Defense"], geo:{ US:70, Europe:20, Other:10 }, type:"ETF" },
   KIE:  { name:"Kier Group", indices:["UK Small Cap"], geo:{ UK:100 }, type:"Stock" },
   NVDA: { name:"NVIDIA Corp", indices:["US Tech","Semiconductors"], geo:{ US:100 }, type:"Stock" },
   BA:   { name:"BAE Systems", indices:["UK Defense"], geo:{ UK:60, US:25, Other:15 }, type:"Stock" },
@@ -23203,7 +23241,6 @@ function seedGIAHoldings() {
     { id: 'gia_seed_KIE',  ticker: 'KIE',  name: 'Kier Group plc',                     shares: 19486,  price: 2.08,    totalCost: 17410.19, type:'personal', wrapper:'GIA', includeInCalc:false, fromHistory:false, seeded:true },
     { id: 'gia_seed_NVDA', ticker: 'NVDA', name: 'NVIDIA Corp',                        shares: 6,      price: 153.83,  totalCost: 766.27,   type:'personal', wrapper:'GIA', includeInCalc:false, fromHistory:false, seeded:true },
     { id: 'gia_seed_SMGB', ticker: 'SMGB', name: 'VanEck Semiconductor UCITS ETF',     shares: 88,     price: 66.22,   totalCost: 5251.23,  type:'personal', wrapper:'GIA', includeInCalc:false, fromHistory:false, seeded:true },
-    { id: 'gia_seed_DFNG', ticker: 'DFNG', name: 'VanEck Defense UCITS ETF',           shares: 146,    price: 48.76,   totalCost: 6980.35,  type:'personal', wrapper:'GIA', includeInCalc:false, fromHistory:false, seeded:true },
     { id: 'gia_seed_VWRP', ticker: 'VWRP', name: 'Vanguard FTSE All-World UCITS ETF',  shares: 426,    price: 133.07,  totalCost: 51489.73, type:'personal', wrapper:'GIA', includeInCalc:false, fromHistory:false, seeded:true },
     { id: 'gia_seed_VUAG', ticker: 'VUAG', name: 'Vanguard S&P 500 UCITS ETF',         shares: 243,    price: 101.90,  totalCost: 22291.91, type:'personal', wrapper:'GIA', includeInCalc:false, fromHistory:false, seeded:true },
   ];
@@ -23299,6 +23336,21 @@ function migrateTickerNames() {
     if (renames[f.ticker]) { f.ticker = renames[f.ticker]; changed = true; }
   });
   if (changed) lsSet(LS.EXTRA_FUNDS, extra);
+
+  // One-shot removal of the legacy DFNG seeded holding (May 2026).
+  // Voss sold his DFNG position in full, so the seeded array no longer
+  // contains it (see seedGIAHoldings) and any existing live entry needs
+  // to be cleaned out of LS.PORTFOLIO. We match by id specifically rather
+  // than ticker to avoid touching any fromHistory DFNG entries that might
+  // legitimately exist if he ever buys DFNG again later; only the seeded
+  // legacy entry is removed. Sold history entries in LS.HISTORY are
+  // explicitly preserved — they're a separate store and untouched here.
+  const portfolioAfter = lsGet(LS.PORTFOLIO, []);
+  const dfngIdx = portfolioAfter.findIndex(h => h.id === 'gia_seed_DFNG');
+  if (dfngIdx >= 0) {
+    portfolioAfter.splice(dfngIdx, 1);
+    lsSet(LS.PORTFOLIO, portfolioAfter);
+  }
 }
 
 // ════════════════════════════════════════════════════════
