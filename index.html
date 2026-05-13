@@ -17992,8 +17992,8 @@ function renderGrowthChart(type='monthly') {
   // point's date label.
   const firstPoint = points[0];
   const sinceLabel = firstPoint.isBaseline
-    ? 'since baseline'
-    : `since ${firstPoint.label}`;
+    ? 'Since Baseline'
+    : `Since ${firstPoint.label}`;
 
   el.innerHTML=`
     <div class="plan-card mb16">
