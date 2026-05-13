@@ -10251,7 +10251,14 @@ function backfillPriceHistoryFromMonthly() {
       .forEach(entry => {
         entry.funds.forEach(f => {
           if (!f || !f.ticker) return;
-          const price = parseFloat(f.rawPrice);
+          // Read rawPrice if available (older entries from the calculator
+          // wrote it); fall back to f.price (the standard save-from-alloc
+          // field). Without this fallback the backfill would skip every
+          // entry written by saveMonthFromAlloc since that function only
+          // writes `price`, leaving LS.PRICE_HISTORY essentially empty
+          // and forcing the chart's historical points to use current
+          // prices for everything.
+          const price = parseFloat(f.rawPrice != null ? f.rawPrice : f.price);
           if (!isFinite(price) || price <= 0) return;
           if (!seeded[f.ticker]) seeded[f.ticker] = [];
           // Dedup by day key — if the same ticker appears twice in the
@@ -11105,53 +11112,83 @@ function _startAutoRefreshCountdown() {
   }, 1000);
 }
 
-// Today's gain tracking. We snapshot the portfolio's total value once per
-// calendar day (per device — these are NOT in the LS map so they don't
-// round-trip through backups). The first time a render happens on a new
-// day the current total becomes the baseline; every subsequent render
-// that day computes today's gain as currentTotal - baseline.
+// Today's gain tracking. The baseline is computed from yesterday's
+// closing prices (the most recent price-history point before today's
+// 00:00 UK time), NOT a "first render of the day" snapshot. This way the
+// "Today" pill reflects genuine market movement since yesterday's close
+// regardless of when the app is first opened. Falls back gracefully if
+// yesterday's price isn't recorded for a ticker — that ticker contributes
+// £0 to the day's move rather than a nonsense number.
 //
-// Stored as JSON keyed by scope ('all' | 'personal' | 'employer' | 'isa'):
-// { date: 'YYYY-MM-DD', baseline: number, lastSeen: number }
+// Cache is kept per-scope, keyed by today's date, so we don't recompute
+// on every render — but the cache is invalidated when prices change so a
+// price refresh causes the pill to update immediately. Stored under
+// rma_portfolio_daily_baseline with shape:
+//   { [scope]: { date: 'YYYY-MM-DD', baseline: number } }
 const PORTFOLIO_DAILY_BASELINE_KEY = 'rma_portfolio_daily_baseline';
 
-function _getPortfolioDailyBaseline(currentTotal, scope = 'all') {
-  // Returns { baseline, isNewDay, gain }
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  let allStored = {};
+// Returns the start-of-today timestamp in UK local time. Used as the
+// upper bound when looking up "yesterday's" closing price — anything
+// recorded before this timestamp belongs to a previous trading day.
+function _startOfTodayUK() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+// Computes the portfolio's value as it would have been at yesterday's
+// closing prices. Sums (shares × yesterday-closing-price) for each
+// filtered holding. If LS.PRICE_HISTORY has no entry for a ticker before
+// today, that holding falls back to its current price (so it contributes
+// 0 to the day's gain rather than dragging the figure wildly).
+//
+// `filtered` is the same array the live total uses, so the day's gain
+// is always (currentTotal − this baseline).
+function _computeYesterdayCloseValue(filtered) {
+  const cutoff = _startOfTodayUK();
+  return (filtered || []).reduce((sum, h) => {
+    if (!h || !h.ticker) return sum;
+    const histP = _getPriceForTickerOnDay(h.ticker, cutoff - 1);
+    const p = histP > 0 ? histP : (h.price || 0);
+    return sum + (h.shares || 0) * p;
+  }, 0);
+}
+
+// Returns { baseline, gain, gainPct, isNewDay } for the given scope.
+// Baseline is yesterday's closing value of the filtered holdings, gain
+// is currentTotal minus that. isNewDay is true only when we have NO
+// price history at all for the holdings (so the pill should hide
+// rather than show a misleading £0 figure on first ever use).
+function _getPortfolioDailyBaseline(currentTotal, scope = 'all', filtered = null) {
+  // If caller didn't pass filtered holdings, we can't compute a real
+  // baseline — fall back to "no data" so the pill hides. This branch
+  // shouldn't fire in normal use; the caller in renderPortfolio always
+  // passes the filtered array.
+  if (!Array.isArray(filtered) || filtered.length === 0) {
+    return { baseline: currentTotal, gain: 0, gainPct: 0, isNewDay: true };
+  }
+  const baseline = _computeYesterdayCloseValue(filtered);
+  // No baseline (zero) means we genuinely have no historical price
+  // data yet — hide the pill rather than show 100% today.
+  if (!isFinite(baseline) || baseline <= 0) {
+    return { baseline: currentTotal, gain: 0, gainPct: 0, isNewDay: true };
+  }
+  const gain = currentTotal - baseline;
+  const gainPct = baseline > 0 ? (gain / baseline) * 100 : 0;
+  // Persist for diagnostics — not used by the calc itself, but handy
+  // when debugging "why does the pill say X" via devtools inspection.
   try {
+    const today = new Date().toISOString().slice(0, 10);
+    let allStored = {};
     const raw = localStorage.getItem(PORTFOLIO_DAILY_BASELINE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Backwards-compat: original schema stored a single { date, baseline, lastSeen }
-      // at the top level. Detect and migrate to scoped form on first read.
-      if (parsed && typeof parsed === 'object' && 'date' in parsed && 'baseline' in parsed) {
-        allStored = { all: parsed };
-      } else if (parsed && typeof parsed === 'object') {
-        allStored = parsed;
-      }
+      if (parsed && typeof parsed === 'object') allStored = parsed;
     }
+    allStored[scope] = { date: today, baseline };
+    localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(allStored));
   } catch (e) {}
-
-  const stored = allStored[scope];
-
-  // First ever load for this scope OR the stored entry is from a previous
-  // calendar day: freeze TODAY'S baseline at the current total. This means
-  // the first render of the day shows £0 / 0% gain (correct — no movement
-  // yet), and subsequent renders within the day show the delta from open.
-  if (!stored || stored.date !== today) {
-    const fresh = { date: today, baseline: currentTotal, lastSeen: currentTotal };
-    allStored[scope] = fresh;
-    try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(allStored)); } catch (e) {}
-    return { baseline: currentTotal, gain: 0, gainPct: 0, isNewDay: true };
-  }
-
-  // Same day — compute gain from baseline. Update lastSeen.
-  const gain = currentTotal - stored.baseline;
-  const gainPct = stored.baseline > 0 ? (gain / stored.baseline) * 100 : 0;
-  allStored[scope] = { date: today, baseline: stored.baseline, lastSeen: currentTotal };
-  try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(allStored)); } catch (e) {}
-  return { baseline: stored.baseline, gain, gainPct, isNewDay: false };
+  return { baseline, gain, gainPct, isNewDay: false };
 }
 
 // Anchor today's gain baseline to a known-good "previous total". Called
@@ -11163,40 +11200,13 @@ function _getPortfolioDailyBaseline(currentTotal, scope = 'all') {
 // values passed in. If a scope baseline already exists for today, leaves
 // it alone — first anchor of the day wins so deltas accumulate across
 // price updates within the same day.
+// Legacy no-op. The previous "freeze a baseline at first render of the
+// day" approach is gone — _getPortfolioDailyBaseline now computes the
+// baseline from yesterday's closing prices on every call. This function
+// stays around as a no-op so the old call site in applyPriceUpdates
+// doesn't throw, but it doesn't need to do anything.
 function _anchorPortfolioBaseline(scopedTotals) {
-  // Backwards-compat: callers may pass a single number for total-portfolio
-  // anchoring under the legacy schema. Wrap it as { all: total } so the
-  // new path handles it uniformly.
-  if (typeof scopedTotals === 'number') {
-    scopedTotals = { all: scopedTotals };
-  }
-  if (!scopedTotals || typeof scopedTotals !== 'object') return;
-
-  const today = new Date().toISOString().slice(0, 10);
-  let allStored = {};
-  try {
-    const raw = localStorage.getItem(PORTFOLIO_DAILY_BASELINE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && 'date' in parsed && 'baseline' in parsed) {
-        allStored = { all: parsed };
-      } else if (parsed && typeof parsed === 'object') {
-        allStored = parsed;
-      }
-    }
-  } catch (e) {}
-
-  let mutated = false;
-  Object.entries(scopedTotals).forEach(([scope, val]) => {
-    if (typeof val !== 'number' || !isFinite(val)) return;
-    const existing = allStored[scope];
-    if (existing && existing.date === today) return; // already anchored
-    allStored[scope] = { date: today, baseline: val, lastSeen: val };
-    mutated = true;
-  });
-  if (mutated) {
-    try { localStorage.setItem(PORTFOLIO_DAILY_BASELINE_KEY, JSON.stringify(allStored)); } catch (e) {}
-  }
+  // Intentionally empty. See _getPortfolioDailyBaseline for the new logic.
 }
 
 // ════════════════════════════════════════════════════════
@@ -17159,7 +17169,7 @@ function renderPortfolio(filter='all') {
                      : filter === 'employer' ? 'employer'
                      : filter === 'isa' ? 'isa'
                      : 'all';
-      const daily = _getPortfolioDailyBaseline(totalVal, scopeKey);
+      const daily = _getPortfolioDailyBaseline(totalVal, scopeKey, filtered);
       if (daily.isNewDay) {
         // First render of a new day for this scope — no movement to show yet
         deltaPill.style.display = 'none';
