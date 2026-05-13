@@ -12161,6 +12161,24 @@ function renderSoldShareRows() {
   }
   const wrapper = document.getElementById('sold-wrapper')?.value || 'GIA';
 
+  // Capture focus state BEFORE we blow away the DOM so we can restore it
+  // afterwards. Without this, every keystroke in the Ticker or Units Sold
+  // input loses focus because oninput → renderSoldShareRows replaces the
+  // entire grid, including the input the user is typing into. We track
+  // which row and which field was focused (by data attributes) plus the
+  // cursor position within the input, then restore all three after the
+  // re-render. Result: the user can type continuously without re-clicking.
+  const activeEl = document.activeElement;
+  let focusRowIndex = -1, focusField = '', focusStart = 0, focusEnd = 0;
+  if (activeEl && activeEl.tagName === 'INPUT' && el.contains(activeEl)) {
+    focusRowIndex = parseInt(activeEl.dataset.sellrow || '-1', 10);
+    focusField    = activeEl.dataset.sellfield || '';
+    try {
+      focusStart = activeEl.selectionStart || 0;
+      focusEnd   = activeEl.selectionEnd   || 0;
+    } catch (e) { /* some input types don't support selection — fine */ }
+  }
+
   el.innerHTML = soldShareRows.map((r, i) => {
     // Auto-fill cost basis indicator
     let costIndicator = '';
@@ -12185,28 +12203,44 @@ function renderSoldShareRows() {
         <span class="input-label">Ticker</span>
         <input class="text-input" type="text" value="${r.ticker}" placeholder="e.g. VWRP"
           style="text-transform:uppercase;font-weight:600"
+          data-sellrow="${i}" data-sellfield="ticker"
           oninput="_onSoldRowTickerChange(${i}, this.value)">
       </div>
       <div class="input-group">
         <span class="input-label">Units Sold</span>
         <input class="num-input" type="text" inputmode="numeric" value="${r.units||0}" step="1" min="0"
+          data-sellrow="${i}" data-sellfield="units"
           oninput="_onSoldRowUnitsChange(${i}, this.value)">
         ${unitsWarn}
       </div>
       <div class="input-group" data-pound>
         <span class="input-label">Sale Price</span>
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${r.price||0}" step="0.001" min="0"
+          data-sellrow="${i}" data-sellfield="price"
           oninput="_onSoldRowPriceChange(${i}, this.value)"></div>
       </div>
       <div class="input-group" data-pound>
         <span class="input-label">Avg Cost ${costIndicator}</span>
         <div class="pound-wrap"><input class="num-input" type="text" inputmode="decimal" value="${r.avgCost ? r.avgCost.toFixed(4) : 0}" step="0.001" min="0"
+          data-sellrow="${i}" data-sellfield="avgCost"
           oninput="_onSoldRowAvgCostChange(${i}, this.value)"></div>
         ${costNote}
       </div>
       ${soldShareRows.length > 1 ? `<button class="btn-danger btn-sm" onclick="soldShareRows.splice(${i},1);renderSoldShareRows();recomputeSoldFormAuto()">Remove</button>` : ''}
     </div>`;
   }).join('');
+
+  // Restore focus to whichever input was being typed into before the
+  // re-render. Cursor position is restored too, so caret-in-middle edits
+  // (e.g. typing in the middle of an already-entered ticker) keep the
+  // cursor where the user expects rather than snapping to the end.
+  if (focusRowIndex >= 0 && focusField) {
+    const target = el.querySelector(`input[data-sellrow="${focusRowIndex}"][data-sellfield="${focusField}"]`);
+    if (target) {
+      target.focus();
+      try { target.setSelectionRange(focusStart, focusEnd); } catch (e) {}
+    }
+  }
 }
 
 // ── Recompute auto fields whenever any input changes ──────────────
@@ -14920,8 +14954,11 @@ function renderHistory(filter='all') {
 
     // Each holding becomes its own mini-card with ticker, units, value/pct, price.
     // Mini-cards use a slightly lighter chrome than the parent so they read as
-    // nested rather than competing with the outer card.
-    const fundsHtml = entry.funds.map(f => {
+    // nested rather than competing with the outer card. Guard against entries
+    // that somehow lack a funds array — should never happen with normal save
+    // paths, but defensive in case of a corrupted localStorage write or
+    // partial sync state.
+    const fundsHtml = (entry.funds || []).map(f => {
       const fb = fundBuffer[f.ticker] || 0;
       const fbPct = (f.value || 0) > 0 ? (fb / f.value * 100) : 0;
       const bufferLine = (showBufferStrip && fb > 0.005)
@@ -15004,7 +15041,7 @@ function renderHistory(filter='all') {
           </div>
         </div>
         <div class="edit-funds-grid">
-          ${entry.funds.map(f=>`
+          ${(entry.funds || []).map(f=>`
             <div class="edit-fund-block">
               <div class="edit-fund-ticker">${f.ticker}</div>
               <div class="edit-fund-inputs">
