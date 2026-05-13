@@ -17718,8 +17718,30 @@ function renderGrowthChart(type='monthly') {
     .filter(h => h.seeded)
     .reduce((s, h) => s + (h.totalCost || 0), 0);
 
-  if (history.length < 2) {
-    el.innerHTML=`<div class="history-empty" style="padding:24px">Save at least two months of ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}data to see ${wrapperLabel === 'all wrappers' ? 'your' : "this wrapper's"} growth chart.</div>`;
+  // ── Chart empty state ────────────────────────────────────────────────
+  // The chart needs at least 2 chronological data points to draw a line.
+  // Three cases:
+  //   (a) 0 history entries, 0 seeded → nothing to show. Standard empty state.
+  //   (b) 0 history entries, has seeded → only legacy holdings, but no
+  //       contribution events. Show a friendlier message.
+  //   (c) 1 history entry + seeded legacy holdings → previously fell into
+  //       the empty state because history.length was 1. Now we synthesise
+  //       a baseline point representing the seeded position pre-history,
+  //       so the line shows growth from that baseline to the save date.
+  //       This is the common case for ISA / SIPP wrappers where the user
+  //       contributes annually and might wait 12 months between saves.
+  //   (d) 2+ history entries → standard flow, no synthesis needed.
+  const hasSeededInWrapper = portfolio.some(h => h.seeded);
+  if (history.length === 0) {
+    const msg = hasSeededInWrapper
+      ? `Save your first ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}contribution to see the growth chart.`
+      : `Save at least two months of ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}data to see ${wrapperLabel === 'all wrappers' ? 'your' : "this wrapper's"} growth chart.`;
+    el.innerHTML=`<div class="history-empty" style="padding:24px">${msg}</div>`;
+    return;
+  }
+  if (history.length === 1 && !hasSeededInWrapper) {
+    // Only one history entry and no legacy — can't draw a meaningful line
+    el.innerHTML=`<div class="history-empty" style="padding:24px">One ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}entry saved so far. Save another to see this wrapper's growth chart.</div>`;
     return;
   }
 
@@ -17823,6 +17845,36 @@ function renderGrowthChart(type='monthly') {
           wrapper: e.wrapper || 'GIA',
         });
       }
+    });
+  }
+
+  // ── Synthetic baseline point ─────────────────────────────────────────
+  // When the wrapper has just one history entry but also has seeded legacy
+  // holdings, the chart needs a second time point to draw a line. We
+  // synthesise a baseline at the moment just before the first history
+  // entry, representing the seeded position only (no history-derived units
+  // existed yet). Growth between the baseline and the first save then
+  // reflects the genuine combination of legacy market appreciation plus
+  // the new contribution at its cost. This is the common case for ISA /
+  // SIPP wrappers where the user contributes once a year and wouldn't
+  // want to wait 12 months to see any chart at all.
+  if (history.length === 1 && hasSeededInWrapper && points.length === 1) {
+    const firstPoint = points[0];
+    // Legacy value at current live prices — same calc as the main loop's
+    // legacyValue, ensuring the baseline aligns with how subsequent
+    // points include seeded holdings.
+    const baselineValue = portfolio
+      .filter(h => h.seeded)
+      .reduce((s,h) => s + h.shares * (h.price || 0), 0);
+    const baselineTimestamp = firstPoint.timestamp - 86400000; // one day before
+    points.unshift({
+      label: 'Baseline',
+      fullDate: 'Pre-contribution baseline',
+      value: baselineValue,
+      contributed: seededCostBase,
+      timestamp: baselineTimestamp,
+      wrapper: firstPoint.wrapper,
+      isBaseline: true, // tag for any future tooltip differentiation
     });
   }
 
