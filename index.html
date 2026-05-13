@@ -14855,9 +14855,9 @@ function renderHistory(filter='all') {
       const soldFundsHtml = (entry.funds||[]).map(f =>
         `<div class="history-fund">
           <strong>${f.ticker}</strong>${Math.abs(f.held)} units sold<br>
-          £${fmtNum(f.value,0)} proceeds<br>
+          £${fmtNum(f.value,0)} Proceeds<br>
           @ £${_formatPriceDisplay(parseFloat(f.price||0)) || parseFloat(f.price||0).toFixed(2)}
-          ${f.gain ? `<br><span style="color:${f.gain>=0?'var(--green)':'var(--red)'}">Gain: ${f.gain>=0?'+':''}£${fmtNum(Math.round(f.gain),0)}</span>` : ''}
+          ${f.gain ? `<br><span style="color:${f.gain>=0?'var(--green)':'var(--red)'}">${f.gain>=0?'Gain':'Loss'}: ${f.gain>=0?'+':''}£${fmtNum(Math.round(Math.abs(f.gain)),0)}</span>` : ''}
         </div>`
       ).join('');
       return `<div class="history-card" style="border-left:3px solid var(--red)" id="hcard_${entry.id}">
@@ -14868,7 +14868,7 @@ function renderHistory(filter='all') {
               <span style="background:rgba(255,255,255,0.06);color:${wrapperColour};font-size:9px;font-weight:600;padding:2px 10px;border-radius:10px;border:1px solid ${wrapperColour};margin-left:6px">${entryWrapper}</span>
               <span class="history-date" style="margin-left:8px">${entry.date}</span>
             </div>
-            <div class="history-val" style="color:var(--red)">£${fmtNum(Math.round(entry.proceeds||0),0)} proceeds</div>
+            <div class="history-val" style="color:var(--red)">£${fmtNum(Math.round(entry.proceeds||0),0)} Proceeds</div>
             ${entry.cgtRealised>0?`<div class="history-sub">CGT realised: £${fmtNum(entry.cgtRealised,2)}</div>`:''}
             ${entry.isaUsedAmount>0?`<div class="history-sub">ISA allowance used: £${fmtNum(entry.isaUsedAmount,0)}</div>`:''}
             ${entry.notes?`<div class="history-sub" style="font-style:italic">${_esc(entry.notes)}</div>`:''}
