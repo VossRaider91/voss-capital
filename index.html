@@ -10290,6 +10290,45 @@ function backfillPriceHistoryFromMonthly() {
 // uid is required to keep gradient IDs unique across the page —
 // otherwise multiple sparklines collide on the same defs entry and
 // only one renders the fill correctly.
+// Looks up the price for `ticker` on the day containing `timestamp`,
+// reading from LS.PRICE_HISTORY. Returns the closest data point at or
+// before that day. Returns 0 if no data is available for that ticker
+// at that point in time — callers should fall back to a sensible
+// alternative (e.g. the entry's recorded price, or the current price).
+//
+// Used by renderGrowthChart so historical points use historical prices
+// rather than current prices. Without this lookup, every chart point
+// would value its cumulative units at TODAY's prices, which means the
+// chart can't show genuine market movement between historical dates —
+// it would only reflect changes in CONTRIBUTIONS over time.
+//
+// Lookup is linear because LS.PRICE_HISTORY keeps at most ~90 entries
+// per ticker (90-day rolling window in recordPriceTick), so a binary
+// search would only marginally help. The series is already sorted
+// chronologically by recordPriceTick / backfillPriceHistoryFromMonthly.
+function _getPriceForTickerOnDay(ticker, timestamp) {
+  if (!ticker || !isFinite(timestamp)) return 0;
+  try {
+    const all = lsGet(LS.PRICE_HISTORY, {}) || {};
+    const series = Array.isArray(all[ticker]) ? all[ticker] : [];
+    if (series.length === 0) return 0;
+    // Walk backwards through the series to find the latest entry with
+    // ts <= timestamp. The series is sorted chronologically (oldest
+    // first) so we iterate from the end.
+    for (let i = series.length - 1; i >= 0; i--) {
+      const p = series[i];
+      if (!p || !isFinite(p.ts) || !isFinite(p.price)) continue;
+      if (p.ts <= timestamp) return p.price;
+    }
+    // No entry on or before that timestamp — return 0 so the caller
+    // can fall back. This typically happens for the very first history
+    // entry if backfill ran but the day's price wasn't captured.
+    return 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
 function renderSparkline(ticker, uid, opts = {}) {
   const width  = opts.width  || 110;
   const height = opts.height || 28;
@@ -17797,6 +17836,14 @@ function renderGrowthChart(type='monthly') {
     // branch (one point per year). The point's timestamp is the LAST
     // buy of that day so it sits chronologically correctly, but the
     // label shows only the date so the visualisation stays clean.
+    //
+    // Each point's VALUE is computed using the price that was in effect
+    // on that day (from LS.PRICE_HISTORY), NOT the current live price.
+    // This way the chart shows genuine historical market movement rather
+    // than just stepping up at each contribution event. Without this,
+    // the chart was effectively showing "cumulative units × today's
+    // prices" at every historical point — which makes intraday market
+    // moves invisible.
     let cumulativeUnits = {};   // ticker → cumulative units held (net of sales)
     let cumulativeCost  = 0;    // running cost basis from history
     // Group buys by yyyy-mm-dd to find the last entry per day
@@ -17806,20 +17853,60 @@ function renderGrowthChart(type='monthly') {
       const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
       lastBuyTsByDay[dayKey] = e.timestamp;
     });
+    // Per-ticker price-paid lookup from history entries — falls back to
+    // this when LS.PRICE_HISTORY has no entry for a given day. Tracks
+    // the most-recent recorded entry-price per ticker UP TO the current
+    // walk position, so we never accidentally use a future price.
+    const pricePaidByTicker = {};
+    // Seeded ticker → current price map for fallback at historical
+    // points that predate any price-history data.
+    const seededHoldings = portfolio.filter(h => h.seeded);
+    // Determines whether this point is "today" (the latest day). The
+    // latest point always uses current live prices so it reconciles
+    // perfectly with the header total.
+    const latestDayKey = sortedBuys.length > 0
+      ? (() => {
+          const lastTs = sortedBuys[sortedBuys.length - 1].timestamp;
+          const d = new Date(lastTs);
+          return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        })()
+      : null;
+    // Helper: price for `ticker` on `timestamp`, with fallback chain.
+    // For the LATEST point (today's day key) we deliberately use current
+    // prices so the chart's final point exactly matches the header total.
+    const priceAt = (ticker, timestamp, isLatestPoint) => {
+      if (isLatestPoint) return getBestPrice(ticker);
+      const hist = _getPriceForTickerOnDay(ticker, timestamp);
+      if (hist > 0) return hist;
+      const paid = pricePaidByTicker[ticker];
+      if (paid > 0) return paid;
+      return getBestPrice(ticker); // last-resort fallback to current price
+    };
     sortedBuys.forEach(e => {
       (e.funds||[]).forEach(f => {
         cumulativeUnits[f.ticker] = (cumulativeUnits[f.ticker] || 0) + (f.held || 0);
         cumulativeCost += (f.held || 0) * (f.price || 0);
+        // Remember the most-recent price paid for this ticker so points
+        // before LS.PRICE_HISTORY had data can still value units.
+        if ((f.price || 0) > 0) pricePaidByTicker[f.ticker] = f.price;
       });
       applySoldUpTo(e.timestamp, cumulativeUnits);
       // Only emit a point for the LAST buy of each day
       const d = new Date(e.timestamp);
       const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
       if (e.timestamp !== lastBuyTsByDay[dayKey]) return;
+      const isLatest = (dayKey === latestDayKey);
+      // Value cumulative units at the price in effect on this day
       const cumulativeValue = Object.entries(cumulativeUnits).reduce((s, [ticker, units]) => {
-        return s + units * getBestPrice(ticker);
+        return s + units * priceAt(ticker, e.timestamp, isLatest);
       }, 0);
-      const legacyValue = portfolio.filter(h => h.seeded).reduce((s,h) => s + h.shares * (h.price||0), 0);
+      // Value seeded legacy holdings at the price in effect on this day
+      // (falls back to seeded.price for points predating price history)
+      const legacyValue = seededHoldings.reduce((s, h) => {
+        const histP = _getPriceForTickerOnDay(h.ticker, e.timestamp);
+        const p = isLatest ? (h.price || 0) : (histP > 0 ? histP : (h.price || 0));
+        return s + h.shares * p;
+      }, 0);
       const totalVal = cumulativeValue + legacyValue;
       const contrib = seededCostBase + cumulativeCost;
       points.push({
@@ -17834,20 +17921,44 @@ function renderGrowthChart(type='monthly') {
   } else {
     // Yearly: walk every entry chronologically (so cost & sales accumulate
     // correctly), but only emit a point per year (last buy of year).
+    // Uses the same historical-price valuation as the monthly branch so
+    // year-on-year market movements are honest. See the monthly comments
+    // for the full rationale and fallback chain.
     let cumulativeUnits = {};
     let cumulativeCost  = 0;
     let lastBuyTsByYear = {};
     sortedBuys.forEach(e => { lastBuyTsByYear[new Date(e.timestamp).getFullYear()] = e.timestamp; });
+    const pricePaidByTicker = {};
+    const seededHoldings = portfolio.filter(h => h.seeded);
+    const latestYear = sortedBuys.length > 0
+      ? new Date(sortedBuys[sortedBuys.length - 1].timestamp).getFullYear()
+      : null;
+    const priceAt = (ticker, timestamp, isLatestPoint) => {
+      if (isLatestPoint) return getBestPrice(ticker);
+      const hist = _getPriceForTickerOnDay(ticker, timestamp);
+      if (hist > 0) return hist;
+      const paid = pricePaidByTicker[ticker];
+      if (paid > 0) return paid;
+      return getBestPrice(ticker);
+    };
     sortedBuys.forEach(e => {
       (e.funds||[]).forEach(f => {
         cumulativeUnits[f.ticker] = (cumulativeUnits[f.ticker] || 0) + (f.held||0);
         cumulativeCost += (f.held || 0) * (f.price || 0);
+        if ((f.price || 0) > 0) pricePaidByTicker[f.ticker] = f.price;
       });
       applySoldUpTo(e.timestamp, cumulativeUnits);
       const yr = new Date(e.timestamp).getFullYear();
       if (e.timestamp === lastBuyTsByYear[yr]) {
-        const cumulativeValue = Object.entries(cumulativeUnits).reduce((s,[ticker,units]) => s + units * getBestPrice(ticker), 0);
-        const legacyValue = portfolio.filter(h => h.seeded).reduce((s,h) => s + h.shares*(h.price||0), 0);
+        const isLatest = (yr === latestYear);
+        const cumulativeValue = Object.entries(cumulativeUnits).reduce((s,[ticker,units]) => {
+          return s + units * priceAt(ticker, e.timestamp, isLatest);
+        }, 0);
+        const legacyValue = seededHoldings.reduce((s, h) => {
+          const histP = _getPriceForTickerOnDay(h.ticker, e.timestamp);
+          const p = isLatest ? (h.price || 0) : (histP > 0 ? histP : (h.price || 0));
+          return s + h.shares * p;
+        }, 0);
         points.push({
           label: yr,
           fullDate: yr,
@@ -17872,13 +17983,19 @@ function renderGrowthChart(type='monthly') {
   // want to wait 12 months to see any chart at all.
   if (history.length === 1 && hasSeededInWrapper && points.length === 1) {
     const firstPoint = points[0];
-    // Legacy value at current live prices — same calc as the main loop's
-    // legacyValue, ensuring the baseline aligns with how subsequent
-    // points include seeded holdings.
+    const baselineTimestamp = firstPoint.timestamp - 86400000; // one day before
+    // Legacy value at the price in effect on the baseline day. Falls
+    // back to current price if no historical price is recorded for
+    // that ticker on that day. This keeps the baseline value
+    // consistent with how the main chart points value seeded holdings
+    // — both use historical prices where available.
     const baselineValue = portfolio
       .filter(h => h.seeded)
-      .reduce((s,h) => s + h.shares * (h.price || 0), 0);
-    const baselineTimestamp = firstPoint.timestamp - 86400000; // one day before
+      .reduce((s, h) => {
+        const histP = _getPriceForTickerOnDay(h.ticker, baselineTimestamp);
+        const p = histP > 0 ? histP : (h.price || 0);
+        return s + h.shares * p;
+      }, 0);
     points.unshift({
       label: 'Baseline',
       fullDate: 'Pre-contribution baseline',
