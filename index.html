@@ -19937,6 +19937,14 @@ function renderWrapperAllowances() {
   const tyLabel     = `${tyStartYear}/${String(tyStartYear + 1).slice(-2)}`;
 
   // ── ISA — sum all ISA-tagged investment entries in current TY ──
+  // Uses entry.budget (the gross contribution) rather than funds-value
+  // sum (the deployed amount). This matters because the buffer leaves
+  // a small residual as cash in the wrapper, but HMRC counts the FULL
+  // contribution against your annual allowance the moment it lands in
+  // the wrapper, not when it's deployed. Same logic for SIPP below —
+  // employer contributions are valued at gross amount paid in.
+  // Fallback to funds-value sum is preserved for older entries where
+  // budget wasn't recorded (e.g. quick-add rows or imported history).
   const investHistory = (typeof lsGet === 'function' && typeof LS !== 'undefined')
     ? lsGet(LS.HISTORY, []) : [];
   let isaUsed = 0;
@@ -19946,9 +19954,11 @@ function renderWrapperAllowances() {
     if (entry.type === 'sold') return; // disposals don't count toward allowances
     if (entry.timestamp < tyStartMs || entry.timestamp > tyEndMs) return;
     const wrapper = entry.wrapper || (entry.type === 'employer' ? 'SIPP' : 'GIA');
-    const sum = (entry.funds || []).reduce((s, f) => s + (parseFloat(f.value) || 0), 0);
-    if (wrapper === 'ISA') isaUsed += sum;
-    else if (wrapper === 'SIPP') sippUsed += sum; // employer-only by user contract
+    const budgetAmount = parseFloat(entry.budget) || 0;
+    const fundsValue = (entry.funds || []).reduce((s, f) => s + (parseFloat(f.value) || 0), 0);
+    const contributionAmount = budgetAmount > 0 ? budgetAmount : fundsValue;
+    if (wrapper === 'ISA') isaUsed += contributionAmount;
+    else if (wrapper === 'SIPP') sippUsed += contributionAmount; // employer-only by user contract
   });
 
   // ── CGT exempt — read directly from the input the user maintains on this tab ──
