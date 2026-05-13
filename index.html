@@ -3532,9 +3532,28 @@ body.privacy-mode-active .portfolio-delta-pill {
   font-size: 10px; color: var(--muted);
 }
 .alw-row-foot-warn { color: var(--amber); }
+.alw-prior-edit {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--muted);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  margin-left: 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.alw-prior-edit:hover {
+  border-color: rgba(255,255,255,0.4);
+  color: var(--text);
+}
 @media (max-width: 600px) {
   .alw-row-fig { font-size: 12px; }
   .alw-row-fig-cap { font-size: 9.5px; }
+  .alw-prior-edit { font-size: 9px; padding: 2px 6px; margin-left: 6px; }
 }
 .bgt-row:last-child td { border-bottom: none; }
 .bgt-row.bgt-total td {
@@ -10149,6 +10168,7 @@ const LS = {
   HL_DD_DAY: 'rma_hl_dd_day_v1',
   HL_DD_DISMISSALS: 'rma_hl_dd_dismissals_v1',
   PRICE_HISTORY: 'rma_price_history_v1',
+  PRIOR_TY_CONTRIBUTIONS: 'rma_prior_ty_contributions_v1',
   UI: 'rma_ui_v1',
 };
 
@@ -19917,6 +19937,95 @@ function renderTaxProvisionPlanner() {
 // All four read from existing state. No new inputs. The "implied monthly pace
 // to fill" footnote uses simple linear projection (remaining ÷ months left).
 // Re-renders on every save via renderTaxProvisionPlanner cascade.
+// ── Prior-tax-year contributions helpers ──
+// Some contributions occur OUTSIDE the monthly save flow — e.g. employer
+// SIPP payments in April that landed before the user started using the
+// app's save-month system, or one-off lump sums recorded only in legacy
+// seeded holdings. These don't appear in LS.HISTORY so the allowance
+// tracker can't see them.
+//
+// This helper lets the user store a "manual prior contributions" figure
+// per wrapper, scoped to the current tax year, that gets ADDED to the
+// history-derived total. The figure auto-clears at tax-year rollover
+// (detected by the stored `taxYear` field not matching the live one).
+//
+// Schema: { taxYear: '2026/27', ISA: number, SIPP: number }
+function _currentTYLabel() {
+  const t = new Date();
+  const m = t.getMonth(), d = t.getDate();
+  const beforeApr6 = (m < 3) || (m === 3 && d < 6);
+  const startY = beforeApr6 ? t.getFullYear() - 1 : t.getFullYear();
+  return `${startY}/${String(startY + 1).slice(-2)}`;
+}
+
+function _getPriorContributions() {
+  // Returns { ISA, SIPP } for the CURRENT tax year. Auto-clears stored
+  // values when the tax year has rolled over since they were saved.
+  const tyNow = _currentTYLabel();
+  try {
+    const raw = localStorage.getItem(LS.PRIOR_TY_CONTRIBUTIONS);
+    if (!raw) return { ISA: 0, SIPP: 0 };
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return { ISA: 0, SIPP: 0 };
+    // Stale year — start of new tax year resets the slate. We rewrite
+    // the storage so subsequent reads are cheap.
+    if (parsed.taxYear !== tyNow) {
+      const fresh = { taxYear: tyNow, ISA: 0, SIPP: 0 };
+      localStorage.setItem(LS.PRIOR_TY_CONTRIBUTIONS, JSON.stringify(fresh));
+      return { ISA: 0, SIPP: 0 };
+    }
+    return {
+      ISA: parseFloat(parsed.ISA) || 0,
+      SIPP: parseFloat(parsed.SIPP) || 0,
+    };
+  } catch (e) {
+    return { ISA: 0, SIPP: 0 };
+  }
+}
+
+function _setPriorContribution(wrapper, amount) {
+  // Sets the manual prior-contributions figure for a wrapper in the
+  // current tax year. Called from the inline edit affordance on the
+  // allowance bar. Amount of 0 (or negative coerced to 0) effectively
+  // clears the field.
+  if (wrapper !== 'ISA' && wrapper !== 'SIPP') return;
+  const tyNow = _currentTYLabel();
+  const amt = Math.max(0, parseFloat(amount) || 0);
+  try {
+    const current = _getPriorContributions();
+    const next = { taxYear: tyNow, ISA: current.ISA, SIPP: current.SIPP };
+    next[wrapper] = amt;
+    localStorage.setItem(LS.PRIOR_TY_CONTRIBUTIONS, JSON.stringify(next));
+  } catch (e) {
+    console.warn('_setPriorContribution failed', e);
+  }
+}
+
+// Inline edit handler. Prompts the user for the prior-contributions
+// figure for a given wrapper, stores it, and re-renders the allowance
+// bars so the change shows immediately.
+function editPriorContribution(wrapper) {
+  if (wrapper !== 'ISA' && wrapper !== 'SIPP') return;
+  const current = _getPriorContributions();
+  const existing = current[wrapper] || 0;
+  const label = wrapper === 'SIPP'
+    ? 'Prior SIPP contributions this tax year (e.g. April employer payments not yet logged):'
+    : 'Prior ISA contributions this tax year (lump sums or transfers not yet logged):';
+  const raw = prompt(label, existing > 0 ? String(existing) : '');
+  if (raw === null) return; // cancelled
+  const cleaned = raw.replace(/[£,\s]/g, '');
+  const val = parseFloat(cleaned);
+  if (cleaned !== '' && (!isFinite(val) || val < 0)) {
+    alert('Please enter a positive number.');
+    return;
+  }
+  _setPriorContribution(wrapper, cleaned === '' ? 0 : val);
+  if (typeof renderWrapperAllowances === 'function') renderWrapperAllowances();
+  if (typeof toast === 'function') {
+    toast(`${wrapper} prior contributions set to £${fmtNum(cleaned === '' ? 0 : val, 0)} for ${_currentTYLabel()}`);
+  }
+}
+
 function renderWrapperAllowances() {
   const out = document.getElementById('wrapper-allowances-output');
   if (!out) return;
@@ -19961,6 +20070,14 @@ function renderWrapperAllowances() {
     else if (wrapper === 'SIPP') sippUsed += contributionAmount; // employer-only by user contract
   });
 
+  // Add manual prior-contributions for the current tax year. Lets the
+  // user log contributions (e.g. employer SIPP payments) that happened
+  // before they started using the save-month flow, or one-off lump sums
+  // not represented in LS.HISTORY. Auto-clears at TY rollover.
+  const priorContribs = _getPriorContributions();
+  isaUsed  += priorContribs.ISA  || 0;
+  sippUsed += priorContribs.SIPP || 0;
+
   // ── CGT exempt — read directly from the input the user maintains on this tab ──
   const cgtAllowanceEl = document.getElementById('cgt-allowance');
   const cgtUsedEl      = document.getElementById('cgt-used');
@@ -20004,6 +20121,12 @@ function renderWrapperAllowances() {
   // amber when over 80% used (gentle warning) and red when fully consumed.
   // Footnote shows £ remaining left, monthly pace right; pace turns amber when
   // current pace + months left implies the user will overshoot.
+  //
+  // options.editWrapper, when set ('ISA' or 'SIPP'), renders a small inline
+  // edit affordance so the user can adjust prior-tax-year contributions
+  // (one-off lump sums or employer payments that pre-date the save-month
+  // flow). The adjusted amount is folded silently into the headline figure;
+  // no separate footnote is shown, keeping the panel clean.
   const buildRow = (label, used, cap, pillBg, pillBorder, pillFg, options = {}) => {
     const pct = cap > 0 ? Math.min((used / cap) * 100, 100) : 0;
     const remaining = Math.max(cap - used, 0);
@@ -20018,11 +20141,14 @@ function renderWrapperAllowances() {
       : (remaining > 0
           ? `£${fmtNum(Math.round(pace), 0)}/mo to fill by 5 April ${tyStartYear + 1}`
           : `Filled · no further headroom`);
+    const editLink = options.editWrapper
+      ? `<button class="alw-prior-edit" onclick="editPriorContribution('${options.editWrapper}')" title="Add or adjust prior contributions for this tax year">Add prior</button>`
+      : '';
     return `
       <div class="alw-row">
         <div class="alw-row-head">
           <div class="alw-row-pill" style="background:${pillBg};color:${pillFg};border-color:${pillBorder}">${label}</div>
-          <div class="alw-row-fig">£${fmtNum(Math.round(used), 0)} <span class="alw-row-fig-cap">/ £${fmtNum(cap, 0)}</span></div>
+          <div class="alw-row-fig">£${fmtNum(Math.round(used), 0)} <span class="alw-row-fig-cap">/ £${fmtNum(cap, 0)}</span>${editLink}</div>
         </div>
         <div class="alw-bar-track">
           <div class="alw-bar-fill" style="width:${pct.toFixed(1)}%;background:${fillColour}"></div>
@@ -20037,7 +20163,7 @@ function renderWrapperAllowances() {
   const isaRow = buildRow(
     'ISA', isaUsed, ISA_CAP,
     'rgba(48,209,88,0.10)', 'rgba(48,209,88,0.40)', 'var(--green)',
-    { paceWarn: true }
+    { paceWarn: true, editWrapper: 'ISA' }
   );
   const sippRow = buildRow(
     'SIPP', sippUsed, SIPP_CAP,
@@ -20045,7 +20171,8 @@ function renderWrapperAllowances() {
     {
       paceLabel: sippUsed >= SIPP_CAP
         ? `Filled · no further headroom`
-        : `Employer contributions only · projected based on history`
+        : `Employer contributions only · projected based on history`,
+      editWrapper: 'SIPP'
     }
   );
   const cgtRow = buildRow(
