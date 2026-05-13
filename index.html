@@ -17788,36 +17788,48 @@ function renderGrowthChart(type='monthly') {
 
   let points = [];
   if (type === 'monthly') {
-    // Accumulate cumulative value AND cumulative cost basis month by month
+    // Walk every buy chronologically to keep cumulative units and cost
+    // accurate, but only emit one chart point per calendar day. Multiple
+    // entries saved on the same day (e.g. a GIA monthly save followed by
+    // a SIPP top-up) used to produce duplicate dots on the chart with
+    // identical date labels — now they collapse into a single end-of-day
+    // point. The aggregation matches the pattern used in the yearly
+    // branch (one point per year). The point's timestamp is the LAST
+    // buy of that day so it sits chronologically correctly, but the
+    // label shows only the date so the visualisation stays clean.
     let cumulativeUnits = {};   // ticker → cumulative units held (net of sales)
     let cumulativeCost  = 0;    // running cost basis from history
-    points = sortedBuys.map(e => {
-      // Apply this buy's units and cost
+    // Group buys by yyyy-mm-dd to find the last entry per day
+    const lastBuyTsByDay = {};
+    sortedBuys.forEach(e => {
+      const d = new Date(e.timestamp);
+      const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      lastBuyTsByDay[dayKey] = e.timestamp;
+    });
+    sortedBuys.forEach(e => {
       (e.funds||[]).forEach(f => {
         cumulativeUnits[f.ticker] = (cumulativeUnits[f.ticker] || 0) + (f.held || 0);
-        // Cost basis contribution = units bought this month × price paid
         cumulativeCost += (f.held || 0) * (f.price || 0);
       });
-      // Apply any sales that happened on or before this timestamp
       applySoldUpTo(e.timestamp, cumulativeUnits);
-      // Value = cumulative units × current live price (so the line moves
-      // when prices change). Plus seeded legacy holdings at current price.
+      // Only emit a point for the LAST buy of each day
+      const d = new Date(e.timestamp);
+      const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (e.timestamp !== lastBuyTsByDay[dayKey]) return;
       const cumulativeValue = Object.entries(cumulativeUnits).reduce((s, [ticker, units]) => {
         return s + units * getBestPrice(ticker);
       }, 0);
       const legacyValue = portfolio.filter(h => h.seeded).reduce((s,h) => s + h.shares * (h.price||0), 0);
       const totalVal = cumulativeValue + legacyValue;
-      // Total contributed at this point = seeded legacy cost basis (constant)
-      // plus history-derived running cost up to this entry.
       const contrib = seededCostBase + cumulativeCost;
-      return {
+      points.push({
         label: e.date.split(' ').slice(0,2).join(' '),
         fullDate: e.date,
         value: totalVal,
         contributed: contrib,
         timestamp: e.timestamp,
         wrapper: e.wrapper || 'GIA',
-      };
+      });
     });
   } else {
     // Yearly: walk every entry chronologically (so cost & sales accumulate
@@ -17956,8 +17968,32 @@ function renderGrowthChart(type='monthly') {
   const marketGrowth = latestValue - latestContrib;
   const growthPct = latestContrib > 0 ? (marketGrowth/latestContrib*100) : 0;
   const firstValue = points[0].value;
-  const totalChange = latestValue - firstValue;
-  const totalChangePct = firstValue > 0 ? (totalChange/firstValue*100) : 0;
+  const firstContrib = points[0].contributed;
+  // "Overall" pill represents the change in MARKET GROWTH between the
+  // first point and the latest, NOT the change in raw value. The raw
+  // value moves by both contributions AND market gains, so reporting
+  // `latestValue − firstValue` overstates return: a £44,946 contribution
+  // event between the two points would show as "+210.7% overall" even
+  // though no actual market gain occurred. By comparing the GAP between
+  // value and contributions at each end, we isolate the genuine market
+  // performance over the displayed window. For a single-history-entry
+  // wrapper with a synthetic baseline, this gives the user the honest
+  // picture of how their legacy holdings appreciated AND how their new
+  // contribution has fared since being deposited.
+  const firstMarketGrowth = firstValue - firstContrib;
+  const totalChange = marketGrowth - firstMarketGrowth;
+  // Percentage denominator: latest contributions (the money currently
+  // invested). This matches how investment returns are typically reported.
+  const totalChangePct = latestContrib > 0 ? (totalChange/latestContrib*100) : 0;
+  // Label suffix: tell the user the actual window the pill is measuring,
+  // so they don't conflate it with the "Market Growth" metric which is
+  // since-inception. For a synthetic baseline (one-history-entry wrappers
+  // with seeded legacy), we read the marker. Otherwise we use the first
+  // point's date label.
+  const firstPoint = points[0];
+  const sinceLabel = firstPoint.isBaseline
+    ? 'since baseline'
+    : `since ${firstPoint.label}`;
 
   el.innerHTML=`
     <div class="plan-card mb16">
@@ -17985,7 +18021,7 @@ function renderGrowthChart(type='monthly') {
       <div class="growth-legend-chip"><div class="growth-legend-bar gold"></div>Portfolio Value</div>
       <div class="growth-legend-chip"><div class="growth-legend-bar blue"></div>Contributions</div>
       <div class="growth-legend-chip"><div class="growth-legend-area"></div>Market Growth</div>
-      <div class="growth-overall-chip ${totalChange>=0?'pos':'neg'}">${totalChange>=0?'+':''}£${fmtNum(Math.round(totalChange),0)} (${totalChangePct>=0?'+':''}${totalChangePct.toFixed(1)}%) overall</div>
+      <div class="growth-overall-chip ${totalChange>=0?'pos':'neg'}">${totalChange>=0?'+':''}£${fmtNum(Math.round(totalChange),0)} (${totalChangePct>=0?'+':''}${totalChangePct.toFixed(1)}%) ${sinceLabel}</div>
     </div>
     <svg id="growthSVG" width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
       <defs>
