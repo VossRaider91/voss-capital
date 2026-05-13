@@ -16579,6 +16579,29 @@ function syncPortfolioFromHistory() {
   // Keep only manual/seeded portfolio entries (non-history-sourced)
   const manualOnly = portfolio.filter(h => !h.fromHistory);
 
+  // Build a live-price lookup keyed by ticker. We take the highest stored
+  // price across the WHOLE portfolio array — both seeded/manual holdings
+  // and any existing fromHistory entries — because applyPriceUpdates
+  // writes the fresh price into all matching holdings before calling
+  // syncPortfolioFromHistory, so the latest price will be present
+  // somewhere in the array regardless of which kind of holding the
+  // ticker has. If a ticker has only fromHistory entries (e.g. XNAQ or
+  // SMGB in an ISA wrapper with no legacy position), this still works
+  // because the price has already been written to those fromHistory
+  // entries by applyPriceUpdates moments ago.
+  //
+  // This is the May 2026 fix for the bug where syncPortfolioFromHistory
+  // would overwrite fromHistory entries with their STALE historical-entry
+  // prices (entry.funds[i].price recorded at save time) — causing the
+  // visible "New Holdings" prices to revert to last month's value even
+  // after a successful refresh.
+  const livePriceByTicker = {};
+  portfolio.forEach(h => {
+    if (!h.ticker || !(h.price > 0)) return;
+    const cur = livePriceByTicker[h.ticker] || 0;
+    if (h.price > cur) livePriceByTicker[h.ticker] = h.price;
+  });
+
   // Build history-derived entries, preserving existing settings
   const historyEntries = Object.values(latestHeld)
     .filter(h => h.shares > 0)
@@ -16588,11 +16611,20 @@ function syncPortfolioFromHistory() {
         p.ticker === h.ticker &&
         p.wrapper === h.wrapper
       );
+      // Resolve price in priority order:
+      //   1) live ticker price from anywhere in the portfolio array (always
+      //      reflects the most recent refresh by applyPriceUpdates)
+      //   2) price already stored on the existing fromHistory entry
+      //   3) price baked into the most recent history entry (last resort)
+      const livePrice = livePriceByTicker[h.ticker] || 0;
+      const resolvedPrice = livePrice > 0
+        ? livePrice
+        : (existing?.price > 0 ? existing.price : (h.price > 0 ? h.price : 0));
       return {
         ...h,
         id: existing ? existing.id : `hist_${h.ticker}_${h.wrapper}`,
         includeInCalc: existing !== undefined ? existing.includeInCalc : true,
-        price: h.price > 0 ? h.price : (existing?.price || 0),
+        price: resolvedPrice,
         totalCost: existing?.totalCost || 0,
       };
     });
