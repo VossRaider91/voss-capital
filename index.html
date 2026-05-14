@@ -8884,7 +8884,7 @@ body.modal-active .container > footer {
           <div class="section-label mb16" style="color:var(--amber)">Property</div>
           <div class="input-group mb12" data-pound>
             <span class="input-label">Primary Residence — Current Value</span>
-            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-house-value" value="0" step="1000" min="0" oninput="renderNetWorth()"></div>
+            <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="nw-house-value" value="0" step="1000" min="0" oninput="renderNetWorth(); if (typeof mpRecalc === 'function') mpRecalc();"></div>
           </div>
           <div class="input-group mb12" data-pound>
             <span class="input-label">Outstanding Mortgage <span style="color:var(--blue);font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;margin-left:4px">🔒 auto</span></span>
@@ -10027,6 +10027,7 @@ body.modal-active .container > footer {
             <th>Principal Paid</th>
             <th>Payment Made</th>
             <th>Closing Balance</th>
+            <th>LTV</th>
           </tr>
         </thead>
         <tbody id="mp-table-body"></tbody>
@@ -22085,10 +22086,35 @@ function mpRecalc() {
   // ── Amortisation table — shows Overpayment Path ──
   const tbody = document.getElementById('mp-table-body');
   if (!tbody) return;
+  // Property value drives the LTV column. Lives in Net Worth so it's the
+  // single source of truth — changing it there cascades into every row's
+  // LTV figure on the next render. If the field is missing or zero we
+  // render an em dash rather than a misleading 0% or Infinity%.
+  // Stored key is 'house-value' (kebab-case from the form field id);
+  // dot-notation can't reach it, hence the bracket lookup.
+  const nwStore = lsGet(LS.NET_WORTH, {}) || {};
+  const propertyValueForLTV = parseFloat(nwStore['house-value']) || 0;
+  // Colour bands match common UK remortgage tiers — these are roughly the
+  // breakpoints where lenders shift you into better rate brackets:
+  //   <60%  green   (best-tier deals)
+  //   <80%  muted   (mainstream deals)
+  //   <90%  amber   (higher LTV bracket)
+  //   ≥90%  red     (only first-time buyer / specialist deals)
+  const ltvBandColour = (pct) => {
+    if (!isFinite(pct)) return 'var(--muted)';
+    if (pct < 60) return 'var(--green)';
+    if (pct < 80) return 'var(--text)';
+    if (pct < 90) return 'var(--amber)';
+    return 'var(--red)';
+  };
   tbody.innerHTML = optimisedSchedule.map(r => {
     const monthLabel = r.rowDate.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
     const rowClass   = r.isCurrentMonth ? 'mp-current-month' : r.isRateSwitch ? 'mp-rate-switch' : '';
     const flag       = r.isCurrentMonth ? ' ← Today' : r.isRateSwitch ? ' ← Rate switches here' : '';
+    const ltvPct     = propertyValueForLTV > 0 ? (r.closingBal / propertyValueForLTV) * 100 : null;
+    const ltvCell    = ltvPct == null
+      ? '<td class="mp-ltv" style="color:var(--muted2)">—</td>'
+      : `<td class="mp-ltv" style="color:${ltvBandColour(ltvPct)};font-variant-numeric:tabular-nums">${ltvPct.toFixed(1)}%</td>`;
     return `<tr class="${rowClass}">
       <td>${monthLabel}${flag ? `<span style="font-size:9px;margin-left:4px;opacity:0.7">${flag}</span>` : ''}</td>
       <td style="color:${r.isPostSwitch ? 'var(--blue)' : 'var(--muted)'}">${r.activeAnnRate.toFixed(2)}%</td>
@@ -22097,6 +22123,7 @@ function mpRecalc() {
       <td class="mp-principal">£${fmtNum(r.principal, 2)}</td>
       <td>£${fmtNum(r.totalPay, 2)}</td>
       <td class="mp-balance">${fmt3(r.closingBal)}</td>
+      ${ltvCell}
     </tr>`;
   }).join('');
 }
