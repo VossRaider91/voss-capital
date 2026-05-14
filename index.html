@@ -2143,6 +2143,49 @@ h1 {
    the ticker label at the top and the Units / Price inputs side by
    side beneath. Two ticker blocks fit per row on desktop, one per row
    on mobile so every input has full breathing room. */
+
+/* ── ALLOWANCE INCLUSION TOGGLE ──────────────────────────────────
+   Sits between the edit form's top row (date / wrapper / budget) and
+   the per-fund grid below. Lets the user mark an entry as a buffer
+   redeployment rather than a fresh contribution, so it gets ignored
+   by the wrapper-allowance tracker. Only rendered for ISA/SIPP
+   entries — GIA has no annual allowance to track. */
+.edit-allowance-toggle {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+.allowance-toggle-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.allowance-toggle-label input[type="checkbox"] {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blue);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.allowance-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.35;
+}
+.allowance-toggle-hint {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .edit-funds-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -15109,6 +15152,16 @@ function renderHistory(filter='all') {
             <div class="pound-wrap"><input class="num-input" type="text" inputmode="numeric" id="edit_budget_${entry.id}" value="${entry.budget||0}"></div>
           </div>
         </div>
+        ${(entryWrapper === 'ISA' || entryWrapper === 'SIPP') ? `
+        <div class="edit-allowance-toggle">
+          <label class="allowance-toggle-label">
+            <input type="checkbox" id="edit_include_${entry.id}" ${entry.excludeFromAllowance ? '' : 'checked'}>
+            <span class="allowance-toggle-text">
+              Include in ${entryWrapper} wrapper allowance
+              <span class="allowance-toggle-hint">Untick if this is a redeployment of buffer cash, not a new contribution</span>
+            </span>
+          </label>
+        </div>` : ''}
         <div class="edit-funds-grid">
           ${(entry.funds || []).map(f=>`
             <div class="edit-fund-block">
@@ -15232,6 +15285,20 @@ function saveEditForm(id) {
   // Capture wrapper change
   const newWrapper = document.getElementById(`edit_wrapper_${id}`)?.value;
   if (newWrapper) history[idx].wrapper = newWrapper;
+
+  // Capture the "Include in wrapper allowance" toggle for ISA/SIPP entries.
+  // Stored as excludeFromAllowance (the inverse of the visible checkbox) so
+  // that legacy entries — which never had this field — default to
+  // "included", matching the historical behaviour. Only ISA and SIPP have
+  // wrapper allowances to track; the checkbox isn't rendered for GIA.
+  const includeEl = document.getElementById(`edit_include_${id}`);
+  if (includeEl && (newWrapper === 'ISA' || newWrapper === 'SIPP')) {
+    history[idx].excludeFromAllowance = !includeEl.checked;
+  } else {
+    // Wrapper changed to GIA or no checkbox present — clear the flag so
+    // we don't leave stale state if the wrapper is later changed back.
+    delete history[idx].excludeFromAllowance;
+  }
 
   history[idx].funds = history[idx].funds.map(f => {
     const unitsRaw = parseFloat(document.getElementById(`edit_units_${id}_${f.ticker}`)?.value);
@@ -20061,6 +20128,7 @@ function renderWrapperAllowances() {
   investHistory.forEach(entry => {
     if (!entry || !entry.timestamp) return;
     if (entry.type === 'sold') return; // disposals don't count toward allowances
+    if (entry.excludeFromAllowance) return; // user-flagged as buffer redeployment, not a fresh contribution
     if (entry.timestamp < tyStartMs || entry.timestamp > tyEndMs) return;
     const wrapper = entry.wrapper || (entry.type === 'employer' ? 'SIPP' : 'GIA');
     const budgetAmount = parseFloat(entry.budget) || 0;
