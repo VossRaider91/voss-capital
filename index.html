@@ -8676,7 +8676,7 @@ body.modal-active .container > footer {
         <div class="plan-card-metric">
           <div class="plan-card-metric-label">Inflation-Adjusted</div>
           <div class="plan-card-metric-value" id="ret-cp-real" data-balance-sensitive>—</div>
-          <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Today's money</div>
+          <div class="plan-card-metric-label" id="ret-cp-real-monthly" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Today's money</div>
         </div>
         <div class="plan-card-metric">
           <div class="plan-card-metric-label">Growth Generated</div>
@@ -16162,15 +16162,25 @@ function renderCurrentPosition() {
   const fullProjected    = gr.finalNominal;
   const contributionDelta = Math.max(0, fullProjected - projectedNominal);
 
-  // Income from no-contributions pot
+  // Income from no-contributions pot. We compute both the nominal figure
+  // (using the projected pot at retirement) AND the inflation-adjusted
+  // figure (using projectedReal, the pot in today's money). Same
+  // withdrawal mode and rate apply to both — the only difference is the
+  // pot value being drawn from. Showing both lets the user see what their
+  // headline income figure is worth in present-day purchasing power.
   let cpMonthlyIncome;
+  let cpMonthlyIncomeReal;
   if (withdrawalMode === 'drawdown') {
     const dm = Math.max(1, 95 - targetAge) * 12;
     cpMonthlyIncome = monthlyRate > 0
       ? projectedNominal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -dm))
       : projectedNominal / dm;
+    cpMonthlyIncomeReal = monthlyRate > 0
+      ? projectedReal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -dm))
+      : projectedReal / dm;
   } else {
-    cpMonthlyIncome = projectedNominal * 0.04 / 12;
+    cpMonthlyIncome     = projectedNominal * 0.04 / 12;
+    cpMonthlyIncomeReal = projectedReal    * 0.04 / 12;
   }
 
   // Progress: current value as % of no-contributions projected (how far compounding alone gets you)
@@ -16195,6 +16205,7 @@ function renderCurrentPosition() {
   set('ret-cp-time',          timeLabel);
   set('ret-cp-time-sub',      `To Age ${targetAge}`);
   set('ret-cp-real',          `£${fmtNum(Math.round(projectedReal), 0)}`);
+  set('ret-cp-real-monthly',  `Today's money · £${fmtNum(Math.round(cpMonthlyIncomeReal), 0)}/mo`);
   set('ret-cp-growth',        `+£${fmtNum(Math.round(growthGenerated), 0)}`);
   set('ret-cp-progress',      contributionDelta > 0 ? `+£${fmtNum(Math.round(contributionDelta), 0)}` : '£0');
   set('ret-cp-progress-sub',  `On top of the £${fmtNum(Math.round(projectedNominal), 0)} your current pot generates`);
