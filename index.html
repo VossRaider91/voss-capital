@@ -2969,6 +2969,17 @@ body.privacy-mode-active .portfolio-delta-pill {
   background: rgba(10,132,255,0.04);
   box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
 }
+/* mp-input-month — type="month" renders a native iOS control with an
+   intrinsic minimum width wider than a plain text field. Without an
+   explicit min-width:0 it ignores width:100% in a narrow flex/grid
+   column and spills off the card edge. The Remortgage Switch Date now
+   also sits in its own full-width row (see mortgage planner markup) so
+   it has the whole card width to render into. */
+.mp-input-month {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 .mp-table-wrap {
   overflow-x: auto; max-height: 420px; overflow-y: auto;
   border: 1px solid rgba(200,215,240,0.16);
@@ -5159,6 +5170,24 @@ body.privacy-mode-active .portfolio-delta-pill {
 .plan-card-metrics.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .plan-card-metrics.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .plan-card-metrics.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* rows-2 — a 4-metric strip laid out as a 2x2 grid on desktop. Promotes
+   the existing mobile cols-4 reflow (line ~7628) to all viewport sizes so
+   the Portfolio Snapshot Tax & Timing card reads identically desktop and
+   mobile. Divider borders mirror the mobile rule exactly: vertical line
+   between the two columns, horizontal line under the top row. */
+.plan-card-metrics.rows-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.plan-card-metrics.rows-2 .plan-card-metric:nth-child(odd) {
+  border-right: 1px solid rgba(255,255,255,0.10);
+}
+.plan-card-metrics.rows-2 .plan-card-metric:nth-child(even) {
+  border-right: none;
+}
+.plan-card-metrics.rows-2 .plan-card-metric:nth-child(-n+2) {
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
 
 /* Hero variant — blue-tinted plan-card for headline summary surfaces.
    Used for "Net Worth", "Projected Value at Retirement", primary KPIs. */
@@ -9983,11 +10012,11 @@ body.modal-active .container > footer {
       <div class="subsection-label" id="mp-future-heading" style="margin-bottom:4px">Future Projections</div>
       <div class="stat-sub" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
     </div>
+    <div class="mp-input-group" style="margin-bottom:16px">
+      <label class="mp-input-label" for="mp-switch-date" style="color:var(--blue)">Remortgage Switch Date</label>
+      <input class="mp-input mp-input-month" type="month" id="mp-switch-date" value="2029-05" oninput="mpRecalc()" style="text-align:left">
+    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">
-      <div class="mp-input-group">
-        <label class="mp-input-label" for="mp-switch-date" style="color:var(--blue)">Remortgage Switch Date</label>
-        <input class="mp-input" type="month" id="mp-switch-date" value="2029-05" oninput="mpRecalc()" style="text-align:left">
-      </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-new-rate" style="color:var(--blue)">Projected New Rate %</label>
         <input class="mp-input" type="text" inputmode="decimal" id="mp-new-rate" value="3.50" step="0.05" min="0" max="20" oninput="mpRecalc()">
@@ -22308,7 +22337,7 @@ function renderAnalyse() {
           <span class="plan-card-ticker">Tax &amp; Timing</span>
           <span class="plan-card-context">Where you stand right now</span>
         </div>
-        <div class="plan-card-metrics cols-3">
+        <div class="plan-card-metrics rows-2">
           <div class="plan-card-metric">
             <div class="plan-card-metric-label">Tax-Exempt</div>
             <div class="plan-card-metric-value ${taxExemptCls}">${taxExemptPct.toFixed(1)}%</div>
@@ -22318,6 +22347,11 @@ function renderAnalyse() {
             <div class="plan-card-metric-label">GIA Gain</div>
             <div class="plan-card-metric-value ${giaGainCls}" data-balance-sensitive>${totalGIAGain>=0?'+':'−'}£${fmtNum(Math.round(Math.abs(totalGIAGain)),0)}</div>
             <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">If sold today</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Annual Income</div>
+            <div class="plan-card-metric-value amber" data-balance-sensitive>£${fmtNum(Math.round((giaValue+isaValue)*0.04),0)}</div>
+            <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">4% of GIA + ISA</div>
           </div>
           <div class="plan-card-metric">
             <div class="plan-card-metric-label">Years to Retirement</div>
