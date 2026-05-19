@@ -13193,13 +13193,27 @@ function buildFundCards() {
 
 function getPortfolioActualPct(ticker) {
   const portfolio = lsGet(LS.PORTFOLIO, []);
-  // Only include holdings that are ticked AND not legacy/seeded
-  const ticked = portfolio.filter(h => h.includeInCalc !== false && !h.seeded);
+  // Mirror the Portfolio Overview: the ACTUAL figure must be scoped to the
+  // wrapper currently selected in the calculator dropdown, so it matches the
+  // per-wrapper Target sitting next to it (e.g. VWRP shows 36.0% on the GIA
+  // Overview tab and the VWRP card targets 36). Both numerator and
+  // denominator are restricted to ticked, non-legacy holdings in that one
+  // wrapper, exactly as renderPortfolio's sectionPct does for the wrapper pill.
+  const activeWrapper = document.getElementById('activeWrapper')?.value || 'GIA';
+  const ticked = portfolio.filter(h =>
+    h.includeInCalc !== false &&
+    !h.seeded &&
+    (h.wrapper || 'GIA') === activeWrapper
+  );
   const totalVal = ticked.reduce((s,h) => s + h.shares * (h.price||0), 0);
   if (totalVal === 0) return null;
-  const holding = ticked.find(h => h.ticker === ticker);
-  if (!holding) return null;
-  return (holding.shares * (holding.price||0)) / totalVal * 100;
+  // Sum the ticker within this wrapper (a wrapper holds one entry per
+  // ticker, but reduce is robust either way).
+  const tickerVal = ticked
+    .filter(h => h.ticker === ticker)
+    .reduce((s,h) => s + h.shares * (h.price||0), 0);
+  if (tickerVal === 0) return null;
+  return tickerVal / totalVal * 100;
 }
 
 function updateBudgetNote() {
@@ -14157,6 +14171,13 @@ function pullFromWrapper(wrapper, btn) {
   if (trackerEl) trackerEl.dataset.wrapper = wrapper;
 
   saveCalcInputs();
+  // Rebuild the fund cards so each card's ACTUAL line recomputes against the
+  // wrapper just selected. getPortfolioActualPct is wrapper-scoped, so without
+  // this rebuild the ACTUAL text would go stale on a wrapper change while the
+  // drift badge moved — the same badge-vs-text split this round set out to fix.
+  // Safe to call here: saveCalcInputs has just persisted the freshly-filled
+  // recommended units into LS.INPUTS, so buildFundCards reads them back intact.
+  if (document.getElementById('fundsGrid')) buildFundCards();
   updateLiveDrift();
   // Clear any stale month-vs-month comparison from the previous wrapper —
   // _lastAlloc was for a different wrapper and the comparison would be misleading.
