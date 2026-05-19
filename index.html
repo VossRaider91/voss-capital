@@ -17936,95 +17936,113 @@ function renderGrowthChart(type='monthly') {
 
   let points = [];
   if (type === 'monthly') {
-    // Walk every buy chronologically to keep cumulative units and cost
-    // accurate, but only emit one chart point per calendar day. Multiple
-    // entries saved on the same day (e.g. a GIA monthly save followed by
-    // a SIPP top-up) used to produce duplicate dots on the chart with
-    // identical date labels — now they collapse into a single end-of-day
-    // point. The aggregation matches the pattern used in the yearly
-    // branch (one point per year). The point's timestamp is the LAST
-    // buy of that day so it sits chronologically correctly, but the
-    // label shows only the date so the visualisation stays clean.
+    // Monthly chart shows a rolling view of the current calendar month —
+    // 5 evenly-spaced points from the 1st of the month through to today,
+    // valued at today's units × the recorded price on each day from
+    // LS.PRICE_HISTORY. This gives a proper time-series portfolio chart
+    // similar to what HL shows on each wrapper screen, rather than only
+    // moving when a new history entry is saved.
     //
-    // Each point's VALUE is computed using the price that was in effect
-    // on that day (from LS.PRICE_HISTORY), NOT the current live price.
-    // This way the chart shows genuine historical market movement rather
-    // than just stepping up at each contribution event. Without this,
-    // the chart was effectively showing "cumulative units × today's
-    // prices" at every historical point — which makes intraday market
-    // moves invisible.
-    let cumulativeUnits = {};   // ticker → cumulative units held (net of sales)
-    let cumulativeCost  = 0;    // running cost basis from history
-    // Group buys by yyyy-mm-dd to find the last entry per day
-    const lastBuyTsByDay = {};
-    sortedBuys.forEach(e => {
-      const d = new Date(e.timestamp);
-      const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      lastBuyTsByDay[dayKey] = e.timestamp;
-    });
-    // Per-ticker price-paid lookup from history entries — falls back to
-    // this when LS.PRICE_HISTORY has no entry for a given day. Tracks
-    // the most-recent recorded entry-price per ticker UP TO the current
-    // walk position, so we never accidentally use a future price.
-    const pricePaidByTicker = {};
-    // Seeded ticker → current price map for fallback at historical
-    // points that predate any price-history data.
-    const seededHoldings = portfolio.filter(h => h.seeded);
-    // Determines whether this point is "today" (the latest day). The
-    // latest point always uses current live prices so it reconciles
-    // perfectly with the header total.
-    const latestDayKey = sortedBuys.length > 0
-      ? (() => {
-          const lastTs = sortedBuys[sortedBuys.length - 1].timestamp;
-          const d = new Date(lastTs);
-          return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-        })()
-      : null;
-    // Helper: price for `ticker` on `timestamp`, with fallback chain.
-    // For the LATEST point (today's day key) we deliberately use current
-    // prices so the chart's final point exactly matches the header total.
+    // Design choices:
+    //   • Day spacing is recomputed each render so the chart "compresses"
+    //     as the month progresses — on day 5 the points are days 1-5,
+    //     on day 15 they spread to roughly days 1, 5, 8, 12, 15, and on
+    //     day 31 they cover the whole month at days 1, 9, 16, 24, 31.
+    //   • Units used at every point are CURRENT units (today's portfolio).
+    //     We don't try to reconstruct past unit counts because for the
+    //     user's workflow, units shift on contribution save only — and
+    //     once a new month's first entry is logged, the chart for the
+    //     new month is built from today's prices going forward. The
+    //     tradeoff: a chart point on day 3 valued at day-3 prices × today's
+    //     units slightly overstates value if you bought new units on day 8.
+    //     For consumer-level tracking this is acceptable.
+    //   • Contributions per point = seededCostBase + sum of all history
+    //     entries with timestamp on or before that day. So early-month
+    //     points correctly show lower contribution lines if contributions
+    //     happened mid-month.
+    //   • The latest point always anchors to today's live header total
+    //     (via the reconciliation step further down) so the chart's
+    //     rightmost figure never drifts from the headline.
+    //   • Cumulative cost is also reconstructed up to each point's
+    //     timestamp by walking sortedBuys with timestamp ≤ point's
+    //     end-of-day.
+
+    const now = new Date();
+    const todayDay = now.getDate();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+
+    // Compute the 5 day-of-month positions, evenly spaced from day 1
+    // through to today's day. On day 1 we emit only one point (the chart
+    // would look strange with all five points stacked on a single day);
+    // on days 2-4 we emit one point per day so the line at least extends
+    // visually. From day 5 onwards we always emit exactly 5 points.
+    let dayOffsets;
+    if (todayDay === 1) {
+      dayOffsets = [1];
+    } else if (todayDay < 5) {
+      // Spread however many days we have evenly — 2, 3 or 4 points.
+      dayOffsets = [];
+      for (let i = 1; i <= todayDay; i++) dayOffsets.push(i);
+    } else {
+      // Five points: first = day 1, last = today, interior = even split.
+      dayOffsets = [];
+      for (let i = 0; i < 5; i++) {
+        const frac = i / 4; // 0, 0.25, 0.5, 0.75, 1
+        const dayNum = Math.round(1 + frac * (todayDay - 1));
+        dayOffsets.push(dayNum);
+      }
+      // De-dup in case rounding produced collisions (unlikely past day 5
+      // but harmless to guard).
+      dayOffsets = Array.from(new Set(dayOffsets));
+    }
+
+    // Reusable price-lookup helper. For the latest point (today) we use
+    // current live prices so the chart's rightmost value matches the
+    // header total exactly. For all other points we use the recorded
+    // price on that day; falls back to current price if no data exists
+    // for that day yet (early-month or new-ticker case).
     const priceAt = (ticker, timestamp, isLatestPoint) => {
       if (isLatestPoint) return getBestPrice(ticker);
       const hist = _getPriceForTickerOnDay(ticker, timestamp);
       if (hist > 0) return hist;
-      const paid = pricePaidByTicker[ticker];
-      if (paid > 0) return paid;
-      return getBestPrice(ticker); // last-resort fallback to current price
+      return getBestPrice(ticker);
     };
-    sortedBuys.forEach(e => {
-      (e.funds||[]).forEach(f => {
-        cumulativeUnits[f.ticker] = (cumulativeUnits[f.ticker] || 0) + (f.held || 0);
-        cumulativeCost += (f.held || 0) * (f.price || 0);
-        // Remember the most-recent price paid for this ticker so points
-        // before LS.PRICE_HISTORY had data can still value units.
-        if ((f.price || 0) > 0) pricePaidByTicker[f.ticker] = f.price;
+
+    dayOffsets.forEach((dayNum, idx) => {
+      // Use end-of-day so the price-history lookup picks up any tick
+      // recorded that day (recordPriceTick writes at the time of refresh,
+      // which is typically afternoon UK time for LSE).
+      const pointDate = new Date(now.getFullYear(), now.getMonth(), dayNum, 23, 59, 59, 999);
+      const pointTs   = pointDate.getTime();
+      const isLatest  = (idx === dayOffsets.length - 1);
+
+      // Value EVERY holding (seeded legacy + accumulated new) using today's
+      // units. This is simpler and good enough for the user's workflow —
+      // see comment block above for the rationale.
+      const totalVal = portfolio.reduce((s, h) => {
+        return s + (h.shares || 0) * priceAt(h.ticker, pointTs, isLatest);
+      }, 0);
+
+      // Cumulative cost up to this point: seeded cost base + every history
+      // entry with timestamp ≤ end-of-day. Sold entries don't add to cost.
+      let contribAtPoint = seededCostBase;
+      sortedBuys.forEach(e => {
+        if (e.timestamp > pointTs) return;
+        (e.funds || []).forEach(f => {
+          contribAtPoint += (f.held || 0) * (f.price || 0);
+        });
       });
-      applySoldUpTo(e.timestamp, cumulativeUnits);
-      // Only emit a point for the LAST buy of each day
-      const d = new Date(e.timestamp);
-      const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      if (e.timestamp !== lastBuyTsByDay[dayKey]) return;
-      const isLatest = (dayKey === latestDayKey);
-      // Value cumulative units at the price in effect on this day
-      const cumulativeValue = Object.entries(cumulativeUnits).reduce((s, [ticker, units]) => {
-        return s + units * priceAt(ticker, e.timestamp, isLatest);
-      }, 0);
-      // Value seeded legacy holdings at the price in effect on this day
-      // (falls back to seeded.price for points predating price history)
-      const legacyValue = seededHoldings.reduce((s, h) => {
-        const histP = _getPriceForTickerOnDay(h.ticker, e.timestamp);
-        const p = isLatest ? (h.price || 0) : (histP > 0 ? histP : (h.price || 0));
-        return s + h.shares * p;
-      }, 0);
-      const totalVal = cumulativeValue + legacyValue;
-      const contrib = seededCostBase + cumulativeCost;
+
+      // Label uses "5 May" style. Always shows the day number; the month
+      // is implied by context (chart only shows current month).
+      const monthShort = pointDate.toLocaleDateString('en-GB', { month: 'short' });
       points.push({
-        label: e.date.split(' ').slice(0,2).join(' '),
-        fullDate: e.date,
+        label: `${dayNum} ${monthShort}`,
+        fullDate: pointDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
         value: totalVal,
-        contributed: contrib,
-        timestamp: e.timestamp,
-        wrapper: e.wrapper || 'GIA',
+        contributed: contribAtPoint,
+        timestamp: pointTs,
+        wrapper: 'GIA', // wrapper field is unused in the calendar-month chart but kept for tooltip schema
       });
     });
   } else {
@@ -18090,7 +18108,12 @@ function renderGrowthChart(type='monthly') {
   // the new contribution at its cost. This is the common case for ISA /
   // SIPP wrappers where the user contributes once a year and wouldn't
   // want to wait 12 months to see any chart at all.
-  if (history.length === 1 && hasSeededInWrapper && points.length === 1) {
+  // Skip synthetic baseline for the monthly view — the calendar-month
+  // chart now always emits at least one real point from price-history
+  // data, so injecting a "baseline" on top would confuse the picture.
+  // Yearly still benefits from it (single-entry wrappers with seeded
+  // legacy positions otherwise show as a flat line).
+  if (type === 'yearly' && history.length === 1 && hasSeededInWrapper && points.length === 1) {
     const firstPoint = points[0];
     const baselineTimestamp = firstPoint.timestamp - 86400000; // one day before
     // Legacy value at the price in effect on the baseline day. Falls
