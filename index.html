@@ -17305,11 +17305,13 @@ function renderPortfolio(filter='all') {
   // just the wrapper's value, so the label must say so or it reads as
   // a flat-out wrong claim above a smaller number. Short forms match
   // the wording already used on the Portfolio Growth card subtitle
-  // ("in your GIA wrapper" etc.). Falls back to the total label if the
-  // element isn't on this page.
+  // ("in your GIA wrapper" etc.). Keys MUST match the strings returned
+  // by getPortfolioFilter (see filterMap there): 'all', 'personal',
+  // 'employer', 'isa'. Falls back to the total label if the element
+  // isn't on this page.
   const labelEl = document.getElementById('portfolioValueLabel');
   if (labelEl) {
-    const scopeLabels = { all: 'Total Portfolio Value', gia: 'GIA Value', employer: 'SIPP Value', isa: 'ISA Value' };
+    const scopeLabels = { all: 'Total Portfolio Value', personal: 'GIA Value', employer: 'SIPP Value', isa: 'ISA Value' };
     labelEl.textContent = scopeLabels[filter] || 'Total Portfolio Value';
   }
 
@@ -19995,35 +19997,6 @@ function renderTaxProvisionPlanner() {
   const comfortable = Math.ceil((thisYear / 12) * 1.1 / 50) * 50; // 10% buffer, rounded to £50
   const savedSoFar = _bgtTaxSavedThisTaxYear();
 
-  // Cascade the comfortable recommendation into the budget tracker's Planned
-  // figure for Tax Provision — but ONLY when the recommendation has actually
-  // changed since the last cascade. This way:
-  //   - First time: cascades the figure
-  //   - User changes income/prior liability: cascades the new figure
-  //   - User manually edits budget Planned: not overwritten on subsequent renders
-  //   - Income changes again: cascades again, overwriting the manual edit
-  // Tracked via _lastCascadedTaxProvision on the planner state, so re-renders
-  // triggered by other things (tab switches, daily refresh) don't trigger a cascade.
-  try {
-    if (comfortable > 0) {
-      const cascadeKey = '_lastCascadedTaxProvision';
-      const lastCascaded = parseFloat(localStorage.getItem(cascadeKey)) || -1;
-      if (Math.abs(comfortable - lastCascaded) > 0.5) {
-        const bgtState = bgtLoad();
-        if (!bgtState.planned) bgtState.planned = {};
-        bgtState.planned['Tax Provision'] = comfortable;
-        bgtSave(bgtState);
-        localStorage.setItem(cascadeKey, String(comfortable));
-        // If we're on the Budget tab, re-render so the user sees the change immediately
-        if (typeof _renderBgtMainTable === 'function') {
-          try { _renderBgtMainTable(bgtState); } catch (e) {}
-        }
-      }
-    }
-  } catch (e) {
-    // Cascade is best-effort — silently no-op if budget data isn't ready
-  }
-
   // Build the HMRC payment schedule for the next 12 months. Payments
   // include any combination of: balancing payment for the prior year
   // (31 January, on top of the POA), 1st POA (31 January), 2nd POA
@@ -20045,7 +20018,6 @@ function renderTaxProvisionPlanner() {
         </div>
         <div class="plan-card-body">
           <div class="plan-card-headline">£${fmtNum(Math.round(comfortable), 0)}<span style="font-size:18px;color:#a8d4ff;font-weight:500;margin-left:4px">/mo</span></div>
-          <div class="plan-card-headline-sub">↪ Auto-syncs to Tax Provision Planned in Budget tracker</div>
         </div>
       </div>
 
