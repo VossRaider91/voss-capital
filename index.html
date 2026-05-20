@@ -2969,17 +2969,6 @@ body.privacy-mode-active .portfolio-delta-pill {
   background: rgba(10,132,255,0.04);
   box-shadow: 0 0 0 4px rgba(10,132,255,0.30);
 }
-/* mp-input-month — type="month" renders a native iOS control with an
-   intrinsic minimum width wider than a plain text field. Without an
-   explicit min-width:0 it ignores width:100% in a narrow flex/grid
-   column and spills off the card edge. The Remortgage Switch Date now
-   also sits in its own full-width row (see mortgage planner markup) so
-   it has the whole card width to render into. */
-.mp-input-month {
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-}
 .mp-table-wrap {
   overflow-x: auto; max-height: 420px; overflow-y: auto;
   border: 1px solid rgba(200,215,240,0.16);
@@ -8531,6 +8520,63 @@ body.modal-active .container > footer {
       <!-- Legacy Coast FIRE anchor — kept hidden for backwards compatibility -->
       <div id="ret-coast-context" style="display:none"></div>
 
+      <!-- Compound Crossover — answers "when will annual market growth on my
+           portfolio exceed my annual contributions". Reads ret-current,
+           ret-monthly and ret-growth from the same inputs the rest of the
+           page uses, so changing any of them recalculates this card via the
+           existing input-listener cascade in calculateRetirement(). -->
+      <div class="plan-card mb16" id="ret-crossover-card" style="display:none;margin-top:14px">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Compound Crossover</span>
+          <span class="plan-card-context">When annual growth outpaces your contributions</span>
+        </div>
+        <div class="stat-sub" style="margin-top:14px;margin-bottom:14px" id="ret-crossover-blurb">The year when your portfolio's market growth will earn more than your contributions. Compound interest starts doing more work than you do.</div>
+
+        <div style="background:var(--recess);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;text-align:center">
+          <div class="plan-card-metric-label">Crossover In</div>
+          <div id="ret-crossover-time" style="font-size:32px;font-weight:700;color:var(--amber);letter-spacing:-0.5px;margin-top:6px">—</div>
+          <div id="ret-crossover-detail" class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:10px">—</div>
+        </div>
+
+        <div class="plan-card-metrics cols-2">
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">This Year's Growth</div>
+            <div class="plan-card-metric-value green" id="ret-crossover-growth" data-balance-sensitive>—</div>
+            <div class="plan-card-metric-label" id="ret-crossover-growth-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Annual Contribution</div>
+            <div class="plan-card-metric-value" id="ret-crossover-contrib" style="color:var(--blue)" data-balance-sensitive>—</div>
+            <div class="plan-card-metric-label" id="ret-crossover-contrib-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;background:var(--recess);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+          <div style="position:relative;height:180px;margin-bottom:8px">
+            <svg id="ret-crossover-svg" viewBox="0 0 600 180" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">
+              <line x1="0" y1="160" x2="600" y2="160" stroke="rgba(255,255,255,0.10)" stroke-width="0.5"/>
+              <line x1="0" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+              <line x1="0" y1="80" x2="600" y2="80" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+              <line x1="0" y1="40" x2="600" y2="40" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+              <line id="ret-crossover-contrib-path" x1="0" y1="0" x2="600" y2="0" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/>
+              <path id="ret-crossover-growth-path" d="" stroke="var(--green)" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <line id="ret-crossover-marker" x1="0" y1="0" x2="0" y2="160" stroke="var(--amber)" stroke-width="1" stroke-dasharray="3,3" opacity="0"/>
+              <circle id="ret-crossover-dot" cx="0" cy="0" r="4" fill="var(--amber)" stroke="#000" stroke-width="1.5" opacity="0"/>
+              <text id="ret-crossover-label" x="0" y="0" fill="var(--amber)" font-size="10" font-weight="700" opacity="0">Crossover</text>
+              <text id="ret-crossover-sublabel" x="0" y="0" fill="rgba(255,255,255,0.55)" font-size="9" opacity="0">—</text>
+            </svg>
+          </div>
+          <div id="ret-crossover-xaxis" style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted)"></div>
+          <div style="display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:10px;flex-wrap:wrap">
+            <span style="display:inline-flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:12px;height:2px;background:var(--blue);display:inline-block"></span>Annual Contributions</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:12px;height:2px;background:var(--green);display:inline-block"></span>Annual Market Growth</span>
+          </div>
+        </div>
+
+        <div id="ret-crossover-sensitivity" style="font-size:10px;color:var(--muted);line-height:1.5;text-align:center;padding:10px 0 4px">—</div>
+        <div style="font-size:10px;color:var(--muted2);line-height:1.5;font-style:italic;text-align:center">Compares 12 months of projected market growth against 12 months of contributions. Reads your current portfolio, monthly contribution and expected return from the inputs above.</div>
+      </div>
+
       <div class="gold-divider"></div>
       <div class="section-label mb16">Year by Year Milestones</div>
       <div id="projectionTable"></div>
@@ -9896,9 +9942,12 @@ body.modal-active .container > footer {
       <div class="subsection-label" id="mp-future-heading" style="margin-bottom:4px">Future Projections</div>
       <div class="stat-sub" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
     </div>
-    <div class="mp-input-group" style="margin-bottom:16px">
+    <div class="mp-input-group" style="margin-bottom:16px;max-width:260px">
       <label class="mp-input-label" for="mp-switch-date" style="color:var(--blue)">Remortgage Switch Date</label>
-      <input class="mp-input mp-input-month" type="month" id="mp-switch-date" value="2029-05" oninput="mpRecalc()" style="text-align:left">
+      <div class="month-pill-wrap">
+        <div class="month-pill-display" id="mp-switch-date-display">May 2029</div>
+        <input class="month-pill-input" type="month" id="mp-switch-date" value="2029-05" onchange="_updateMortgageSwitchDate()">
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">
       <div class="mp-input-group">
@@ -14820,6 +14869,29 @@ function clearHistoryFilters() {
   renderHistory(getHistoryActiveFilter());
 }
 
+// Sibling helper for the mortgage planner's Remortgage Switch Date pill.
+// Uses the same display contract as _updateMonthPillDisplay (always shows
+// a formatted "Month YYYY" — no "Any" state, since this field always has a
+// default value of May 2029) and chains into mpRecalc so the whole projection
+// updates as soon as the user picks a new date. Replaces the previous bare
+// type="month" input that rendered as raw ISO on macOS Safari and stretched
+// full-width across the card on desktop.
+function _updateMortgageSwitchDate() {
+  const input = document.getElementById('mp-switch-date');
+  const display = document.getElementById('mp-switch-date-display');
+  if (input && display) {
+    const v = input.value;
+    if (v) {
+      const [year, month] = v.split('-').map(Number);
+      if (year && month) {
+        const d = new Date(year, month - 1, 1);
+        display.textContent = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+      }
+    }
+  }
+  if (typeof mpRecalc === 'function') mpRecalc();
+}
+
 // Helper: rewrite the visible month-pill label after the underlying input
 // changes (or is cleared). Reads the input's YYYY-MM value, formats it as
 // "Month YYYY" via toLocaleDateString, and updates the display div. Empty
@@ -16066,6 +16138,7 @@ function calculateRetirement() {
   // Keep the global result in sync so renderAnalyse always has current figures
   calculateGlobalRetirement();
   renderCurrentPosition();
+  _renderCompoundCrossover();
   if (document.getElementById('tab-analyse')?.classList.contains('active')) renderAnalyse();
 }
 
@@ -16162,6 +16235,165 @@ function renderCurrentPosition() {
 
   // Cascade: keep the Freedom Number card in sync with every change here
   renderFreedomNumber();
+}
+
+function _renderCompoundCrossover() {
+  const card = document.getElementById('ret-crossover-card');
+  if (!card) return;
+
+  const startValue = parseFloat((document.getElementById('ret-current')?.value || '').replace(/,/g, '')) || 0;
+  const monthly    = parseFloat((document.getElementById('ret-monthly')?.value || '').replace(/,/g, '')) || 0;
+  const ratePct    = parseFloat(document.getElementById('ret-growth')?.value) || 0;
+
+  if (startValue <= 0 || monthly <= 0 || ratePct <= 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  const rate = ratePct / 100;
+  const annualContrib = monthly * 12;
+  const monthlyRate = Math.pow(1 + rate, 1/12) - 1;
+
+  function project(start, mthly, monRate, maxMonths) {
+    const series = [];
+    let v = start;
+    series.push({ m:0, value:v, monthGrowth:0 });
+    for (let m = 1; m <= maxMonths; m++) {
+      const growthThisMonth = v * monRate;
+      v = v + mthly + growthThisMonth;
+      series.push({ m, value:v, monthGrowth:growthThisMonth });
+    }
+    let cross = null;
+    for (let m = 12; m <= maxMonths; m++) {
+      let trail12 = 0;
+      for (let k = m - 11; k <= m; k++) trail12 += series[k].monthGrowth;
+      if (trail12 >= mthly * 12) { cross = m; break; }
+    }
+    return { series, cross };
+  }
+
+  const MAX = 600;
+  const main = project(startValue, monthly, monthlyRate, MAX);
+
+  const currentYearGrowth = startValue * rate;
+
+  const fmtMonths = (m) => {
+    if (m === null) return '50y+';
+    const y = Math.floor(m / 12);
+    const mm = m % 12;
+    if (y === 0) return mm + ' months';
+    if (mm === 0) return y + ' year' + (y===1?'':'s');
+    return y + 'y ' + mm + 'm';
+  };
+  const dateInMonths = (m) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + m);
+    return d.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+  };
+  const fmtGBPCompact = (n) => {
+    const a = Math.abs(n);
+    if (a >= 1000000) return '£' + (n/1000000).toFixed(2) + 'm';
+    if (a >= 1000) return '£' + Math.round(n/1000) + 'k';
+    return '£' + Math.round(n).toLocaleString('en-GB');
+  };
+
+  const timeEl   = document.getElementById('ret-crossover-time');
+  const detailEl = document.getElementById('ret-crossover-detail');
+  const growthEl = document.getElementById('ret-crossover-growth');
+  const gSubEl   = document.getElementById('ret-crossover-growth-sub');
+  const contrEl  = document.getElementById('ret-crossover-contrib');
+  const cSubEl   = document.getElementById('ret-crossover-contrib-sub');
+
+  if (main.cross !== null) {
+    const point = main.series[main.cross];
+    timeEl.textContent = fmtMonths(main.cross);
+    detailEl.textContent = dateInMonths(main.cross) + ' · portfolio at ' + fmtGBPCompact(point.value);
+  } else {
+    timeEl.textContent = '50y+';
+    detailEl.textContent = 'Beyond projection window';
+  }
+  growthEl.textContent = '£' + fmtNum(Math.round(currentYearGrowth), 0);
+  gSubEl.textContent   = ratePct.toFixed(1) + '% on £' + fmtNum(Math.round(startValue), 0);
+  contrEl.textContent  = '£' + fmtNum(Math.round(annualContrib), 0);
+  cSubEl.textContent   = '£' + fmtNum(Math.round(monthly), 0) + ' × 12 months';
+
+  const W = 600, H = 160;
+  const horizonMonths = main.cross !== null
+    ? Math.min(MAX, Math.max(60, Math.round(main.cross * 1.5)))
+    : 240;
+
+  const annualGrowthAt = (m) => {
+    if (m < 12) return main.series[m].value * rate;
+    let trail = 0;
+    for (let k = m - 11; k <= m; k++) trail += main.series[k].monthGrowth;
+    return trail;
+  };
+
+  const maxGrowth = annualGrowthAt(horizonMonths);
+  const maxY = Math.max(annualContrib, maxGrowth) * 1.1;
+
+  const xScale = (m) => (m / horizonMonths) * W;
+  const yScale = (v) => H - (v / maxY) * H;
+
+  const contribY = yScale(annualContrib);
+  const contribLine = document.getElementById('ret-crossover-contrib-path');
+  contribLine.setAttribute('x1', '0');
+  contribLine.setAttribute('y1', contribY.toFixed(1));
+  contribLine.setAttribute('x2', W);
+  contribLine.setAttribute('y2', contribY.toFixed(1));
+
+  const STEP = Math.max(1, Math.floor(horizonMonths / 80));
+  let d = '';
+  for (let m = 0; m <= horizonMonths; m += STEP) {
+    const x = xScale(m).toFixed(1);
+    const y = yScale(annualGrowthAt(m)).toFixed(1);
+    d += (m === 0 ? 'M' : ' L') + x + ',' + y;
+  }
+  document.getElementById('ret-crossover-growth-path').setAttribute('d', d);
+
+  const marker   = document.getElementById('ret-crossover-marker');
+  const dot      = document.getElementById('ret-crossover-dot');
+  const label    = document.getElementById('ret-crossover-label');
+  const subLabel = document.getElementById('ret-crossover-sublabel');
+  if (main.cross !== null && main.cross <= horizonMonths) {
+    const cx = xScale(main.cross);
+    marker.setAttribute('x1', cx); marker.setAttribute('x2', cx);
+    marker.setAttribute('opacity', '0.7');
+    dot.setAttribute('cx', cx); dot.setAttribute('cy', contribY.toFixed(1));
+    dot.setAttribute('opacity', '1');
+    const labelX = cx > W - 90 ? cx - 80 : cx + 5;
+    label.setAttribute('x', labelX); label.setAttribute('y', 14);
+    label.setAttribute('opacity', '1');
+    subLabel.setAttribute('x', labelX); subLabel.setAttribute('y', 26);
+    subLabel.setAttribute('opacity', '1');
+    subLabel.textContent = dateInMonths(main.cross);
+  } else {
+    marker.setAttribute('opacity', '0');
+    dot.setAttribute('opacity', '0');
+    label.setAttribute('opacity', '0');
+    subLabel.setAttribute('opacity', '0');
+  }
+
+  const xAxis = document.getElementById('ret-crossover-xaxis');
+  xAxis.innerHTML = '';
+  const tickCount = 5;
+  for (let i = 0; i <= tickCount; i++) {
+    const years = Math.round((horizonMonths / 12) * (i / tickCount));
+    const span = document.createElement('span');
+    span.textContent = i === 0 ? 'Today' : '+' + years + 'y';
+    xAxis.appendChild(span);
+  }
+
+  const sensitivityEl = document.getElementById('ret-crossover-sensitivity');
+  const lowerRate = Math.max(0.01, rate - 0.01);
+  const upperRate = rate + 0.01;
+  const lower = project(startValue, monthly, Math.pow(1 + lowerRate, 1/12) - 1, MAX).cross;
+  const upper = project(startValue, monthly, Math.pow(1 + upperRate, 1/12) - 1, MAX).cross;
+  sensitivityEl.innerHTML =
+    'At ' + (lowerRate*100).toFixed(1) + '%: <span style="color:var(--white);font-weight:600">' + fmtMonths(lower) + '</span>' +
+    '  ·  at ' + ratePct.toFixed(1) + '%: <span style="color:var(--amber);font-weight:600">' + fmtMonths(main.cross) + '</span>' +
+    '  ·  at ' + (upperRate*100).toFixed(1) + '%: <span style="color:var(--white);font-weight:600">' + fmtMonths(upper) + '</span>';
 }
 
 // ════════════════════════════════════════════════════════
@@ -21817,6 +22049,20 @@ function mpLoadState() {
   setVal('mp-overpay', saved.overpay || 0);
   setVal('mp-switch-date', saved.switchDate || '2029-05');
   setVal('mp-new-rate', saved.newRate || 3.50);
+  // Sync the month-pill display after restoring the underlying input value,
+  // otherwise the saved date is reflected in the input but the visible label
+  // still shows the HTML default "May 2029".
+  if (typeof _updateMortgageSwitchDate === 'function') {
+    const input = document.getElementById('mp-switch-date');
+    const display = document.getElementById('mp-switch-date-display');
+    if (input && display && input.value) {
+      const [year, month] = input.value.split('-').map(Number);
+      if (year && month) {
+        const d = new Date(year, month - 1, 1);
+        display.textContent = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+      }
+    }
+  }
 }
 
 function mpSaveState() {
@@ -22907,7 +23153,7 @@ function renderAnalyseNetWorth() {
       { label:'Business Equity', val:business, icon:'\ud83c\udfe2', note:'Business Asset Disposal Relief may apply', taxFree:true },
       { label:'Other Assets', val:other, icon:'\ud83d\udce6', note:'', taxFree:true },
       { label:'GIA Portfolio', val:giaVal, icon:'\ud83d\udcc8', note:nwGIANote, taxFree:false },
-    ].filter(r=>r.val>0);
+    ].filter(r=>r.val>0).sort((a,b)=>b.val-a.val);
 
     nwBreak.innerHTML = `
       <div style="background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px">
