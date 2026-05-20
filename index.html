@@ -9252,7 +9252,7 @@ body.modal-active .container > footer {
         </div>
         <div id="cash-equiv-extract-row" style="display:none;align-items:center;gap:10px">
           <span class="input-label" style="margin-bottom:0">Extract as</span>
-          <select class="num-input" id="cash-equiv-extract-as" style="text-align:left;cursor:pointer;width:auto;min-height:36px;padding:8px 12px;font-size:12px" onchange="renderCashEquivalent()">
+          <select class="num-input" id="cash-equiv-extract-as" style="text-align:left;cursor:pointer;width:auto;min-height:36px;padding:8px 12px;font-size:12px" onchange="renderCashEquivalent(); try{saveTaxSettings();}catch(e){}">
             <option value="salary">Salary (PAYE)</option>
             <option value="dividend">Dividend</option>
           </select>
@@ -19779,7 +19779,8 @@ function renderCashEquivalent() {
 }
 
 // Cash Equivalent mode switcher — toggles the segmented control and re-runs
-// the renderer. Stored on window so it survives across collapse/expand.
+// the renderer. Stored on window so it survives across collapse/expand, and
+// persisted to LS.TAX so it survives page close + syncs cross-device.
 function setCashEquivMode(m) {
   window._cashEquivMode = m;
   const pBtn = document.getElementById('cash-equiv-mode-personal');
@@ -19787,6 +19788,7 @@ function setCashEquivMode(m) {
   if (pBtn) pBtn.classList.toggle('active', m === 'personal');
   if (bBtn) bBtn.classList.toggle('active', m === 'business');
   renderCashEquivalent();
+  try { saveTaxSettings(); } catch (e) {}
 }
 
 // ── Tax / Sell tab field mirrors ─────────────────────────────
@@ -19840,6 +19842,13 @@ function saveTaxSettings() {
     bonus:        stripComma('inc-bonus') || 0,
     isaAllowance: stripComma('sell-isa-allowance') || 20000,
     priorLiability: stripComma('tax-prior-liability') || 0,
+    // Cash Equivalent Calculator state — net target + mode toggle + extraction
+    // method. Persisting these to LS.TAX means they survive page close and
+    // sync across devices via the standard Supabase pipeline (LS.TAX is in
+    // REQUIRED_BACKUP_KEYS).
+    cashEquivTarget:    stripComma('cash-equiv-target') || 0,
+    cashEquivMode:      (window._cashEquivMode || 'personal'),
+    cashEquivExtractAs: (document.getElementById('cash-equiv-extract-as')?.value || 'salary'),
   });
   // Cascade to every derived view — Analyse uses tax settings for its CGT
   // breakdown, Sell Calculator uses allowances, ISA tracker uses both.
@@ -19871,6 +19880,22 @@ function loadTaxSettings() {
     document.getElementById('tax-prior-liability').value = s.priorLiability;
   }
 
+  // Restore Cash Equivalent Calculator state. Done before listener-wiring
+  // and before updateIncomeTotal() so the renderer paints the saved figures
+  // on first paint without flicker. setCashEquivMode is invoked at the end
+  // to apply the active-pill state and hide/show the extract row.
+  const cashEquivInput = document.getElementById('cash-equiv-target');
+  if (cashEquivInput && s.cashEquivTarget !== undefined && s.cashEquivTarget > 0) {
+    cashEquivInput.value = s.cashEquivTarget;
+  }
+  const cashEquivExtractEl = document.getElementById('cash-equiv-extract-as');
+  if (cashEquivExtractEl && s.cashEquivExtractAs) {
+    cashEquivExtractEl.value = s.cashEquivExtractAs;
+  }
+  if (s.cashEquivMode) {
+    window._cashEquivMode = s.cashEquivMode;
+  }
+
   // Wire listeners ONCE — guarded by a flag because this function is also
   // called from undo restoration paths, which would otherwise stack duplicate
   // listeners on every undo operation.
@@ -19892,9 +19917,16 @@ function loadTaxSettings() {
       }, 400);
     });
     document.querySelectorAll('input[name="bonus-type"]').forEach(el => el.addEventListener('change', updateIncomeTotal));
+    // Cash Equivalent Calculator: persist the net-target input on every
+    // keystroke. The mode toggle and extract-as dropdown persist via their
+    // own handlers (setCashEquivMode and renderCashEquivalent).
+    document.getElementById('cash-equiv-target')?.addEventListener('input', saveTaxSettings);
     loadTaxSettings._listenersWired = true;
   }
   updateIncomeTotal();
+  // Apply the restored mode state. Done after updateIncomeTotal so the
+  // renderer fires once with the right mode set.
+  try { setCashEquivMode(window._cashEquivMode || 'personal'); } catch (e) {}
 }
 
 // ════════════════════════════════════════════════════════
