@@ -5665,6 +5665,14 @@ body.privacy-mode-active .portfolio-delta-pill {
     padding: 7px 14px;
     font-size: 11px;
   }
+  /* Compact modifier: 2-option toggles (Personal/Business, Monthly/Yearly,
+     etc.) shouldn't expand to fill the card on mobile. Inline-flex keeps
+     them content-sized so the active pill isn't lonely in a giant container. */
+  .seg-toggle.seg-toggle-compact {
+    display: inline-flex;
+    width: auto;
+    overflow-x: visible;
+  }
 
   /* ── GRIDS — collapse multi-column to 1 or 2 columns ──────── */
   .grid-2, .grid-3 { grid-template-columns: 1fr !important; gap: 10px !important; }
@@ -9238,7 +9246,7 @@ body.modal-active .container > footer {
       <div class="stat-sub" style="margin-bottom:16px">Enter the amount you want in your pocket and see what it costs to put it there. Switch between personal-income view and the full business extraction stack to compare.</div>
 
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
-        <div class="seg-toggle" role="tablist" aria-label="Cash equivalent mode">
+        <div class="seg-toggle seg-toggle-compact" role="tablist" aria-label="Cash equivalent mode">
           <button type="button" class="seg-option active" id="cash-equiv-mode-personal" onclick="setCashEquivMode('personal')"><span>Personal Income</span></button>
           <button type="button" class="seg-option" id="cash-equiv-mode-business" onclick="setCashEquivMode('business')"><span>Through My Business</span></button>
         </div>
