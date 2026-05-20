@@ -17556,20 +17556,26 @@ function renderPortfolio(filter='all') {
   const newTotal = newHoldings.reduce((s,h)=>s+h.value,0);
   const legacyTotal = legacyHoldings.reduce((s,h)=>s+h.value,0);
 
-  // Group by wrapper within each section
-  const groupByWrapper = (holdings, sectionTotal) => {
+  // Group by wrapper within each section. Each wrapper's tickers receive
+  // percentages relative to that wrapper's own total (sum of items.value)
+  // so the cards under a "GIA" heading always sum to 100% of GIA, regardless
+  // of whether the user is on the All tab or the Personal (GIA) tab. This
+  // also keeps the maths consistent across pills — switching from All to
+  // GIA shouldn't change the percentages shown on the GIA cards.
+  const groupByWrapper = (holdings) => {
     const wrappers = ['GIA','SIPP','ISA'];
     return wrappers.map(w => {
       const items = holdings.filter(h => (h.wrapper||'GIA') === w).sort((a,b)=>b.value-a.value);
-      return { wrapper:w, items };
+      const wrapperTotal = items.reduce((s,h) => s + h.value, 0);
+      return { wrapper:w, items, wrapperTotal };
     }).filter(g=>g.items.length>0).map(g=>({
       ...g,
-      items: g.items.map(h => ({ ...h, sectionPct: sectionTotal>0?h.value/sectionTotal*100:0 }))
+      items: g.items.map(h => ({ ...h, sectionPct: g.wrapperTotal>0 ? h.value/g.wrapperTotal*100 : 0 }))
     }));
   };
 
-  const newGroups = groupByWrapper(newHoldings, newTotal);
-  const legacyGroups = groupByWrapper(legacyHoldings, legacyTotal);
+  const newGroups = groupByWrapper(newHoldings);
+  const legacyGroups = groupByWrapper(legacyHoldings);
 
   const wrapperColourClass = w => w==='ISA'?'green':w==='SIPP'?'blue':'amber';
 
@@ -17675,7 +17681,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
         <div style="min-width:0;flex:1">
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600">New Holdings</div>
-          <div class="holdings-section-explainer" style="display:none;font-size:9px;color:var(--muted);padding-right:12px">From monthly history. Ticked by default so they feed the calculator's drift and rebalancing.<br>% shown relative to new holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span></div>
+          <div class="holdings-section-explainer" style="display:none;font-size:9px;color:var(--muted);padding-right:12px">From monthly history. Ticked by default so they feed the calculator's drift and rebalancing.<br>% shown relative to each wrapper section · Total: <span data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <span class="holdings-section-balance" style="display:inline-flex" data-balance-sensitive>£${fmtNum(Math.round(newTotal),0)}</span>
@@ -17692,7 +17698,7 @@ function renderPortfolio(filter='all') {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
         <div style="min-width:0;flex:1">
           <div class="section-label" style="margin-bottom:2px;font-size:10px;font-weight:600;color:var(--muted)">Legacy Holdings</div>
-          <div class="holdings-section-explainer" style="display:none;font-size:9px;color:var(--muted2);padding-right:12px">Pre-calculator holdings. Unticked by default so the calculator doesn't try to rebalance against your historical positions.<br>% shown relative to legacy holdings only · Total: <span data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span></div>
+          <div class="holdings-section-explainer" style="display:none;font-size:9px;color:var(--muted2);padding-right:12px">Pre-calculator holdings. Unticked by default so the calculator doesn't try to rebalance against your historical positions.<br>% shown relative to each wrapper section · Total: <span data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <span class="holdings-section-balance" style="display:inline-flex" data-balance-sensitive>£${fmtNum(Math.round(legacyTotal),0)}</span>
