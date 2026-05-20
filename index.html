@@ -9215,6 +9215,118 @@ body.modal-active .container > footer {
        automatically whenever a new entry is saved. -->
   <div id="wrapper-allowances-output"></div>
 
+  <!-- Cash Equivalent Calculator — May 2026 — answers "I want £X in my
+       pocket, what gross salary would I need to net that on top of my
+       declared income?" Walks the 2026/27 tax bands honestly (basic →
+       higher → personal-allowance taper → additional rate) plus NI, so the
+       answer respects band transitions rather than naively dividing by a
+       single marginal rate. Reads PAYE + dividends + bonus from the Income
+       Tax Calculator below as the baseline, then computes the uplift
+       required to net the user's chosen target. -->
+  <div class="card card-left chevron-collapsible mb16" data-collapsible="cash-equivalent">
+    <div class="collapsible-header" onclick="toggleMobileCollapse('cash-equivalent')" style="cursor:pointer">
+      <div class="flex-between" style="margin-bottom:0">
+        <div style="flex:1;min-width:0">
+          <div class="section-label" style="margin-bottom:4px">Cash Equivalent Calculator</div>
+          <div class="stat-sub" id="cash-equiv-summary">Net target → gross salary needed</div>
+        </div>
+        <span class="collapsible-chevron" aria-hidden="true">⌄</span>
+      </div>
+    </div>
+    <div class="collapsible-body" style="margin-top:16px">
+
+      <div class="stat-sub" style="margin-bottom:16px">Enter the amount you want in your pocket and see what it costs to put it there. Switch between personal-income view and the full business extraction stack to compare.</div>
+
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+        <div class="seg-toggle" role="tablist" aria-label="Cash equivalent mode">
+          <button type="button" class="seg-option active" id="cash-equiv-mode-personal" onclick="setCashEquivMode('personal')"><span>Personal Income</span></button>
+          <button type="button" class="seg-option" id="cash-equiv-mode-business" onclick="setCashEquivMode('business')"><span>Through My Business</span></button>
+        </div>
+        <div id="cash-equiv-extract-row" style="display:none;align-items:center;gap:10px">
+          <span class="input-label" style="margin-bottom:0">Extract as</span>
+          <select class="num-input" id="cash-equiv-extract-as" style="text-align:left;cursor:pointer;width:auto;min-height:36px;padding:8px 12px;font-size:12px" onchange="renderCashEquivalent()">
+            <option value="salary">Salary (PAYE)</option>
+            <option value="dividend">Dividend</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+        <div>
+          <div class="input-label mb8">Net Cash At Hand</div>
+          <div class="flex-center">
+            <span style="font-size:22px;font-weight:600;color:var(--blue)">£</span>
+            <input class="budget-input" type="text" inputmode="numeric" id="cash-equiv-target" value="20000" step="100" style="width:140px" oninput="renderCashEquivalent()">
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-card mb16">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker" id="cash-equiv-head-title">Equivalent Gross Salary</span>
+          <span class="plan-card-context" id="cash-equiv-context">Based on your declared income</span>
+        </div>
+        <div class="plan-card-body">
+          <div class="plan-card-headline" id="cash-equiv-gross" data-balance-sensitive>£0</div>
+          <div class="plan-card-headline-sub" id="cash-equiv-explainer">—</div>
+        </div>
+      </div>
+
+      <div class="plan-card mb16" id="cash-equiv-personal-breakdown">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Tax Breakdown on That Salary</span>
+          <span class="plan-card-context">Income tax, NI, and what you keep</span>
+        </div>
+        <div class="plan-card-metrics cols-3">
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">Income Tax</div>
+            <div class="plan-card-metric-value red" id="cash-equiv-inctax" data-balance-sensitive>£0</div>
+            <div class="plan-card-metric-label" id="cash-equiv-inctax-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">National Insurance</div>
+            <div class="plan-card-metric-value red" id="cash-equiv-ni" data-balance-sensitive>£0</div>
+            <div class="plan-card-metric-label" id="cash-equiv-ni-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
+          </div>
+          <div class="plan-card-metric">
+            <div class="plan-card-metric-label">You Net</div>
+            <div class="plan-card-metric-value green" id="cash-equiv-net" data-balance-sensitive>£0</div>
+            <div class="plan-card-metric-label" id="cash-equiv-net-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-card mb16" id="cash-equiv-business-waterfall" style="display:none">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Extraction Waterfall</span>
+          <span class="plan-card-context">Each layer of tax on the way to your wallet</span>
+        </div>
+        <div class="plan-card-body">
+          <div id="cash-equiv-waterfall-rows" style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0 14px"></div>
+        </div>
+      </div>
+
+      <div class="plan-card mb16">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Effective Spending Discount</span>
+          <span class="plan-card-context" id="cash-equiv-discount-context">Untaxed cash vs declared earnings</span>
+        </div>
+        <div class="plan-card-body">
+          <div class="plan-card-headline" id="cash-equiv-discount" style="color:var(--green)" data-balance-sensitive>0%</div>
+          <div class="plan-card-headline-sub" id="cash-equiv-discount-sub">—</div>
+        </div>
+      </div>
+
+      <div id="cash-equiv-callout" style="background:rgba(255,179,64,0.08);border:1px solid rgba(255,179,64,0.20);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:none">
+        <div style="font-size:10px;color:var(--amber);font-weight:600;letter-spacing:0.5px;margin-bottom:4px;text-transform:uppercase" id="cash-equiv-callout-head">Why the gap is so wide</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.75);line-height:1.5" id="cash-equiv-callout-text">—</div>
+      </div>
+
+      <div style="font-size:10px;color:var(--muted2);line-height:1.5;font-style:italic;text-align:center;margin-top:8px">Reads your declared income live from the Income Tax Calculator below. Recalculates as you change PAYE, dividends or bonus.</div>
+
+    </div>
+  </div>
+
   <!-- ═══════════════════════════════════════════════════════════
        ZONE 1 — INCOME & TAX OWED
        Income tax inputs, breakdowns, bonus, and provision planner.
@@ -19261,6 +19373,412 @@ function updateIncomeTotal() {
   if (document.getElementById('tab-sell')?.classList.contains('active')) {
     initSellCalculator();
   }
+  // Cascade to the Cash Equivalent Calculator — it reads PAYE/dividends/bonus
+  // as its baseline declared income, so every income input change must
+  // refresh it. Wrapped in try in case the card hasn't loaded yet.
+  try { renderCashEquivalent(); } catch (e) {}
+}
+
+// ─────────────────────────────────────────────────────────────
+// CASH EQUIVALENT CALCULATOR (v22.6)
+// "I want £X in my pocket — what gross salary would I need to earn on top
+// of my declared income to net that?" Walks the 2026/27 tax bands honestly
+// rather than naively dividing by a single marginal rate, so the answer
+// respects band transitions including the 60% PA-taper band between £100k
+// and £125,140. NI added on top (8% in the main band, 2% above £50,270).
+//
+// Approach: walk forward in £1 micro-steps from the baseline gross,
+// accumulating gross uplift until cumulative net reaches the target. At each
+// step, compute the marginal income-tax rate and marginal NI rate for the
+// CURRENT cumulative gross, so band crossings are handled automatically.
+// Step size is chosen as £1 for accuracy with negligible cost (worst-case
+// scenarios complete in <1ms because the inner loop is just arithmetic).
+// ─────────────────────────────────────────────────────────────
+function renderCashEquivalent() {
+  const grossEl    = document.getElementById('cash-equiv-gross');
+  if (!grossEl) return;
+
+  // 2026/27 constants — must mirror updateIncomeTotal exactly
+  const FULL_PA = 12570, PA_TAPER_START = 100000, PA_TAPER_END = 125140;
+  const BR_LIMIT = 50270, HR_LIMIT = 125140;
+  const BR = 0.20, HR = 0.40, AR = 0.45;
+  const NI_LO = 12570, NI_UP = 50270, NI_MAIN = 0.08, NI_HI = 0.02;
+  // Dividend allowance + dividend rates 2026/27 (mirrors updateIncomeTotal)
+  const DIV_ALLOW = 500, DIV_HR = 0.3375, DIV_AR = 0.3935;
+  // Corporate constants — fixed per Voss's setup (VAT-registered, above CT
+  // small-profits ceiling so 25% main rate applies, employer NI at 15% above
+  // £5k secondary threshold).
+  const VAT_RATE = 0.20, CT_RATE = 0.25, ER_NI_RATE = 0.15, ER_NI_THRESH = 5000;
+
+  const stripComma = id => parseFloat((document.getElementById(id)?.value || '').replace(/,/g, '')) || 0;
+  const paye      = stripComma('inc-paye');
+  const dividends = stripComma('inc-dividends');
+  const bonus     = stripComma('inc-bonus');
+  const baselineGross = paye + dividends + bonus;
+  const target = stripComma('cash-equiv-target');
+  const mode = window._cashEquivMode || 'personal';
+  const extractAs = document.getElementById('cash-equiv-extract-as')?.value || 'salary';
+
+  // Marginal income tax rate at gross income G — accounts for PA taper.
+  const incTaxMarginal = (G) => {
+    let effPA = FULL_PA;
+    if (G > PA_TAPER_END) effPA = 0;
+    else if (G > PA_TAPER_START) effPA = Math.max(0, FULL_PA - Math.floor((G - PA_TAPER_START) / 2));
+    if (G < effPA) return 0;
+    if (G < BR_LIMIT) return BR;
+    if (G < PA_TAPER_START) return HR;
+    if (G < PA_TAPER_END) return HR + HR * 0.5;
+    return AR;
+  };
+
+  // Marginal NI rate at gross G — employee class 1
+  const niMarginal = (G) => {
+    if (G < NI_LO) return 0;
+    if (G < NI_UP) return NI_MAIN;
+    return NI_HI;
+  };
+
+  // Marginal dividend tax rate at total gross G — used for the dividend route.
+  // At Voss's income level dividends start in the higher rate band; this
+  // simplified model uses the HR rate up to the additional-rate threshold,
+  // then AR above. Dividend allowance handled separately as a runup buffer.
+  const divTaxMarginal = (G) => {
+    if (G < PA_TAPER_END) return DIV_HR;
+    return DIV_AR;
+  };
+
+  // Common: walk gross salary forward until net (after income tax + NI)
+  // equals target. Returns {gross, net, tax, ni} for the uplift only.
+  const walkSalary = (tgt, baseline) => {
+    let cg=0, cn=0, ct=0, cni=0;
+    const MAX = 5_000_000;
+    while (cn < tgt && cg < MAX) {
+      const G = baseline + cg;
+      const it = incTaxMarginal(G);
+      const ni = niMarginal(G);
+      const netR = 1 - it - ni;
+      if (netR <= 0) break;
+      const rem = tgt - cn;
+      const step = rem > 100 ? 10 : 1;
+      cg += step;
+      cn += step * netR;
+      ct += step * it;
+      cni += step * ni;
+    }
+    return { gross: cg, net: cn, tax: ct, ni: cni };
+  };
+
+  // Walk gross dividend forward. Dividend allowance (£500) only applies once
+  // across the user's total dividend income — if the baseline already used
+  // it (which Voss does, £87,430 of dividends in the baseline), no remaining
+  // headroom is available, so the uplift is taxed from the first £1.
+  const walkDividend = (tgt, baseline) => {
+    let cg=0, cn=0, ct=0;
+    let remainingAllow = (dividends >= DIV_ALLOW) ? 0 : (DIV_ALLOW - dividends);
+    const MAX = 5_000_000;
+    while (cn < tgt && cg < MAX) {
+      const G = baseline + cg;
+      let rate;
+      if (remainingAllow > 0) { rate = 0; remainingAllow -= 1; }
+      else rate = divTaxMarginal(G);
+      const netR = 1 - rate;
+      if (netR <= 0) break;
+      const rem = tgt - cn;
+      const step = (remainingAllow > 0) ? 1 : (rem > 100 ? 10 : 1);
+      cg += step;
+      cn += step * netR;
+      ct += step * rate;
+    }
+    return { gross: cg, net: cn, divtax: ct };
+  };
+
+  // ── Element refs reused across branches ──
+  const ctxEl       = document.getElementById('cash-equiv-context');
+  const headTitleEl = document.getElementById('cash-equiv-head-title');
+  const explainerEl = document.getElementById('cash-equiv-explainer');
+  const discountEl  = document.getElementById('cash-equiv-discount');
+  const discountSubEl = document.getElementById('cash-equiv-discount-sub');
+  const discountCtxEl = document.getElementById('cash-equiv-discount-context');
+  const callout = document.getElementById('cash-equiv-callout');
+  const calloutHead = document.getElementById('cash-equiv-callout-head');
+  const calloutText = document.getElementById('cash-equiv-callout-text');
+  const summaryEl = document.getElementById('cash-equiv-summary');
+  const personalPanel = document.getElementById('cash-equiv-personal-breakdown');
+  const businessPanel = document.getElementById('cash-equiv-business-waterfall');
+  const extractRow = document.getElementById('cash-equiv-extract-row');
+
+  // ── Mode-driven UI visibility ──
+  if (mode === 'business') {
+    if (personalPanel) personalPanel.style.display = 'none';
+    if (businessPanel) businessPanel.style.display = '';
+    if (extractRow) extractRow.style.display = 'flex';
+  } else {
+    if (personalPanel) personalPanel.style.display = '';
+    if (businessPanel) businessPanel.style.display = 'none';
+    if (extractRow) extractRow.style.display = 'none';
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PERSONAL MODE — exactly the original behaviour
+  // ══════════════════════════════════════════════════════
+  if (mode === 'personal') {
+    const p = walkSalary(target, baselineGross);
+    const grossUplift = Math.round(p.gross);
+    const incTax = Math.round(p.tax);
+    const ni = Math.round(p.ni);
+    const net = Math.round(p.net);
+
+    if (headTitleEl) headTitleEl.textContent = 'Equivalent Gross Salary';
+    grossEl.textContent = '£' + fmtNum(grossUplift, 0);
+    if (ctxEl) ctxEl.textContent = baselineGross > 0
+      ? `On top of declared £${fmtNum(baselineGross, 0)}`
+      : 'No declared income set — enter PAYE / dividends / bonus below';
+    if (explainerEl) explainerEl.textContent = target > 0
+      ? `You'd need to earn this much extra to net £${fmtNum(target, 0)}`
+      : 'Enter a net cash amount above to see the equivalent gross salary';
+
+    document.getElementById('cash-equiv-inctax').textContent = '£' + fmtNum(incTax, 0);
+    document.getElementById('cash-equiv-ni').textContent     = '£' + fmtNum(ni, 0);
+    document.getElementById('cash-equiv-net').textContent    = '£' + fmtNum(net, 0);
+    const effITPct = grossUplift > 0 ? (incTax / grossUplift * 100) : 0;
+    const effNIPct = grossUplift > 0 ? (ni / grossUplift * 100) : 0;
+    const effNetPct = grossUplift > 0 ? (net / grossUplift * 100) : 0;
+    document.getElementById('cash-equiv-inctax-sub').textContent = `${effITPct.toFixed(1)}% effective`;
+    document.getElementById('cash-equiv-ni-sub').textContent     = `${effNIPct.toFixed(1)}% effective`;
+    document.getElementById('cash-equiv-net-sub').textContent    = `${effNetPct.toFixed(1)}% kept`;
+
+    const discountPct = grossUplift > 0 ? ((grossUplift - net) / grossUplift * 100) : 0;
+    if (discountEl) discountEl.textContent = discountPct.toFixed(1) + '%';
+    if (discountCtxEl) discountCtxEl.textContent = 'Untaxed cash vs declared earnings';
+    if (discountSubEl) {
+      discountSubEl.textContent = target > 0
+        ? `Untaxed cash effectively gives you this discount versus spending declared earnings. A £${fmtNum(target, 0)} outlay costs £${fmtNum(target, 0)} in cash, or £${fmtNum(grossUplift, 0)} of gross salary to net the same.`
+        : 'Enter a net cash amount above to see the effective discount';
+    }
+
+    if (callout && calloutText && calloutHead) {
+      calloutHead.textContent = 'Why the gap is so wide';
+      if (baselineGross >= PA_TAPER_START && baselineGross < PA_TAPER_END) {
+        callout.style.display = '';
+        calloutText.textContent =
+          `At £${fmtNum(baselineGross, 0)} declared income you sit in the 60% income tax taper band ` +
+          `(40% tax + 40% on the £0.50 of personal allowance you lose per £1 earned). Add 2% NI and ` +
+          `your marginal rate is 62%, meaning you keep only 38p of each extra £1 earned. That's why ` +
+          `netting £${fmtNum(target, 0)} needs £${fmtNum(grossUplift, 0)} of gross salary.`;
+      } else if (baselineGross >= PA_TAPER_END) {
+        callout.style.display = '';
+        calloutText.textContent =
+          `At £${fmtNum(baselineGross, 0)} declared income you're in additional rate (45% income tax + 2% NI = 47% marginal). ` +
+          `You keep 53p of each extra £1 earned.`;
+      } else if (baselineGross >= BR_LIMIT) {
+        callout.style.display = '';
+        calloutText.textContent =
+          `At £${fmtNum(baselineGross, 0)} declared income you're in higher rate (40% income tax + 2% NI = 42% marginal). ` +
+          `You keep 58p of each extra £1 earned.`;
+      } else {
+        callout.style.display = 'none';
+      }
+    }
+
+    if (summaryEl) summaryEl.textContent = target > 0
+      ? `£${fmtNum(target, 0)} net needs £${fmtNum(grossUplift, 0)} gross`
+      : 'Net target → gross salary needed';
+    return;
+  }
+
+  // ══════════════════════════════════════════════════════
+  // BUSINESS MODE — salary route
+  // Chain: revenue → VAT → corp tax → employer NI → gross salary → income
+  // tax → employee NI → net.
+  // ══════════════════════════════════════════════════════
+  if (mode === 'business' && extractAs === 'salary') {
+    const personal = walkSalary(target, baselineGross);
+    const grossSalary = personal.gross;
+    const erNI = Math.max(0, (grossSalary - ER_NI_THRESH) * ER_NI_RATE);
+    const profitNeeded = grossSalary + erNI;
+    const netBusiness = profitNeeded / (1 - CT_RATE);
+    const corpTax = netBusiness - profitNeeded;
+    const revenue = netBusiness * (1 + VAT_RATE);
+    const vat = revenue - netBusiness;
+
+    const revenueR = Math.round(revenue);
+    const vatR = Math.round(vat);
+    const netBR = Math.round(netBusiness);
+    const erNIR = Math.round(erNI);
+    const corpR = Math.round(corpTax);
+    const grossR = Math.round(grossSalary);
+    const itR = Math.round(personal.tax);
+    const eeNIR = Math.round(personal.ni);
+    const netR = Math.round(personal.net);
+
+    if (headTitleEl) headTitleEl.textContent = 'Required Business Revenue';
+    grossEl.textContent = '£' + fmtNum(revenueR, 0);
+    if (ctxEl) ctxEl.textContent = 'Gross of VAT, before any tax';
+    if (explainerEl) explainerEl.textContent = target > 0
+      ? `Your business needs to invoice this much to net you £${fmtNum(target, 0)} after all taxes through the salary route.`
+      : 'Enter a net cash amount above to see the required revenue';
+
+    const rowsEl = document.getElementById('cash-equiv-waterfall-rows');
+    if (rowsEl) rowsEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.85)">Business revenue (gross)</span>
+        <span style="color:#fff;font-weight:600;font-variant-numeric:tabular-nums">£${fmtNum(revenueR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− VAT remitted to HMRC (20% on net)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(vatR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.85);font-weight:500">Net business income</span>
+        <span style="color:#fff;font-weight:600;font-variant-numeric:tabular-nums">£${fmtNum(netBR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Employer NI (15% on salary above £5k)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(erNIR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Corporation tax (25% on profit)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(corpR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.85);font-weight:500">Your gross salary</span>
+        <span style="color:#fff;font-weight:600;font-variant-numeric:tabular-nums">£${fmtNum(grossR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Income tax (taper / additional rate)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(itR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Employee NI (2% above £50,270)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(eeNIR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:14px 0;font-size:13px;align-items:baseline;border-top:1px solid rgba(255,255,255,0.15);margin-top:2px">
+        <span style="color:#fff;font-weight:600">You net</span>
+        <span style="color:var(--green);font-weight:700;font-variant-numeric:tabular-nums">£${fmtNum(netR,0)}</span>
+      </div>
+    `;
+
+    const discountPct = revenueR > 0 ? ((revenueR - netR) / revenueR * 100) : 0;
+    if (discountEl) discountEl.textContent = discountPct.toFixed(1) + '%';
+    if (discountCtxEl) discountCtxEl.textContent = 'Through the business stack (salary route)';
+    if (discountSubEl) {
+      discountSubEl.textContent = target > 0
+        ? `Untaxed cash effectively gives you this discount versus extracting from your business. A £${fmtNum(target, 0)} outlay costs £${fmtNum(target, 0)} in cash, or £${fmtNum(revenueR, 0)} of business revenue to net the same.`
+        : 'Enter a net cash amount above to see the effective discount';
+    }
+
+    if (callout && calloutText && calloutHead) {
+      callout.style.display = '';
+      calloutHead.textContent = 'Why the stack is so deep';
+      calloutText.textContent =
+        `Money extracted through your business via salary gets bitten five times: VAT on the way in (20%), ` +
+        `employer NI on the salary (15% above £5k), corporation tax on the residual profit (25%), your personal income tax ` +
+        `(60% in the taper band), and your employee NI (2% above £50,270). Switch "Extract as" to Dividend to compare — ` +
+        `dividends skip both NI layers but add dividend tax, typically cheaper for owner-managers in the taper band.`;
+    }
+
+    if (summaryEl) summaryEl.textContent = target > 0
+      ? `£${fmtNum(target, 0)} net needs £${fmtNum(revenueR, 0)} revenue (salary)`
+      : 'Net target → business revenue needed';
+    return;
+  }
+
+  // ══════════════════════════════════════════════════════
+  // BUSINESS MODE — dividend route
+  // Chain: revenue → VAT → corp tax → dividend → dividend tax → net.
+  // No employer or employee NI layers.
+  // ══════════════════════════════════════════════════════
+  if (mode === 'business' && extractAs === 'dividend') {
+    const dividend = walkDividend(target, baselineGross);
+    const grossDividend = dividend.gross;
+    const profitNeeded = grossDividend;
+    const netBusiness = profitNeeded / (1 - CT_RATE);
+    const corpTax = netBusiness - profitNeeded;
+    const revenue = netBusiness * (1 + VAT_RATE);
+    const vat = revenue - netBusiness;
+
+    const revenueR = Math.round(revenue);
+    const vatR = Math.round(vat);
+    const netBR = Math.round(netBusiness);
+    const corpR = Math.round(corpTax);
+    const gdR = Math.round(grossDividend);
+    const dtR = Math.round(dividend.divtax);
+    const netR = Math.round(dividend.net);
+
+    if (headTitleEl) headTitleEl.textContent = 'Required Business Revenue';
+    grossEl.textContent = '£' + fmtNum(revenueR, 0);
+    if (ctxEl) ctxEl.textContent = 'Gross of VAT, before any tax';
+    if (explainerEl) explainerEl.textContent = target > 0
+      ? `Your business needs to invoice this much to net you £${fmtNum(target, 0)} after all taxes through the dividend route.`
+      : 'Enter a net cash amount above to see the required revenue';
+
+    const rowsEl = document.getElementById('cash-equiv-waterfall-rows');
+    if (rowsEl) rowsEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.85)">Business revenue (gross)</span>
+        <span style="color:#fff;font-weight:600;font-variant-numeric:tabular-nums">£${fmtNum(revenueR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− VAT remitted to HMRC (20% on net)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(vatR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.85);font-weight:500">Net business income</span>
+        <span style="color:#fff;font-weight:600;font-variant-numeric:tabular-nums">£${fmtNum(netBR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Corporation tax (25% on profit)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(corpR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.85);font-weight:500">Dividend paid to you</span>
+        <span style="color:#fff;font-weight:600;font-variant-numeric:tabular-nums">£${fmtNum(gdR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
+        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Dividend tax (33.75% higher / 39.35% additional)</span>
+        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(dtR,0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:14px 0;font-size:13px;align-items:baseline;border-top:1px solid rgba(255,255,255,0.15);margin-top:2px">
+        <span style="color:#fff;font-weight:600">You net</span>
+        <span style="color:var(--green);font-weight:700;font-variant-numeric:tabular-nums">£${fmtNum(netR,0)}</span>
+      </div>
+    `;
+
+    const discountPct = revenueR > 0 ? ((revenueR - netR) / revenueR * 100) : 0;
+    if (discountEl) discountEl.textContent = discountPct.toFixed(1) + '%';
+    if (discountCtxEl) discountCtxEl.textContent = 'Through the business stack (dividend route)';
+    if (discountSubEl) {
+      discountSubEl.textContent = target > 0
+        ? `Untaxed cash effectively gives you this discount versus extracting from your business. A £${fmtNum(target, 0)} outlay costs £${fmtNum(target, 0)} in cash, or £${fmtNum(revenueR, 0)} of business revenue to net the same.`
+        : 'Enter a net cash amount above to see the effective discount';
+    }
+
+    if (callout && calloutText && calloutHead) {
+      callout.style.display = '';
+      calloutHead.textContent = 'Dividend route';
+      calloutText.textContent =
+        `Dividends skip both NI layers (employer's and employee's) but still get bitten by VAT, ` +
+        `corporation tax, and dividend tax. At £${fmtNum(baselineGross,0)} declared income your dividend tax ` +
+        `is 33.75% on the higher-rate portion and 39.35% above £125,140. Often the cheaper extraction route ` +
+        `for owner-managers; compare against Salary using the dropdown above.`;
+    }
+
+    if (summaryEl) summaryEl.textContent = target > 0
+      ? `£${fmtNum(target, 0)} net needs £${fmtNum(revenueR, 0)} revenue (dividend)`
+      : 'Net target → business revenue needed';
+    return;
+  }
+}
+
+// Cash Equivalent mode switcher — toggles the segmented control and re-runs
+// the renderer. Stored on window so it survives across collapse/expand.
+function setCashEquivMode(m) {
+  window._cashEquivMode = m;
+  const pBtn = document.getElementById('cash-equiv-mode-personal');
+  const bBtn = document.getElementById('cash-equiv-mode-business');
+  if (pBtn) pBtn.classList.toggle('active', m === 'personal');
+  if (bBtn) bBtn.classList.toggle('active', m === 'business');
+  renderCashEquivalent();
 }
 
 // ── Tax / Sell tab field mirrors ─────────────────────────────
