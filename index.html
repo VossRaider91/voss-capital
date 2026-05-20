@@ -3465,87 +3465,9 @@ body.privacy-mode-active .portfolio-delta-pill {
   border-bottom-right-radius: 6px;
 }
 
-/* Spending Velocity panel — May 2026 ──
-   Compact rows showing pacing for each category group. The white tick
-   on each bar marks the day-of-month percentage so the user can read at
-   a glance whether they're ahead or behind pace. Pills mirror the
-   colour language used elsewhere on the page (income green, tax red,
-   fixed amber, variable blue). On mobile the figure column drops to
-   the next line so the pill never wraps and the pacing tick stays
-   precisely aligned. */
-.bgt-velo-stack { display:flex; flex-direction:column; gap:10px; }
-.bgt-velo-row {
-  background: rgba(255,255,255,0.025);
-  border: 0.5px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-.bgt-velo-row-head {
-  display:flex; align-items:center; gap:10px; margin-bottom:8px;
-}
-.bgt-velo-row-pill {
-  font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
-  padding: 3px 8px; border-radius: 10px;
-  border: 0.5px solid; flex-shrink: 0; white-space: nowrap;
-}
-.bgt-velo-row-fig {
-  font-size: 11px; color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  flex: 1; min-width: 0; white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis; text-align: right;
-}
-.bgt-velo-row-fig-sep { color: var(--muted2); margin: 0 2px; }
-.bgt-velo-row-pct {
-  font-size: 11px; font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0; min-width: 36px; text-align: right;
-}
-.bgt-velo-bar-track {
-  position: relative;
-  height: 6px;
-  background: rgba(0,0,0,0.30);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 50px;
-  overflow: visible;
-  margin-bottom: 6px;
-}
-.bgt-velo-bar-fill {
-  position: absolute; left: 0; top: 0; bottom: 0;
-  border-radius: 50px;
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.25);
-  transition: width 0.3s ease;
-}
-.bgt-velo-bar-tick {
-  position: absolute; top: -2px; bottom: -2px;
-  width: 1.5px;
-  background: var(--white);
-  box-shadow: 0 0 4px rgba(255,255,255,0.6);
-  transform: translateX(-0.75px);
-}
-.bgt-velo-row-note {
-  font-size: 10px; color: var(--muted); line-height: 1.4;
-}
-@media (max-width: 600px) {
-  /* On iPhone Air width (~430px) and narrower, stack the figure on its
-     own row so the pacing percentage and pill never compete for space.
-     Pill stays left, percentage stays right, figure drops below. */
-  .bgt-velo-row-head {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-areas: "pill pct" "fig fig";
-    gap: 4px 10px;
-    align-items: center;
-  }
-  .bgt-velo-row-pill { grid-area: pill; }
-  .bgt-velo-row-pct  { grid-area: pct; }
-  .bgt-velo-row-fig  { grid-area: fig; text-align: left; font-size: 10px; }
-}
-
 /* Wrapper Allowances panel — May 2026 ──
    Sits on the Tax tab beneath the Tax Provision Planner. Four rows:
-   ISA, SIPP (employer-only), CGT exempt, and Dividend Allowance.
-   Same row pattern as the velocity panel for visual consistency
-   across both new analytics blocks. */
+   ISA, SIPP (employer-only), CGT exempt, and Dividend Allowance. */
 .alw-stack { display:flex; flex-direction:column; gap:10px; }
 .alw-row {
   background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
@@ -9051,12 +8973,6 @@ body.modal-active .container > footer {
 
     <!-- Annual Year-to-Date panel — populated by _renderBgtYtdPanel -->
     <div id="bgt-ytd-panel"></div>
-
-    <!-- Spending Velocity — May 2026 — pacing snapshot of where the user
-         should be vs where they are by category group at the current point
-         in the month. Sits above Historical Averages so the velocity check
-         comes before the long-run averages context. -->
-    <div id="bgt-velocity-panel"></div>
 
     <!-- Historical Averages — multi-month rolling averages -->
     <div id="bgt-averages-panel"></div>
@@ -22619,10 +22535,27 @@ function renderAnalyse() {
     const historyDeployed  = personalDeployed + employerDeployed;
     const seededCostBase   = portfolio.filter(h => h.seeded).reduce((s,h) => s + (h.totalCost || 0), 0);
     const totalDeployed    = historyDeployed + seededCostBase;
-    const avgMonthly       = monthsOfData > 0 ? historyDeployed / monthsOfData : 0;
 
     const firstEntry = [...history].sort((a,b)=>a.timestamp-b.timestamp)[0];
     const latestEntry = [...history].sort((a,b)=>b.timestamp-a.timestamp)[0];
+
+    // ── Calendar-month span — distinct from save count ──
+    // Previously "Months of Data" was literally history.length (saved
+    // entries), which meant 5 saves in May would read as "5 months of
+    // data". That was misleading on its face AND it broke the average
+    // below — avgMonthly = totalDeployed / saveCount answers a different
+    // question to avgMonthly = totalDeployed / months. We now count the
+    // distinct calendar months spanned by the saves (Year-Month pairs
+    // between first and latest entry, inclusive), so a single month of
+    // saves reads as "1 month" and the average is genuinely per-month.
+    const monthKey = ts => {
+      const d = new Date(ts);
+      return d.getFullYear() * 12 + d.getMonth();
+    };
+    const calendarMonthsSpan = (firstEntry && latestEntry)
+      ? (monthKey(latestEntry.timestamp) - monthKey(firstEntry.timestamp) + 1)
+      : 0;
+    const avgMonthly = calendarMonthsSpan > 0 ? historyDeployed / calendarMonthsSpan : 0;
 
     // ── Market Growth — current value minus FULL cost basis ──
     // Now matches the Portfolio Growth chart exactly: totalValue includes
@@ -22632,12 +22565,14 @@ function renderAnalyse() {
     // counted legacy value as growth.
     const totalGrowth = totalValue - totalDeployed;
 
+    const monthsLabel = calendarMonthsSpan === 1 ? 'month' : 'months';
+    const entriesLabel = monthsOfData === 1 ? 'entry' : 'entries';
     document.getElementById('analyse-history-cards').innerHTML = [
-      { label:'Months of Data', val:monthsOfData, sub:'Saved entries', cls:'gold' },
+      { label:'Months of Data', val:calendarMonthsSpan, sub:`${monthsOfData} saved ${entriesLabel} across ${calendarMonthsSpan} ${monthsLabel}`, cls:'gold' },
       { label:'Total Contributed', val:`£${fmtNum(Math.round(totalDeployed),0)}`, sub:`Avg £${fmtNum(Math.round(avgMonthly),0)}/mo since first entry`, cls:'white' },
       { label:'Market Growth (Est.)', val:`${totalGrowth>=0?'+':''}£${fmtNum(Math.round(totalGrowth),0)}`, sub:'Portfolio gain above contributions', cls: totalGrowth>=0?'green':'red' },
     ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
-    document.getElementById('analyse-history-insight').textContent = `Based on ${monthsOfData} saved entries from ${firstEntry?.date||'—'} to ${latestEntry?.date||'—'}.`;
+    document.getElementById('analyse-history-insight').textContent = `Based on ${monthsOfData} saved ${entriesLabel} from ${firstEntry?.date||'—'} to ${latestEntry?.date||'—'}.`;
   } else {
     document.getElementById('analyse-history-section').style.display = 'none';
   }
@@ -24190,7 +24125,6 @@ function _refreshBgtAnalytics() {
   const state = bgtLoad();
   try { _renderBgtYtdPanel(state);       } catch (e) {}
   try { _renderBgtBreakdownPanel(state); } catch (e) {}
-  try { _renderBgtVelocityPanel(state);  } catch (e) {}
   try { _renderBgtAveragesPanel(state);  } catch (e) {}
 }
 
@@ -24869,7 +24803,6 @@ function _renderBgtMainTable(state) {
   // Cascade: keep all the analytics panels in sync with every edit
   _renderBgtYtdPanel(state);
   _renderBgtBreakdownPanel(state);
-  _renderBgtVelocityPanel(state);
   _renderBgtAveragesPanel(state);
 
   // Apply collapsed state to the new section cards
@@ -25184,118 +25117,6 @@ function _renderBgtBreakdownPanel(state) {
         </div>
       </div>
       ${rows || '<div style="font-size:11px;color:var(--muted);font-style:italic;padding:12px 0">No spending recorded for this month yet.</div>'}
-    </div>`;
-}
-
-// ── Spending Velocity — May 2026 ──
-// Pacing check at the current point in the month. For each category group
-// (Tax Provision, Fixed Expenses, Variable Expenses, Income), compares
-// actual-as-percentage-of-planned against day-of-month-as-percentage. The
-// gap is the velocity signal:
-//   - on or under pace → neutral grey bar
-//   - 5+ percentage points ahead of pace → amber (overspend warning)
-//   - over 100% → red (already breached planned budget)
-//   - income at 100% → green (received in full)
-//   - income < pace → amber (delay/missing income concern)
-// Fixed Expenses get a softer treatment — most fixed bills land on day 1
-// of the month so the pacing line doesn't apply the same way; copy explains.
-// Tax Provision is suppressed when planned is 0, mirroring the warning
-// banner suppression on the main table (May 2026).
-function _renderBgtVelocityPanel(state) {
-  const el = document.getElementById('bgt-velocity-panel');
-  if (!el) return;
-
-  const planned = state.planned || {};
-  const actual  = state.actual  || {};
-
-  const today    = new Date();
-  const dayNum   = today.getDate();
-  const daysInMo = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const pacePct  = (dayNum / daysInMo) * 100;
-
-  const sumGroup = (cats, src) => cats.reduce((s, c) => s + (parseFloat(src[c]) || 0), 0);
-  const tIP = sumGroup(BGT_INCOME, planned);
-  const tIA = sumGroup(BGT_INCOME, actual);
-  const tFP = sumGroup(BGT_FIXED, planned);
-  const tFA = sumGroup(BGT_FIXED, actual);
-  const tVP = sumGroup(BGT_VARIABLE, planned);
-  const tVA = sumGroup(BGT_VARIABLE, actual);
-  const tTP = sumGroup(BGT_TAX, planned);
-  const tTA = sumGroup(BGT_TAX, actual);
-
-  // Hide the panel entirely when the user has neither planned nor recorded
-  // anything yet — empty state would just be noise on a blank Budget tab.
-  const anyData = tIP + tIA + tFP + tFA + tVP + tVA + tTP + tTA > 0;
-  if (!anyData) { el.innerHTML = ''; return; }
-
-  // Per-row evaluation. Returns the bar fill colour, the status copy beneath
-  // the bar, and the headline percentage display. Logic differs per row type:
-  //   - expense rows (fixed/variable/tax): pct = actual/planned, on-pace
-  //     comparison drives status
-  //   - income rows: pct = actual/planned with the framing flipped
-  //     (under-pace is a warning, at-pace or above is fine)
-  const evalExpense = (act, plan, opts = {}) => {
-    if (plan <= 0) return null;
-    const pct = (act / plan) * 100;
-    const gap = pct - pacePct; // positive = ahead of pace
-    let colour, copy;
-    if (pct >= 100) { colour = 'var(--red)'; copy = `Over budget by £${fmtNum(Math.round(act - plan), 0)} · ${pct.toFixed(0)}% spent`; }
-    else if (gap > 5) { colour = 'var(--amber)'; copy = `${gap.toFixed(0)} percentage points ahead of pace`; }
-    else if (gap < -5 && opts.noteUnderPace) { colour = 'var(--green)'; copy = `${Math.abs(gap).toFixed(0)} pts under pace · room to spare`; }
-    else { colour = 'var(--muted)'; copy = `On pace · ${pct.toFixed(0)}% spent at day ${dayNum} of ${daysInMo}`; }
-    if (opts.fixedNote) copy = opts.fixedNote;
-    return { pct, colour, copy };
-  };
-  const evalIncome = (act, plan) => {
-    if (plan <= 0) return null;
-    const pct = (act / plan) * 100;
-    let colour, copy;
-    if (pct >= 100) { colour = 'var(--green)'; copy = `Received in full`; }
-    else if (pct >= pacePct - 5) { colour = 'var(--muted)'; copy = `${pct.toFixed(0)}% received · pacing normally`; }
-    else { colour = 'var(--amber)'; copy = `${(pacePct - pct).toFixed(0)} pts behind pace · check for delays`; }
-    return { pct, colour, copy };
-  };
-
-  // Build each row's HTML. The white pacing line at top is a 1.5px tick
-  // overlaid on the bar at the day-of-month percentage. Bar fill widths
-  // are clamped to 100% so over-budget rows still render visually clean.
-  const buildRow = (label, pillBg, pillBorder, pillFg, act, plan, evalResult) => {
-    if (!evalResult) return '';
-    const fillWidth = Math.min(evalResult.pct, 100).toFixed(1);
-    return `
-      <div class="bgt-velo-row">
-        <div class="bgt-velo-row-head">
-          <div class="bgt-velo-row-pill" style="background:${pillBg};color:${pillFg};border-color:${pillBorder}">${label}</div>
-          <div class="bgt-velo-row-fig">£${fmtNum(Math.round(act), 0)} <span class="bgt-velo-row-fig-sep">/</span> £${fmtNum(Math.round(plan), 0)}</div>
-          <div class="bgt-velo-row-pct" style="color:${evalResult.colour}">${evalResult.pct.toFixed(0)}%</div>
-        </div>
-        <div class="bgt-velo-bar-track">
-          <div class="bgt-velo-bar-fill" style="width:${fillWidth}%;background:${evalResult.colour}"></div>
-          <div class="bgt-velo-bar-tick" style="left:${pacePct.toFixed(2)}%"></div>
-        </div>
-        <div class="bgt-velo-row-note">${evalResult.copy}</div>
-      </div>`;
-  };
-
-  const incomeRow   = buildRow('INCOME',           'rgba(58,212,143,0.10)','rgba(58,212,143,0.40)','var(--green)', tIA, tIP, evalIncome(tIA, tIP));
-  const taxRow      = buildRow('TAX PROVISION',    'rgba(224,100,100,0.10)','rgba(224,100,100,0.40)','var(--red)',   tTA, tTP, evalExpense(tTA, tTP));
-  const fixedRow    = buildRow('FIXED EXPENSES',   'rgba(201,127,58,0.10)','rgba(201,127,58,0.40)','var(--amber)',  tFA, tFP, evalExpense(tFA, tFP, { fixedNote: 'Fixed bills typically land on day 1 — High % early in the month is expected' }));
-  const variableRow = buildRow('VARIABLE EXPENSES','rgba(58,143,201,0.10)','rgba(58,143,201,0.40)','var(--blue)',   tVA, tVP, evalExpense(tVA, tVP, { noteUnderPace: true }));
-
-  el.innerHTML = `
-    <div class="card mb16">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-        <div>
-          <div class="section-label" style="margin-bottom:2px">Spending Velocity</div>
-          <div class="stat-sub">Day ${dayNum} of ${daysInMo} · ${pacePct.toFixed(0)}% Through the month · White tick marks where you should be</div>
-        </div>
-      </div>
-      <div class="bgt-velo-stack">
-        ${incomeRow}
-        ${taxRow}
-        ${fixedRow}
-        ${variableRow}
-      </div>
     </div>`;
 }
 
