@@ -9947,14 +9947,14 @@ body.modal-active .container > footer {
       <div class="subsection-label" id="mp-future-heading" style="margin-bottom:4px">Future Projections</div>
       <div class="stat-sub" id="mp-future-blurb">Enter your expected remortgage switch date and rate to enable the three-way path comparison below.</div>
     </div>
-    <div class="mp-input-group" style="margin-bottom:16px;max-width:260px">
-      <label class="mp-input-label" for="mp-switch-date" style="color:var(--blue)">Remortgage Switch Date</label>
-      <div class="month-pill-wrap">
-        <div class="month-pill-display" id="mp-switch-date-display">May 2029</div>
-        <input class="month-pill-input" type="month" id="mp-switch-date" value="2029-05" onchange="_updateMortgageSwitchDate()">
-      </div>
-    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">
+      <div class="mp-input-group">
+        <label class="mp-input-label" for="mp-switch-date" style="color:var(--blue)">Remortgage Switch Date</label>
+        <div class="month-pill-wrap">
+          <div class="month-pill-display" id="mp-switch-date-display">May 2029</div>
+          <input class="month-pill-input" type="month" id="mp-switch-date" value="2029-05" onchange="_updateMortgageSwitchDate()">
+        </div>
+      </div>
       <div class="mp-input-group">
         <label class="mp-input-label" for="mp-new-rate" style="color:var(--blue)">Projected New Rate %</label>
         <input class="mp-input" type="text" inputmode="decimal" id="mp-new-rate" value="3.50" step="0.05" min="0" max="20" oninput="mpRecalc()">
