@@ -9219,7 +9219,7 @@ body.modal-active .container > footer {
     <!-- Top hero strip: total value + today's gain pill on the left, compact arc on the right -->
     <div class="portfolio-hero">
       <div class="portfolio-hero-meta">
-        <div class="stat-label mb4">Total Portfolio Value</div>
+        <div class="stat-label mb4" id="portfolioValueLabel">Total Portfolio Value</div>
         <div class="stat-val xl gold" id="totalPortfolioValue" data-balance-sensitive>£0</div>
         <div class="portfolio-hero-substats">
           <span class="portfolio-delta-pill" id="portfolio-delta-pill" data-balance-sensitive style="display:none"></span>
@@ -17300,6 +17300,19 @@ function renderPortfolio(filter='all') {
   // animateNumber wired May 2026 — smooth tween on live price ticks
   animateNumber(document.getElementById('totalPortfolioValue'), totalVal, { prefix: '£', decimals: 0 });
 
+  // Label tracks the active wrapper pill. "Total Portfolio Value" only
+  // makes sense on the All scope; on a wrapper view, that figure is
+  // just the wrapper's value, so the label must say so or it reads as
+  // a flat-out wrong claim above a smaller number. Short forms match
+  // the wording already used on the Portfolio Growth card subtitle
+  // ("in your GIA wrapper" etc.). Falls back to the total label if the
+  // element isn't on this page.
+  const labelEl = document.getElementById('portfolioValueLabel');
+  if (labelEl) {
+    const scopeLabels = { all: 'Total Portfolio Value', gia: 'GIA Value', employer: 'SIPP Value', isa: 'ISA Value' };
+    labelEl.textContent = scopeLabels[filter] || 'Total Portfolio Value';
+  }
+
   // Hero meta line — compact "N holdings · M tickers"
   const uniqueTickers = new Set(filtered.map(h => h.ticker)).size;
   const metaTextEl = document.getElementById('portfolio-hero-meta-text');
@@ -17988,34 +18001,33 @@ function renderGrowthChart(type='monthly') {
   if (type === 'monthly') {
     // Monthly chart shows a rolling view of the current calendar month —
     // 5 evenly-spaced points from the 1st of the month through to today,
-    // valued at today's units × the recorded price on each day from
-    // LS.PRICE_HISTORY. This gives a proper time-series portfolio chart
-    // similar to what HL shows on each wrapper screen, rather than only
-    // moving when a new history entry is saved.
+    // valued at the units that actually existed at each point × the
+    // recorded price on each day from LS.PRICE_HISTORY. This gives a
+    // proper time-series portfolio chart similar to what HL shows on
+    // each wrapper screen.
     //
     // Design choices:
     //   • Day spacing is recomputed each render so the chart "compresses"
     //     as the month progresses — on day 5 the points are days 1-5,
     //     on day 15 they spread to roughly days 1, 5, 8, 12, 15, and on
     //     day 31 they cover the whole month at days 1, 9, 16, 24, 31.
-    //   • Units used at every point are CURRENT units (today's portfolio).
-    //     We don't try to reconstruct past unit counts because for the
-    //     user's workflow, units shift on contribution save only — and
-    //     once a new month's first entry is logged, the chart for the
-    //     new month is built from today's prices going forward. The
-    //     tradeoff: a chart point on day 3 valued at day-3 prices × today's
-    //     units slightly overstates value if you bought new units on day 8.
-    //     For consumer-level tracking this is acceptable.
+    //   • Units used at each point are reconstructed chronologically:
+    //     seeded legacy units are always present, history-derived units
+    //     accumulate only as their timestamps pass. This means a £40k
+    //     contribution logged on day 12 shows as a real step-up on that
+    //     day, not a phantom presence from day 1. The earlier "today's
+    //     units everywhere" simplification produced a catastrophic bug
+    //     on contribution days: value at day 1 was inflated by holdings
+    //     not yet purchased, contributed at day 1 was the legacy cost
+    //     only, the gap looked enormous, and the gap then "collapsed"
+    //     to its real size by month end — the Since pill reported that
+    //     collapse as a "loss" of £40k+ that never happened.
     //   • Contributions per point = seededCostBase + sum of all history
-    //     entries with timestamp on or before that day. So early-month
-    //     points correctly show lower contribution lines if contributions
-    //     happened mid-month.
+    //     entries with timestamp on or before that day. Matches the
+    //     unit-accumulation timeline exactly.
     //   • The latest point always anchors to today's live header total
     //     (via the reconciliation step further down) so the chart's
     //     rightmost figure never drifts from the headline.
-    //   • Cumulative cost is also reconstructed up to each point's
-    //     timestamp by walking sortedBuys with timestamp ≤ point's
-    //     end-of-day.
 
     const now = new Date();
     const todayDay = now.getDate();
@@ -18058,6 +18070,10 @@ function renderGrowthChart(type='monthly') {
       return getBestPrice(ticker);
     };
 
+    // Pre-compute the seeded legacy units that exist at every point —
+    // they pre-date all history entries by definition.
+    const seededHoldingsM = portfolio.filter(h => h.seeded);
+
     dayOffsets.forEach((dayNum, idx) => {
       // Use end-of-day so the price-history lookup picks up any tick
       // recorded that day (recordPriceTick writes at the time of refresh,
@@ -18066,15 +18082,46 @@ function renderGrowthChart(type='monthly') {
       const pointTs   = pointDate.getTime();
       const isLatest  = (idx === dayOffsets.length - 1);
 
-      // Value EVERY holding (seeded legacy + accumulated new) using today's
-      // units. This is simpler and good enough for the user's workflow —
-      // see comment block above for the rationale.
-      const totalVal = portfolio.reduce((s, h) => {
+      // Build the unit set that existed at this point. Seeded legacy
+      // holdings are always counted. New-holding units accumulate from
+      // history entries with timestamp ≤ end-of-day; sales are applied
+      // in the same chronological order so the count reflects reality.
+      // This fixes the prior "today's units everywhere" defect where a
+      // mid-month contribution made the 1st-of-month value look fully
+      // populated, then the Since-pill reported a phantom loss as the
+      // contribution line caught up.
+      const unitsAtPoint = {};
+      sortedBuys.forEach(e => {
+        if (e.timestamp > pointTs) return;
+        (e.funds || []).forEach(f => {
+          unitsAtPoint[f.ticker] = (unitsAtPoint[f.ticker] || 0) + (f.held || 0);
+        });
+      });
+      // Apply every sale up to this point. We don't use applySoldUpTo
+      // here because that helper assumes a persistent accumulator
+      // across calls (it tracks consumed sales in a Set); with our
+      // fresh per-point unit map, the second iteration onwards would
+      // silently skip sales that had already been "consumed" against
+      // an earlier point's discarded map.
+      soldTimestamps.forEach(ts => {
+        if (ts > pointTs) return;
+        soldByTimestamp[ts].forEach(({ticker, units: sold}) => {
+          unitsAtPoint[ticker] = Math.max(0, (unitsAtPoint[ticker]||0) - sold);
+        });
+      });
+
+      // Value the legacy seeded holdings at this day's price.
+      const legacyValM = seededHoldingsM.reduce((s, h) => {
         return s + (h.shares || 0) * priceAt(h.ticker, pointTs, isLatest);
       }, 0);
+      // Value the accumulated history-derived units at this day's price.
+      const historyValM = Object.entries(unitsAtPoint).reduce((s, [ticker, units]) => {
+        return s + units * priceAt(ticker, pointTs, isLatest);
+      }, 0);
+      const totalVal = legacyValM + historyValM;
 
       // Cumulative cost up to this point: seeded cost base + every history
-      // entry with timestamp ≤ end-of-day. Sold entries don't add to cost.
+      // entry with timestamp ≤ end-of-day. Matches the unit timeline above.
       let contribAtPoint = seededCostBase;
       sortedBuys.forEach(e => {
         if (e.timestamp > pointTs) return;
