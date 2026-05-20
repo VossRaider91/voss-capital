@@ -9848,10 +9848,6 @@ body.modal-active .container > footer {
         <div class="section-label mb12" style="color:var(--amber)">Income vs Expenses — Plan vs Actual</div>
         <div id="analyse-budget-perf-table"></div>
       </div>
-      <div style="background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px 18px">
-        <div class="section-label mb12">Category Highlights</div>
-        <div class="grid-3" id="analyse-budget-perf-highlights"></div>
-      </div>
     </div>
   </div>
 
@@ -22858,7 +22854,6 @@ function renderBudgetPerformance() {
         No archived months yet. Complete your first month on the Budget Tracker to start seeing annual performance data here.
       </div>`;
     document.getElementById('analyse-budget-perf-table').innerHTML = '';
-    document.getElementById('analyse-budget-perf-highlights').innerHTML = '';
     return;
   }
 
@@ -22962,53 +22957,6 @@ function renderBudgetPerformance() {
             <td ${varCls(netActual-netPlanned,false)}>${varStr(netActual-netPlanned,false)}</td></tr>
         </tbody>
       </table>`;
-
-    // ── Category highlights — biggest overspend and best controlled ──
-    // Aggregate per variable category across all months
-    const catTotals = {};
-    months.forEach(m => {
-      const planned = m.plannedSnapshot || {};
-      const actual  = m.actualSnapshot  || {};
-      BGT_VARIABLE.forEach(cat => {
-        if (!catTotals[cat]) catTotals[cat] = { planned:0, actual:0 };
-        catTotals[cat].planned += parseFloat(planned[cat]) || 0;
-        catTotals[cat].actual  += parseFloat(actual[cat])  || 0;
-      });
-    });
-    // Investment Deposit is excluded from highlights because the under/over
-    // logic inverts for it. Spending less than planned on investing is a
-    // failure to invest (not "best controlled"); spending more is positive
-    // (not "biggest overspend"). It belongs in retirement progress reporting,
-    // not budget discipline highlights.
-    const catRows = Object.entries(catTotals)
-      .filter(([cat, v]) => cat !== 'Investment Deposit' && (v.planned > 0 || v.actual > 0))
-      .map(([cat, v]) => ({ cat, planned:v.planned, actual:v.actual, variance: v.actual - v.planned }));
-
-    const overspend  = [...catRows].sort((a,b) => b.variance - a.variance)[0];
-    const controlled = [...catRows].filter(r => r.variance <= 0).sort((a,b) => a.variance - b.variance)[0];
-    const avgMonthly = ann.count > 0 ? netActual / ann.count : 0;
-
-    const hlEl = document.getElementById('analyse-budget-perf-highlights');
-    if (hlEl) hlEl.innerHTML = [
-      overspend && overspend.variance > 0 ? {
-        label: 'Biggest Overspend',
-        val:   overspend.cat,
-        sub:   `+£${fmtNum(Math.round(overspend.variance),0)} over plan this year`,
-        cls:   'red',
-      } : { label:'Biggest Overspend', val:'None', sub:'All variable categories within budget', cls:'green' },
-      controlled ? {
-        label: 'Best Controlled',
-        val:   controlled.cat,
-        sub:   `£${fmtNum(Math.round(Math.abs(controlled.variance)),0)} under budget this year`,
-        cls:   'green',
-      } : { label:'Best Controlled', val:'—', sub:'Not enough data', cls:'muted' },
-      {
-        label: 'Avg Monthly Net',
-        val:   `${avgMonthly>=0?'+':''}£${fmtNum(Math.round(avgMonthly),0)}`,
-        sub:   `Across ${ann.count} completed month${ann.count!==1?'s':''}`,
-        cls:   avgMonthly >= 0 ? 'green' : 'red',
-      },
-    ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-val sm ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
   };
 
   window._bgtRenderPerfYear(years[0]);
