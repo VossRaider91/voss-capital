@@ -13062,6 +13062,7 @@ function buildFundCards() {
         <div class="input-group">
           <span class="input-label">Units Held</span>
           <input class="num-input" type="text" inputmode="numeric" id="held_${f.id}" value="${held}" step="1" min="0">
+          <span class="buy-rec" id="buy_${f.id}" style="display:none;font-size:10px;color:var(--blue);font-weight:600;margin-top:4px;letter-spacing:0.3px">Buy 0 more</span>
         </div>
         <div class="input-group" data-pound>
           <span class="input-label">Price</span>
@@ -13525,6 +13526,22 @@ function calculate() {
   const efficiencyCls = parseFloat(efficiency) >= 97 ? 'green' : parseFloat(efficiency) >= 90 ? 'amber' : 'red';
   const driftCls      = maxDriftVal <= 2 ? 'green' : maxDriftVal <= 5 ? 'amber' : 'red';
   const driftSub      = currentPortVal > 0 ? `${maxDriftFund.ticker} ${maxDriftFund.overweight > 0 ? 'overweight' : 'underweight'}` : `${maxDriftFund.ticker} after purchase`;
+
+  // Mirror per-fund buy quantities into the buy-rec spans below each Units
+  // Held input. Same mechanism that pullFromWrapper uses, so the user sees
+  // a consistent "Buy N more" hint regardless of which path produced it.
+  // The Units Held input itself stays as the user's current holdings.
+  bestAlloc.forEach(f => {
+    const buyEl = document.getElementById(`buy_${f.id}`);
+    if (!buyEl) return;
+    if (f.shares > 0) {
+      buyEl.textContent = `Buy ${f.shares} more`;
+      buyEl.style.display = 'inline-block';
+    } else {
+      buyEl.style.display = 'none';
+    }
+  });
+
   document.getElementById('calcSummary').innerHTML = `
     <div class="plan-card">
       <div class="plan-card-header">
@@ -14051,13 +14068,22 @@ function pullFromWrapper(wrapper, btn) {
       recommendations.forEach((r, i) => { r.additionalUnits = bestUnits[i]; });
     }
 
-    // Step 4: fill Units Held with the units to BUY this month only (not cumulative total)
+    // Step 4: write each fund's recommended buy into its dedicated buy-rec
+    // display element. The Units Held field stays as the user's actual current
+    // holdings (set by the match.shares write above), so the label is finally
+    // honest about what it contains. The buy quantity gets its own visible home
+    // immediately below the held input, so the user can see "hold 42, buy 12 more".
     recommendations.forEach(({ f, additionalUnits }) => {
-      const el = document.getElementById(`held_${f.id}`);
-      if (!el) return;
-      el.value = additionalUnits;
-      flashInput(el);
-
+      const buyEl = document.getElementById(`buy_${f.id}`);
+      if (buyEl) {
+        if (additionalUnits > 0) {
+          buyEl.textContent = `Buy ${additionalUnits} more`;
+          buyEl.style.display = 'inline-block';
+          flashInput(buyEl);
+        } else {
+          buyEl.style.display = 'none';
+        }
+      }
       const priceEl = document.getElementById(`price_${f.id}`);
       if (priceEl) flashInput(priceEl);
     });
