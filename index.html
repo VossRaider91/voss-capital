@@ -8121,10 +8121,7 @@ body.modal-active .container > footer {
 
   <div id="calcResults" style="display:none">
     <div class="card-gold mb16">
-      <div class="section-label">Portfolio Summary</div>
-      <div class="mb16" id="calcSummary"></div>
-      <div class="gold-divider"></div>
-      <div class="section-label" style="margin-bottom:4px">Allocation by Fund</div>
+      <div class="section-label" style="margin-bottom:4px">Allocation By Fund</div>
       <div class="stat-sub mb16">Units to buy, £ to deploy, buffer reserved</div>
       <div id="allocRowsV2"></div>
 
@@ -13716,7 +13713,13 @@ function calculate() {
     }
   });
 
-  document.getElementById('calcSummary').innerHTML = `
+  // Allocation Snapshot card removed (per Voss's request). The container
+  // #calcSummary no longer exists in the markup, so we guard the write with
+  // a null check. Variables computed above (currentPortVal, projAfter,
+  // efficiency, maxDriftVal, etc.) are still referenced downstream, so the
+  // calculation logic stays put.
+  const calcSummaryEl = document.getElementById('calcSummary');
+  if (calcSummaryEl) calcSummaryEl.innerHTML = `
     <div class="plan-card">
       <div class="plan-card-header">
         <span class="plan-card-ticker">Allocation Snapshot</span>
@@ -14058,6 +14061,7 @@ function _renderMonthVsMonth() {
         <div class="stat-label">Total Deployed</div>
         <div class="stat-val sm" style="color:${deployedColour}">${fmtSignedMoney(deployedDelta)}</div>
         <div class="stat-sub">£${fmtNum(Math.round(lastDeployed), 0)} → £${fmtNum(Math.round(thisDeployed), 0)}</div>
+        <div class="stat-sub" style="font-size:9px;color:var(--muted2);margin-top:2px;font-style:italic">Raw cost · excludes whole-share buffer</div>
       </div>
       <div class="stat">
         <div class="stat-label">Budget Efficiency</div>
