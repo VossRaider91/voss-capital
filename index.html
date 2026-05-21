@@ -9606,14 +9606,12 @@ body.modal-active .container > footer {
       <div class="flex-between" style="margin-bottom:0">
         <div style="flex:1;min-width:0">
           <div class="section-label" style="margin-bottom:4px">Cash Calculator</div>
-          <div class="stat-sub" id="cash-equiv-summary">Net target → gross salary needed</div>
+          <div class="stat-sub" id="cash-equiv-summary">Log cash deposits & Calculate cash income</div>
         </div>
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
       </div>
     </div>
     <div class="collapsible-body" style="margin-top:16px">
-
-      <div class="stat-sub" style="margin-bottom:16px">Log your cash deposits to keep rotation even across HSBC, Santander and Nationwide. Then see what each £1 of cash extraction costs you in business revenue with the Salary/Dividend calculator below.</div>
 
       <!-- ═══════════════════════════════════════════════════════════
            CASH DEPOSITS LOG (v22.8, moved to top of section in v22.9)
@@ -19940,7 +19938,6 @@ function renderCashEquivalent() {
   const callout = document.getElementById('cash-equiv-callout');
   const calloutHead = document.getElementById('cash-equiv-callout-head');
   const calloutText = document.getElementById('cash-equiv-callout-text');
-  const summaryEl = document.getElementById('cash-equiv-summary');
   const businessPanel = document.getElementById('cash-equiv-business-waterfall');
 
   // ── Mode-driven UI visibility ──
@@ -20042,9 +20039,6 @@ function renderCashEquivalent() {
         `dividends pay corporation tax instead of NI layers, and typically extract more efficiently at this income level.`;
     }
 
-    if (summaryEl) summaryEl.textContent = target > 0
-      ? `£${fmtNum(target, 0)} net needs £${fmtNum(revenueR, 0)} revenue (salary)`
-      : 'Net target → business revenue needed';
     return;
   }
 
@@ -20128,9 +20122,6 @@ function renderCashEquivalent() {
         `for owner-managers; switch to Salary to compare.`;
     }
 
-    if (summaryEl) summaryEl.textContent = target > 0
-      ? `£${fmtNum(target, 0)} net needs £${fmtNum(revenueR, 0)} revenue (dividend)`
-      : 'Net target → business revenue needed';
     return;
   }
 }
