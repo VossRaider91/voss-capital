@@ -4547,64 +4547,70 @@ input[type="date"].cd-field {
 .cd-bank-name.cd-hsbc { color: #FF8585; }
 .cd-bank-name.cd-santander { color: #FFC97A; }
 .cd-bank-name.cd-nationwide { color: #6AB2FF; }
-.cd-bank-since {
-  font-size: 18px;
+
+/* ════ VARIANT C tile structure ════
+   Top section: big Days Ago number + sub-line with "Days Ago" and last
+   deposit date stacked.
+   Bottom section: temperature-coloured 12-month total + Last 12 Months
+   percentage label + headroom remaining in matching temperature.
+   No all-time total. No deposit count. Every line drives a decision. */
+.vc-since {
+  font-size: 22px;
   font-weight: 700;
   color: #fff;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
 }
-.cd-bank-since.cd-never {
+.vc-since-never {
   font-size: 14px;
   color: var(--muted2);
   font-style: italic;
   font-weight: 500;
+  line-height: 1;
 }
-.cd-bank-since-sub {
+.vc-since-sub {
   font-size: 9px;
   color: var(--muted);
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.35;
 }
 .cd-bank-divider {
   height: 1px;
   background: rgba(255,255,255,0.10);
-  margin: 8px 4px;
+  margin: 10px 4px;
 }
-.cd-bank-total {
-  font-size: 13px;
+.vc-12m-val {
+  font-size: 18px;
   font-weight: 700;
-  color: var(--green);
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 8px rgba(48,209,88,0.20);
+  letter-spacing: -0.3px;
+  line-height: 1;
 }
-.cd-bank-total.cd-zero {
-  color: var(--muted2);
-  text-shadow: none;
+.vc-12m-label {
+  font-size: 8px;
   font-weight: 600;
-}
-.cd-bank-meta {
-  font-size: 9px;
-  color: var(--muted2);
-  margin-top: 2px;
-}
-.cd-bank-last {
-  font-size: 8px;
-  color: var(--muted2);
-  margin-top: 4px;
-  letter-spacing: 0.2px;
-}
-/* 12-month rolling figure on each bank tile — sits below cd-bank-last,
-   tinted with a subtle amber to signal it's the rolling-window line
-   that matters against the UK bank cash deposit limits (~£5k/12m). */
-.cd-bank-12m {
-  font-size: 8px;
   color: rgba(255,179,64,0.65);
-  margin-top: 3px;
   letter-spacing: 0.3px;
+  margin-top: 3px;
+}
+.vc-headroom {
+  font-size: 10px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  margin-top: 6px;
+  letter-spacing: -0.2px;
 }
+
+/* Temperature scale used by the 12m value and the headroom line.
+   The class is computed in JS by _cdTempClass against the £5,000
+   soft ceiling. Five-stop gradient from cool green at low fill to
+   red danger at or above the ceiling. */
+.temp-cool   { color: #30D158; text-shadow: 0 0 12px rgba(48,209,88,0.20); }
+.temp-mid    { color: #D4D158; text-shadow: 0 0 12px rgba(212,209,88,0.22); }
+.temp-warm   { color: #FFB340; text-shadow: 0 0 12px rgba(255,179,64,0.30); }
+.temp-hot    { color: #FF8A3D; text-shadow: 0 0 14px rgba(255,138,61,0.38); }
+.temp-danger { color: #FF453A; text-shadow: 0 0 16px rgba(255,69,58,0.45); }
 
 /* Amber nudge callout below the rotation strip */
 .cd-nudge {
@@ -9709,8 +9715,8 @@ body.modal-active .container > footer {
 
           <div class="cd-section-divider"></div>
           <div class="cd-history-head">
-            <span class="cd-history-title">Recent deposits</span>
-            <span class="cd-history-meta" id="cd-history-meta">Newest first</span>
+            <span class="cd-history-title">Recent Deposits</span>
+            <span class="cd-history-meta" id="cd-history-meta">Newest First</span>
           </div>
           <div id="cd-history-rows"></div>
 
@@ -20270,34 +20276,73 @@ function _cdComputeNextBank(stats) {
   return candidates[0];
 }
 
+// Map the 12-month figure against the £5,000 soft ceiling to a
+// temperature CSS class for both the headline value and the headroom
+// line. Five bands:
+//   £0-£2,000   (0-40%)   = cool   (green, plenty of headroom)
+//   £2k-£3.25k  (40-65%)  = mid    (yellow-green, used half)
+//   £3.25k-£4k  (65-80%)  = warm   (amber, real attention)
+//   £4k-£4.75k  (80-95%)  = hot    (orange, near ceiling)
+//   £4.75k+     (95-100%+) = danger (red, at or over ceiling)
+const CD_CEILING = 5000;
+function _cdTempClass(last12mTotal) {
+  const pct = (last12mTotal / CD_CEILING) * 100;
+  if (pct < 40) return 'temp-cool';
+  if (pct < 65) return 'temp-mid';
+  if (pct < 80) return 'temp-warm';
+  if (pct < 95) return 'temp-hot';
+  return 'temp-danger';
+}
+
 // Build the rotation strip HTML for the three bank tiles.
+// Variant C layout: Bank name → big Days Ago number → "Days Ago" sub
+// + "Last: date" → divider → temperature-coloured 12-month total →
+// "Last 12 Months · X%" amber label → "£X Headroom" matching temperature.
+// No all-time total. No deposit count. Decision-pure layout — every
+// line on the tile drives an actual decision about whether to deposit
+// here.
 function _cdRenderRotationStrip(stats, nextBank) {
   const tile = (bank) => {
     const s = stats[bank];
     const isNext = (bank === nextBank);
     const colourClass = 'cd-' + bank.toLowerCase();
+
+    // Top section: days-ago headline with last-date underneath
     const sinceMain = s.lastDaysAgo === null
-      ? `<div class="cd-bank-since cd-never">Never</div><div class="cd-bank-since-sub">used yet</div>`
-      : `<div class="cd-bank-since">${s.lastDaysAgo}</div><div class="cd-bank-since-sub">${s.lastDaysAgo === 1 ? 'day' : 'days'} ago</div>`;
-    // Bottom of tile: all-time total + count + last-date, then the
-    // 12-month rolling total on its own line. The 12m line is hidden
-    // when count is zero (would duplicate the "No deposits" message)
-    // and also hidden when count > 0 but last12mCount is 0 (e.g. the
-    // last deposit was over a year ago and nothing more recent — rare
-    // edge case, but worth handling so the line doesn't read "£0 in
-    // last 12m" alongside a non-zero all-time total).
-    const last12mLine = (s.count > 0 && s.last12mCount > 0)
-      ? `<div class="cd-bank-12m">12 Months: £${fmtNum(s.last12mTotal, 0)}</div>`
-      : '';
-    const totalLine = s.count === 0
-      ? `<div class="cd-bank-total cd-zero">£0</div><div class="cd-bank-meta">No deposits</div>`
-      : `<div class="cd-bank-total">£${fmtNum(s.total, 0)}</div><div class="cd-bank-meta">${s.count} deposit${s.count === 1 ? '' : 's'}</div>${s.lastDate ? `<div class="cd-bank-last">Last: ${_cdFmtDate(s.lastDate)}</div>` : ''}${last12mLine}`;
+      ? `<div class="vc-since-never">Never</div><div class="vc-since-sub">Used Yet</div>`
+      : `<div class="vc-since">${s.lastDaysAgo}</div><div class="vc-since-sub">Days Ago<br>Last: ${_cdFmtDate(s.lastDate)}</div>`;
+
+    // Bottom section: 12m total + percentage + headroom. Hidden when
+    // bank has never been used (would all read £0/0%/£5,000 which is
+    // misleading — the bank hasn't actively used any headroom, the
+    // figures are just defaults).
+    let bottomSection = '';
+    if (s.lastDaysAgo !== null) {
+      const temp = _cdTempClass(s.last12mTotal);
+      const pct = Math.round((s.last12mTotal / CD_CEILING) * 100);
+      const headroom = Math.max(0, CD_CEILING - s.last12mTotal);
+      bottomSection = `
+        <div class="cd-bank-divider"></div>
+        <div class="vc-12m-val ${temp}">£${fmtNum(s.last12mTotal, 0)}</div>
+        <div class="vc-12m-label">Last 12 Months · ${pct}%</div>
+        <div class="vc-headroom ${temp}">£${fmtNum(headroom, 0)} Headroom</div>
+      `;
+    } else {
+      // Never-used: show the full £5k headroom in cool green so the
+      // tile still has a bottom section but messaged appropriately.
+      bottomSection = `
+        <div class="cd-bank-divider"></div>
+        <div class="vc-12m-val temp-cool">£0</div>
+        <div class="vc-12m-label">Last 12 Months · 0%</div>
+        <div class="vc-headroom temp-cool">£5,000 Headroom</div>
+      `;
+    }
+
     return `<div class="cd-bank-tile${isNext ? ' is-next' : ''}">
       ${isNext ? '<span class="cd-next-badge">NEXT</span>' : ''}
       <div class="cd-bank-name ${colourClass}">${bank}</div>
       ${sinceMain}
-      <div class="cd-bank-divider"></div>
-      ${totalLine}
+      ${bottomSection}
     </div>`;
   };
   return `<div class="cd-rotation-grid">${CD_BANKS.map(tile).join('')}</div>`;
@@ -20391,9 +20436,9 @@ function renderCashDepositsLog() {
   const metaEl = document.getElementById('cd-history-meta');
   if (metaEl) {
     if (deposits.length === 0) {
-      metaEl.textContent = 'Newest first';
+      metaEl.textContent = 'Newest First';
     } else if (deposits.length <= 5 || window._cashDepositsShowAll) {
-      metaEl.textContent = `${deposits.length} deposit${deposits.length === 1 ? '' : 's'} · newest first`;
+      metaEl.textContent = `${deposits.length} Deposit${deposits.length === 1 ? '' : 's'} · Newest First`;
     } else {
       metaEl.textContent = `Showing 5 of ${deposits.length}`;
     }
