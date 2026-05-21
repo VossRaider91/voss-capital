@@ -4545,7 +4545,7 @@ input[type="date"].cd-field {
   margin-bottom: 6px;
 }
 .cd-bank-name.cd-hsbc { color: #FF8585; }
-.cd-bank-name.cd-santander { color: #FFA191; }
+.cd-bank-name.cd-santander { color: #FFC97A; }
 .cd-bank-name.cd-nationwide { color: #6AB2FF; }
 .cd-bank-since {
   font-size: 18px;
@@ -4594,6 +4594,17 @@ input[type="date"].cd-field {
   margin-top: 4px;
   letter-spacing: 0.2px;
 }
+/* 12-month rolling figure on each bank tile — sits below cd-bank-last,
+   tinted with a subtle amber to signal it's the rolling-window line
+   that matters against the UK bank cash deposit limits (~£5k/12m). */
+.cd-bank-12m {
+  font-size: 8px;
+  color: rgba(255,179,64,0.65);
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 
 /* Amber nudge callout below the rotation strip */
 .cd-nudge {
@@ -4611,16 +4622,25 @@ input[type="date"].cd-field {
   font-weight: 700;
 }
 
-/* Total Banked summary pill — green wash */
+/* Total Banked summary pill — green wash. Two rows: all-time total
+   at the top, last-12-months below a thin divider. Both rows are
+   flex-between (label left, value right) so the figures align. */
 .cd-total-banked {
   margin-top: 12px;
   background: rgba(48,209,88,0.06);
   border: 1px solid rgba(48,209,88,0.20);
   border-radius: 10px;
   padding: 10px 14px;
+}
+.cd-total-banked-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+}
+.cd-total-banked-divider {
+  height: 1px;
+  background: rgba(48,209,88,0.18);
+  margin: 8px 0;
 }
 .cd-total-banked-label {
   font-size: 10px;
@@ -4635,6 +4655,20 @@ input[type="date"].cd-field {
   color: var(--green);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 12px rgba(48,209,88,0.20);
+}
+/* Sub-row for the 12-month figure — smaller text, dimmer green */
+.cd-total-banked-label-sub {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+}
+.cd-total-banked-val-sub {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(48,209,88,0.80);
+  font-variant-numeric: tabular-nums;
 }
 
 /* History list */
@@ -4698,9 +4732,9 @@ input[type="date"].cd-field {
   border: 1px solid rgba(219,0,17,0.36);
 }
 .cd-bank-pill.cd-santander {
-  background: rgba(236,28,28,0.12);
-  color: #FFA191;
-  border: 1px solid rgba(236,28,28,0.28);
+  background: rgba(255,159,10,0.16);
+  color: #FFC97A;
+  border: 1px solid rgba(255,159,10,0.36);
 }
 .cd-bank-pill.cd-nationwide {
   background: rgba(0,82,164,0.22);
@@ -20160,11 +20194,30 @@ function _cdFmtDate(dateStr) {
 }
 
 // Compute per-bank totals from the deposits array. Returns an object
-// keyed by bank name with { total, count, lastDate, lastDaysAgo }.
-// Banks with no deposits get { total: 0, count: 0, lastDate: null }.
+// keyed by bank name with { total, count, lastDate, lastDaysAgo,
+// last12mTotal, last12mCount }. Banks with no deposits get all zeros.
+//
+// last12mTotal and last12mCount track the rolling 12-month window —
+// useful because UK retail banks typically apply cash deposit limits
+// on a rolling 12-month basis (HSBC ~£5k, Santander £1k/day £5k/year,
+// Nationwide ~£5k similar). The cutoff is today minus 365 days,
+// inclusive of the boundary day (a deposit dated exactly 365 days ago
+// still counts as "in" the window).
 function _cdComputeBankStats(deposits) {
   const stats = {};
-  CD_BANKS.forEach(b => { stats[b] = { total: 0, count: 0, lastDate: null, lastDaysAgo: null }; });
+  CD_BANKS.forEach(b => {
+    stats[b] = { total: 0, count: 0, lastDate: null, lastDaysAgo: null, last12mTotal: 0, last12mCount: 0 };
+  });
+
+  // Rolling 12-month cutoff: today's date minus 365 days, formatted
+  // as ISO YYYY-MM-DD so it compares correctly against deposit dates.
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  cutoff.setDate(cutoff.getDate() - 365);
+  const cutoffISO = cutoff.getFullYear() + '-' +
+    String(cutoff.getMonth() + 1).padStart(2, '0') + '-' +
+    String(cutoff.getDate()).padStart(2, '0');
+
   deposits.forEach(d => {
     if (!stats[d.bank]) return;
     const amt = parseFloat(String(d.amount).replace(/,/g, '')) || 0;
@@ -20172,6 +20225,11 @@ function _cdComputeBankStats(deposits) {
     stats[d.bank].count += 1;
     if (!stats[d.bank].lastDate || d.date > stats[d.bank].lastDate) {
       stats[d.bank].lastDate = d.date;
+    }
+    // Rolling 12-month tally — inclusive of the boundary day
+    if (d.date >= cutoffISO) {
+      stats[d.bank].last12mTotal += amt;
+      stats[d.bank].last12mCount += 1;
     }
   });
   // Days-ago is computed after totals so it uses the most-recent date
@@ -20185,24 +20243,31 @@ function _cdComputeBankStats(deposits) {
 // Rules: (1) Never-used banks always beat used banks. (2) Among
 // never-used banks, the fixed order HSBC → Santander → Nationwide
 // wins. (3) Among used banks, the one with the oldest last-deposit
-// wins; ties broken by the same fixed order.
+// wins. (4) On date ties, the bank with the FEWEST deposits wins —
+// this actively favours the under-used bank when two have been
+// quiet for the same period. (5) On both date AND count ties,
+// fall back to the fixed HSBC → Santander → Nationwide order.
 function _cdComputeNextBank(stats) {
   // First: any never-used banks?
   const neverUsed = CD_BANKS.filter(b => stats[b].lastDate === null);
   if (neverUsed.length > 0) {
     return neverUsed[0]; // Fixed order via CD_BANKS array
   }
-  // All banks used: pick the one with the oldest lastDate.
-  // CD_BANKS order acts as natural tie-break since we iterate that way.
-  let oldestBank = CD_BANKS[0];
-  let oldestDate = stats[oldestBank].lastDate;
-  CD_BANKS.forEach(b => {
-    if (stats[b].lastDate < oldestDate) {
-      oldestDate = stats[b].lastDate;
-      oldestBank = b;
+  // All banks used. Sort by (oldest date asc, then fewest count asc,
+  // then fixed bank order). The first entry wins.
+  const candidates = CD_BANKS.slice().sort((a, b) => {
+    // Primary: oldest lastDate (earlier date = smaller = wins)
+    if (stats[a].lastDate !== stats[b].lastDate) {
+      return stats[a].lastDate < stats[b].lastDate ? -1 : 1;
     }
+    // Tie on date: fewest deposits wins (smaller count = wins)
+    if (stats[a].count !== stats[b].count) {
+      return stats[a].count - stats[b].count;
+    }
+    // Tie on both: fixed CD_BANKS order wins
+    return CD_BANKS.indexOf(a) - CD_BANKS.indexOf(b);
   });
-  return oldestBank;
+  return candidates[0];
 }
 
 // Build the rotation strip HTML for the three bank tiles.
@@ -20214,9 +20279,19 @@ function _cdRenderRotationStrip(stats, nextBank) {
     const sinceMain = s.lastDaysAgo === null
       ? `<div class="cd-bank-since cd-never">Never</div><div class="cd-bank-since-sub">used yet</div>`
       : `<div class="cd-bank-since">${s.lastDaysAgo}</div><div class="cd-bank-since-sub">${s.lastDaysAgo === 1 ? 'day' : 'days'} ago</div>`;
+    // Bottom of tile: all-time total + count + last-date, then the
+    // 12-month rolling total on its own line. The 12m line is hidden
+    // when count is zero (would duplicate the "No deposits" message)
+    // and also hidden when count > 0 but last12mCount is 0 (e.g. the
+    // last deposit was over a year ago and nothing more recent — rare
+    // edge case, but worth handling so the line doesn't read "£0 in
+    // last 12m" alongside a non-zero all-time total).
+    const last12mLine = (s.count > 0 && s.last12mCount > 0)
+      ? `<div class="cd-bank-12m">12 Months: £${fmtNum(s.last12mTotal, 0)}</div>`
+      : '';
     const totalLine = s.count === 0
       ? `<div class="cd-bank-total cd-zero">£0</div><div class="cd-bank-meta">No deposits</div>`
-      : `<div class="cd-bank-total">£${fmtNum(s.total, 0)}</div><div class="cd-bank-meta">${s.count} deposit${s.count === 1 ? '' : 's'}</div>${s.lastDate ? `<div class="cd-bank-last">Last: ${_cdFmtDate(s.lastDate)}</div>` : ''}`;
+      : `<div class="cd-bank-total">£${fmtNum(s.total, 0)}</div><div class="cd-bank-meta">${s.count} deposit${s.count === 1 ? '' : 's'}</div>${s.lastDate ? `<div class="cd-bank-last">Last: ${_cdFmtDate(s.lastDate)}</div>` : ''}${last12mLine}`;
     return `<div class="cd-bank-tile${isNext ? ' is-next' : ''}">
       ${isNext ? '<span class="cd-next-badge">NEXT</span>' : ''}
       <div class="cd-bank-name ${colourClass}">${bank}</div>
@@ -20241,12 +20316,23 @@ function _cdRenderNudge(stats, nextBank, totalDeposits) {
   return `<div class="cd-nudge"><strong>${nextBank}</strong> has the oldest deposit. Deposit next here to keep the rotation even across all three banks.</div>`;
 }
 
-// Build the Total Banked pill HTML. Hidden if no deposits yet.
-function _cdRenderTotalBanked(totalAcrossAll, depositCount) {
+// Build the Total Banked pill HTML. Hidden if no deposits yet. Shows
+// two lines: all-time total at the top, last-12-months total below
+// with a thin separator. The 12m line gives Voss a quick read on his
+// rolling exposure against the typical £5k-ish cash deposit limits
+// that UK retail banks apply on a 12-month basis.
+function _cdRenderTotalBanked(totalAcrossAll, last12mAcrossAll, depositCount) {
   if (depositCount === 0) return '';
   return `<div class="cd-total-banked">
-    <span class="cd-total-banked-label">Total Banked</span>
-    <span class="cd-total-banked-val">£${fmtNum(totalAcrossAll, 0)}</span>
+    <div class="cd-total-banked-row">
+      <span class="cd-total-banked-label">Total Banked</span>
+      <span class="cd-total-banked-val">£${fmtNum(totalAcrossAll, 0)}</span>
+    </div>
+    <div class="cd-total-banked-divider"></div>
+    <div class="cd-total-banked-row cd-total-banked-12m">
+      <span class="cd-total-banked-label-sub">Last 12 months</span>
+      <span class="cd-total-banked-val-sub">£${fmtNum(last12mAcrossAll, 0)}</span>
+    </div>
   </div>`;
 }
 
@@ -20287,6 +20373,7 @@ function renderCashDepositsLog() {
   const stats = _cdComputeBankStats(deposits);
   const nextBank = _cdComputeNextBank(stats);
   const totalAcrossAll = CD_BANKS.reduce((sum, b) => sum + stats[b].total, 0);
+  const last12mAcrossAll = CD_BANKS.reduce((sum, b) => sum + stats[b].last12mTotal, 0);
 
   // Rotation strip
   const stripEl = document.getElementById('cd-rotation-strip');
@@ -20296,9 +20383,9 @@ function renderCashDepositsLog() {
   const nudgeEl = document.getElementById('cd-nudge');
   if (nudgeEl) nudgeEl.innerHTML = _cdRenderNudge(stats, nextBank, deposits.length);
 
-  // Total banked
+  // Total banked — two-line layout (all-time + last 12 months)
   const totalEl = document.getElementById('cd-total-banked');
-  if (totalEl) totalEl.innerHTML = _cdRenderTotalBanked(totalAcrossAll, deposits.length);
+  if (totalEl) totalEl.innerHTML = _cdRenderTotalBanked(totalAcrossAll, last12mAcrossAll, deposits.length);
 
   // History meta + rows
   const metaEl = document.getElementById('cd-history-meta');
