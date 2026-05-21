@@ -20213,14 +20213,31 @@ function _cdDaysAgo(dateStr) {
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
 
-// Format an ISO date YYYY-MM-DD into a compact "9 May 26" form for the
-// rotation tile last-line and the history row date.
+// Format an ISO date YYYY-MM-DD into a compact "9 May 26" form. Used
+// by the rotation tile's "Last:" line and the reset countdown's
+// "Resets On" line where every pixel matters.
 function _cdFmtDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr + 'T00:00:00');
   if (isNaN(d.getTime())) return dateStr;
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${d.getDate()} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+}
+
+// Format an ISO date with a three-letter day-of-week prefix:
+// "Thu 21 May 26". Used by the Cash Deposits Log history rows so
+// each entry tells you not just when the deposit happened but what
+// day of the week — useful for spotting patterns like "always on
+// Fridays" or for matching against a paper diary. Kept separate
+// from _cdFmtDate because the tile and reset line don't have room
+// for the extra prefix.
+function _cdFmtDateWithDay(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return dateStr;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
 }
 
 // Compute per-bank totals from the deposits array. Returns an object
@@ -20502,7 +20519,7 @@ function _cdRenderHistoryRows(deposits) {
     return `<div class="cd-row" id="cd-row-${d.id}">
       <div class="cd-row-left">
         <span class="cd-bank-pill ${colourClass}">${d.bank}</span>
-        <span class="cd-row-date">${_cdFmtDate(d.date)}</span>
+        <span class="cd-row-date">${_cdFmtDateWithDay(d.date)}</span>
       </div>
       <div class="cd-row-right">
         <span class="cd-row-amt">+£${fmtNum(amt, 0)}</span>
@@ -25649,6 +25666,36 @@ function _bgtAdvanceMonthLabel(label) {
   return parsed.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
+// Format an audit log date string with a three-letter day-of-week prefix.
+// Audit dates are stored as "18 May 19:49" (day month time, no year), so we
+// have to derive the year from context:
+//   - For current-month entries, the year is implicitly "this calendar year"
+//   - For archived months, the caller passes monthLabelHint like "April 2026"
+//     and we parse the year from that
+// Returns "Mon 18 May 19:49" on success, or the original string unchanged
+// if parsing fails (so malformed legacy entries display as-is rather than
+// breaking the audit log).
+function _bgtFmtAuditDateWithDay(dateStr, monthLabelHint) {
+  if (!dateStr) return dateStr;
+  const parts = String(dateStr).split(' ');
+  if (parts.length < 2) return dateStr;
+  const day = parseInt(parts[0], 10);
+  const monthsByName = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  const month = monthsByName[parts[1]];
+  if (!isFinite(day) || month === undefined) return dateStr;
+  // Resolve the year. Prefer the explicit hint if provided.
+  let year;
+  if (monthLabelHint) {
+    const yearMatch = String(monthLabelHint).match(/(\d{4})/);
+    if (yearMatch) year = parseInt(yearMatch[1], 10);
+  }
+  if (!year) year = new Date().getFullYear();
+  const d = new Date(year, month, day);
+  if (isNaN(d.getTime())) return dateStr;
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return `${dayNames[d.getDay()]} ${dateStr}`;
+}
+
 // ── State ──────────────────────────────────────────────────
 function bgtLoad() {
   const state = lsGet(LS.BUDGET, {
@@ -26941,7 +26988,7 @@ function _renderBgtAudit(state) {
       <div class="bgt-audit-row" id="bgt-audit-row-${origIdx}">
         <span style="color:var(--white);font-weight:600">${_esc(e.category)}${e.note ? `<span style="display:block;font-size:9px;color:var(--muted);font-weight:400;margin-top:1px">${_esc(e.note)}</span>` : ''}</span>
         <span style="color:var(--gold);font-weight:600">+£${fmtNum(e.amount,2)}</span>
-        <span style="color:var(--muted);font-size:10px">${e.date}</span>
+        <span style="color:var(--muted);font-size:10px">${_bgtFmtAuditDateWithDay(e.date, state.activeMonth)}</span>
         <button class="bgt-edit-btn" onclick="bgtToggleAuditEdit(${origIdx})" title="Edit this transaction">✎</button>
         <button class="bgt-del-btn" onclick="bgtDeleteAuditEntry(${origIdx})" title="Remove">✕</button>
       </div>
@@ -27391,7 +27438,7 @@ function _renderBgtHistAudit(rec) {
     return `<div class="bgt-audit-row">
       <span style="color:var(--white);font-weight:600">${_esc(e.category)}${e.note ? `<span style="display:block;font-size:9px;color:var(--muted);font-weight:400;margin-top:1px">${_esc(e.note)}</span>` : ''}</span>
       <span style="color:var(--amber);font-weight:600">+£${fmtNum(e.amount,2)}</span>
-      <span style="color:var(--muted);font-size:10px">${e.date}</span>
+      <span style="color:var(--muted);font-size:10px">${_bgtFmtAuditDateWithDay(e.date, rec.month)}</span>
       <button class="bgt-del-btn" onclick="bgtHistDeleteAuditEntry('${monthId}',${origIdx})" title="Remove this transaction">✕</button>
     </div>`;
   }).join('');
