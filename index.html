@@ -25379,8 +25379,11 @@ function _renderBgtMainTable(state) {
         ? (sd > 0 ? `+£${fmtNum(Math.abs(sd),2)}` : `-£${fmtNum(Math.abs(sd),2)}`)
         : (sd > 0 ? `-£${fmtNum(Math.abs(sd),2)} Under` : `+£${fmtNum(Math.abs(sd),2)} Over`));
 
-    // Confirmation count — rows marked fully recurring (green tick)
-    const confirmedCount = items.filter(n => !!recurring[n]).length;
+    // Filled count — rows where an actual figure has been entered (or
+    // auto-filled from the Tax page / Income Tax Calculator). Says
+    // "X/N filled" so the user can tell at a glance whether the section
+    // has been reconciled for the month. Rows with actual = 0 don't count.
+    const filledCount = items.filter(n => (parseFloat(actual[n]) || 0) > 0).length;
 
     // Progress bar — actual vs planned within the section
     let barPlanWidth = 0, barActualWidth = 0, barActualColor = 'rgba(255,255,255,0.32)';
@@ -25456,7 +25459,7 @@ function _renderBgtMainTable(state) {
             <span class="bgt-section-pill">${label}</span>
             <span class="bgt-section-card-headline">£${fmtNum(sa,2)}</span>
             <span class="bgt-section-card-drift" style="color:${driftCls}">${driftStr}</span>
-            <span class="bgt-section-card-confirm">${confirmedCount}/${items.length} Confirmed</span>
+            <span class="bgt-section-card-confirm">${filledCount}/${items.length} Filled</span>
           </div>
           <span class="bgt-section-card-chevron" aria-hidden="true">⌄</span>
         </div>
