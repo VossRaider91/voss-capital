@@ -9240,19 +9240,12 @@ body.modal-active .container > footer {
     </div>
     <div class="collapsible-body" style="margin-top:16px">
 
-      <div class="stat-sub" style="margin-bottom:16px">Enter the amount you want in your pocket and see what it costs to put it there. Switch between personal-income view and the full business extraction stack to compare.</div>
+      <div class="stat-sub" style="margin-bottom:16px">Enter the amount you want in your pocket and see what it costs your business to put it there. Switch between salary and dividend extraction to compare.</div>
 
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
-        <div class="seg-toggle seg-toggle-compact" role="tablist" aria-label="Cash equivalent mode">
-          <button type="button" class="seg-option active" id="cash-equiv-mode-personal" onclick="setCashEquivMode('personal')"><span>Personal Income</span></button>
-          <button type="button" class="seg-option" id="cash-equiv-mode-business" onclick="setCashEquivMode('business')"><span>Through My Business</span></button>
-        </div>
-        <div id="cash-equiv-extract-row" style="display:none;align-items:center;gap:10px">
-          <span class="input-label" style="margin-bottom:0">Extract as</span>
-          <select class="num-input" id="cash-equiv-extract-as" style="text-align:left;cursor:pointer;width:auto;min-height:36px;padding:8px 12px;font-size:12px" onchange="renderCashEquivalent(); try{saveTaxSettings();}catch(e){}">
-            <option value="salary">Salary (PAYE)</option>
-            <option value="dividend">Dividend</option>
-          </select>
+        <div class="seg-toggle seg-toggle-compact" role="tablist" aria-label="Cash equivalent extraction method">
+          <button type="button" class="seg-option active" id="cash-equiv-mode-salary" onclick="setCashEquivMode('salary')"><span>Salary</span></button>
+          <button type="button" class="seg-option" id="cash-equiv-mode-dividend" onclick="setCashEquivMode('dividend')"><span>Dividend</span></button>
         </div>
       </div>
 
@@ -9277,31 +9270,7 @@ body.modal-active .container > footer {
         </div>
       </div>
 
-      <div class="plan-card mb16" id="cash-equiv-personal-breakdown">
-        <div class="plan-card-header">
-          <span class="plan-card-ticker">Tax Breakdown on That Salary</span>
-          <span class="plan-card-context">Income tax, NI, and what you keep</span>
-        </div>
-        <div class="plan-card-metrics cols-3">
-          <div class="plan-card-metric">
-            <div class="plan-card-metric-label">Income Tax</div>
-            <div class="plan-card-metric-value red" id="cash-equiv-inctax" data-balance-sensitive>£0</div>
-            <div class="plan-card-metric-label" id="cash-equiv-inctax-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
-          </div>
-          <div class="plan-card-metric">
-            <div class="plan-card-metric-label">National Insurance</div>
-            <div class="plan-card-metric-value red" id="cash-equiv-ni" data-balance-sensitive>£0</div>
-            <div class="plan-card-metric-label" id="cash-equiv-ni-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
-          </div>
-          <div class="plan-card-metric">
-            <div class="plan-card-metric-label">You Net</div>
-            <div class="plan-card-metric-value green" id="cash-equiv-net" data-balance-sensitive>£0</div>
-            <div class="plan-card-metric-label" id="cash-equiv-net-sub" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="plan-card mb16" id="cash-equiv-business-waterfall" style="display:none">
+      <div class="plan-card mb16" id="cash-equiv-business-waterfall">
         <div class="plan-card-header">
           <span class="plan-card-ticker">Extraction Waterfall</span>
           <span class="plan-card-context">Each layer of tax on the way to your wallet</span>
@@ -19428,8 +19397,7 @@ function renderCashEquivalent() {
   const bonus     = stripComma('inc-bonus');
   const baselineGross = paye + dividends + bonus;
   const target = stripComma('cash-equiv-target');
-  const mode = window._cashEquivMode || 'personal';
-  const extractAs = document.getElementById('cash-equiv-extract-as')?.value || 'salary';
+  const mode = window._cashEquivMode || 'salary';
 
   // Marginal income tax rate at gross income G — accounts for PA taper.
   const incTaxMarginal = (G) => {
@@ -19523,97 +19491,25 @@ function renderCashEquivalent() {
   const calloutHead = document.getElementById('cash-equiv-callout-head');
   const calloutText = document.getElementById('cash-equiv-callout-text');
   const summaryEl = document.getElementById('cash-equiv-summary');
-  const personalPanel = document.getElementById('cash-equiv-personal-breakdown');
   const businessPanel = document.getElementById('cash-equiv-business-waterfall');
-  const extractRow = document.getElementById('cash-equiv-extract-row');
 
   // ── Mode-driven UI visibility ──
-  if (mode === 'business') {
-    if (personalPanel) personalPanel.style.display = 'none';
-    if (businessPanel) businessPanel.style.display = '';
-    if (extractRow) extractRow.style.display = 'flex';
-  } else {
-    if (personalPanel) personalPanel.style.display = '';
-    if (businessPanel) businessPanel.style.display = 'none';
-    if (extractRow) extractRow.style.display = 'none';
-  }
+  // Both routes are business extractions now. The waterfall panel is always
+  // shown; the contents differ based on Salary vs Dividend route. The legacy
+  // personal-breakdown panel is hidden because the personal mode was removed
+  // when the toggle simplified from Personal/Business to Salary/Dividend.
+  if (businessPanel) businessPanel.style.display = '';
+  const personalPanel = document.getElementById('cash-equiv-personal-breakdown');
+  if (personalPanel) personalPanel.style.display = 'none';
 
   // ══════════════════════════════════════════════════════
-  // PERSONAL MODE — exactly the original behaviour
-  // ══════════════════════════════════════════════════════
-  if (mode === 'personal') {
-    const p = walkSalary(target, baselineGross, paye);
-    const grossUplift = Math.round(p.gross);
-    const incTax = Math.round(p.tax);
-    const ni = Math.round(p.ni);
-    const net = Math.round(p.net);
-
-    if (headTitleEl) headTitleEl.textContent = 'Equivalent Gross Salary';
-    grossEl.textContent = '£' + fmtNum(grossUplift, 0);
-    if (ctxEl) ctxEl.textContent = baselineGross > 0
-      ? `On top of declared £${fmtNum(baselineGross, 0)}`
-      : 'No declared income set — enter PAYE / dividends / bonus below';
-    if (explainerEl) explainerEl.textContent = target > 0
-      ? `You'd need to earn this much extra to net £${fmtNum(target, 0)}`
-      : 'Enter a net cash amount above to see the equivalent gross salary';
-
-    document.getElementById('cash-equiv-inctax').textContent = '£' + fmtNum(incTax, 0);
-    document.getElementById('cash-equiv-ni').textContent     = '£' + fmtNum(ni, 0);
-    document.getElementById('cash-equiv-net').textContent    = '£' + fmtNum(net, 0);
-    const effITPct = grossUplift > 0 ? (incTax / grossUplift * 100) : 0;
-    const effNIPct = grossUplift > 0 ? (ni / grossUplift * 100) : 0;
-    const effNetPct = grossUplift > 0 ? (net / grossUplift * 100) : 0;
-    document.getElementById('cash-equiv-inctax-sub').textContent = `${effITPct.toFixed(1)}% effective`;
-    document.getElementById('cash-equiv-ni-sub').textContent     = `${effNIPct.toFixed(1)}% effective`;
-    document.getElementById('cash-equiv-net-sub').textContent    = `${effNetPct.toFixed(1)}% kept`;
-
-    const discountPct = grossUplift > 0 ? ((grossUplift - net) / grossUplift * 100) : 0;
-    if (discountEl) discountEl.textContent = discountPct.toFixed(1) + '%';
-    if (discountCtxEl) discountCtxEl.textContent = 'Untaxed cash vs declared earnings';
-    if (discountSubEl) {
-      discountSubEl.textContent = target > 0
-        ? `Untaxed cash effectively gives you this discount versus spending declared earnings. A £${fmtNum(target, 0)} outlay costs £${fmtNum(target, 0)} in cash, or £${fmtNum(grossUplift, 0)} of gross salary to net the same.`
-        : 'Enter a net cash amount above to see the effective discount';
-    }
-
-    if (callout && calloutText && calloutHead) {
-      calloutHead.textContent = 'Why the gap is so wide';
-      if (baselineGross >= PA_TAPER_START && baselineGross < PA_TAPER_END) {
-        callout.style.display = '';
-        calloutText.textContent =
-          `At £${fmtNum(baselineGross, 0)} declared income you sit in the 60% income tax taper band ` +
-          `(40% tax + 40% on the £0.50 of personal allowance you lose per £1 earned). Add 2% NI and ` +
-          `your marginal rate is 62%, meaning you keep only 38p of each extra £1 earned. That's why ` +
-          `netting £${fmtNum(target, 0)} needs £${fmtNum(grossUplift, 0)} of gross salary.`;
-      } else if (baselineGross >= PA_TAPER_END) {
-        callout.style.display = '';
-        calloutText.textContent =
-          `At £${fmtNum(baselineGross, 0)} declared income you're in additional rate (45% income tax + 2% NI = 47% marginal). ` +
-          `You keep 53p of each extra £1 earned.`;
-      } else if (baselineGross >= BR_LIMIT) {
-        callout.style.display = '';
-        calloutText.textContent =
-          `At £${fmtNum(baselineGross, 0)} declared income you're in higher rate (40% income tax + 2% NI = 42% marginal). ` +
-          `You keep 58p of each extra £1 earned.`;
-      } else {
-        callout.style.display = 'none';
-      }
-    }
-
-    if (summaryEl) summaryEl.textContent = target > 0
-      ? `£${fmtNum(target, 0)} net needs £${fmtNum(grossUplift, 0)} gross`
-      : 'Net target → gross salary needed';
-    return;
-  }
-
-  // ══════════════════════════════════════════════════════
-  // BUSINESS MODE — salary route
+  // SALARY ROUTE — extract from the business as PAYE salary
   // Chain: revenue → VAT → (salary + employer NI deducted as expense) →
   // income tax → employee NI → net. Salary and employer NI are deductible
   // business expenses so no corporation tax applies on the payroll cost.
   // If salary is the only outflow, taxable profit is zero and CT is zero.
   // ══════════════════════════════════════════════════════
-  if (mode === 'business' && extractAs === 'salary') {
+  if (mode === 'salary') {
     const personal = walkSalary(target, baselineGross, paye);
     const grossSalary = personal.gross;
     const erNI = Math.max(0, (grossSalary - ER_NI_THRESH) * ER_NI_RATE);
@@ -19692,7 +19588,7 @@ function renderCashEquivalent() {
       calloutText.textContent =
         `Salary is a deductible business expense so it bypasses corporation tax, but it still gets bitten four times: ` +
         `VAT on the way in (20%), employer NI on the salary (15% above £5k), your personal income tax ` +
-        `(60% in the taper band), and your employee NI (2% above £50,270). Switch "Extract as" to Dividend to compare — ` +
+        `(60% in the taper band), and your employee NI (2% above £50,270). Switch to Dividend to compare — ` +
         `dividends pay corporation tax instead of NI layers, and typically extract more efficiently at this income level.`;
     }
 
@@ -19703,11 +19599,11 @@ function renderCashEquivalent() {
   }
 
   // ══════════════════════════════════════════════════════
-  // BUSINESS MODE — dividend route
+  // DIVIDEND ROUTE — extract from the business as a dividend
   // Chain: revenue → VAT → corp tax → dividend → dividend tax → net.
   // No employer or employee NI layers.
   // ══════════════════════════════════════════════════════
-  if (mode === 'business' && extractAs === 'dividend') {
+  if (mode === 'dividend') {
     const dividend = walkDividend(target, baselineGross);
     const grossDividend = dividend.gross;
     const profitNeeded = grossDividend;
@@ -19779,7 +19675,7 @@ function renderCashEquivalent() {
         `Dividends skip both NI layers (employer's and employee's) but still get bitten by VAT, ` +
         `corporation tax, and dividend tax. At £${fmtNum(baselineGross,0)} declared income your dividend tax ` +
         `is 33.75% on the higher-rate portion and 39.35% above £125,140. Often the cheaper extraction route ` +
-        `for owner-managers; compare against Salary using the dropdown above.`;
+        `for owner-managers; switch to Salary to compare.`;
     }
 
     if (summaryEl) summaryEl.textContent = target > 0
@@ -19792,12 +19688,16 @@ function renderCashEquivalent() {
 // Cash Equivalent mode switcher — toggles the segmented control and re-runs
 // the renderer. Stored on window so it survives across collapse/expand, and
 // persisted to LS.TAX so it survives page close + syncs cross-device.
+// Modes are 'salary' or 'dividend'. Legacy values from earlier versions
+// ('personal' / 'business') are migrated on read: see loadTaxSettings.
 function setCashEquivMode(m) {
+  // Defensive: normalise any unknown value to salary
+  if (m !== 'salary' && m !== 'dividend') m = 'salary';
   window._cashEquivMode = m;
-  const pBtn = document.getElementById('cash-equiv-mode-personal');
-  const bBtn = document.getElementById('cash-equiv-mode-business');
-  if (pBtn) pBtn.classList.toggle('active', m === 'personal');
-  if (bBtn) bBtn.classList.toggle('active', m === 'business');
+  const salaryBtn = document.getElementById('cash-equiv-mode-salary');
+  const divBtn    = document.getElementById('cash-equiv-mode-dividend');
+  if (salaryBtn) salaryBtn.classList.toggle('active', m === 'salary');
+  if (divBtn)    divBtn.classList.toggle('active', m === 'dividend');
   renderCashEquivalent();
   try { saveTaxSettings(); } catch (e) {}
 }
@@ -19858,8 +19758,7 @@ function saveTaxSettings() {
     // sync across devices via the standard Supabase pipeline (LS.TAX is in
     // REQUIRED_BACKUP_KEYS).
     cashEquivTarget:    stripComma('cash-equiv-target') || 0,
-    cashEquivMode:      (window._cashEquivMode || 'personal'),
-    cashEquivExtractAs: (document.getElementById('cash-equiv-extract-as')?.value || 'salary'),
+    cashEquivMode:      (window._cashEquivMode || 'salary'),
   });
   // Cascade to every derived view — Analyse uses tax settings for its CGT
   // breakdown, Sell Calculator uses allowances, ISA tracker uses both.
@@ -19899,12 +19798,15 @@ function loadTaxSettings() {
   if (cashEquivInput && s.cashEquivTarget !== undefined && s.cashEquivTarget > 0) {
     cashEquivInput.value = s.cashEquivTarget;
   }
-  const cashEquivExtractEl = document.getElementById('cash-equiv-extract-as');
-  if (cashEquivExtractEl && s.cashEquivExtractAs) {
-    cashEquivExtractEl.value = s.cashEquivExtractAs;
-  }
   if (s.cashEquivMode) {
-    window._cashEquivMode = s.cashEquivMode;
+    // Migrate legacy values from earlier versions: 'personal' had no
+    // business stack and was a pure salary tax view, so it best maps to
+    // 'salary'. 'business' used to need a separate dropdown — fall back to
+    // 'salary' since that was the dropdown's default. Any unknown value
+    // also falls through to 'salary'.
+    let m = s.cashEquivMode;
+    if (m !== 'salary' && m !== 'dividend') m = 'salary';
+    window._cashEquivMode = m;
   }
 
   // Wire listeners ONCE — guarded by a flag because this function is also
@@ -19937,7 +19839,7 @@ function loadTaxSettings() {
   updateIncomeTotal();
   // Apply the restored mode state. Done after updateIncomeTotal so the
   // renderer fires once with the right mode set.
-  try { setCashEquivMode(window._cashEquivMode || 'personal'); } catch (e) {}
+  try { setCashEquivMode(window._cashEquivMode || 'salary'); } catch (e) {}
 }
 
 // ════════════════════════════════════════════════════════
