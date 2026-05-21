@@ -19443,10 +19443,14 @@ function renderCashEquivalent() {
     return AR;
   };
 
-  // Marginal NI rate at gross G — employee class 1
-  const niMarginal = (G) => {
-    if (G < NI_LO) return 0;
-    if (G < NI_UP) return NI_MAIN;
+  // Marginal NI rate at cumulative SALARY G (PAYE only — dividends don't
+  // attract employee NI). Caller must pass the running salary total, not
+  // the running total gross. This fix prevents under-charging NI when the
+  // baseline is mostly dividends (which would otherwise look "above the
+  // £50,270 NI ceiling" but actually leave the 8% band fully unconsumed).
+  const niMarginal = (salaryG) => {
+    if (salaryG < NI_LO) return 0;
+    if (salaryG < NI_UP) return NI_MAIN;
     return NI_HI;
   };
 
@@ -19461,13 +19465,17 @@ function renderCashEquivalent() {
 
   // Common: walk gross salary forward until net (after income tax + NI)
   // equals target. Returns {gross, net, tax, ni} for the uplift only.
-  const walkSalary = (tgt, baseline) => {
+  // Takes baselineGrossArg (total declared, drives income tax bands) and
+  // baselinePayeArg (PAYE only, drives NI bands). They're different when
+  // the baseline includes dividend income — see niMarginal comment above.
+  const walkSalary = (tgt, baselineGrossArg, baselinePayeArg) => {
     let cg=0, cn=0, ct=0, cni=0;
     const MAX = 5_000_000;
     while (cn < tgt && cg < MAX) {
-      const G = baseline + cg;
+      const G = baselineGrossArg + cg;          // total gross for income tax bands
+      const salaryG = baselinePayeArg + cg;     // salary only for NI bands
       const it = incTaxMarginal(G);
-      const ni = niMarginal(G);
+      const ni = niMarginal(salaryG);
       const netR = 1 - it - ni;
       if (netR <= 0) break;
       const rem = tgt - cn;
@@ -19534,7 +19542,7 @@ function renderCashEquivalent() {
   // PERSONAL MODE — exactly the original behaviour
   // ══════════════════════════════════════════════════════
   if (mode === 'personal') {
-    const p = walkSalary(target, baselineGross);
+    const p = walkSalary(target, baselineGross, paye);
     const grossUplift = Math.round(p.gross);
     const incTax = Math.round(p.tax);
     const ni = Math.round(p.ni);
@@ -19600,16 +19608,20 @@ function renderCashEquivalent() {
 
   // ══════════════════════════════════════════════════════
   // BUSINESS MODE — salary route
-  // Chain: revenue → VAT → corp tax → employer NI → gross salary → income
-  // tax → employee NI → net.
+  // Chain: revenue → VAT → (salary + employer NI deducted as expense) →
+  // income tax → employee NI → net. Salary and employer NI are deductible
+  // business expenses so no corporation tax applies on the payroll cost.
+  // If salary is the only outflow, taxable profit is zero and CT is zero.
   // ══════════════════════════════════════════════════════
   if (mode === 'business' && extractAs === 'salary') {
-    const personal = walkSalary(target, baselineGross);
+    const personal = walkSalary(target, baselineGross, paye);
     const grossSalary = personal.gross;
     const erNI = Math.max(0, (grossSalary - ER_NI_THRESH) * ER_NI_RATE);
-    const profitNeeded = grossSalary + erNI;
-    const netBusiness = profitNeeded / (1 - CT_RATE);
-    const corpTax = netBusiness - profitNeeded;
+    // Total payroll cost — salary + employer NI. Both fully deductible so
+    // the net business income required equals the payroll cost exactly,
+    // with no corporation tax layer between them.
+    const payrollCost = grossSalary + erNI;
+    const netBusiness = payrollCost;
     const revenue = netBusiness * (1 + VAT_RATE);
     const vat = revenue - netBusiness;
 
@@ -19617,7 +19629,6 @@ function renderCashEquivalent() {
     const vatR = Math.round(vat);
     const netBR = Math.round(netBusiness);
     const erNIR = Math.round(erNI);
-    const corpR = Math.round(corpTax);
     const grossR = Math.round(grossSalary);
     const itR = Math.round(personal.tax);
     const eeNIR = Math.round(personal.ni);
@@ -19647,10 +19658,6 @@ function renderCashEquivalent() {
       <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
         <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Employer NI (15% on salary above £5k)</span>
         <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(erNIR,0)}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:baseline">
-        <span style="color:rgba(255,255,255,0.55);padding-left:14px">− Corporation tax (25% on profit)</span>
-        <span style="color:var(--red);font-variant-numeric:tabular-nums">−£${fmtNum(corpR,0)}</span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;align-items:baseline">
         <span style="color:rgba(255,255,255,0.85);font-weight:500">Your gross salary</span>
@@ -19683,10 +19690,10 @@ function renderCashEquivalent() {
       callout.style.display = '';
       calloutHead.textContent = 'Why the stack is so deep';
       calloutText.textContent =
-        `Money extracted through your business via salary gets bitten five times: VAT on the way in (20%), ` +
-        `employer NI on the salary (15% above £5k), corporation tax on the residual profit (25%), your personal income tax ` +
+        `Salary is a deductible business expense so it bypasses corporation tax, but it still gets bitten four times: ` +
+        `VAT on the way in (20%), employer NI on the salary (15% above £5k), your personal income tax ` +
         `(60% in the taper band), and your employee NI (2% above £50,270). Switch "Extract as" to Dividend to compare — ` +
-        `dividends skip both NI layers but add dividend tax, typically cheaper for owner-managers in the taper band.`;
+        `dividends pay corporation tax instead of NI layers, and typically extract more efficiently at this income level.`;
     }
 
     if (summaryEl) summaryEl.textContent = target > 0
