@@ -9592,22 +9592,15 @@ body.modal-active .container > footer {
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-tax">
 
-  <!-- Wrapper Allowances — May 2026 — sits at the very top of the Tax tab
-       so the user sees their allowance usage before drilling into the income
-       tax / CGT / sell mechanics. Tracks ISA, SIPP (employer-only), CGT
-       exempt, and Dividend Allowance across the current UK tax year. Pulls
-       live data from monthly history + budget tracker, so it updates
-       automatically whenever a new entry is saved. -->
-  <div id="wrapper-allowances-output"></div>
-
-  <!-- Cash Equivalent Calculator — May 2026 — answers "I want £X in my
-       pocket, what gross salary would I need to net that on top of my
-       declared income?" Walks the 2026/27 tax bands honestly (basic →
-       higher → personal-allowance taper → additional rate) plus NI, so the
-       answer respects band transitions rather than naively dividing by a
-       single marginal rate. Reads PAYE + dividends + bonus from the Income
-       Tax Calculator below as the baseline, then computes the uplift
-       required to net the user's chosen target. -->
+  <!-- Cash Calculator (was Cash Equivalent Calculator, renamed v22.8) —
+       moved to the very top of the Tax tab in v22.10 because the Cash
+       Deposits Log nested inside it is the most frequently-used tool on
+       this page. Voss banks cash multiple times a month; the rotation
+       tracker needs to be reachable in one tap. The Salary/Dividend
+       extraction calculator follows underneath the deposits log inside
+       the same collapsible. Reads PAYE + dividends + bonus from the
+       Income Tax Calculator below as the baseline, then computes the
+       uplift required to net the user's chosen target. -->
   <div class="card card-left chevron-collapsible mb16" data-collapsible="cash-equivalent">
     <div class="collapsible-header" onclick="toggleMobileCollapse('cash-equivalent')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
@@ -9749,6 +9742,14 @@ body.modal-active .container > footer {
 
     </div>
   </div>
+
+  <!-- Wrapper Allowances tracker (moved below Cash Calculator in v22.10).
+       Tracks ISA, SIPP (employer-only), CGT exempt, and Dividend Allowance
+       across the current UK tax year. Pulls live data from monthly history
+       + budget tracker, so it updates automatically whenever a new entry
+       is saved. Rendered into by renderWrapperAllowances() — pure
+       getElementById + innerHTML so the position swap is markup-only. -->
+  <div id="wrapper-allowances-output"></div>
 
   <!-- ═══════════════════════════════════════════════════════════
        ZONE 1 — INCOME & TAX OWED
