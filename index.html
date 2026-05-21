@@ -4436,6 +4436,332 @@ body.privacy-mode-active .portfolio-delta-pill {
   }
 }
 
+/* ════════════════════════════════════════════════════════════════
+   CASH DEPOSITS LOG (v22.8) — styles for the rotation tile strip,
+   form inputs, history rows, and supporting widgets inside the Cash
+   Calculator card. All classes prefixed cd- to avoid collisions.
+   Visual language mirrors the canonical plan-card / budget-input /
+   amber-callout patterns used elsewhere on the calculator.
+   ════════════════════════════════════════════════════════════════ */
+.cd-input-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cd-field {
+  background: linear-gradient(180deg, rgba(8,12,18,0.7) 0%, rgba(14,20,28,0.6) 100%);
+  border: 1px solid rgba(200,215,240,0.14);
+  border-radius: 12px;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  width: 100%;
+  padding: 10px 12px;
+  outline: none;
+  min-height: 42px;
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.40);
+}
+.cd-field:focus {
+  border-color: var(--blue);
+  background: rgba(10,132,255,0.04);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.30), inset 0 1px 2px rgba(0,0,0,0.40);
+}
+.cd-field.cd-amount { padding-left: 26px; font-weight: 600; }
+.cd-field-wrap { position: relative; }
+.cd-pound {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+}
+select.cd-field {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image:
+    linear-gradient(180deg, rgba(8,12,18,0.7) 0%, rgba(14,20,28,0.6) 100%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path fill='rgba(255,255,255,0.5)' d='M5 7L1 3h8z'/></svg>");
+  background-repeat: no-repeat, no-repeat;
+  background-position: 0 0, right 12px center;
+  background-size: 100% 100%, 10px 10px;
+  padding-right: 32px;
+  cursor: pointer;
+}
+input[type="date"].cd-field {
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: dark;
+}
+
+/* Rotation tile strip — three equal columns, one per bank. The
+   "next" tile gets an amber border, glow, and floating NEXT badge. */
+.cd-rotation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+}
+.cd-bank-tile {
+  position: relative;
+  background: linear-gradient(180deg, rgba(8,12,18,0.55) 0%, rgba(14,20,28,0.45) 100%);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  padding: 14px 8px 12px;
+  text-align: center;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+}
+.cd-bank-tile.is-next {
+  border-color: rgba(255,159,10,0.55);
+  background: linear-gradient(180deg, rgba(40,28,8,0.55) 0%, rgba(28,20,8,0.40) 100%);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30), 0 0 12px rgba(255,159,10,0.20);
+}
+.cd-next-badge {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #FFB340 0%, #FF9F0A 100%);
+  color: #1a0e00;
+  font-weight: 800;
+  font-size: 8px;
+  letter-spacing: 0.7px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(255,159,10,0.40), inset 0 0.5px 0 rgba(255,255,255,0.40);
+}
+.cd-bank-name {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.cd-bank-name.cd-hsbc { color: #FF8585; }
+.cd-bank-name.cd-santander { color: #FFA191; }
+.cd-bank-name.cd-nationwide { color: #6AB2FF; }
+.cd-bank-since {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.3px;
+}
+.cd-bank-since.cd-never {
+  font-size: 14px;
+  color: var(--muted2);
+  font-style: italic;
+  font-weight: 500;
+}
+.cd-bank-since-sub {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cd-bank-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.10);
+  margin: 8px 4px;
+}
+.cd-bank-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgba(48,209,88,0.20);
+}
+.cd-bank-total.cd-zero {
+  color: var(--muted2);
+  text-shadow: none;
+  font-weight: 600;
+}
+.cd-bank-meta {
+  font-size: 9px;
+  color: var(--muted2);
+  margin-top: 2px;
+}
+.cd-bank-last {
+  font-size: 8px;
+  color: var(--muted2);
+  margin-top: 4px;
+  letter-spacing: 0.2px;
+}
+
+/* Amber nudge callout below the rotation strip */
+.cd-nudge {
+  background: rgba(255,159,10,0.08);
+  border: 1px solid rgba(255,159,10,0.25);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.80);
+  line-height: 1.5;
+}
+.cd-nudge strong {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+/* Total Banked summary pill — green wash */
+.cd-total-banked {
+  margin-top: 12px;
+  background: rgba(48,209,88,0.06);
+  border: 1px solid rgba(48,209,88,0.20);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.cd-total-banked-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.78);
+}
+.cd-total-banked-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgba(48,209,88,0.20);
+}
+
+/* History list */
+.cd-section-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.10);
+  margin: 14px 0 10px;
+}
+.cd-history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 6px 0 4px;
+}
+.cd-history-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.1px;
+}
+.cd-history-meta {
+  font-size: 9px;
+  color: var(--muted2);
+}
+.cd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  gap: 8px;
+}
+.cd-row:last-of-type { border-bottom: 0; }
+.cd-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.cd-row-date {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cd-bank-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.cd-bank-pill.cd-hsbc {
+  background: rgba(219,0,17,0.18);
+  color: #FF8585;
+  border: 1px solid rgba(219,0,17,0.36);
+}
+.cd-bank-pill.cd-santander {
+  background: rgba(236,28,28,0.12);
+  color: #FFA191;
+  border: 1px solid rgba(236,28,28,0.28);
+}
+.cd-bank-pill.cd-nationwide {
+  background: rgba(0,82,164,0.22);
+  color: #6AB2FF;
+  border: 1px solid rgba(0,82,164,0.40);
+}
+.cd-row-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.cd-row-amt {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+  text-shadow: 0 0 12px rgba(48,209,88,0.20);
+}
+.cd-del {
+  background: transparent;
+  border: 0;
+  color: rgba(255,255,255,0.30);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: inherit;
+  line-height: 1;
+}
+.cd-del:hover {
+  color: var(--red);
+  background: rgba(255,69,58,0.08);
+}
+.cd-empty-history {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted2);
+  font-style: italic;
+  padding: 14px 12px;
+  line-height: 1.5;
+}
+.cd-show-all {
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  color: rgba(168,212,255,0.70);
+  cursor: pointer;
+  padding: 10px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-top: 4px;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  font-family: inherit;
+}
+.cd-show-all:hover { color: rgba(168,212,255,0.95); }
+
 /* Historical Averages "This month £X" overTag — sits inline next to the
    category name on desktop, but on narrow screens drops onto its own line
    so phrases like "This month £2,700.00 ↑" don't wrap mid-word in the
@@ -9232,7 +9558,7 @@ body.modal-active .container > footer {
     <div class="collapsible-header" onclick="toggleMobileCollapse('cash-equivalent')" style="cursor:pointer">
       <div class="flex-between" style="margin-bottom:0">
         <div style="flex:1;min-width:0">
-          <div class="section-label" style="margin-bottom:4px">Cash Equivalent Calculator</div>
+          <div class="section-label" style="margin-bottom:4px">Cash Calculator</div>
           <div class="stat-sub" id="cash-equiv-summary">Net target → gross salary needed</div>
         </div>
         <span class="collapsible-chevron" aria-hidden="true">⌄</span>
@@ -9240,7 +9566,7 @@ body.modal-active .container > footer {
     </div>
     <div class="collapsible-body" style="margin-top:16px">
 
-      <div class="stat-sub" style="margin-bottom:16px">Enter the amount you want in your pocket and see what it costs your business to put it there. Switch between salary and dividend extraction to compare.</div>
+      <div class="stat-sub" style="margin-bottom:16px">See what each £1 of cash extraction costs you in business revenue, switch between salary and dividend routes to compare, and log your cash deposits to keep rotation even across HSBC, Santander and Nationwide.</div>
 
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
         <div class="seg-toggle seg-toggle-compact" role="tablist" aria-label="Cash equivalent extraction method">
@@ -9297,6 +9623,65 @@ body.modal-active .container > footer {
       </div>
 
       <div style="font-size:10px;color:var(--muted2);line-height:1.5;font-style:italic;text-align:center;margin-top:8px">Reads your declared income live from the Income Tax Calculator below. Recalculates as you change PAYE, dividends or bonus.</div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           CASH DEPOSITS LOG (v22.8) — tracks cash banked across HSBC,
+           Santander, and Nationwide. The rotation tile strip shows
+           days-since-last-deposit for each bank, with a NEXT badge on
+           whichever bank is most overdue. Never-used banks tie-break
+           ahead of any used bank (HSBC → Santander → Nationwide order).
+           The Bank dropdown defaults to the Next bank, so adding is a
+           one-tap action in the common case. Soft nudge only — no
+           hard block on depositing into the same bank twice.
+
+           Persisted via cashDeposits in LS.TAX, which is in
+           REQUIRED_BACKUP_KEYS so it auto-syncs cross-device.
+           Each deposit is {id, amount, date, bank}.
+           ═══════════════════════════════════════════════════════════ -->
+      <div class="plan-card mb16" style="margin-top:20px">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Cash Deposits Log</span>
+          <span class="plan-card-context">Rotate across<br>HSBC, Santander, Nationwide</span>
+        </div>
+        <div class="plan-card-body">
+
+          <div class="cd-input-grid">
+            <div>
+              <div class="input-label" style="font-size:9px;margin-bottom:5px">Amount</div>
+              <div class="cd-field-wrap">
+                <span class="cd-pound">£</span>
+                <input class="cd-field cd-amount" type="text" inputmode="decimal" id="cd-input-amount" placeholder="0">
+              </div>
+            </div>
+            <div>
+              <div class="input-label" style="font-size:9px;margin-bottom:5px">Date</div>
+              <input class="cd-field" type="date" id="cd-input-date">
+            </div>
+            <div>
+              <div class="input-label" style="font-size:9px;margin-bottom:5px">Bank</div>
+              <select class="cd-field" id="cd-input-bank">
+                <option value="HSBC">HSBC</option>
+                <option value="Santander">Santander</option>
+                <option value="Nationwide">Nationwide</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn-gold" style="padding:10px 14px;font-size:12px;min-height:38px" onclick="addCashDeposit()">Add Deposit</button>
+
+          <div id="cd-rotation-strip"></div>
+          <div id="cd-nudge"></div>
+          <div id="cd-total-banked"></div>
+
+          <div class="cd-section-divider"></div>
+          <div class="cd-history-head">
+            <span class="cd-history-title">Recent deposits</span>
+            <span class="cd-history-meta" id="cd-history-meta">Newest first</span>
+          </div>
+          <div id="cd-history-rows"></div>
+
+        </div>
+      </div>
 
     </div>
   </div>
@@ -19702,6 +20087,312 @@ function setCashEquivMode(m) {
   try { saveTaxSettings(); } catch (e) {}
 }
 
+// ════════════════════════════════════════════════════════════════════
+// CASH DEPOSITS LOG (v22.8)
+// Track cash banked across HSBC, Santander, Nationwide. The rotation
+// renderer picks the "next" bank as whichever has the oldest last-
+// deposit timestamp. Never-used banks tie-break ahead of any used
+// bank, in fixed order HSBC → Santander → Nationwide.
+//
+// Each deposit is {id, amount, date, bank} where:
+//   id     = timestamp at creation (ms since epoch), unique enough
+//   amount = number (pounds, can be decimal)
+//   date   = ISO date string YYYY-MM-DD
+//   bank   = one of 'HSBC' | 'Santander' | 'Nationwide'
+//
+// Persisted in LS.TAX.cashDeposits (already in REQUIRED_BACKUP_KEYS so
+// auto-syncs cross-device via Supabase).
+// ════════════════════════════════════════════════════════════════════
+
+// Fixed bank list and tie-break order for "Next" selection among
+// never-used banks. Edit here if banks ever change.
+const CD_BANKS = ['HSBC', 'Santander', 'Nationwide'];
+
+// Read the deposits array from LS.TAX with comma-strip safety on amount.
+// Returns sorted by date descending (newest first), or empty array.
+function _cdGetDeposits() {
+  try {
+    const raw = lsGet(LS.TAX) || {};
+    const arr = Array.isArray(raw.cashDeposits) ? raw.cashDeposits : [];
+    return arr.slice().sort((a, b) => {
+      // Newest first by date; ties broken by id descending
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return (b.id || 0) - (a.id || 0);
+    });
+  } catch (e) {
+    return [];
+  }
+}
+
+// Write the deposits array back to LS.TAX. Triggers Supabase sync via
+// saveTaxSettings since cashDeposits sits inside LS.TAX which is in
+// REQUIRED_BACKUP_KEYS.
+function _cdSaveDeposits(arr) {
+  try {
+    const raw = lsGet(LS.TAX) || {};
+    raw.cashDeposits = arr;
+    lsSet(LS.TAX, raw);
+    try { snapshotState(); } catch (e) {}
+    try { saveTaxSettings(); } catch (e) {}
+  } catch (e) {}
+}
+
+// Compute days between an ISO date string and today, floored.
+// Negative means the date is in the future (treated as 0 for "ago").
+function _cdDaysAgo(dateStr) {
+  if (!dateStr) return null;
+  const then = new Date(dateStr + 'T00:00:00');
+  if (isNaN(then.getTime())) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffMs = today.getTime() - then.getTime();
+  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+// Format an ISO date YYYY-MM-DD into a compact "9 May 26" form for the
+// rotation tile last-line and the history row date.
+function _cdFmtDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return dateStr;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+}
+
+// Compute per-bank totals from the deposits array. Returns an object
+// keyed by bank name with { total, count, lastDate, lastDaysAgo }.
+// Banks with no deposits get { total: 0, count: 0, lastDate: null }.
+function _cdComputeBankStats(deposits) {
+  const stats = {};
+  CD_BANKS.forEach(b => { stats[b] = { total: 0, count: 0, lastDate: null, lastDaysAgo: null }; });
+  deposits.forEach(d => {
+    if (!stats[d.bank]) return;
+    const amt = parseFloat(String(d.amount).replace(/,/g, '')) || 0;
+    stats[d.bank].total += amt;
+    stats[d.bank].count += 1;
+    if (!stats[d.bank].lastDate || d.date > stats[d.bank].lastDate) {
+      stats[d.bank].lastDate = d.date;
+    }
+  });
+  // Days-ago is computed after totals so it uses the most-recent date
+  CD_BANKS.forEach(b => {
+    stats[b].lastDaysAgo = stats[b].lastDate ? _cdDaysAgo(stats[b].lastDate) : null;
+  });
+  return stats;
+}
+
+// Decide which bank should be "Next" given the per-bank stats.
+// Rules: (1) Never-used banks always beat used banks. (2) Among
+// never-used banks, the fixed order HSBC → Santander → Nationwide
+// wins. (3) Among used banks, the one with the oldest last-deposit
+// wins; ties broken by the same fixed order.
+function _cdComputeNextBank(stats) {
+  // First: any never-used banks?
+  const neverUsed = CD_BANKS.filter(b => stats[b].lastDate === null);
+  if (neverUsed.length > 0) {
+    return neverUsed[0]; // Fixed order via CD_BANKS array
+  }
+  // All banks used: pick the one with the oldest lastDate.
+  // CD_BANKS order acts as natural tie-break since we iterate that way.
+  let oldestBank = CD_BANKS[0];
+  let oldestDate = stats[oldestBank].lastDate;
+  CD_BANKS.forEach(b => {
+    if (stats[b].lastDate < oldestDate) {
+      oldestDate = stats[b].lastDate;
+      oldestBank = b;
+    }
+  });
+  return oldestBank;
+}
+
+// Build the rotation strip HTML for the three bank tiles.
+function _cdRenderRotationStrip(stats, nextBank) {
+  const tile = (bank) => {
+    const s = stats[bank];
+    const isNext = (bank === nextBank);
+    const colourClass = 'cd-' + bank.toLowerCase();
+    const sinceMain = s.lastDaysAgo === null
+      ? `<div class="cd-bank-since cd-never">Never</div><div class="cd-bank-since-sub">used yet</div>`
+      : `<div class="cd-bank-since">${s.lastDaysAgo}</div><div class="cd-bank-since-sub">${s.lastDaysAgo === 1 ? 'day' : 'days'} ago</div>`;
+    const totalLine = s.count === 0
+      ? `<div class="cd-bank-total cd-zero">£0</div><div class="cd-bank-meta">No deposits</div>`
+      : `<div class="cd-bank-total">£${fmtNum(s.total, 0)}</div><div class="cd-bank-meta">${s.count} deposit${s.count === 1 ? '' : 's'}</div>${s.lastDate ? `<div class="cd-bank-last">Last: ${_cdFmtDate(s.lastDate)}</div>` : ''}`;
+    return `<div class="cd-bank-tile${isNext ? ' is-next' : ''}">
+      ${isNext ? '<span class="cd-next-badge">NEXT</span>' : ''}
+      <div class="cd-bank-name ${colourClass}">${bank}</div>
+      ${sinceMain}
+      <div class="cd-bank-divider"></div>
+      ${totalLine}
+    </div>`;
+  };
+  return `<div class="cd-rotation-grid">${CD_BANKS.map(tile).join('')}</div>`;
+}
+
+// Build the amber nudge callout HTML. Wording differs based on whether
+// any banks are used yet.
+function _cdRenderNudge(stats, nextBank, totalDeposits) {
+  if (totalDeposits === 0) {
+    return `<div class="cd-nudge">Start your rotation with <strong>${nextBank}</strong>. The log will track which bank to deposit into next as you add entries.</div>`;
+  }
+  const someNeverUsed = CD_BANKS.some(b => stats[b].lastDate === null);
+  if (someNeverUsed) {
+    return `<div class="cd-nudge">Deposit next into <strong>${nextBank}</strong> to spread the cash evenly across all three banks.</div>`;
+  }
+  return `<div class="cd-nudge"><strong>${nextBank}</strong> has the oldest deposit. Deposit next here to keep the rotation even across all three banks.</div>`;
+}
+
+// Build the Total Banked pill HTML. Hidden if no deposits yet.
+function _cdRenderTotalBanked(totalAcrossAll, depositCount) {
+  if (depositCount === 0) return '';
+  return `<div class="cd-total-banked">
+    <span class="cd-total-banked-label">Total Banked</span>
+    <span class="cd-total-banked-val">£${fmtNum(totalAcrossAll, 0)}</span>
+  </div>`;
+}
+
+// Build the history rows HTML. Respects the show-all flag — if there
+// are more than 5 deposits and the flag is false, show first 5 + a
+// "Show all" expander button. If true, show every deposit.
+function _cdRenderHistoryRows(deposits) {
+  if (deposits.length === 0) {
+    return `<div class="cd-empty-history">No deposits logged yet.<br>Add your first deposit above to start tracking.</div>`;
+  }
+  const showAll = !!window._cashDepositsShowAll;
+  const visible = showAll ? deposits : deposits.slice(0, 5);
+  const rows = visible.map(d => {
+    const colourClass = 'cd-' + d.bank.toLowerCase();
+    const amt = parseFloat(String(d.amount).replace(/,/g, '')) || 0;
+    return `<div class="cd-row" id="cd-row-${d.id}">
+      <div class="cd-row-left">
+        <span class="cd-bank-pill ${colourClass}">${d.bank}</span>
+        <span class="cd-row-date">${_cdFmtDate(d.date)}</span>
+      </div>
+      <div class="cd-row-right">
+        <span class="cd-row-amt">+£${fmtNum(amt, 0)}</span>
+        <button class="cd-del" onclick="deleteCashDeposit(${d.id})" title="Delete">&times;</button>
+      </div>
+    </div>`;
+  }).join('');
+  const expander = (!showAll && deposits.length > 5)
+    ? `<button class="cd-show-all" onclick="toggleCashDepositsShowAll()">Show all ${deposits.length} deposits ↓</button>`
+    : (showAll && deposits.length > 5 ? `<button class="cd-show-all" onclick="toggleCashDepositsShowAll()">Show fewer ↑</button>` : '');
+  return rows + expander;
+}
+
+// Top-level renderer — orchestrates the rotation strip, nudge,
+// total-banked pill, and history rows. Reads state fresh each call so
+// changes anywhere else in the app trigger correct re-renders.
+function renderCashDepositsLog() {
+  const deposits = _cdGetDeposits();
+  const stats = _cdComputeBankStats(deposits);
+  const nextBank = _cdComputeNextBank(stats);
+  const totalAcrossAll = CD_BANKS.reduce((sum, b) => sum + stats[b].total, 0);
+
+  // Rotation strip
+  const stripEl = document.getElementById('cd-rotation-strip');
+  if (stripEl) stripEl.innerHTML = _cdRenderRotationStrip(stats, nextBank);
+
+  // Amber nudge
+  const nudgeEl = document.getElementById('cd-nudge');
+  if (nudgeEl) nudgeEl.innerHTML = _cdRenderNudge(stats, nextBank, deposits.length);
+
+  // Total banked
+  const totalEl = document.getElementById('cd-total-banked');
+  if (totalEl) totalEl.innerHTML = _cdRenderTotalBanked(totalAcrossAll, deposits.length);
+
+  // History meta + rows
+  const metaEl = document.getElementById('cd-history-meta');
+  if (metaEl) {
+    if (deposits.length === 0) {
+      metaEl.textContent = 'Newest first';
+    } else if (deposits.length <= 5 || window._cashDepositsShowAll) {
+      metaEl.textContent = `${deposits.length} deposit${deposits.length === 1 ? '' : 's'} · newest first`;
+    } else {
+      metaEl.textContent = `Showing 5 of ${deposits.length}`;
+    }
+  }
+  const rowsEl = document.getElementById('cd-history-rows');
+  if (rowsEl) rowsEl.innerHTML = _cdRenderHistoryRows(deposits);
+
+  // Default the Bank dropdown to the Next bank so adding is one tap
+  const bankSelectEl = document.getElementById('cd-input-bank');
+  if (bankSelectEl && document.activeElement !== bankSelectEl) {
+    bankSelectEl.value = nextBank;
+  }
+}
+
+// Action: add a new deposit. Reads form fields, validates, prepends
+// the new entry to the deposits array, persists, and re-renders.
+function addCashDeposit() {
+  const amountEl = document.getElementById('cd-input-amount');
+  const dateEl = document.getElementById('cd-input-date');
+  const bankEl = document.getElementById('cd-input-bank');
+  if (!amountEl || !dateEl || !bankEl) return;
+
+  // Comma-strip mandatory per Standing Order 0.6 carryover
+  const amount = parseFloat(String(amountEl.value).replace(/,/g, ''));
+  const date = dateEl.value;
+  const bank = bankEl.value;
+
+  if (!isFinite(amount) || amount <= 0) {
+    amountEl.focus();
+    return;
+  }
+  if (!date) {
+    dateEl.focus();
+    return;
+  }
+  if (!CD_BANKS.includes(bank)) return;
+
+  const deposits = _cdGetDeposits();
+  deposits.push({
+    id: Date.now(),
+    amount: amount,
+    date: date,
+    bank: bank
+  });
+  _cdSaveDeposits(deposits);
+
+  // Reset just the amount field so the user can immediately log another;
+  // date stays at the most-recent value, bank dropdown gets reset to the
+  // new Next bank by the renderer.
+  amountEl.value = '';
+  renderCashDepositsLog();
+  amountEl.focus();
+}
+
+// Action: delete a deposit by id. No confirmation — deletion is
+// easily reversed by re-entering, and a confirm dialog would block
+// the natural one-tap flow.
+function deleteCashDeposit(id) {
+  const deposits = _cdGetDeposits();
+  const filtered = deposits.filter(d => d.id !== id);
+  if (filtered.length === deposits.length) return; // nothing matched
+  _cdSaveDeposits(filtered);
+  renderCashDepositsLog();
+}
+
+// Action: toggle the show-all expander state and re-render.
+function toggleCashDepositsShowAll() {
+  window._cashDepositsShowAll = !window._cashDepositsShowAll;
+  renderCashDepositsLog();
+}
+
+// Initialiser: default the date field to today and paint the section.
+// Called from loadTaxSettings so it runs after persisted state is
+// restored but before the user can interact.
+function initCashDepositsLog() {
+  const dateEl = document.getElementById('cd-input-date');
+  if (dateEl && !dateEl.value) {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    dateEl.value = `${y}-${m}-${d}`;
+  }
+  renderCashDepositsLog();
+}
+
 // ── Tax / Sell tab field mirrors ─────────────────────────────
 // cgt-used and sell-used are two views of the same underlying value
 // (LS.TAX.used). Same for cgt-allowance and sell-allowance. When the user
@@ -19840,6 +20531,11 @@ function loadTaxSettings() {
   // Apply the restored mode state. Done after updateIncomeTotal so the
   // renderer fires once with the right mode set.
   try { setCashEquivMode(window._cashEquivMode || 'salary'); } catch (e) {}
+  // Initialise the Cash Deposits Log (defaults date to today + paints
+  // the rotation strip, total banked, and history rows from persisted
+  // state). Wrapped in try in case the card hasn't loaded yet on first
+  // boot or is hidden behind a collapsible.
+  try { initCashDepositsLog(); } catch (e) {}
 }
 
 // ════════════════════════════════════════════════════════
