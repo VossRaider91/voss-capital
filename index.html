@@ -4602,6 +4602,20 @@ input[type="date"].cd-field {
   letter-spacing: -0.2px;
 }
 
+/* Reset countdown — only rendered for temp-hot and temp-danger states.
+   Small amber-tinted italic line that sits under the headroom figure
+   and tells the user when the rolling 12-month total will dip back
+   below £5,000 based on existing deposits aging out. */
+.vc-reset {
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(255,179,64,0.85);
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
 /* Temperature scale used by the 12m value and the headroom line.
    The class is computed in JS by _cdTempClass against the £5,000
    soft ceiling. Five-stop gradient from cool green at low fill to
@@ -9606,9 +9620,78 @@ body.modal-active .container > footer {
     </div>
     <div class="collapsible-body" style="margin-top:16px">
 
-      <div class="stat-sub" style="margin-bottom:16px">See what each £1 of cash extraction costs you in business revenue, switch between salary and dividend routes to compare, and log your cash deposits to keep rotation even across HSBC, Santander and Nationwide.</div>
+      <div class="stat-sub" style="margin-bottom:16px">Log your cash deposits to keep rotation even across HSBC, Santander and Nationwide. Then see what each £1 of cash extraction costs you in business revenue with the Salary/Dividend calculator below.</div>
 
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+      <!-- ═══════════════════════════════════════════════════════════
+           CASH DEPOSITS LOG (v22.8, moved to top of section in v22.9)
+           — tracks cash banked across HSBC, Santander, and Nationwide.
+           The rotation tile strip shows days-since-last-deposit for
+           each bank, with a NEXT badge on whichever bank is most
+           overdue. Never-used banks tie-break ahead of any used bank
+           (HSBC → Santander → Nationwide order). The Bank dropdown
+           defaults to the Next bank, so adding is a one-tap action in
+           the common case. Soft nudge only — no hard block on
+           depositing into the same bank twice.
+
+           Each new deposit also cascades to the Budget Tracker's
+           Cash to Bank row via bgtAutoSyncCashDeposit (v22.9). The
+           relationship is one-way: Budget Tracker entries can be
+           edited or deleted independently of the Cash Deposits Log.
+
+           Persisted via cashDeposits in LS.TAX, which is in
+           REQUIRED_BACKUP_KEYS so it auto-syncs cross-device.
+           Each deposit is {id, amount, date, bank}.
+           ═══════════════════════════════════════════════════════════ -->
+      <div class="plan-card mb16">
+        <div class="plan-card-header">
+          <span class="plan-card-ticker">Cash Deposits Log</span>
+          <span class="plan-card-context">Rotate across<br>HSBC, Santander, Nationwide</span>
+        </div>
+        <div class="plan-card-body">
+
+          <div class="cd-input-grid">
+            <div>
+              <div class="input-label" style="font-size:9px;margin-bottom:5px">Amount</div>
+              <div class="cd-field-wrap">
+                <span class="cd-pound">£</span>
+                <input class="cd-field cd-amount" type="text" inputmode="decimal" id="cd-input-amount" placeholder="0">
+              </div>
+            </div>
+            <div>
+              <div class="input-label" style="font-size:9px;margin-bottom:5px">Date</div>
+              <input class="cd-field" type="date" id="cd-input-date">
+            </div>
+            <div>
+              <div class="input-label" style="font-size:9px;margin-bottom:5px">Bank</div>
+              <select class="cd-field" id="cd-input-bank">
+                <option value="HSBC">HSBC</option>
+                <option value="Santander">Santander</option>
+                <option value="Nationwide">Nationwide</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn-gold" style="padding:10px 14px;font-size:12px;min-height:38px" onclick="addCashDeposit()">Add Deposit</button>
+
+          <div id="cd-rotation-strip"></div>
+          <div id="cd-nudge"></div>
+          <div id="cd-total-banked"></div>
+
+          <div class="cd-section-divider"></div>
+          <div class="cd-history-head">
+            <span class="cd-history-title">Recent Deposits</span>
+            <span class="cd-history-meta" id="cd-history-meta">Newest First</span>
+          </div>
+          <div id="cd-history-rows"></div>
+
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           CASH CALCULATOR (was Cash Equivalent Calculator, renamed
+           v22.8). Salary/Dividend extraction route comparison.
+           ═══════════════════════════════════════════════════════════ -->
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;margin-top:24px">
         <div class="seg-toggle seg-toggle-compact" role="tablist" aria-label="Cash equivalent extraction method">
           <button type="button" class="seg-option active" id="cash-equiv-mode-salary" onclick="setCashEquivMode('salary')"><span>Salary</span></button>
           <button type="button" class="seg-option" id="cash-equiv-mode-dividend" onclick="setCashEquivMode('dividend')"><span>Dividend</span></button>
@@ -9663,65 +9746,6 @@ body.modal-active .container > footer {
       </div>
 
       <div style="font-size:10px;color:var(--muted2);line-height:1.5;font-style:italic;text-align:center;margin-top:8px">Reads your declared income live from the Income Tax Calculator below. Recalculates as you change PAYE, dividends or bonus.</div>
-
-      <!-- ═══════════════════════════════════════════════════════════
-           CASH DEPOSITS LOG (v22.8) — tracks cash banked across HSBC,
-           Santander, and Nationwide. The rotation tile strip shows
-           days-since-last-deposit for each bank, with a NEXT badge on
-           whichever bank is most overdue. Never-used banks tie-break
-           ahead of any used bank (HSBC → Santander → Nationwide order).
-           The Bank dropdown defaults to the Next bank, so adding is a
-           one-tap action in the common case. Soft nudge only — no
-           hard block on depositing into the same bank twice.
-
-           Persisted via cashDeposits in LS.TAX, which is in
-           REQUIRED_BACKUP_KEYS so it auto-syncs cross-device.
-           Each deposit is {id, amount, date, bank}.
-           ═══════════════════════════════════════════════════════════ -->
-      <div class="plan-card mb16" style="margin-top:20px">
-        <div class="plan-card-header">
-          <span class="plan-card-ticker">Cash Deposits Log</span>
-          <span class="plan-card-context">Rotate across<br>HSBC, Santander, Nationwide</span>
-        </div>
-        <div class="plan-card-body">
-
-          <div class="cd-input-grid">
-            <div>
-              <div class="input-label" style="font-size:9px;margin-bottom:5px">Amount</div>
-              <div class="cd-field-wrap">
-                <span class="cd-pound">£</span>
-                <input class="cd-field cd-amount" type="text" inputmode="decimal" id="cd-input-amount" placeholder="0">
-              </div>
-            </div>
-            <div>
-              <div class="input-label" style="font-size:9px;margin-bottom:5px">Date</div>
-              <input class="cd-field" type="date" id="cd-input-date">
-            </div>
-            <div>
-              <div class="input-label" style="font-size:9px;margin-bottom:5px">Bank</div>
-              <select class="cd-field" id="cd-input-bank">
-                <option value="HSBC">HSBC</option>
-                <option value="Santander">Santander</option>
-                <option value="Nationwide">Nationwide</option>
-              </select>
-            </div>
-          </div>
-
-          <button class="btn-gold" style="padding:10px 14px;font-size:12px;min-height:38px" onclick="addCashDeposit()">Add Deposit</button>
-
-          <div id="cd-rotation-strip"></div>
-          <div id="cd-nudge"></div>
-          <div id="cd-total-banked"></div>
-
-          <div class="cd-section-divider"></div>
-          <div class="cd-history-head">
-            <span class="cd-history-title">Recent Deposits</span>
-            <span class="cd-history-meta" id="cd-history-meta">Newest First</span>
-          </div>
-          <div id="cd-history-rows"></div>
-
-        </div>
-      </div>
 
     </div>
   </div>
@@ -20294,6 +20318,68 @@ function _cdTempClass(last12mTotal) {
   return 'temp-danger';
 }
 
+// Compute the date at which a bank's rolling 12-month total will dip
+// below the ceiling, given its current deposits. Used to show a small
+// "resets on X" countdown under the headroom line for banks at hot or
+// danger temperature.
+//
+// Algorithm: take all of the bank's deposits inside the current 12-month
+// window, sort ascending by date, then walk through them as if each
+// were aging out at its date + 366 days. Find the earliest deposit
+// whose age-out brings the cumulative "shed" amount up to or past the
+// excess (rolling - ceiling). The day after that deposit ages out is
+// when the rolling figure drops below the ceiling.
+//
+// Returns { resetISO, daysUntil } when a reset is calculable, or null
+// when the bank is already under the ceiling (no reset needed) or has
+// no deposits at all.
+function _cdComputeResetInfo(deposits, bank, last12mTotal) {
+  if (last12mTotal <= CD_CEILING) return null;
+  if (!deposits || deposits.length === 0) return null;
+
+  // Build the same cutoff used by _cdComputeBankStats — must match
+  // exactly so the deposits we work with are the same ones contributing
+  // to last12mTotal.
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  cutoff.setDate(cutoff.getDate() - 365);
+  const cutoffISO = cutoff.getFullYear() + '-' +
+    String(cutoff.getMonth() + 1).padStart(2, '0') + '-' +
+    String(cutoff.getDate()).padStart(2, '0');
+
+  // Bank-specific deposits inside the current window, sorted oldest first
+  const inWindow = deposits
+    .filter(d => d.bank === bank && d.date >= cutoffISO)
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (inWindow.length === 0) return null;
+
+  const excess = last12mTotal - CD_CEILING;
+  let cumShed = 0;
+  let triggerDeposit = null;
+  for (const d of inWindow) {
+    cumShed += parseFloat(String(d.amount).replace(/,/g, '')) || 0;
+    if (cumShed >= excess) {
+      triggerDeposit = d;
+      break;
+    }
+  }
+  if (!triggerDeposit) return null;
+
+  // The day this deposit ages out is its date + 366 days (the 12-month
+  // window is inclusive of the boundary day at date + 365, so it
+  // properly drops out from date + 366 onwards).
+  const ageOut = new Date(triggerDeposit.date + 'T12:00:00');
+  ageOut.setDate(ageOut.getDate() + 366);
+  const resetISO = ageOut.getFullYear() + '-' +
+    String(ageOut.getMonth() + 1).padStart(2, '0') + '-' +
+    String(ageOut.getDate()).padStart(2, '0');
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const daysUntil = Math.max(0, Math.ceil((ageOut - today) / (1000 * 60 * 60 * 24)));
+
+  return { resetISO, daysUntil };
+}
+
 // Build the rotation strip HTML for the three bank tiles.
 // Variant C layout: Bank name → big Days Ago number → "Days Ago" sub
 // + "Last: date" → divider → temperature-coloured 12-month total →
@@ -20301,7 +20387,7 @@ function _cdTempClass(last12mTotal) {
 // No all-time total. No deposit count. Decision-pure layout — every
 // line on the tile drives an actual decision about whether to deposit
 // here.
-function _cdRenderRotationStrip(stats, nextBank) {
+function _cdRenderRotationStrip(stats, nextBank, deposits) {
   const tile = (bank) => {
     const s = stats[bank];
     const isNext = (bank === nextBank);
@@ -20321,11 +20407,31 @@ function _cdRenderRotationStrip(stats, nextBank) {
       const temp = _cdTempClass(s.last12mTotal);
       const pct = Math.round((s.last12mTotal / CD_CEILING) * 100);
       const headroom = Math.max(0, CD_CEILING - s.last12mTotal);
+
+      // Reset-date countdown: only shown for hot or danger states.
+      // For cool / mid / warm the bank is comfortably within the
+      // ceiling and a reset countdown would be noise. Compact format:
+      // "Resets in 47 days" (short ranges) → "Resets on 7 Oct 26"
+      // (>90 days). Threshold picked so the line still feels
+      // immediate when it matters and less alarming when the wait is
+      // distant.
+      let resetLine = '';
+      if ((temp === 'temp-hot' || temp === 'temp-danger') && deposits) {
+        const reset = _cdComputeResetInfo(deposits, bank, s.last12mTotal);
+        if (reset) {
+          const label = reset.daysUntil <= 90
+            ? `Resets In ${reset.daysUntil} ${reset.daysUntil === 1 ? 'Day' : 'Days'}`
+            : `Resets On ${_cdFmtDate(reset.resetISO)}`;
+          resetLine = `<div class="vc-reset">${label}</div>`;
+        }
+      }
+
       bottomSection = `
         <div class="cd-bank-divider"></div>
         <div class="vc-12m-val ${temp}">£${fmtNum(s.last12mTotal, 0)}</div>
         <div class="vc-12m-label">Last 12 Months · ${pct}%</div>
         <div class="vc-headroom ${temp}">£${fmtNum(headroom, 0)} Headroom</div>
+        ${resetLine}
       `;
     } else {
       // Never-used: show the full £5k headroom in cool green so the
@@ -20422,7 +20528,7 @@ function renderCashDepositsLog() {
 
   // Rotation strip
   const stripEl = document.getElementById('cd-rotation-strip');
-  if (stripEl) stripEl.innerHTML = _cdRenderRotationStrip(stats, nextBank);
+  if (stripEl) stripEl.innerHTML = _cdRenderRotationStrip(stats, nextBank, deposits);
 
   // Amber nudge
   const nudgeEl = document.getElementById('cd-nudge');
@@ -20477,13 +20583,19 @@ function addCashDeposit() {
   if (!CD_BANKS.includes(bank)) return;
 
   const deposits = _cdGetDeposits();
-  deposits.push({
+  const newDeposit = {
     id: Date.now(),
     amount: amount,
     date: date,
     bank: bank
-  });
+  };
+  deposits.push(newDeposit);
   _cdSaveDeposits(deposits);
+
+  // Cascade to Budget Tracker: increment Cash to Bank actual + audit entry.
+  // The Budget Tracker side can be edited or deleted independently —
+  // the relationship is intentionally one-way.
+  try { bgtAutoSyncCashDeposit(amount, bank, newDeposit.id); } catch (e) {}
 
   // Reset just the amount field so the user can immediately log another;
   // date stays at the most-recent value, bank dropdown gets reset to the
@@ -25750,6 +25862,49 @@ function bgtAutoSyncGIAContribution(amount, sourceLabel) {
     note:     note,
     monthId:  _bgtMonthId(state.activeMonth),
     autoSync: true, // flag for recognition; user can still edit/delete
+  });
+
+  bgtSave(state);
+
+  // Re-render the budget tab if it's currently visible so the user sees the entry land
+  if (document.querySelector('#tab-budget.active')) {
+    try { _renderBgtMainTable(state); _renderBgtAudit(state); } catch (e) {}
+  }
+}
+
+// ── Auto-sync cash deposit to budget tracker (v22.9) ─────────────
+// Called when a deposit is added in the Cash Deposits Log. Adds the
+// amount to the live month's "Cash to Bank" actual and pushes a matching
+// audit entry. The audit entry stores a reference to the deposit ID
+// (sourceDepositId) for debugging and traceability, but the relationship
+// is intentionally one-way: deleting the Budget Tracker entry does NOT
+// delete the underlying cash deposit. Per Voss's design: the Cash
+// Deposits Log is the source of truth for deposit events; the Budget
+// Tracker is the source of truth for monthly cash flow.
+function bgtAutoSyncCashDeposit(amount, bank, depositId) {
+  if (!amount || amount <= 0) return;
+  const state = bgtLoad();
+  if (!state.activeMonth) state.activeMonth = _bgtCurrentMonth();
+  if (!state.actual) state.actual = {};
+  if (!state.audit)  state.audit  = [];
+
+  // Increment, not overwrite. If there's already £1,020 in Cash to Bank
+  // and we're adding £350, the new actual is £1,370.
+  state.actual['Cash to Bank'] = (parseFloat(state.actual['Cash to Bank']) || 0) + amount;
+
+  const now     = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+    + ' ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  const note    = bank ? `Auto-sync from Cash Deposits Log · ${bank}` : 'Auto-sync from Cash Deposits Log';
+
+  state.audit.push({
+    category:        'Cash to Bank',
+    amount:          amount,
+    date:            dateStr,
+    note:            note,
+    monthId:         _bgtMonthId(state.activeMonth),
+    autoSync:        true,
+    sourceDepositId: depositId || null, // for traceability; budget side can be deleted freely
   });
 
   bgtSave(state);
