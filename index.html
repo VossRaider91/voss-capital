@@ -17912,6 +17912,13 @@ function syncPortfolioFromHistory() {
         if (excluded.includes(f.ticker)) return;
         const key = `${f.ticker}__${entryWrapper}`;
 
+        // Cost contribution from this buy: units × price paid. Tracked
+        // as running totalCost across all buys for this ticker/wrapper
+        // so we can derive a weighted-average cost basis (v22.13). The
+        // gain/loss display on each holding card reads from h.avgCost
+        // and h.totalCost, both populated here.
+        const buyCost = (f.held || 0) * (f.price > 0 ? f.price : 0);
+
         if (!latestHeld[key]) {
           latestHeld[key] = {
             ticker: f.ticker,
@@ -17919,18 +17926,24 @@ function syncPortfolioFromHistory() {
             wrapper: entryWrapper,
             shares: f.held,
             price: f.price > 0 ? f.price : 0,
+            totalCost: buyCost,
             fromHistory: true,
           };
         } else {
           // Add this month's units to the running total
           latestHeld[key].shares += f.held;
+          latestHeld[key].totalCost = (latestHeld[key].totalCost || 0) + buyCost;
           if (f.price > 0) latestHeld[key].price = f.price;
         }
         latestTimestamp[key] = entry.timestamp;
       });
     });
 
-  // Apply sold entries — reduce units from matching wrapper
+  // Apply sold entries — reduce units from matching wrapper, and reduce
+  // totalCost proportionally so avgCost is preserved for remaining units.
+  // Standard Section 104 pool behaviour: selling X of N units at avg cost
+  // C removes (X × C) from the cost pool, leaving the avgCost unchanged
+  // for what remains. v22.13 (cost-basis tracking for FROM HISTORY).
   [...history]
     .filter(e => e.type === 'sold' && e.funds && e.funds.length > 0)
     .sort((a, b) => a.timestamp - b.timestamp)
@@ -17943,7 +17956,12 @@ function syncPortfolioFromHistory() {
         const unitsSold = Math.abs(f.held || 0);
         const key = `${f.ticker}__${entryWrapper}`;
         if (latestHeld[key]) {
-          latestHeld[key].shares = Math.max(0, latestHeld[key].shares - unitsSold);
+          const preSharesS  = latestHeld[key].shares;
+          const preCostS    = latestHeld[key].totalCost || 0;
+          const avgCostPre  = preSharesS > 0 ? preCostS / preSharesS : 0;
+          const sellUnits   = Math.min(unitsSold, preSharesS);
+          latestHeld[key].shares    = Math.max(0, preSharesS - unitsSold);
+          latestHeld[key].totalCost = Math.max(0, preCostS - (sellUnits * avgCostPre));
         }
       });
     });
@@ -17992,12 +18010,18 @@ function syncPortfolioFromHistory() {
       const resolvedPrice = livePrice > 0
         ? livePrice
         : (existing?.price > 0 ? existing.price : (h.price > 0 ? h.price : 0));
+      // Cost basis: use h.totalCost (freshly computed across all buys
+      // minus any sales) as authoritative. Compute avgCost from it for
+      // the gain/loss display on the holding card (v22.13).
+      const totalCost = h.totalCost || 0;
+      const avgCost   = h.shares > 0 && totalCost > 0 ? totalCost / h.shares : 0;
       return {
         ...h,
         id: existing ? existing.id : `hist_${h.ticker}_${h.wrapper}`,
         includeInCalc: existing !== undefined ? existing.includeInCalc : true,
         price: resolvedPrice,
-        totalCost: existing?.totalCost || 0,
+        totalCost: totalCost,
+        avgCost: avgCost,
       };
     });
 
