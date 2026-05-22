@@ -4509,6 +4509,25 @@ input[type="date"].cd-field {
   gap: 8px;
   margin-top: 16px;
 }
+/* Second-row grid for Variant A (v22.10): Lloyds and NatWest sit
+   centred under the middle three banks of the top row. Padding is
+   sized so each bottom tile has the same width as a top-row column
+   (one third of container width minus gap considerations). The
+   horizontal padding pushes the row in by one column-width plus
+   gap. On narrow mobile we reduce the padding to keep both tiles
+   visible without crushing them. */
+.cd-rotation-grid-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 0 calc((100% - 16px) / 6 + 4px);
+}
+@media (max-width: 520px) {
+  .cd-rotation-grid-row2 {
+    padding: 0 calc((100% - 16px) / 6);
+  }
+}
 .cd-bank-tile {
   position: relative;
   background: linear-gradient(180deg, rgba(8,12,18,0.55) 0%, rgba(14,20,28,0.45) 100%);
@@ -4547,6 +4566,8 @@ input[type="date"].cd-field {
 .cd-bank-name.cd-hsbc { color: #FF8585; }
 .cd-bank-name.cd-santander { color: #FFC97A; }
 .cd-bank-name.cd-nationwide { color: #6AB2FF; }
+.cd-bank-name.cd-lloyds { color: #48BB78; }
+.cd-bank-name.cd-natwest { color: #B57AC4; }
 
 /* ════ VARIANT C tile structure ════
    Top section: big Days Ago number + sub-line with "Days Ago" and last
@@ -4760,6 +4781,16 @@ input[type="date"].cd-field {
   background: rgba(0,82,164,0.22);
   color: #6AB2FF;
   border: 1px solid rgba(0,82,164,0.40);
+}
+.cd-bank-pill.cd-lloyds {
+  background: rgba(0,138,71,0.20);
+  color: #48BB78;
+  border: 1px solid rgba(0,138,71,0.40);
+}
+.cd-bank-pill.cd-natwest {
+  background: rgba(122,31,135,0.22);
+  color: #B57AC4;
+  border: 1px solid rgba(122,31,135,0.42);
 }
 .cd-row-right {
   display: flex;
@@ -9658,6 +9689,8 @@ body.modal-active .container > footer {
                 <option value="HSBC">HSBC</option>
                 <option value="Santander">Santander</option>
                 <option value="Nationwide">Nationwide</option>
+                <option value="Lloyds">Lloyds</option>
+                <option value="NatWest">NatWest</option>
               </select>
             </div>
           </div>
@@ -20161,8 +20194,15 @@ function setCashEquivMode(m) {
 // ════════════════════════════════════════════════════════════════════
 
 // Fixed bank list and tie-break order for "Next" selection among
-// never-used banks. Edit here if banks ever change.
-const CD_BANKS = ['HSBC', 'Santander', 'Nationwide'];
+// never-used banks. The order here is the canonical priority sequence:
+// among never-used banks, the earliest in this array wins. Among used
+// banks, oldest last-deposit-date wins (with fewest-deposits as the
+// secondary tie-break). Edit here if banks ever change.
+//
+// v22.10 added Lloyds and NatWest as the 4th and 5th banks. All five
+// banks share the same £5,000 soft ceiling (CD_CEILING) and use the
+// same Variant C tile structure.
+const CD_BANKS = ['HSBC', 'Santander', 'Nationwide', 'Lloyds', 'NatWest'];
 
 // Read the deposits array from LS.TAX with comma-strip safety on amount.
 // Returns sorted by date descending (newest first), or empty array.
@@ -20460,7 +20500,17 @@ function _cdRenderRotationStrip(stats, nextBank, deposits) {
       ${bottomSection}
     </div>`;
   };
-  return `<div class="cd-rotation-grid">${CD_BANKS.map(tile).join('')}</div>`;
+  // v22.10: split CD_BANKS into two rows. First three banks render in
+  // the primary 3-column grid at the top; banks 4 and 5 render in a
+  // 2-column grid centred underneath the middle three. The slice
+  // boundaries are deliberate — if a future change extends CD_BANKS
+  // past 5 entries, extras would not render until the layout is
+  // explicitly extended to handle them. This is a safety guard, not
+  // a limit on the rotation logic (which works with any list length).
+  const topRow = CD_BANKS.slice(0, 3).map(tile).join('');
+  const bottomRow = CD_BANKS.slice(3, 5).map(tile).join('');
+  return `<div class="cd-rotation-grid">${topRow}</div>` +
+    (bottomRow ? `<div class="cd-rotation-grid-row2">${bottomRow}</div>` : '');
 }
 
 // Build the amber nudge callout HTML. Wording differs based on whether
