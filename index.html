@@ -4510,6 +4510,20 @@ input[type="date"].cd-field {
   gap: 8px;
   margin-top: 16px;
 }
+
+/* Add Deposit button: full-width on mobile so it's easy to tap and
+   visually balances the three stacked input fields above it. On desktop
+   it stays auto-width (left-aligned pill) per the original Variant C
+   design. The btn-gold base styles handle gradient, font, and shadow;
+   this rule only sets width. v22.10. */
+.cd-add-btn {
+  width: auto;
+}
+@media (max-width: 768px) {
+  .cd-add-btn {
+    width: 100%;
+  }
+}
 .cd-rotation-grid > .cd-bank-tile {
   grid-column: span 2;
 }
@@ -9694,7 +9708,7 @@ body.modal-active .container > footer {
             </div>
           </div>
 
-          <button class="btn-gold" style="padding:10px 14px;font-size:12px;min-height:38px" onclick="addCashDeposit()">Add Deposit</button>
+          <button class="btn-gold cd-add-btn" style="padding:10px 14px;font-size:12px;min-height:38px" onclick="addCashDeposit()">Add Deposit</button>
 
           <div id="cd-rotation-strip"></div>
           <div id="cd-nudge"></div>
