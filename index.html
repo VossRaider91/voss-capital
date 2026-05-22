@@ -4505,28 +4505,28 @@ input[type="date"].cd-field {
    "next" tile gets an amber border, glow, and floating NEXT badge. */
 .cd-rotation-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: 1fr;
   gap: 8px;
   margin-top: 16px;
 }
-/* Second-row grid for Variant A (v22.10): Lloyds and NatWest sit
-   centred under the middle three banks of the top row. Padding is
-   sized so each bottom tile has the same width as a top-row column
-   (one third of container width minus gap considerations). The
-   horizontal padding pushes the row in by one column-width plus
-   gap. On narrow mobile we reduce the padding to keep both tiles
-   visible without crushing them. */
-.cd-rotation-grid-row2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 0 calc((100% - 16px) / 6 + 4px);
+.cd-rotation-grid > .cd-bank-tile {
+  grid-column: span 2;
 }
-@media (max-width: 520px) {
-  .cd-rotation-grid-row2 {
-    padding: 0 calc((100% - 16px) / 6);
-  }
+/* Variant A (v22.10): banks 4 and 5 (Lloyds, NatWest) sit in row 2,
+   placed at columns 2-3 and 4-5 so they're centred under the middle
+   three tiles of row 1. Single grid container means widths are guaranteed
+   identical across both rows (same 6-column foundation). grid-auto-rows
+   1fr above forces both rows to equal height so all five tiles render at
+   exactly the same height as well as the same width regardless of how
+   much content each one has. */
+.cd-rotation-grid > .cd-bank-tile:nth-child(4) {
+  grid-column: 2 / span 2;
+  grid-row: 2;
+}
+.cd-rotation-grid > .cd-bank-tile:nth-child(5) {
+  grid-column: 4 / span 2;
+  grid-row: 2;
 }
 .cd-bank-tile {
   position: relative;
@@ -20499,17 +20499,15 @@ function _cdRenderRotationStrip(stats, nextBank, deposits) {
       ${bottomSection}
     </div>`;
   };
-  // v22.10: split CD_BANKS into two rows. First three banks render in
-  // the primary 3-column grid at the top; banks 4 and 5 render in a
-  // 2-column grid centred underneath the middle three. The slice
-  // boundaries are deliberate — if a future change extends CD_BANKS
-  // past 5 entries, extras would not render until the layout is
-  // explicitly extended to handle them. This is a safety guard, not
-  // a limit on the rotation logic (which works with any list length).
-  const topRow = CD_BANKS.slice(0, 3).map(tile).join('');
-  const bottomRow = CD_BANKS.slice(3, 5).map(tile).join('');
-  return `<div class="cd-rotation-grid">${topRow}</div>` +
-    (bottomRow ? `<div class="cd-rotation-grid-row2">${bottomRow}</div>` : '');
+  // v22.10: single 6-column grid renders all five tiles. CSS handles
+  // row placement and column spans declaratively: tiles 1-3 span 2
+  // columns each in row 1, tiles 4-5 span 2 columns each in row 2
+  // placed at cols 2-3 and 4-5 (centred under the middle three of
+  // row 1). The grid-auto-rows: 1fr rule forces both rows to equal
+  // height so all five tiles render at exactly the same width AND
+  // height regardless of how much content each contains.
+  const allTiles = CD_BANKS.slice(0, 5).map(tile).join('');
+  return `<div class="cd-rotation-grid">${allTiles}</div>`;
 }
 
 // Build the amber nudge callout HTML. Wording differs based on whether
