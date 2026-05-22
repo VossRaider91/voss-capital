@@ -4661,22 +4661,6 @@ input[type="date"].cd-field {
 .temp-hot    { color: #FF8A3D; text-shadow: 0 0 14px rgba(255,138,61,0.38); }
 .temp-danger { color: #FF453A; text-shadow: 0 0 16px rgba(255,69,58,0.45); }
 
-/* Amber nudge callout below the rotation strip */
-.cd-nudge {
-  background: rgba(255,159,10,0.08);
-  border: 1px solid rgba(255,159,10,0.25);
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin-top: 12px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.80);
-  line-height: 1.5;
-}
-.cd-nudge strong {
-  color: var(--amber);
-  font-weight: 700;
-}
-
 /* Total Banked summary pill — green wash. Two rows: all-time total
    at the top, last-12-months below a thin divider. Both rows are
    flex-between (label left, value right) so the figures align. */
@@ -9711,7 +9695,6 @@ body.modal-active .container > footer {
           <button class="btn-gold cd-add-btn" style="padding:10px 14px;font-size:12px;min-height:38px" onclick="addCashDeposit()">Add Deposit</button>
 
           <div id="cd-rotation-strip"></div>
-          <div id="cd-nudge"></div>
           <div id="cd-total-banked"></div>
 
           <div class="cd-section-divider"></div>
@@ -20524,19 +20507,6 @@ function _cdRenderRotationStrip(stats, nextBank, deposits) {
   return `<div class="cd-rotation-grid">${allTiles}</div>`;
 }
 
-// Build the amber nudge callout HTML. Wording differs based on whether
-// any banks are used yet.
-function _cdRenderNudge(stats, nextBank, totalDeposits) {
-  if (totalDeposits === 0) {
-    return `<div class="cd-nudge">Start your rotation with <strong>${nextBank}</strong>. The log will track which bank to deposit into next as you add entries.</div>`;
-  }
-  const someNeverUsed = CD_BANKS.some(b => stats[b].lastDate === null);
-  if (someNeverUsed) {
-    return `<div class="cd-nudge">Deposit next into <strong>${nextBank}</strong> to spread the cash evenly across all three banks.</div>`;
-  }
-  return `<div class="cd-nudge"><strong>${nextBank}</strong> has the oldest deposit. Deposit next here to keep the rotation even across all three banks.</div>`;
-}
-
 // Build the Total Banked pill HTML. Hidden if no deposits yet. Shows
 // two lines: all-time total at the top, last-12-months total below
 // with a thin separator. The 12m line gives Voss a quick read on his
@@ -20599,10 +20569,6 @@ function renderCashDepositsLog() {
   // Rotation strip
   const stripEl = document.getElementById('cd-rotation-strip');
   if (stripEl) stripEl.innerHTML = _cdRenderRotationStrip(stats, nextBank, deposits);
-
-  // Amber nudge
-  const nudgeEl = document.getElementById('cd-nudge');
-  if (nudgeEl) nudgeEl.innerHTML = _cdRenderNudge(stats, nextBank, deposits.length);
 
   // Total banked — two-line layout (all-time + last 12 months)
   const totalEl = document.getElementById('cd-total-banked');
