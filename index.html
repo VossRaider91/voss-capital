@@ -1618,6 +1618,62 @@ h1 {
   color: #ffffff;
 }
 
+/* Year picker for the Portfolio Growth Yearly view (v22.12). A small
+   horizontal row: label on the left, native select dropdown on the
+   right. Styled to match the dark-mode aesthetic. Custom SVG chevron
+   to replace the native arrow which renders inconsistently across
+   browsers. */
+#growthYearPicker {
+  align-items: center;
+  gap: 12px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+}
+.growth-year-picker-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+}
+.growth-year-picker-select {
+  flex: 1;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 36px 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3e%3cpath d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-opacity='0.55' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.growth-year-picker-select:hover {
+  border-color: rgba(255,255,255,0.20);
+}
+.growth-year-picker-select:focus {
+  outline: none;
+  border-color: rgba(10,132,255,0.50);
+  box-shadow: 0 0 0 3px rgba(10,132,255,0.15);
+}
+.growth-year-picker-select option {
+  background: #1a1d22;
+  color: #fff;
+}
+
 /* ── SELL TAB — Tax Band toggle and CGT chip width parity ────────
    The CGT settings card (.sell-cgt-settings) uses flex-wrap:wrap.
    At viewports ≤1100px the row wraps, putting the Tax Band pill on
@@ -2664,6 +2720,12 @@ h1 {
   color: var(--muted);
   text-transform: uppercase;
 }
+.hcard-total-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
 .hcard-total {
   font-size: 17px;
   font-weight: 600;
@@ -2672,6 +2734,15 @@ h1 {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+.hcard-gain {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hcard-gain.pos { color: var(--green); }
+.hcard-gain.neg { color: var(--red); }
 .hcard-pills {
   display: flex; align-items: center; gap: 8px;
   flex-wrap: wrap;
@@ -9855,6 +9926,7 @@ body.modal-active .container > footer {
       <button class="seg-option active" onclick="switchGrowthTab('monthly',this)"><span>Monthly</span></button>
       <button class="seg-option" onclick="switchGrowthTab('yearly',this)"><span>Yearly</span></button>
     </div>
+    <div id="growthYearPicker" style="display:none" class="mb16"></div>
     <div id="growthChartWrap" style="position:relative">
       <div id="growthChart"></div>
       <div id="growthTip" style="display:none;position:absolute;background:rgba(10,10,10,0.96);border:1px solid var(--gold);padding:10px 14px;border-radius:10px;font-size:10px;color:var(--white);pointer-events:none;z-index:200;min-width:180px;line-height:1.8;white-space:nowrap"></div>
@@ -13894,6 +13966,84 @@ function switchGrowthTab(type, btn) {
   if (parentTabs) parentTabs.querySelectorAll('.sub-tab, .seg-option').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   renderGrowthChart(type);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// YEAR PICKER (v22.12)
+// The Yearly chart now shows month-boundary points within a SELECTED
+// calendar year. The picker above the chart lets the user choose which
+// year to view. Populated with every year that has data in LS.HISTORY,
+// plus the current year (always shown so user can see YTD even before
+// any 2027 buys). Selected year persists in window._growthYear so it
+// survives toggles between Monthly and Yearly view.
+// ════════════════════════════════════════════════════════════════════
+function _renderYearPicker() {
+  const el = document.getElementById('growthYearPicker');
+  if (!el) return;
+
+  // Only show the picker when Yearly view is active. The picker is
+  // hidden by default; renderGrowthChart toggles its display.
+  const activeTab = (typeof getActiveGrowthTab === 'function') ? getActiveGrowthTab() : 'monthly';
+  if (activeTab !== 'yearly') {
+    el.style.display = 'none';
+    return;
+  }
+
+  // Gather years that have history data, plus current year always.
+  const allHistory = lsGet(LS.HISTORY, []).filter(e => e.funds && e.funds.length > 0);
+  const yearsWithData = new Set(allHistory.map(e => new Date(e.timestamp).getFullYear()));
+  yearsWithData.add(new Date().getFullYear());
+  const years = Array.from(yearsWithData).sort((a, b) => b - a); // descending
+
+  if (years.length === 0) {
+    el.style.display = 'none';
+    return;
+  }
+
+  // Default selected year: window._growthYear if set and valid,
+  // otherwise current calendar year.
+  const currentYear = new Date().getFullYear();
+  let selected = window._growthYear || currentYear;
+  if (!years.includes(selected)) selected = currentYear;
+  window._growthYear = selected;
+
+  const options = years.map(y => {
+    const isCurrent = y === currentYear;
+    const label = isCurrent ? `${y} (current)` : String(y);
+    return `<option value="${y}"${y === selected ? ' selected' : ''}>${label}</option>`;
+  }).join('');
+
+  el.innerHTML = `
+    <label class="growth-year-picker-label">Select year</label>
+    <select class="growth-year-picker-select" onchange="switchGrowthYear(this.value)">
+      ${options}
+    </select>
+  `;
+  el.style.display = 'flex';
+}
+
+function switchGrowthYear(yearStr) {
+  const year = parseInt(yearStr, 10);
+  if (!isFinite(year)) return;
+  window._growthYear = year;
+  // Persist in LS.UI so it survives reload
+  try {
+    const ui = lsGet(LS.UI, {}) || {};
+    ui.growthYear = year;
+    lsSet(LS.UI, ui);
+  } catch (e) {}
+  renderGrowthChart('yearly');
+}
+
+// Restore the persisted year selection on init, before the first chart
+// render. Called from the init flow.
+function _restoreGrowthYearFromLS() {
+  try {
+    const ui = lsGet(LS.UI, {}) || {};
+    if (typeof ui.growthYear === 'number' && isFinite(ui.growthYear)) {
+      window._growthYear = ui.growthYear;
+    }
+  } catch (e) {}
 }
 
 // ════════════════════════════════════════════════════════
@@ -18423,6 +18573,37 @@ function renderPortfolio(filter='all') {
     // To change a price, the user clicks Edit which opens the inline form.
     const pricePillContent = `<span class="hcard-price-pound">£</span>${_formatPriceDisplay(h.price||0) || '0'}`;
 
+    // Cost basis & gain/loss vs cost (v22.13). For each holding, compute
+    // the avgCost from the entry's own data with a sensible fallback chain:
+    //   1. h.avgCost if explicitly set (sync sets this for fromHistory
+    //      holdings; sells preserve it).
+    //   2. h.totalCost / h.shares if totalCost is stamped (seeded legacy
+    //      pattern — the seedX functions stamp totalCost on each entry).
+    //   3. h.price as a last resort (means we don't know the cost; gain
+    //      will display as £0 / 0% which is honestly "no signal").
+    // Then derive £gain = (currentPrice - avgCost) × shares and
+    // %gain = (currentPrice - avgCost) / avgCost × 100. Skip rendering
+    // the gain line if avgCost is unknown OR if avgCost equals current
+    // price exactly (showing "+£0 (+0.0%)" is just noise).
+    const _avgCost = h.avgCost && h.avgCost > 0
+                   ? h.avgCost
+                   : (h.totalCost && h.shares > 0 ? h.totalCost / h.shares : 0);
+    let gainHtml = '';
+    if (_avgCost > 0 && h.price > 0) {
+      const gainPerUnit = h.price - _avgCost;
+      const gainTotal   = gainPerUnit * h.shares;
+      const gainPct     = (gainPerUnit / _avgCost) * 100;
+      // Suppress display when both gain figures round to zero — keeps
+      // the card visually quiet when there's no movement to report.
+      if (Math.abs(Math.round(gainTotal)) > 0 || Math.abs(gainPct) >= 0.05) {
+        const sign    = gainTotal >= 0 ? '+' : '-';
+        const pctSign = gainPct >= 0 ? '+' : '';
+        const cls     = gainTotal >= 0 ? 'pos' : 'neg';
+        const gainTxt = `${sign}£${fmtNum(Math.round(Math.abs(gainTotal)), 0)} (${pctSign}${gainPct.toFixed(1)}%)`;
+        gainHtml = `<div class="hcard-gain ${cls}" data-balance-sensitive>${gainTxt}</div>`;
+      }
+    }
+
     return `<div class="hcard" id="hrow_${h.id}" data-ticker="${h.ticker}">
       <div class="hcard-top">
         <div class="hcard-top-left">
@@ -18438,7 +18619,10 @@ function renderPortfolio(filter='all') {
             <span class="hcard-type-meta">${typeMeta}</span>
           </div>
         </div>
-        <div class="hcard-total" data-balance-sensitive>£${fmtNum(Math.round(h.value),0)}</div>
+        <div class="hcard-total-block">
+          <div class="hcard-total" data-balance-sensitive>£${fmtNum(Math.round(h.value),0)}</div>
+          ${gainHtml}
+        </div>
       </div>
       <div class="hcard-pills">
         <div class="hcard-units-pill">${h.shares} units</div>
@@ -18849,6 +19033,11 @@ function moveNWPieTooltip(e) {
 // GROWTH CHART
 // ════════════════════════════════════════════════════════
 function renderGrowthChart(type='monthly') {
+  // Render the year picker (visible only when type === 'yearly').
+  // Must happen before the chart itself so the picker is in the DOM
+  // and reflects the current year selection.
+  try { _renderYearPicker(); } catch (e) {}
+
   const allHistory = lsGet(LS.HISTORY, []).filter(e => e.funds && e.funds.length > 0);
   const allPortfolio = lsGet(LS.PORTFOLIO, []);
   const el = document.getElementById('growthChart');
@@ -19138,55 +19327,130 @@ function renderGrowthChart(type='monthly') {
       });
     });
   } else {
-    // Yearly: walk every entry chronologically (so cost & sales accumulate
-    // correctly), but only emit a point per year (last buy of year).
-    // Uses the same historical-price valuation as the monthly branch so
-    // year-on-year market movements are honest. See the monthly comments
-    // for the full rationale and fallback chain.
-    let cumulativeUnits = {};
-    let cumulativeCost  = 0;
-    let lastBuyTsByYear = {};
-    sortedBuys.forEach(e => { lastBuyTsByYear[new Date(e.timestamp).getFullYear()] = e.timestamp; });
-    const pricePaidByTicker = {};
-    const seededHoldings = portfolio.filter(h => h.seeded);
-    const latestYear = sortedBuys.length > 0
-      ? new Date(sortedBuys[sortedBuys.length - 1].timestamp).getFullYear()
-      : null;
-    const priceAt = (ticker, timestamp, isLatestPoint) => {
-      if (isLatestPoint) return getBestPrice(ticker);
-      const hist = _getPriceForTickerOnDay(ticker, timestamp);
-      if (hist > 0) return hist;
-      const paid = pricePaidByTicker[ticker];
-      if (paid > 0) return paid;
-      return getBestPrice(ticker);
-    };
-    sortedBuys.forEach(e => {
-      (e.funds||[]).forEach(f => {
-        cumulativeUnits[f.ticker] = (cumulativeUnits[f.ticker] || 0) + (f.held||0);
-        cumulativeCost += (f.held || 0) * (f.price || 0);
-        if ((f.price || 0) > 0) pricePaidByTicker[f.ticker] = f.price;
-      });
-      applySoldUpTo(e.timestamp, cumulativeUnits);
-      const yr = new Date(e.timestamp).getFullYear();
-      if (e.timestamp === lastBuyTsByYear[yr]) {
-        const isLatest = (yr === latestYear);
-        const cumulativeValue = Object.entries(cumulativeUnits).reduce((s,[ticker,units]) => {
-          return s + units * priceAt(ticker, e.timestamp, isLatest);
-        }, 0);
-        const legacyValue = seededHoldings.reduce((s, h) => {
-          const histP = _getPriceForTickerOnDay(h.ticker, e.timestamp);
-          const p = isLatest ? (h.price || 0) : (histP > 0 ? histP : (h.price || 0));
-          return s + h.shares * p;
-        }, 0);
-        points.push({
-          label: yr,
-          fullDate: yr,
-          value: cumulativeValue + legacyValue,
-          contributed: seededCostBase + cumulativeCost,
-          timestamp: e.timestamp,
-          wrapper: e.wrapper || 'GIA',
-        });
+    // Yearly: month-boundary points within a single calendar year.
+    // v22.12 redesign — completely different from the previous "one point
+    // per year of buy history" model. Now mirrors the Monthly chart's
+    // pattern but at month granularity within a year. Points emitted:
+    //   1. Start-of-year baseline (1 January, or 1 May for 2026 since
+    //      that's when the tool started being used).
+    //   2. End-of-each-completed-month after the baseline.
+    //   3. Today (for current year, if today isn't already a month-end).
+    //   4. For past years, no "today" point — chart ends at 31 December.
+    //
+    // The selected year comes from window._growthYear, set by the year
+    // picker dropdown above the chart. Defaults to current year.
+    //
+    // Sales are applied per-point using soldTimestamps directly (not via
+    // applySoldUpTo's accumulator) so each point's unit reconstruction is
+    // fresh and doesn't depend on traversal order.
+
+    const selectedYear = window._growthYear || new Date().getFullYear();
+    const currentYear  = new Date().getFullYear();
+    const isCurrentYr  = selectedYear === currentYear;
+    const now          = new Date();
+
+    // Start-of-tracking for 2026 was 1 May (Voss began using the tool).
+    // For 2027 onwards, start-of-year is 1 January. If this becomes a
+    // pattern that needs configuring across years, lift to a constant.
+    const startMonth = (selectedYear === 2026) ? 4 : 0; // 0-indexed, 4 = May
+    const startTs    = new Date(selectedYear, startMonth, 1, 0, 0, 0, 0).getTime();
+
+    // Build the list of point dates:
+    //   - One at start (1 May 2026 or 1 Jan for other years).
+    //   - One at end of each completed month between start and now (current
+    //     year) or end of each month through December (past years).
+    //   - One at today (current year only, if today isn't already at a
+    //     month boundary we'd duplicate).
+    const pointDates = [{ ts: startTs, label: 'start', date: new Date(startTs) }];
+
+    if (isCurrentYr) {
+      // Walk month-ends from startMonth+1 through to the current month.
+      // The current month's end hasn't happened yet, so the latest
+      // month-end we can emit is the END of the PREVIOUS month, not the
+      // current one. Then we add 'today' as the final live point.
+      const currentMonth = now.getMonth(); // 0-indexed
+      for (let m = startMonth + 1; m <= currentMonth; m++) {
+        // End of month m-1 (the just-completed month). Day 0 of month m
+        // is 31/30/28/29 Dec/Nov/Feb of month m-1.
+        const eom = new Date(selectedYear, m, 0, 23, 59, 59, 999);
+        pointDates.push({ ts: eom.getTime(), label: 'eom', date: eom });
       }
+      // Today as the final live point (only if today isn't already
+      // sitting on the start-of-tracking date — avoids a duplicate point
+      // if the user starts tracking and looks at the chart same day).
+      const todayTs = now.getTime();
+      if (todayTs > startTs) {
+        pointDates.push({ ts: todayTs, label: 'today', date: now });
+      }
+    } else {
+      // Past year: emit end-of-each-month from startMonth through to Dec.
+      for (let m = startMonth + 1; m <= 12; m++) {
+        const eom = new Date(selectedYear, m, 0, 23, 59, 59, 999);
+        pointDates.push({ ts: eom.getTime(), label: 'eom', date: eom });
+      }
+    }
+
+    // Build a point from each date entry. Reconstruct units that existed
+    // at each timestamp; value at historical price on that day (or live
+    // price if it's the 'today' point).
+    pointDates.forEach((pd, idx) => {
+      const isLatest = (idx === pointDates.length - 1) && isCurrentYr;
+
+      // Reconstruct units at this point
+      const unitsAtPoint = {};
+      sortedBuys.forEach(e => {
+        if (e.timestamp > pd.ts) return;
+        (e.funds || []).forEach(f => {
+          unitsAtPoint[f.ticker] = (unitsAtPoint[f.ticker] || 0) + (f.held || 0);
+        });
+      });
+      // Apply sales up to this point (fresh per-point, not using
+      // applySoldUpTo's accumulator)
+      soldTimestamps.forEach(ts => {
+        if (ts > pd.ts) return;
+        soldByTimestamp[ts].forEach(({ticker, units: sold}) => {
+          unitsAtPoint[ticker] = Math.max(0, (unitsAtPoint[ticker]||0) - sold);
+        });
+      });
+
+      // Price-lookup with the same fallback chain as the monthly branch
+      const priceAtPoint = (ticker) => {
+        if (isLatest) return getBestPrice(ticker);
+        const hist = _getPriceForTickerOnDay(ticker, pd.ts);
+        if (hist > 0) return hist;
+        return getBestPrice(ticker);
+      };
+
+      // Value seeded legacy holdings at this day's price
+      const legacyVal = (portfolio.filter(h => h.seeded)).reduce((s, h) => {
+        return s + (h.shares || 0) * priceAtPoint(h.ticker);
+      }, 0);
+      // Value the reconstructed history units at this day's price
+      const historyVal = Object.entries(unitsAtPoint).reduce((s, [ticker, units]) => {
+        return s + units * priceAtPoint(ticker);
+      }, 0);
+      const totalVal = legacyVal + historyVal;
+
+      // Cumulative cost up to this point
+      let contribAtPoint = seededCostBase;
+      sortedBuys.forEach(e => {
+        if (e.timestamp > pd.ts) return;
+        (e.funds || []).forEach(f => {
+          contribAtPoint += (f.held || 0) * (f.price || 0);
+        });
+      });
+
+      // Label format: "1 May", "31 May", "30 Jun", etc.
+      const monthShort = pd.date.toLocaleDateString('en-GB', { month: 'short' });
+      const dayNum     = pd.date.getDate();
+      points.push({
+        label:       `${dayNum} ${monthShort}`,
+        fullDate:    pd.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+        value:       totalVal,
+        contributed: contribAtPoint,
+        timestamp:   pd.ts,
+        wrapper:     'GIA', // unused in this chart, kept for tooltip schema parity
+      });
     });
   }
 
@@ -19247,7 +19511,19 @@ function renderGrowthChart(type='monthly') {
   }
 
   if (points.length < 2) {
-    el.innerHTML=`<div class="history-empty" style="padding:24px">Not enough ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}data for a ${type} chart yet.</div>`;
+    let msg;
+    if (type === 'yearly') {
+      const selectedYear = window._growthYear || new Date().getFullYear();
+      const isCurrent = selectedYear === new Date().getFullYear();
+      if (isCurrent) {
+        msg = `The Yearly chart needs at least one completed month past the start of the year. Once a month closes (e.g. 31 May for 2026), the chart will start drawing. Performance History below captures the same data in tabular form in the meantime.`;
+      } else {
+        msg = `No ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}data available for ${selectedYear}.`;
+      }
+    } else {
+      msg = `Not enough ${wrapperLabel === 'all wrappers' ? '' : wrapperLabel + ' '}data for a ${type} chart yet.`;
+    }
+    el.innerHTML=`<div class="history-empty" style="padding:24px">${msg}</div>`;
     return;
   }
 
@@ -28946,6 +29222,9 @@ function _initHelpTooltips() {
 
 function init() {
   migrateTickerNames();
+  // Restore persisted UI state early so chart renders pick up the
+  // previously-selected year. v22.12.
+  try { _restoreGrowthYearFromLS(); } catch (e) {}
   // Load user-customised allocation strategy from LS, replacing the FUNDS
   // defaults if a valid config exists. Must run before any function that
   // iterates FUNDS — including buildFundCards, buildEmpFundsInput, and
