@@ -26217,6 +26217,13 @@ function _runDailyRefresh() {
   if (activeTab === 'tax') {
     try { if (typeof renderTaxTab     === 'function') renderTaxTab();     } catch (e) {}
     try { if (typeof renderISATracker === 'function') renderISATracker(); } catch (e) {}
+    // Cash Deposits Log lives inside the Cash Calculator collapsible on
+    // the Tax tab. Its Days Ago counters are calculated against today's
+    // date at render time, so they need re-rendering after a midnight
+    // crossing to show current values. (v22.10 fix; previously the log
+    // would show stale day counts until the user added/deleted a
+    // deposit or hard-reloaded the page.)
+    try { if (typeof renderCashDepositsLog === 'function') renderCashDepositsLog(); } catch (e) {}
   }
   if (activeTab === 'retirement') {
     try { if (typeof _refreshAgeFromDOB    === 'function') _refreshAgeFromDOB();    } catch (e) {}
