@@ -9356,9 +9356,9 @@ body.modal-active .container > footer {
           <span class="input-label">Category</span>
           <select class="num-input" id="bgt-qa-category" style="text-align:left;cursor:pointer">
             <option value="Groceries">Groceries</option>
+            <option value="Miscellaneous">Miscellaneous</option>
             <option value="Socialising">Socialising</option>
             <option value="Investment Deposit">Investment Deposit</option>
-            <option value="Miscellaneous">Miscellaneous</option>
           </select>
         </div>
         <div class="input-group" data-pound>
@@ -25621,7 +25621,7 @@ const BGT_DEFAULTS = {
 const BGT_INCOME   = ['PAYE Salary', 'Dividend Salary', 'Other Income', 'Cash to Bank'];
 const BGT_TAX      = ['Tax Provision'];
 const BGT_FIXED    = ['Mortgage', 'Mortgage Overpayment', 'Council Tax', 'Utilities', 'Ground Rent'];
-const BGT_VARIABLE = ['Groceries', 'Gym', 'Socialising', 'Investment Deposit', 'Miscellaneous'];
+const BGT_VARIABLE = ['Groceries', 'Miscellaneous', 'Socialising', 'Investment Deposit', 'Gym'];
 const BGT_ALL      = [...BGT_INCOME, ...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE];
 
 // Recurring defaults — categories that almost always have the same value
@@ -27366,6 +27366,18 @@ function deleteBgtMonth(event, monthId) {
 }
 
 function selectBgtHistMonth(monthId) {
+  // Toggle: tapping the tile that's already open closes it. This is the
+  // close affordance the user has — without it, an open month detail
+  // stays open until they navigate away. (v22.10 fix; previously the
+  // function only ever set the selection, never cleared it.)
+  if (_bgtHistSelectedId === monthId) {
+    _bgtHistSelectedId = null;
+    document.getElementById('bgt-hist-detail').style.display = 'none';
+    document.getElementById('bgt-hist-subtitle').textContent = 'Select a month below to inspect it';
+    _renderBgtHistList(); // refresh tile (removes active class)
+    return;
+  }
+
   _bgtHistSelectedId = monthId;
   _renderBgtHistList(); // refresh active tile
 
