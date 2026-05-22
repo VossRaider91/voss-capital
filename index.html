@@ -2005,42 +2005,77 @@ h1 {
 
 /* ════════════════════════════════════════════════════════════════════
    Performance History card (v22.11)
-   Sits underneath the Portfolio Growth chart, archives monthly and
-   yearly figures as the calendar rolls forward. Two sections stacked
-   vertically: months (most recent 24) and years (most recent 10).
-   Each row is flex-between: period label on the left, +£X (+X.X%) on
-   the right. Colour-coded green/red on the figure side only so the
-   label column reads as a neutral list of periods.
+   Sits underneath the Portfolio Growth chart. Two sections: By Month
+   and By Year, each with its own summary box and row list. Designed
+   to feel like a sibling of the Portfolio Growth card directly above,
+   not a tacked-on extension. Visual conventions mirror other plan-cards
+   in the app: proper internal padding, tinted section blocks, clear
+   typographic hierarchy. Mobile carries the same hierarchy with
+   adjusted spacing.
    ════════════════════════════════════════════════════════════════════ */
+
 .perf-history-card { margin-top: 16px; }
-.perf-history-section { margin-top: 14px; }
-.perf-history-section:first-of-type { margin-top: 0; }
+
+/* Body wrapper: gives content proper padding from card edges. The
+   plan-card itself has overflow:hidden + 14px border-radius, so the
+   body sits inside that. 18px padding matches the rhythm of other
+   data-dense cards (Cash Deposits Log, etc). */
+.perf-history-body {
+  padding: 18px;
+}
+
+/* Section block: tinted backdrop, internal padding, rounded corners
+   so By Month and By Year each read as distinct visual containers. */
+.perf-history-section {
+  background: linear-gradient(180deg, rgba(255,255,255,0.020) 0%, rgba(255,255,255,0.010) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.perf-history-section:last-child { margin-bottom: 0; }
+
 .perf-history-section-title {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   color: rgba(255,255,255,0.55);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
+
+/* Row treatment: each period row has proper vertical padding and a
+   subtle divider. The label sits on the left, the figure on the right. */
 .perf-history-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   font-size: 12px;
+  min-height: 36px;
 }
-.perf-history-row:last-child { border-bottom: 0; }
+.perf-history-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.perf-history-row:first-of-type { padding-top: 0; }
+
+/* Current-period highlight: subtle amber tint, more prominence than
+   the surrounding rows but not jarring. */
 .perf-history-row.is-current {
-  background: linear-gradient(180deg, rgba(255,159,10,0.05) 0%, transparent 100%);
-  margin: 0 -8px;
-  padding: 8px;
-  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(255,159,10,0.06) 0%, rgba(255,159,10,0.02) 100%);
+  margin: 6px -10px;
+  padding: 10px;
+  border-radius: 8px;
+  border-bottom: 0;
 }
+.perf-history-row.is-current + .perf-history-row { padding-top: 10px; }
+.perf-history-row.is-current:first-of-type { margin-top: 0; }
+
 .perf-history-label {
   font-weight: 500;
   color: rgba(255,255,255,0.85);
+  letter-spacing: -0.1px;
 }
 .perf-history-row.is-current .perf-history-label {
   color: var(--amber);
@@ -2054,24 +2089,25 @@ h1 {
 .perf-history-figure.pos { color: var(--green); }
 .perf-history-figure.neg { color: var(--red); }
 .perf-history-figure.neutral { color: rgba(255,255,255,0.40); }
+
 .perf-history-empty {
   font-size: 11px;
-  color: rgba(255,255,255,0.50);
+  color: rgba(255,255,255,0.55);
   font-style: italic;
-  padding: 8px 0;
-  line-height: 1.5;
+  padding: 4px 0;
+  line-height: 1.6;
 }
 
 /* Year-row badges (YTD for current year, "N months" for partial-year
    completions). Both compact pills sitting next to the year label. */
 .perf-history-year-badge {
   display: inline-block;
-  margin-left: 6px;
-  padding: 1px 6px;
-  border-radius: 4px;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 5px;
   font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   vertical-align: middle;
   font-variant-numeric: tabular-nums;
@@ -2091,48 +2127,56 @@ h1 {
    staleness so the user knows when to cycle through wrappers. */
 .perf-history-stamp {
   font-size: 10px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.50);
   font-weight: 500;
   letter-spacing: -0.1px;
   font-style: italic;
   white-space: nowrap;
 }
 
-/* Summary box: Best Month / Worst Month / Typical Month.
-   Desktop: three columns side-by-side. Mobile (≤520px): stacks vertically.
-   Each cell shows a label on top, a large coloured figure in the middle,
-   and a percentage + period sub-line beneath. Single-cell fallback used
-   when fewer than 3 months are available. v22.11. */
+/* Summary box: Best / Worst / Typical (Month or Year).
+   Sits at the top of each section as the dominant visual element,
+   above the by-row list. Desktop: three columns side-by-side. Mobile
+   (≤520px): stacks vertically with separator lines. Each cell shows
+   a label on top, a large coloured figure in the middle, and a
+   percentage + period sub-line beneath. */
 .perf-summary-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 14px;
-  margin-bottom: 4px;
-  padding: 14px 12px 12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.015) 100%);
-  border: 1px solid rgba(255,255,255,0.08);
+  gap: 0;
+  margin-bottom: 16px;
+  padding: 14px 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 10px;
 }
 .perf-summary-row.perf-summary-single {
   grid-template-columns: 1fr;
+  padding: 16px;
 }
 .perf-summary-cell {
   text-align: center;
+  padding: 0 12px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.perf-summary-cell:last-of-type { border-right: 0; }
+.perf-summary-row.perf-summary-single .perf-summary-cell {
+  padding: 0;
+  border-right: 0;
 }
 .perf-summary-label {
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   color: rgba(255,255,255,0.50);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .perf-summary-figure {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
   line-height: 1.1;
 }
 .perf-summary-figure.pos { color: var(--green); }
@@ -2141,40 +2185,69 @@ h1 {
   font-size: 10px;
   font-weight: 500;
   color: rgba(255,255,255,0.60);
-  margin-top: 4px;
+  margin-top: 6px;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
 }
 .perf-summary-note {
   grid-column: 1 / -1;
   text-align: center;
   font-size: 10px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.50);
   font-style: italic;
-  margin-top: 6px;
-  line-height: 1.4;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  line-height: 1.5;
 }
 
 @media (max-width: 520px) {
-  .perf-summary-row {
-    grid-template-columns: 1fr;
-    gap: 14px;
+  /* Mobile: less body padding to give content more room, section
+     internals stay generous so rows still feel comfortable. */
+  .perf-history-body {
     padding: 12px;
   }
-  .perf-summary-row .perf-summary-cell {
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+  .perf-history-section {
+    padding: 12px;
+    margin-bottom: 10px;
   }
-  .perf-summary-row .perf-summary-cell:last-of-type {
+  .perf-history-section-title {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+  .perf-history-row {
+    font-size: 11px;
+    padding: 9px 0;
+    min-height: 34px;
+  }
+  .perf-history-figure { font-size: 11px; }
+  .perf-history-row.is-current {
+    margin: 4px -8px;
+    padding: 9px 8px;
+  }
+
+  /* Summary box: stack vertically. Replace inter-cell borders
+     (vertical on desktop) with horizontal dividers between cells. */
+  .perf-summary-row {
+    grid-template-columns: 1fr;
+    padding: 14px 16px;
+  }
+  .perf-summary-cell {
+    padding: 12px 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .perf-summary-cell:first-of-type { padding-top: 0; }
+  .perf-summary-cell:last-of-type {
     padding-bottom: 0;
     border-bottom: 0;
   }
   .perf-summary-figure {
-    font-size: 18px;
+    font-size: 19px;
   }
-  /* History row figures shrink slightly on mobile to keep them on one
-     line alongside longer month labels like "Sep 2026". */
-  .perf-history-row { font-size: 11px; }
-  .perf-history-figure { font-size: 11px; }
+  .perf-summary-sub {
+    font-size: 11px;
+  }
 }
 
 .edit-form {
@@ -19829,15 +19902,17 @@ function _renderPerformanceHistory() {
         <span class="plan-card-ticker">Performance History · ${wrapperLabel}</span>
         ${lastCapturedHtml}
       </div>
-      ${summaryHtml}
-      <div class="perf-history-section">
-        <div class="perf-history-section-title">By Month</div>
-        ${monthsHtml}
-      </div>
-      <div class="perf-history-section">
-        <div class="perf-history-section-title">By Year</div>
-        ${annualSummaryHtml}
-        ${yearsHtml}
+      <div class="perf-history-body">
+        <div class="perf-history-section">
+          <div class="perf-history-section-title">By Month</div>
+          ${summaryHtml}
+          ${monthsHtml}
+        </div>
+        <div class="perf-history-section">
+          <div class="perf-history-section-title">By Year</div>
+          ${annualSummaryHtml}
+          ${yearsHtml}
+        </div>
       </div>
     </div>
   `;
