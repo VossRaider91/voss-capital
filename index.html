@@ -9356,8 +9356,7 @@ body.modal-active .container > footer {
           <span class="input-label">Category</span>
           <select class="num-input" id="bgt-qa-category" style="text-align:left;cursor:pointer">
             <option value="Groceries">Groceries</option>
-            <option value="Extras">Extras</option>
-            <option value="Nights Out">Nights Out</option>
+            <option value="Socialising">Socialising</option>
             <option value="Investment Deposit">Investment Deposit</option>
             <option value="Miscellaneous">Miscellaneous</option>
           </select>
@@ -25613,17 +25612,16 @@ const BGT_DEFAULTS = {
     'Ground Rent':          30,
     'Groceries':            300,
     'Gym':                  40,
-    'Extras':               200,
-    'Nights Out':           100,
+    'Socialising':          100,
     'Investment Deposit':   2700,
-    'Miscellaneous':        0,
+    'Miscellaneous':        200,
   },
 };
 
 const BGT_INCOME   = ['PAYE Salary', 'Dividend Salary', 'Other Income', 'Cash to Bank'];
 const BGT_TAX      = ['Tax Provision'];
 const BGT_FIXED    = ['Mortgage', 'Mortgage Overpayment', 'Council Tax', 'Utilities', 'Ground Rent'];
-const BGT_VARIABLE = ['Groceries', 'Gym', 'Extras', 'Nights Out', 'Investment Deposit', 'Miscellaneous'];
+const BGT_VARIABLE = ['Groceries', 'Gym', 'Socialising', 'Investment Deposit', 'Miscellaneous'];
 const BGT_ALL      = [...BGT_INCOME, ...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE];
 
 // Recurring defaults — categories that almost always have the same value
@@ -25686,6 +25684,82 @@ function _bgtMigrateMainSalaryToPAYE(state) {
   });
 
   state._schemaVersion = 2;
+  return changed;
+}
+
+// v3 migration: variable-expenses cleanup. Three discretionary buckets
+// (Extras, Nights Out, Miscellaneous) was one too many, and "Nights Out"
+// was too narrow a label for general social spend. So:
+//   1. Rename 'Nights Out' → 'Socialising' (rename only — same data,
+//      cleaner label that includes lunches/coffees/non-evening social).
+//   2. Merge 'Extras' INTO 'Miscellaneous' (sum amounts, rewrite audit
+//      entries, drop the Extras key entirely). Eliminates the duplicate
+//      catch-all bucket.
+// Applies to live state AND every archived monthHistory record. Gated by
+// _schemaVersion < 3 so it runs once per LS state then never again.
+// Idempotent: if neither key exists anywhere, nothing happens.
+function _bgtMigrateCategoriesV3(state) {
+  if (state._schemaVersion >= 3) return false;
+  let changed = false;
+
+  // Helper: rename keyA → keyB inside a {category: value} object.
+  // Pure rename: if keyA exists, copy value to keyB and delete keyA.
+  // Does NOT sum if both keys are already present (keyB wins — should
+  // never happen since the migration runs once before any new data is
+  // entered under the new names).
+  const renameKey = (obj, from, to) => {
+    if (!obj || !(from in obj)) return false;
+    if (!(to in obj)) {
+      obj[to] = obj[from];
+    }
+    delete obj[from];
+    return true;
+  };
+
+  // Helper: merge keyA INTO keyB inside a {category: value} object.
+  // If keyB already exists, sum keyA into it. Then delete keyA.
+  // Comma-safe parsing because some legacy values may be strings.
+  const mergeKey = (obj, from, into) => {
+    if (!obj || !(from in obj)) return false;
+    const fromVal  = parseFloat(String(obj[from]).replace(/,/g, '')) || 0;
+    const intoVal  = parseFloat(String(obj[into] ?? 0).replace(/,/g, '')) || 0;
+    obj[into] = fromVal + intoVal;
+    delete obj[from];
+    return true;
+  };
+
+  // Live state: planned + actual buckets
+  ['planned', 'actual'].forEach(bucket => {
+    const obj = state[bucket] || {};
+    if (renameKey(obj, 'Nights Out', 'Socialising')) changed = true;
+    if (mergeKey(obj, 'Extras', 'Miscellaneous')) changed = true;
+  });
+
+  // Live audit entries: rename category fields
+  (state.audit || []).forEach(e => {
+    if (e?.category === 'Nights Out')   { e.category = 'Socialising';    changed = true; }
+    if (e?.category === 'Extras')        { e.category = 'Miscellaneous';  changed = true; }
+  });
+
+  // Every archived month — snapshots + audit + averagesAtSnapshot
+  (state.monthHistory || []).forEach(rec => {
+    ['plannedSnapshot', 'actualSnapshot'].forEach(bucket => {
+      const obj = rec[bucket];
+      if (!obj) return;
+      if (renameKey(obj, 'Nights Out', 'Socialising')) changed = true;
+      if (mergeKey(obj, 'Extras', 'Miscellaneous')) changed = true;
+    });
+    (rec.audit || []).forEach(e => {
+      if (e?.category === 'Nights Out')   { e.category = 'Socialising';    changed = true; }
+      if (e?.category === 'Extras')        { e.category = 'Miscellaneous';  changed = true; }
+    });
+    if (rec.averagesAtSnapshot) {
+      if (renameKey(rec.averagesAtSnapshot, 'Nights Out', 'Socialising')) changed = true;
+      if (mergeKey(rec.averagesAtSnapshot, 'Extras', 'Miscellaneous')) changed = true;
+    }
+  });
+
+  state._schemaVersion = 3;
   return changed;
 }
 
@@ -27901,6 +27975,17 @@ function bgtInitMonitor() {
   const state = bgtLoad();
   let needsSave = false;
   if (_bgtMigrateMainSalaryToPAYE(state)) needsSave = true;
+
+  // v3 (v22.10): rename Nights Out → Socialising, merge Extras → Misc.
+  // If anything actually changed, snapshot first so undo restores the
+  // pre-merge data. We do the snapshot BEFORE saving the migrated state
+  // because snapshotState captures the current LocalStorage state, and
+  // bgtSave below is what writes the new shape. The migration mutated
+  // the in-memory object, but LS still holds the old shape until save.
+  if (_bgtMigrateCategoriesV3(state)) {
+    try { snapshotState('Variable expenses cleanup'); } catch (e) {}
+    needsSave = true;
+  }
 
   // Silent backfill: archived months that pre-date this feature won't have
   // averagesAtSnapshot. Stamp them once on load — same maths as if they
