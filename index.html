@@ -13845,7 +13845,18 @@ function updateLiveDrift() {
     const badge = document.getElementById(`badge_${f.id}`);
     if (!badge) return;
     if (totalVal===0) { badge.textContent='No data'; badge.className='badge badge-none'; return; }
-    if (Math.abs(drift)<=1.5) { badge.textContent='On track'; badge.className='badge badge-ok'; }
+    if (Math.abs(drift)<=1.5) {
+      // On-track pill: append the precise delta so the user can see how
+      // close they are to target rather than just a fuzzy status word.
+      // Sign convention matches Over/Under states (+ means over target,
+      // − means under). Suppress the delta entirely when it rounds to
+      // 0.0% to avoid the noise of a "+0.0%" suffix that conveys nothing.
+      const showDelta = Math.abs(drift) >= 0.05;
+      const sign = drift >= 0 ? '+' : '';
+      const deltaText = showDelta ? ` · ${sign}${drift.toFixed(1)}%` : '';
+      badge.textContent = `On track${deltaText}`;
+      badge.className = 'badge badge-ok';
+    }
     else if (drift>0) { badge.textContent=`+${drift.toFixed(1)}% over`; badge.className='badge badge-over'; }
     else { badge.textContent=`${drift.toFixed(1)}% under`; badge.className='badge badge-under'; }
   });
