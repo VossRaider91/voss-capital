@@ -2606,6 +2606,197 @@ h1 {
    Edit/Remove buttons). Replaces the old grid-row layout where every
    holding shared a single horizontal flex grid.
 */
+/* ════════════════════════════════════════════════════════════════════
+   TICKER SUMMARY CARD (v22.14)
+   Sits above the Portfolio Growth chart. Aggregates all holdings by
+   ticker, sorted by live value descending. Independent of the wrapper-
+   grouped holdings list below.
+   ════════════════════════════════════════════════════════════════════ */
+
+.ticker-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ticker-summary-meta {
+  font-size: 11px;
+  color: rgba(255,255,255,0.50);
+  margin-top: 4px;
+  letter-spacing: -0.1px;
+}
+.ticker-summary-empty {
+  font-size: 12px;
+  color: rgba(255,255,255,0.50);
+  font-style: italic;
+  padding: 16px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.ticker-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.ticker-summary-row:first-of-type { padding-top: 0; }
+.ticker-summary-row:last-of-type { border-bottom: 0; }
+
+.ticker-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ticker-summary-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20);
+}
+.ticker-summary-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ticker-summary-ticker {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+.ticker-summary-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticker-summary-right {
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.ticker-summary-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ticker-summary-gain {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ticker-summary-gain.pos { color: var(--green); }
+.ticker-summary-gain.neg { color: var(--red); }
+.ticker-summary-gain.neutral { color: rgba(255,255,255,0.40); }
+
+/* Totals box at the bottom. Three columns on desktop with vertical
+   dividers between cells (same visual language as the Performance
+   History summary box). On mobile (≤520px) stacks vertically with
+   horizontal dividers between cells. */
+.ticker-summary-totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-top: 14px;
+  padding: 14px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+}
+.ticker-summary-totals-cell {
+  text-align: center;
+  padding: 0 12px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.ticker-summary-totals-cell:last-child { border-right: 0; }
+.ticker-summary-totals-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.50);
+  margin-bottom: 8px;
+}
+.ticker-summary-totals-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+.ticker-summary-totals-value.pos { color: var(--green); }
+.ticker-summary-totals-value.neg { color: var(--red); }
+
+@media (max-width: 520px) {
+  .ticker-summary-row {
+    gap: 10px;
+    padding: 11px 0;
+  }
+  .ticker-summary-swatch {
+    width: 8px;
+    height: 8px;
+  }
+  .ticker-summary-left {
+    gap: 10px;
+  }
+  .ticker-summary-ticker {
+    font-size: 13px;
+  }
+  .ticker-summary-sub {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+  .ticker-summary-value {
+    font-size: 14px;
+  }
+  .ticker-summary-gain {
+    font-size: 10px;
+  }
+
+  /* Totals box: stack to vertical layout. Each cell becomes a row with
+     label-left, value-right. Horizontal dividers between cells. */
+  .ticker-summary-totals {
+    grid-template-columns: 1fr;
+    padding: 4px 14px;
+  }
+  .ticker-summary-totals-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    padding: 10px 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .ticker-summary-totals-cell:last-child { border-bottom: 0; }
+  .ticker-summary-totals-label {
+    margin-bottom: 0;
+  }
+  .ticker-summary-totals-value {
+    font-size: 13px;
+  }
+}
+
 .hcard {
   background: var(--card-gradient);
   backdrop-filter: blur(60px) saturate(200%);
@@ -9917,6 +10108,20 @@ body.modal-active .container > footer {
     <!-- Legacy hidden hooks kept so pre-existing references don't crash on render -->
     <div id="pieLegend" style="display:none"></div>
     <div id="holdingsCount" style="display:none">0</div>
+  </div>
+
+  <!-- Ticker Summary — aggregated view of every ticker across all wrappers,
+       sorted by live value descending. Independent of the holdings list
+       below which groups by wrapper. v22.14. -->
+  <div class="card-gold" id="tickerSummaryCard-wrap">
+    <div class="ticker-summary-header">
+      <div>
+        <div class="section-label">Ticker Summary</div>
+        <div id="tickerSummaryMeta" class="ticker-summary-meta">Combined across all wrappers</div>
+      </div>
+      <button id="btn-tickerSummaryCard" class="btn-ghost btn-sm" onclick="toggleSection('tickerSummaryCard')" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
+    </div>
+    <div id="tickerSummaryCard"><div id="tickerSummaryBody"></div></div>
   </div>
 
   <!-- Portfolio growth chart -->
@@ -18808,6 +19013,148 @@ function renderPortfolio(filter='all') {
   // this hook the auto-refresh price tick would slam the user's open
   // sections shut every 60 seconds.
   try { _restoreHoldingsSectionState(); } catch (e) {}
+
+  // Render the Ticker Summary card sitting above the Portfolio Growth
+  // chart. Passes colourMap so each ticker's swatch matches its pie
+  // chart slice and holdings card swatch. v22.14.
+  try { renderTickerSummary(colourMap); } catch (e) {}
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TICKER SUMMARY (v22.14)
+// One-stop overview of every ticker the user holds, combined across all
+// wrappers. Sits above the Portfolio Growth chart on its own card.
+// Sorted by live value descending. Reads from LS.PORTFOLIO and uses
+// the same colour assignments as the pie chart / holdings list (built
+// in renderPortfolio's pieData step) so a ticker's swatch colour is
+// consistent everywhere it appears in the app.
+//
+// Aggregation maths:
+//   units      = sum of shares across all wrappers
+//   totalCost  = sum of totalCost (each holding carries totalCost from
+//                v22.13's syncPortfolioFromHistory cost tracking, or
+//                from the seedX functions for legacy entries)
+//   avgCost    = totalCost / units (weighted average across wrappers)
+//   value      = sum of (shares × price) — live price per ticker is
+//                consistent across wrappers (same instrument) so we
+//                just use the highest non-zero price found, matching
+//                the livePriceByTicker logic in syncPortfolioFromHistory
+//   gain       = value − totalCost
+//   gainPct    = gain / totalCost × 100 (or 0 if no cost basis)
+// ════════════════════════════════════════════════════════════════════
+function renderTickerSummary(colourMap) {
+  const body = document.getElementById('tickerSummaryBody');
+  const metaEl = document.getElementById('tickerSummaryMeta');
+  if (!body) return;
+
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  if (!portfolio.length) {
+    body.innerHTML = '<div class="ticker-summary-empty">No holdings yet. Save a monthly history entry or seed legacy holdings to populate this card.</div>';
+    if (metaEl) metaEl.textContent = 'Combined across all wrappers';
+    return;
+  }
+
+  // Aggregate by ticker. Combines GIA + ISA + SIPP holdings of the same
+  // ticker into a single row with summed units, summed cost, weighted
+  // average cost basis. The price is the highest non-zero price across
+  // entries (same instrument, same live price — picking the best one
+  // mirrors syncPortfolioFromHistory's livePriceByTicker logic).
+  const byTicker = {};
+  portfolio.forEach(h => {
+    if (!h.ticker || !(h.shares > 0)) return;
+    const t = h.ticker;
+    if (!byTicker[t]) {
+      byTicker[t] = { ticker: t, shares: 0, totalCost: 0, price: 0 };
+    }
+    byTicker[t].shares    += h.shares || 0;
+    byTicker[t].totalCost += (h.totalCost > 0 ? h.totalCost : (h.avgCost > 0 ? h.avgCost * (h.shares||0) : 0));
+    if ((h.price || 0) > byTicker[t].price) byTicker[t].price = h.price || 0;
+  });
+
+  // Derive value, avg cost, gain. Sort by value descending.
+  const rows = Object.values(byTicker)
+    .map(t => {
+      const value   = t.shares * t.price;
+      const avgCost = t.shares > 0 ? t.totalCost / t.shares : 0;
+      const gain    = value - t.totalCost;
+      const gainPct = t.totalCost > 0 ? (gain / t.totalCost) * 100 : 0;
+      return { ...t, value, avgCost, gain, gainPct };
+    })
+    .filter(r => r.value > 0)
+    .sort((a, b) => b.value - a.value);
+
+  if (metaEl) metaEl.textContent = `Combined across all wrappers · ${rows.length} ticker${rows.length === 1 ? '' : 's'}`;
+
+  if (rows.length === 0) {
+    body.innerHTML = '<div class="ticker-summary-empty">No tickers with a current value to display.</div>';
+    return;
+  }
+
+  // Build row HTML. Each row is a flex container with a left block
+  // (swatch + ticker name + supporting line) and a right block (value +
+  // gain). The supporting line uses "Avg" and "Cost" as labels per the
+  // user's specification (capitalised, "·" interpunct separator).
+  const rowsHtml = rows.map(r => {
+    const colour = (colourMap && colourMap[r.ticker]) || '#888';
+    const valTxt = `£${fmtNum(Math.round(r.value), 0)}`;
+    const costTxt = `£${fmtNum(Math.round(r.totalCost), 0)}`;
+    const avgTxt = `£${r.avgCost.toFixed(r.avgCost >= 10 ? 2 : 4)}`;
+    const unitsTxt = `${fmtNum(r.shares, r.shares >= 1000 ? 0 : (r.shares % 1 === 0 ? 0 : 2))} unit${r.shares === 1 ? '' : 's'}`;
+
+    let gainHtml = '';
+    if (r.totalCost > 0 && r.value > 0) {
+      const sign    = r.gain >= 0 ? '+' : '-';
+      const pctSign = r.gainPct >= 0 ? '+' : '';
+      const cls     = r.gain >= 0 ? 'pos' : 'neg';
+      const gainAmt = `${sign}£${fmtNum(Math.round(Math.abs(r.gain)), 0)}`;
+      const gainPct = `${pctSign}${r.gainPct.toFixed(2)}%`;
+      gainHtml = `<div class="ticker-summary-gain ${cls}" data-balance-sensitive>${gainAmt} (${gainPct})</div>`;
+    } else {
+      gainHtml = `<div class="ticker-summary-gain neutral">no cost basis</div>`;
+    }
+
+    return `<div class="ticker-summary-row">
+      <div class="ticker-summary-left">
+        <div class="ticker-summary-swatch" style="background:${colour}"></div>
+        <div class="ticker-summary-text">
+          <div class="ticker-summary-ticker">${r.ticker}</div>
+          <div class="ticker-summary-sub" data-balance-sensitive>${unitsTxt} · Avg ${avgTxt} · Cost ${costTxt}</div>
+        </div>
+      </div>
+      <div class="ticker-summary-right">
+        <div class="ticker-summary-value" data-balance-sensitive>${valTxt}</div>
+        ${gainHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Totals across all tickers. Cost and value sum naturally; total gain
+  // is the difference, total % is (gain / cost) × 100 — same calc as
+  // per-row, just on aggregated figures.
+  const totalCost  = rows.reduce((s, r) => s + r.totalCost, 0);
+  const totalValue = rows.reduce((s, r) => s + r.value, 0);
+  const totalGain  = totalValue - totalCost;
+  const totalPct   = totalCost > 0 ? (totalGain / totalCost) * 100 : 0;
+  const tSign = totalGain >= 0 ? '+' : '-';
+  const tPctSign = totalPct >= 0 ? '+' : '';
+  const tCls = totalGain >= 0 ? 'pos' : 'neg';
+
+  const summaryHtml = `<div class="ticker-summary-totals">
+    <div class="ticker-summary-totals-cell">
+      <div class="ticker-summary-totals-label">Total Cost</div>
+      <div class="ticker-summary-totals-value" data-balance-sensitive>£${fmtNum(Math.round(totalCost), 0)}</div>
+    </div>
+    <div class="ticker-summary-totals-cell">
+      <div class="ticker-summary-totals-label">Total Value</div>
+      <div class="ticker-summary-totals-value" data-balance-sensitive>£${fmtNum(Math.round(totalValue), 0)}</div>
+    </div>
+    <div class="ticker-summary-totals-cell">
+      <div class="ticker-summary-totals-label">Total Gain</div>
+      <div class="ticker-summary-totals-value ${tCls}" data-balance-sensitive>${tSign}£${fmtNum(Math.round(Math.abs(totalGain)), 0)} (${tPctSign}${totalPct.toFixed(2)}%)</div>
+    </div>
+  </div>`;
+
+  body.innerHTML = rowsHtml + summaryHtml;
 }
 
 function toggleSection(id) {
@@ -18818,13 +19165,21 @@ function toggleSection(id) {
   const collapsed = el.style.display === 'none';
   el.style.display = collapsed ? '' : 'none';
   btn.textContent = collapsed ? '▼ Collapse' : '▶ Expand';
-  // Remember the new state so the next renderPortfolio() (which may be
-  // triggered by an auto-refresh tick, a price paste, a sync pull, or any
-  // other cascade) can restore it. Without this the section snaps shut
-  // every 60 seconds when the price refresher fires, which is obviously
-  // not what the user wants when they've deliberately opened it.
+  // Remember the new state so the next renderPortfolio() (triggered by
+  // an auto-refresh tick, price paste, sync pull, etc.) can restore it.
+  // Persist to LS.UI.sectionState so it survives page reload AND
+  // cross-device sync. Without this the section either snaps shut every
+  // 60 seconds (in-memory only) or gets lost on reload (no persistence).
+  // v22.14 — promoted from in-memory-only to LS-persisted.
   if (!window._vossHoldingsSectionState) window._vossHoldingsSectionState = {};
-  window._vossHoldingsSectionState[id] = collapsed ? 'open' : 'closed';
+  const newState = collapsed ? 'open' : 'closed';
+  window._vossHoldingsSectionState[id] = newState;
+  try {
+    const ui = lsGet(LS.UI, {}) || {};
+    if (!ui.sectionState) ui.sectionState = {};
+    ui.sectionState[id] = newState;
+    lsSet(LS.UI, ui);
+  } catch (e) {}
   // Swap explainer text vs balance pill visibility based on collapse state.
   // When collapsed → hide explainer, show balance pill.
   // When expanded → show explainer, hide balance pill (the explainer already
@@ -18843,25 +19198,58 @@ function toggleSection(id) {
   }
 }
 
-// Re-apply the persisted open/closed state of the New Holdings and Legacy
-// Holdings sections after a renderPortfolio() cycle. Called from the tail
-// of renderPortfolio. No-op if the state map is empty (first ever render).
+// Re-apply the persisted open/closed state of collapsible sections after
+// a renderPortfolio() cycle. Reads first from the in-memory cache (set by
+// toggleSection during the session) then falls back to LS.UI.sectionState
+// (set by toggleSection and persisted across reloads). Without this the
+// portfolio's auto-refresh price tick would slam open/closed sections
+// back to their markup default every 60 seconds.
+//
+// Important: this function handles BOTH directions of toggle, because
+// different sections have different defaults. New Holdings / Legacy
+// Holdings default to closed (display:none in markup) so 'open' needs
+// to be applied. Ticker Summary defaults to open (no display style in
+// markup) so 'closed' needs to be applied. Without the closed branch,
+// the user can't preserve a collapsed Ticker Summary state.
 function _restoreHoldingsSectionState() {
-  const state = window._vossHoldingsSectionState;
-  if (!state) return;
-  Object.keys(state).forEach(id => {
-    if (state[id] !== 'open') return;
+  // Merge in-memory + persisted state. In-memory wins on conflict (most
+  // recent change). Persisted is the seed for fresh page loads.
+  let mem = window._vossHoldingsSectionState || {};
+  let persisted = {};
+  try {
+    const ui = lsGet(LS.UI, {}) || {};
+    persisted = ui.sectionState || {};
+  } catch (e) {}
+  const merged = { ...persisted, ...mem };
+  // Hydrate the in-memory cache so subsequent renders see the persisted
+  // values without re-reading LS each time
+  window._vossHoldingsSectionState = merged;
+
+  Object.keys(merged).forEach(id => {
+    const desired = merged[id];
     const el  = document.getElementById(id);
     const btn = document.getElementById(`btn-${id}`);
     const wrap = document.getElementById(`${id}-wrap`);
     if (!el || !btn) return;
-    el.style.display = '';
-    btn.textContent = '▼ Collapse';
-    if (wrap) {
-      const explainer = wrap.querySelector('.holdings-section-explainer');
-      const balance   = wrap.querySelector('.holdings-section-balance');
-      if (explainer) explainer.style.display = '';
-      if (balance)   balance.style.display   = 'none';
+
+    if (desired === 'open') {
+      el.style.display = '';
+      btn.textContent = '▼ Collapse';
+      if (wrap) {
+        const explainer = wrap.querySelector('.holdings-section-explainer');
+        const balance   = wrap.querySelector('.holdings-section-balance');
+        if (explainer) explainer.style.display = '';
+        if (balance)   balance.style.display   = 'none';
+      }
+    } else if (desired === 'closed') {
+      el.style.display = 'none';
+      btn.textContent = '▶ Expand';
+      if (wrap) {
+        const explainer = wrap.querySelector('.holdings-section-explainer');
+        const balance   = wrap.querySelector('.holdings-section-balance');
+        if (explainer) explainer.style.display = 'none';
+        if (balance)   balance.style.display   = 'inline-flex';
+      }
     }
   });
 }
