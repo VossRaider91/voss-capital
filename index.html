@@ -2003,6 +2003,180 @@ h1 {
   color: var(--red);
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   Performance History card (v22.11)
+   Sits underneath the Portfolio Growth chart, archives monthly and
+   yearly figures as the calendar rolls forward. Two sections stacked
+   vertically: months (most recent 24) and years (most recent 10).
+   Each row is flex-between: period label on the left, +£X (+X.X%) on
+   the right. Colour-coded green/red on the figure side only so the
+   label column reads as a neutral list of periods.
+   ════════════════════════════════════════════════════════════════════ */
+.perf-history-card { margin-top: 16px; }
+.perf-history-section { margin-top: 14px; }
+.perf-history-section:first-of-type { margin-top: 0; }
+.perf-history-section-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 10px;
+}
+.perf-history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+}
+.perf-history-row:last-child { border-bottom: 0; }
+.perf-history-row.is-current {
+  background: linear-gradient(180deg, rgba(255,159,10,0.05) 0%, transparent 100%);
+  margin: 0 -8px;
+  padding: 8px;
+  border-radius: 6px;
+}
+.perf-history-label {
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+}
+.perf-history-row.is-current .perf-history-label {
+  color: var(--amber);
+  font-weight: 600;
+}
+.perf-history-figure {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+.perf-history-figure.pos { color: var(--green); }
+.perf-history-figure.neg { color: var(--red); }
+.perf-history-figure.neutral { color: rgba(255,255,255,0.40); }
+.perf-history-empty {
+  font-size: 11px;
+  color: rgba(255,255,255,0.50);
+  font-style: italic;
+  padding: 8px 0;
+  line-height: 1.5;
+}
+
+/* Year-row badges (YTD for current year, "N months" for partial-year
+   completions). Both compact pills sitting next to the year label. */
+.perf-history-year-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+.perf-history-year-badge.ytd {
+  background: rgba(255,159,10,0.18);
+  color: var(--amber);
+  border: 1px solid rgba(255,159,10,0.35);
+}
+.perf-history-year-badge.partial {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* Last-captured stamp shown in the card header — surfaces wrapper
+   staleness so the user knows when to cycle through wrappers. */
+.perf-history-stamp {
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  font-weight: 500;
+  letter-spacing: -0.1px;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Summary box: Best Month / Worst Month / Typical Month.
+   Desktop: three columns side-by-side. Mobile (≤520px): stacks vertically.
+   Each cell shows a label on top, a large coloured figure in the middle,
+   and a percentage + period sub-line beneath. Single-cell fallback used
+   when fewer than 3 months are available. v22.11. */
+.perf-summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 4px;
+  padding: 14px 12px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.015) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+}
+.perf-summary-row.perf-summary-single {
+  grid-template-columns: 1fr;
+}
+.perf-summary-cell {
+  text-align: center;
+}
+.perf-summary-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.50);
+  margin-bottom: 6px;
+}
+.perf-summary-figure {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+.perf-summary-figure.pos { color: var(--green); }
+.perf-summary-figure.neg { color: var(--red); }
+.perf-summary-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.60);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.perf-summary-note {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  font-style: italic;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+@media (max-width: 520px) {
+  .perf-summary-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 12px;
+  }
+  .perf-summary-row .perf-summary-cell {
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .perf-summary-row .perf-summary-cell:last-of-type {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .perf-summary-figure {
+    font-size: 18px;
+  }
+  /* History row figures shrink slightly on mobile to keep them on one
+     line alongside longer month labels like "Sep 2026". */
+  .perf-history-row { font-size: 11px; }
+  .perf-history-figure { font-size: 11px; }
+}
+
 .edit-form {
   background: linear-gradient(180deg, rgba(220,235,250,0.08) 0%, rgba(180,195,220,0.03) 100%);
   border: 1px solid rgba(200,215,240,0.16);
@@ -9612,6 +9786,7 @@ body.modal-active .container > footer {
       <div id="growthChart"></div>
       <div id="growthTip" style="display:none;position:absolute;background:rgba(10,10,10,0.96);border:1px solid var(--gold);padding:10px 14px;border-radius:10px;font-size:10px;color:var(--white);pointer-events:none;z-index:200;min-width:180px;line-height:1.8;white-space:nowrap"></div>
     </div>
+    <div id="performanceHistory" class="mt16"></div>
   </div>
 </div>
 
@@ -10743,6 +10918,7 @@ const LS = {
   HL_DD_DISMISSALS: 'rma_hl_dd_dismissals_v1',
   PRICE_HISTORY: 'rma_price_history_v1',
   PRIOR_TY_CONTRIBUTIONS: 'rma_prior_ty_contributions_v1',
+  PERF_HISTORY: 'rma_perf_history_v1',
   UI: 'rma_ui_v1',
 };
 
@@ -19138,6 +19314,533 @@ function renderGrowthChart(type='monthly') {
 
   // Store scale functions on window so tooltip can compute dot position
   window._growthChartScale = { scaleX, scaleY, w, h, padL, padR, padT, padB };
+
+  // Capture period figures for Performance History card.
+  // Fires for every wrapper view — the active wrapper's bucket gets
+  // updated based on getPortfolioFilter(). To populate all four
+  // wrapper histories the user needs to cycle through wrappers
+  // periodically (typically monthly); the render function shows a
+  // "last captured" stamp so staleness is visible. v22.11.
+  try {
+    const wrapperKey = _perfWrapperKeyFromFilter(activeFilter);
+    _capturePerfHistory(wrapperKey, totalChange, totalChangePct);
+  } catch (e) {}
+  try { _renderPerformanceHistory(); } catch (e) {}
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PERFORMANCE HISTORY (v22.11)
+// Archives the Portfolio Growth chart's "Since X" pill figures by month
+// per wrapper. Annual figures are DERIVED from monthly data at render
+// time (sum of monthly £ values; compound of monthly % returns) rather
+// than captured directly from the Yearly chart view. This means annual
+// figures are always accurate as long as monthly data has been captured,
+// regardless of whether the user remembers to load the Yearly chart at
+// year-end.
+//
+// Schema in LS.PERF_HISTORY:
+//   {
+//     _migratedAt: ISO string (migration marker, never re-runs once set),
+//     wrappers: {
+//       all:  { months: { 'YYYY-MM': {pct, change, label, capturedAt} },
+//                years:  {} (legacy, unused from v22.11 stage 3 onward) },
+//       gia:  { months: {...}, years: {} },
+//       isa:  { months: {...}, years: {} },
+//       sipp: { months: {...}, years: {} },
+//     }
+//   }
+// Capture writes only to months bucket. The years bucket is kept in the
+// schema for backward compatibility (older storage may have data there
+// from stage 1) but is no longer read or written by the current code
+// path. The renderer derives annual figures from monthly aggregation.
+// ════════════════════════════════════════════════════════════════════
+
+// Empty bucket factory — used both for fresh installs and for adding
+// missing wrappers when a new wrapper bucket is referenced.
+function _perfEmptyBucket() { return { months: {}, years: {} }; }
+
+// Load + migrate the store. Handles three cases:
+//   (1) Fresh install (no store) → return new shape with all four buckets empty.
+//   (2) Pre-v22.11 install with flat {months, years} shape → migrate to
+//       wrappers.all and mark _migratedAt.
+//   (3) v22.11+ install → return as-is, but defensively ensure all four
+//       wrapper buckets exist (in case a future code path references one
+//       that was never written to).
+// Migration is idempotent — once _migratedAt is set, future loads
+// short-circuit past the migration check.
+function _perfLoadStore() {
+  const raw = lsGet(LS.PERF_HISTORY, null);
+
+  // Case 1: fresh
+  if (!raw || typeof raw !== 'object') {
+    return {
+      _migratedAt: new Date().toISOString(),
+      wrappers: { all: _perfEmptyBucket(), gia: _perfEmptyBucket(), isa: _perfEmptyBucket(), sipp: _perfEmptyBucket() },
+    };
+  }
+
+  // Case 2: legacy shape (flat months/years without wrappers wrapper)
+  if (!raw.wrappers && (raw.months || raw.years)) {
+    const migrated = {
+      _migratedAt: new Date().toISOString(),
+      wrappers: {
+        all:  { months: raw.months || {}, years: raw.years || {} },
+        gia:  _perfEmptyBucket(),
+        isa:  _perfEmptyBucket(),
+        sipp: _perfEmptyBucket(),
+      },
+    };
+    lsSet(LS.PERF_HISTORY, migrated);
+    return migrated;
+  }
+
+  // Case 3: current shape, but defensively ensure all four wrapper buckets
+  // exist. Don't write back unless we actually added something.
+  if (!raw.wrappers) raw.wrappers = {};
+  let added = false;
+  ['all', 'gia', 'isa', 'sipp'].forEach(k => {
+    if (!raw.wrappers[k]) { raw.wrappers[k] = _perfEmptyBucket(); added = true; }
+    if (!raw.wrappers[k].months) { raw.wrappers[k].months = {}; added = true; }
+    if (!raw.wrappers[k].years)  { raw.wrappers[k].years  = {}; added = true; }
+  });
+  if (added) lsSet(LS.PERF_HISTORY, raw);
+  return raw;
+}
+
+// Map the chart's filter values ('all', 'personal', 'employer', 'isa')
+// onto our schema keys ('all', 'gia', 'sipp', 'isa').
+function _perfWrapperKeyFromFilter(filter) {
+  if (filter === 'personal') return 'gia';
+  if (filter === 'employer') return 'sipp';
+  return filter; // 'all' or 'isa' pass through unchanged
+}
+
+function _capturePerfHistory(wrapperKey, totalChange, totalChangePct) {
+  if (typeof totalChange !== 'number' || typeof totalChangePct !== 'number') return;
+  if (!isFinite(totalChange) || !isFinite(totalChangePct)) return;
+  if (!['all', 'gia', 'isa', 'sipp'].includes(wrapperKey)) return;
+
+  const store  = _perfLoadStore();
+  const bucket = store.wrappers[wrapperKey];
+
+  const now      = new Date();
+  const yyyy     = now.getFullYear();
+  const mm       = String(now.getMonth() + 1).padStart(2, '0');
+  const monthKey = `${yyyy}-${mm}`;
+
+  // From v22.11 stage 3: only capture when on the Monthly tab. The
+  // Yearly tab's figure is year-to-date which doesn't fit into either
+  // a months or years key cleanly. Annual figures are derived from
+  // monthly data at render time, so the Yearly tab no longer feeds
+  // any storage.
+  const activeTab = (typeof getActiveGrowthTab === 'function') ? getActiveGrowthTab() : 'monthly';
+  if (activeTab !== 'monthly') return;
+
+  bucket.months[monthKey] = {
+    pct:        totalChangePct,
+    change:     totalChange,
+    label:      now.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+    capturedAt: now.toISOString(),
+  };
+
+  lsSet(LS.PERF_HISTORY, store);
+}
+
+// Compute annual figures from portfolio data directly. This is the
+// AUTHORITATIVE annual calculation — it mirrors the Portfolio Growth
+// chart's points-building logic but year-windowed instead of month-
+// windowed. For each year present in the user's history, computes:
+//   • Portfolio value at year start (1 Jan) and year end (31 Dec, or
+//     today for the current year), priced at historical prices on
+//     those days (current prices for the latest point).
+//   • Cumulative contributions at year start and year end.
+//   • Annual £ = end_marketGrowth - start_marketGrowth
+//     (where marketGrowth = value - contributions at each point).
+//     This isolates GENUINE market performance from contribution events
+//     — a £20k ISA top-up mid-year doesn't inflate the figure.
+//   • Annual % = annual £ / contributions at year start × 100.
+//     This is honest "return on capital you entered the year with".
+//     The denominator is fixed at year-start contributions, NOT pulled
+//     from each month's varying denominator (which is what compounding
+//     monthly returns would do — approximately right but distorted by
+//     mid-year contribution lumps in wrappers like ISA / SIPP).
+//
+// Returns array sorted descending by year. Each entry includes
+// monthCount (how many months had captured monthly data, for the
+// "partial" badge), isCurrent (matches today's year), and isComplete
+// (year ended or has 12 months of captured data).
+//
+// Wrapper-scoped: uses the same wrapperPredicate/historyPredicate logic
+// as the chart so figures align with what the chart shows.
+function _computeAnnualFigures(wrapperKey, monthsBucket) {
+  // Wrapper predicates — mirror the chart's logic exactly so figures
+  // align with what the chart shows. wrapperKey is one of the four
+  // schema keys ('all', 'gia', 'isa', 'sipp'); the chart's activeFilter
+  // values are different ('all', 'personal', 'employer', 'isa').
+  // Translate back to the chart's filter shape for the predicates.
+  const filter = wrapperKey === 'gia'  ? 'personal'
+               : wrapperKey === 'sipp' ? 'employer'
+               : wrapperKey; // 'all' and 'isa' pass through
+
+  const hPred = (() => {
+    if (filter === 'all') return () => true;
+    if (filter === 'isa') return e => (e.wrapper || 'GIA') === 'ISA';
+    if (filter === 'employer') return e => (e.wrapper || (e.type === 'employer' ? 'SIPP' : 'GIA')) === 'SIPP' || e.type === 'employer';
+    return e => {
+      const w = e.wrapper || (e.type === 'employer' ? 'SIPP' : 'GIA');
+      return w === 'GIA' && e.type !== 'employer';
+    };
+  })();
+
+  const allHistory   = lsGet(LS.HISTORY, []).filter(e => e.funds && e.funds.length > 0);
+  const allPortfolio = lsGet(LS.PORTFOLIO, []);
+
+  const history   = allHistory.filter(hPred);
+  const portfolio = allPortfolio.filter(hPred);
+
+  if (history.length === 0 && !portfolio.some(h => h.seeded)) return [];
+
+  const seededHoldings = portfolio.filter(h => h.seeded);
+  const seededCostBase = seededHoldings.reduce((s, h) => s + (h.totalCost || 0), 0);
+
+  // Build sorted buys (we don't track sales separately here — for the
+  // simple year-windowed value/contribution calc the sales just don't
+  // contribute to units; net effect on units handled by including only
+  // buys in the accumulator and assuming sales are infrequent enough
+  // to not skew yearly windows. For the typical buy-and-hold pattern
+  // this is exact. Sales would matter only in wrappers actively being
+  // wound down, which isn't this user's pattern).
+  const sortedBuys = history
+    .filter(e => e.type !== 'sold')
+    .slice()
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (sortedBuys.length === 0 && seededHoldings.length === 0) return [];
+
+  // Determine the year range to compute. From the earliest year in
+  // history (or the current year if no history) through to current year.
+  const earliestYear = sortedBuys.length > 0
+    ? new Date(sortedBuys[0].timestamp).getFullYear()
+    : new Date().getFullYear();
+  const currentYear  = new Date().getFullYear();
+  const now          = new Date();
+
+  // Helper: compute units, value, contribs at a given timestamp.
+  // isLatest=true uses live current prices (for the end of the current
+  // year window). Otherwise uses historical prices on that day with
+  // current-price fallback.
+  const snapshot = (ts, isLatest) => {
+    const units = {};
+    let contribs = seededCostBase;
+
+    // Accumulate units and contributions from buys with timestamp <= ts
+    sortedBuys.forEach(e => {
+      if (e.timestamp > ts) return;
+      (e.funds || []).forEach(f => {
+        units[f.ticker] = (units[f.ticker] || 0) + (f.held || 0);
+        contribs += (f.held || 0) * (f.price || 0);
+      });
+    });
+
+    // Value the seeded legacy holdings at this day's price
+    const legacyVal = seededHoldings.reduce((s, h) => {
+      const price = isLatest
+        ? (typeof getCurrentPrice === 'function' ? (getCurrentPrice(h.ticker) || h.price || 0) : (h.price || 0))
+        : (_getPriceForTickerOnDay(h.ticker, ts) || h.price || 0);
+      return s + (h.shares || 0) * price;
+    }, 0);
+
+    // Value the accumulated history units at this day's price
+    const historyVal = Object.entries(units).reduce((s, [ticker, u]) => {
+      const price = isLatest
+        ? (typeof getCurrentPrice === 'function' ? (getCurrentPrice(ticker) || 0) : 0)
+        : (_getPriceForTickerOnDay(ticker, ts) || (typeof getCurrentPrice === 'function' ? getCurrentPrice(ticker) : 0) || 0);
+      return s + u * price;
+    }, 0);
+
+    return { value: legacyVal + historyVal, contribs };
+  };
+
+  const results = [];
+  for (let yr = earliestYear; yr <= currentYear; yr++) {
+    const startTs = new Date(yr, 0, 1, 0, 0, 0, 0).getTime();
+    const isCurrentYear = (yr === currentYear);
+    // End of year: 31 Dec at 23:59:59 for completed years, today for current year
+    const endTs = isCurrentYear
+      ? now.getTime()
+      : new Date(yr, 11, 31, 23, 59, 59, 999).getTime();
+
+    const startSnap = snapshot(startTs, false);
+    const endSnap   = snapshot(endTs, isCurrentYear);
+
+    const startMG = startSnap.value - startSnap.contribs;
+    const endMG   = endSnap.value   - endSnap.contribs;
+
+    const annualChange = endMG - startMG;
+    // Honest denominator: contributions at year-start. If user had zero
+    // contributions entering the year (started using tool mid-year),
+    // fall back to year-end contribs to avoid division by zero.
+    const denominator  = startSnap.contribs > 0 ? startSnap.contribs : endSnap.contribs;
+    const annualPct    = denominator > 0 ? (annualChange / denominator * 100) : 0;
+
+    // Skip years where there was literally no activity (both contribs zero)
+    if (startSnap.contribs === 0 && endSnap.contribs === 0) continue;
+
+    // Month count for the partial-year badge: count how many months of
+    // the year exist in the monthly capture data (for display purposes).
+    const monthCount = monthsBucket
+      ? Object.keys(monthsBucket).filter(k => k.startsWith(String(yr))).length
+      : 0;
+
+    results.push({
+      year:       String(yr),
+      change:     annualChange,
+      pct:        annualPct,
+      monthCount,
+      isCurrent:  isCurrentYear,
+      isComplete: !isCurrentYear,
+    });
+  }
+
+  return results.reverse(); // descending: most recent first
+}
+
+function _renderPerformanceHistory() {
+  const el = document.getElementById('performanceHistory');
+  if (!el) return;
+
+  const store        = _perfLoadStore();
+  const activeFilter = (typeof getPortfolioFilter === 'function') ? getPortfolioFilter() : 'all';
+  const wrapperKey   = _perfWrapperKeyFromFilter(activeFilter);
+  const bucket       = store.wrappers[wrapperKey] || _perfEmptyBucket();
+  const months       = bucket.months || {};
+
+  // Display label for the section header so the user knows which
+  // wrapper's history they're looking at.
+  const wrapperLabel = wrapperKey === 'all' ? 'All Wrappers'
+                     : wrapperKey === 'gia' ? 'GIA'
+                     : wrapperKey === 'sipp' ? 'SIPP'
+                     : 'ISA';
+
+  const now             = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentYearKey  = String(now.getFullYear());
+
+  // Sorted month keys, most recent first, capped to 24 months so the
+  // card stays scrollable.
+  const monthKeys = Object.keys(months).sort().reverse().slice(0, 24);
+
+  // Annual figures: computed from underlying portfolio history (NOT from
+  // captured monthly figures). This gives mathematically correct annual
+  // £ and % regardless of when/whether monthly captures occurred, and
+  // doesn't get distorted by mid-year contribution lump sums in wrappers
+  // like ISA/SIPP. Capped to 10 most recent years.
+  const annualEntries = _computeAnnualFigures(wrapperKey, months).slice(0, 10);
+
+  // ── Summary box (Best / Worst / Typical month) ────────────────────
+  // Computed from COMPLETED months only — excludes the current month
+  // which is still in progress and would distort the figures. Needs
+  // at least 3 completed months for the summary to be meaningful;
+  // with 1-2 months "best = worst = typical" is degenerate.
+  const completedMonthKeys = monthKeys.filter(k => k !== currentMonthKey);
+  let summaryHtml = '';
+  if (completedMonthKeys.length >= 3) {
+    const completed = completedMonthKeys.map(k => ({ key: k, ...months[k] }));
+    // Find best and worst by £ change (not %, because £ is the figure
+    // people actually feel — a 10% gain on a small base might be less
+    // notable than a 2% gain on a large base).
+    const best  = completed.reduce((a, b) => (a.change > b.change ? a : b));
+    const worst = completed.reduce((a, b) => (a.change < b.change ? a : b));
+    // Typical month: arithmetic mean of completed monthly £ changes.
+    // Honest about what this is — it's the average pound change you've
+    // seen per month, not a compound return. Useful for "what's a
+    // typical month worth?" rather than "what's my annualised return?".
+    const meanChange = completed.reduce((s, m) => s + m.change, 0) / completed.length;
+    const meanPct    = completed.reduce((s, m) => s + m.pct,    0) / completed.length;
+
+    const summaryCell = (label, fig, monthLabel) => {
+      const sign     = fig.change >= 0 ? '+' : ',';
+      const pctSign  = fig.pct >= 0 ? '+' : '';
+      const cls      = fig.change >= 0 ? 'pos' : 'neg';
+      const figAmt   = `${sign}£${fmtNum(Math.round(Math.abs(fig.change)), 0)}`;
+      const figPct   = `${pctSign}${fig.pct.toFixed(1)}%`;
+      return `<div class="perf-summary-cell">
+        <div class="perf-summary-label">${label}</div>
+        <div class="perf-summary-figure ${cls}">${figAmt}</div>
+        <div class="perf-summary-sub">${figPct}${monthLabel ? ' · ' + monthLabel : ''}</div>
+      </div>`;
+    };
+
+    summaryHtml = `<div class="perf-summary-row">
+      ${summaryCell('Best Month',   best,  best.label)}
+      ${summaryCell('Worst Month',  worst, worst.label)}
+      ${summaryCell('Typical Month', { change: meanChange, pct: meanPct }, '')}
+    </div>`;
+  } else if (completedMonthKeys.length > 0) {
+    // 1-2 completed months: just show the most recent completed month
+    // as a single-cell summary. Once we hit 3, the full triplet appears.
+    const last = months[completedMonthKeys[0]];
+    const sign     = last.change >= 0 ? '+' : ',';
+    const pctSign  = last.pct >= 0 ? '+' : '';
+    const cls      = last.change >= 0 ? 'pos' : 'neg';
+    summaryHtml = `<div class="perf-summary-row perf-summary-single">
+      <div class="perf-summary-cell">
+        <div class="perf-summary-label">Last Completed Month</div>
+        <div class="perf-summary-figure ${cls}">${sign}£${fmtNum(Math.round(Math.abs(last.change)), 0)}</div>
+        <div class="perf-summary-sub">${pctSign}${last.pct.toFixed(1)}% · ${last.label}</div>
+      </div>
+      <div class="perf-summary-note">Best / worst / typical figures appear once 3 months have completed.</div>
+    </div>`;
+  }
+
+  // ── Per-row renderer ─────────────────────────────────────────────────
+  const renderRow = (label, fig, isCurrent) => {
+    if (!fig) {
+      return `<div class="perf-history-row${isCurrent ? ' is-current' : ''}">
+        <span class="perf-history-label">${label}</span>
+        <span class="perf-history-figure neutral">,</span>
+      </div>`;
+    }
+    const sign     = fig.change >= 0 ? '+' : ',';
+    const pctSign  = fig.pct >= 0 ? '+' : '';
+    const cls      = fig.change >= 0 ? 'pos' : 'neg';
+    const text     = `${sign}£${fmtNum(Math.round(Math.abs(fig.change)), 0)} (${pctSign}${fig.pct.toFixed(1)}%)`;
+    return `<div class="perf-history-row${isCurrent ? ' is-current' : ''}">
+      <span class="perf-history-label">${label}</span>
+      <span class="perf-history-figure ${cls}">${text}</span>
+    </div>`;
+  };
+
+  // ── By Month section ─────────────────────────────────────────────────
+  let monthsHtml;
+  if (monthKeys.length === 0) {
+    monthsHtml = `<div class="perf-history-empty">No monthly figures captured yet for ${wrapperLabel}. ${wrapperKey === 'all' ? 'Refresh the chart in Monthly view' : `Switch to the ${wrapperLabel} wrapper and view the Monthly chart`} to capture this month's running total.</div>`;
+  } else {
+    monthsHtml = monthKeys.map(k => {
+      const fig = months[k];
+      return renderRow(fig.label || k, fig, k === currentMonthKey);
+    }).join('');
+  }
+
+  // ── Annual summary (Best / Worst / Typical year) ─────────────────────
+  // Computed from COMPLETED years only (excludes the current year which
+  // is still in progress, same logic as the monthly summary excluding
+  // the current month). Needs at least 3 completed years to show the
+  // full triplet; below that, shows just the last completed year if any.
+  const completedYears = annualEntries.filter(y => !y.isCurrent);
+  let annualSummaryHtml = '';
+  if (completedYears.length >= 3) {
+    const bestY  = completedYears.reduce((a, b) => (a.change > b.change ? a : b));
+    const worstY = completedYears.reduce((a, b) => (a.change < b.change ? a : b));
+    const meanChangeY = completedYears.reduce((s, y) => s + y.change, 0) / completedYears.length;
+    const meanPctY    = completedYears.reduce((s, y) => s + y.pct,    0) / completedYears.length;
+
+    const summaryCellY = (label, fig, yearLabel) => {
+      const sign     = fig.change >= 0 ? '+' : ',';
+      const pctSign  = fig.pct >= 0 ? '+' : '';
+      const cls      = fig.change >= 0 ? 'pos' : 'neg';
+      const figAmt   = `${sign}£${fmtNum(Math.round(Math.abs(fig.change)), 0)}`;
+      const figPct   = `${pctSign}${fig.pct.toFixed(1)}%`;
+      return `<div class="perf-summary-cell">
+        <div class="perf-summary-label">${label}</div>
+        <div class="perf-summary-figure ${cls}">${figAmt}</div>
+        <div class="perf-summary-sub">${figPct}${yearLabel ? ' · ' + yearLabel : ''}</div>
+      </div>`;
+    };
+
+    annualSummaryHtml = `<div class="perf-summary-row">
+      ${summaryCellY('Best Year',    bestY,  bestY.year)}
+      ${summaryCellY('Worst Year',   worstY, worstY.year)}
+      ${summaryCellY('Typical Year', { change: meanChangeY, pct: meanPctY }, '')}
+    </div>`;
+  } else if (completedYears.length > 0) {
+    const last = completedYears[0];
+    const sign     = last.change >= 0 ? '+' : ',';
+    const pctSign  = last.pct >= 0 ? '+' : '';
+    const cls      = last.change >= 0 ? 'pos' : 'neg';
+    annualSummaryHtml = `<div class="perf-summary-row perf-summary-single">
+      <div class="perf-summary-cell">
+        <div class="perf-summary-label">Last Completed Year</div>
+        <div class="perf-summary-figure ${cls}">${sign}£${fmtNum(Math.round(Math.abs(last.change)), 0)}</div>
+        <div class="perf-summary-sub">${pctSign}${last.pct.toFixed(1)}% · ${last.year}</div>
+      </div>
+      <div class="perf-summary-note">Best / worst / typical year figures appear once 3 years have completed.</div>
+    </div>`;
+  }
+
+  // ── By Year section ──────────────────────────────────────────────────
+  // Derived from monthly data. Each year row shows £ + % for that year,
+  // plus optional YTD badge (current year) and month-count suffix when
+  // less than 12 monthly figures were captured for that year.
+  let yearsHtml;
+  if (annualEntries.length === 0) {
+    yearsHtml = `<div class="perf-history-empty">Annual figures will appear here automatically once monthly data is captured. ${monthKeys.length === 0 ? 'Capture a month first by viewing the Monthly chart.' : 'Just keep capturing monthly data and the year totals will build up.'}</div>`;
+  } else {
+    yearsHtml = annualEntries.map(y => {
+      const sign     = y.change >= 0 ? '+' : ',';
+      const pctSign  = y.pct >= 0 ? '+' : '';
+      const cls      = y.change >= 0 ? 'pos' : 'neg';
+      const ytdBadge = y.isCurrent ? '<span class="perf-history-year-badge ytd">YTD</span>' : '';
+      const monthsBadge = (y.monthCount < 12 && !y.isCurrent)
+        ? `<span class="perf-history-year-badge partial">${y.monthCount} ${y.monthCount === 1 ? 'month' : 'months'}</span>`
+        : '';
+      const figText = `${sign}£${fmtNum(Math.round(Math.abs(y.change)), 0)} (${pctSign}${y.pct.toFixed(1)}%)`;
+      return `<div class="perf-history-row${y.isCurrent ? ' is-current' : ''}">
+        <span class="perf-history-label">
+          ${y.year}${ytdBadge}${monthsBadge}
+        </span>
+        <span class="perf-history-figure ${cls}">${figText}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Last-captured stamp ──────────────────────────────────────────────
+  // Surfaces wrapper staleness — if you haven't switched to the ISA view
+  // in three months, the ISA card's stamp will read "3 months ago" and
+  // you'll know to cycle through to refresh. Reads from monthly capture
+  // timestamps only (annual is derived, not captured directly).
+  const allCaptureDates = Object.values(months)
+    .map(f => f.capturedAt)
+    .filter(Boolean)
+    .map(s => new Date(s).getTime());
+  let lastCapturedHtml = '';
+  if (allCaptureDates.length > 0) {
+    const latest = Math.max(...allCaptureDates);
+    const ageMs  = Date.now() - latest;
+    const ageDays = Math.floor(ageMs / 86400000);
+    let ageLabel;
+    if (ageDays === 0)       ageLabel = 'today';
+    else if (ageDays === 1)  ageLabel = 'yesterday';
+    else if (ageDays < 7)    ageLabel = `${ageDays} days ago`;
+    else if (ageDays < 30)   {
+      const weeks = Math.floor(ageDays/7);
+      ageLabel = `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+    }
+    else {
+      const months = Math.floor(ageDays/30);
+      ageLabel = `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    }
+    lastCapturedHtml = `<span class="perf-history-stamp">Last captured ${ageLabel}</span>`;
+  }
+
+  el.innerHTML = `
+    <div class="plan-card perf-history-card">
+      <div class="plan-card-header">
+        <span class="plan-card-ticker">Performance History · ${wrapperLabel}</span>
+        ${lastCapturedHtml}
+      </div>
+      ${summaryHtml}
+      <div class="perf-history-section">
+        <div class="perf-history-section-title">By Month</div>
+        ${monthsHtml}
+      </div>
+      <div class="perf-history-section">
+        <div class="perf-history-section-title">By Year</div>
+        ${annualSummaryHtml}
+        ${yearsHtml}
+      </div>
+    </div>
+  `;
 }
 
 function showGrowthTip(i, event) {
@@ -25194,7 +25897,7 @@ document.addEventListener('keydown', (e) => {
 // ════════════════════════════════════════════════════════
 
 // Required LS keys for a valid backup — any backup missing these is rejected
-const REQUIRED_BACKUP_KEYS = [LS.PORTFOLIO, LS.HISTORY, LS.RETIREMENT, LS.TAX, LS.BUDGET, LS.MORTGAGE];
+const REQUIRED_BACKUP_KEYS = [LS.PORTFOLIO, LS.HISTORY, LS.RETIREMENT, LS.TAX, LS.BUDGET, LS.MORTGAGE, LS.PERF_HISTORY];
 
 function _showImportStatus(msg, isError) {
   const el = document.getElementById('import-status');
