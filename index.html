@@ -6705,13 +6705,14 @@ input[type="date"].cd-field {
      natural source order via CSS `order`. Desktop stays as normal
      block flow so the existing layout is untouched.
 
-     Source order of #tab-portfolio direct children:
+     Source order of #tab-portfolio direct children (v22.14):
        1 = Update Share Prices   (data-collapsible="prices")
        2 = Add / Update Holding  (data-collapsible="holding")
        3 = Summary card          (.card-gold with hero + holdings list)
-       4 = Portfolio Growth card (.card-gold with growth chart)
+       4 = Ticker Summary card   (.card-gold with cross-wrapper view, v22.14)
+       5 = Portfolio Growth card (.card-gold with growth chart)
 
-     Target mobile order: prices → summary → growth → holding.
+     Target mobile order: prices → summary → ticker summary → growth → holding.
      Use nth-child against source position (nth-of-type was wrong
      because it counts all div children, not just .card-gold ones).
 
@@ -6735,8 +6736,9 @@ input[type="date"].cd-field {
   }
   #tab-portfolio.active > :nth-child(1) { order: 1; }   /* Update Share Prices */
   #tab-portfolio.active > :nth-child(3) { order: 2; }   /* Summary (hero) */
-  #tab-portfolio.active > :nth-child(4) { order: 3; }   /* Portfolio Growth */
-  #tab-portfolio.active > :nth-child(2) { order: 4; }   /* Add / Update Holding */
+  #tab-portfolio.active > :nth-child(4) { order: 3; }   /* Ticker Summary */
+  #tab-portfolio.active > :nth-child(5) { order: 4; }   /* Portfolio Growth */
+  #tab-portfolio.active > :nth-child(2) { order: 5; }   /* Add / Update Holding */
   .holding-bar-row {
     grid-template-columns: 76px 1fr 78px 44px !important;
     gap: 8px !important;
