@@ -10119,7 +10119,7 @@ body.modal-active .container > footer {
     <div class="ticker-summary-header">
       <div>
         <div class="section-label">Ticker Summary</div>
-        <div id="tickerSummaryMeta" class="ticker-summary-meta">Combined across all wrappers</div>
+        <div id="tickerSummaryMeta" class="ticker-summary-meta">Shows prices of all tickers combined across all wrappers</div>
       </div>
       <button id="btn-tickerSummaryCard" class="btn-ghost btn-sm" onclick="toggleSection('tickerSummaryCard')" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
     </div>
@@ -19052,7 +19052,7 @@ function renderTickerSummary(colourMap) {
   const portfolio = lsGet(LS.PORTFOLIO, []);
   if (!portfolio.length) {
     body.innerHTML = '<div class="ticker-summary-empty">No holdings yet. Save a monthly history entry or seed legacy holdings to populate this card.</div>';
-    if (metaEl) metaEl.textContent = 'Combined across all wrappers';
+    if (metaEl) metaEl.textContent = 'Shows prices of all tickers combined across all wrappers';
     return;
   }
 
@@ -19085,7 +19085,7 @@ function renderTickerSummary(colourMap) {
     .filter(r => r.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  if (metaEl) metaEl.textContent = `Combined across all wrappers · ${rows.length} ticker${rows.length === 1 ? '' : 's'}`;
+  if (metaEl) metaEl.textContent = `Shows prices of all tickers combined across all wrappers · ${rows.length} ticker${rows.length === 1 ? '' : 's'}`;
 
   if (rows.length === 0) {
     body.innerHTML = '<div class="ticker-summary-empty">No tickers with a current value to display.</div>';
