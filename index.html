@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27063,7 +27064,6 @@ const BGT_DEFAULTS = {
     'Cash to Bank':         0,
     'Tax Provision':        0,
     'Mortgage':             1200,
-    'Mortgage Overpayment': 0,
     'Council Tax':          180,
     'Utilities':            120,
     'Ground Rent':          30,
@@ -27077,7 +27077,7 @@ const BGT_DEFAULTS = {
 
 const BGT_INCOME   = ['PAYE Salary', 'Dividend Salary', 'Other Income', 'Cash to Bank'];
 const BGT_TAX      = ['Tax Provision'];
-const BGT_FIXED    = ['Mortgage', 'Mortgage Overpayment', 'Council Tax', 'Utilities', 'Ground Rent'];
+const BGT_FIXED    = ['Mortgage', 'Council Tax', 'Utilities', 'Ground Rent'];
 const BGT_VARIABLE = ['Groceries', 'Miscellaneous', 'Socialising', 'Investment Deposit', 'Gym'];
 const BGT_ALL      = [...BGT_INCOME, ...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE];
 
@@ -27217,6 +27217,53 @@ function _bgtMigrateCategoriesV3(state) {
   });
 
   state._schemaVersion = 3;
+  return changed;
+}
+
+// v22.15 — Mortgage Overpayment cleanup. Voss reviewed the Budget Tracker
+// and found Mortgage Overpayment to be unused; it sat as a £0 fixed-expense
+// row pad and added noise. Migration strips the key from live + archived
+// state. Idempotent: if 'Mortgage Overpayment' doesn't exist anywhere,
+// nothing happens. Schema version bumps to 4.
+function _bgtMigrateRemoveMortgageOverpayment(state) {
+  if (state._schemaVersion >= 4) return false;
+  let changed = false;
+
+  // Helper: remove key from a {category: value} object
+  const dropKey = (obj, key) => {
+    if (!obj || !(key in obj)) return false;
+    delete obj[key];
+    return true;
+  };
+
+  // Live state: planned + actual buckets
+  ['planned', 'actual'].forEach(bucket => {
+    if (dropKey(state[bucket], 'Mortgage Overpayment')) changed = true;
+  });
+
+  // Live audit entries: filter out any that reference the removed category
+  if (Array.isArray(state.audit)) {
+    const before = state.audit.length;
+    state.audit = state.audit.filter(e => e?.category !== 'Mortgage Overpayment');
+    if (state.audit.length !== before) changed = true;
+  }
+
+  // Every archived month — snapshots + audit + averagesAtSnapshot
+  (state.monthHistory || []).forEach(rec => {
+    ['plannedSnapshot', 'actualSnapshot'].forEach(bucket => {
+      if (dropKey(rec[bucket], 'Mortgage Overpayment')) changed = true;
+    });
+    if (Array.isArray(rec.audit)) {
+      const before = rec.audit.length;
+      rec.audit = rec.audit.filter(e => e?.category !== 'Mortgage Overpayment');
+      if (rec.audit.length !== before) changed = true;
+    }
+    if (rec.averagesAtSnapshot) {
+      if (dropKey(rec.averagesAtSnapshot, 'Mortgage Overpayment')) changed = true;
+    }
+  });
+
+  state._schemaVersion = 4;
   return changed;
 }
 
@@ -29460,6 +29507,13 @@ function bgtInitMonitor() {
   // the in-memory object, but LS still holds the old shape until save.
   if (_bgtMigrateCategoriesV3(state)) {
     try { snapshotState('Variable expenses cleanup'); } catch (e) {}
+    needsSave = true;
+  }
+
+  // v4 (v22.15): remove Mortgage Overpayment from live + archived state.
+  // Snapshot first so undo restores the pre-cleanup data.
+  if (_bgtMigrateRemoveMortgageOverpayment(state)) {
+    try { snapshotState('Remove Mortgage Overpayment'); } catch (e) {}
     needsSave = true;
   }
 
