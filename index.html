@@ -13275,6 +13275,25 @@ function _applyMobileCollapseState() {
     };
     _writeCollapseState(state);
   } else {
+    // v22.16 one-shot reset for the four Budget Tracker section cards.
+    // The budget redesign requires every section to start collapsed on
+    // every render — but any user who had previously expanded a section
+    // had `false` baked into LS, which the backfill below cannot override
+    // because backfill only fills MISSING keys. This reset force-closes
+    // all four sections once, then drops a version stamp so it never
+    // runs again. After this, the user's manual toggles persist normally.
+    try {
+      const VERSION_KEY = 'bgtCollapseResetV2216';
+      if (!localStorage.getItem(VERSION_KEY)) {
+        state['bgt-income']   = true;
+        state['bgt-tax']      = true;
+        state['bgt-fixed']    = true;
+        state['bgt-variable'] = true;
+        _writeCollapseState(state);
+        localStorage.setItem(VERSION_KEY, '1');
+      }
+    } catch (e) { /* localStorage unavailable — fail silent */ }
+
     // Backfill: if user upgraded from a build before retirement was collapsible,
     // their saved state won't have a retirement key. Default it to collapsed too.
     if (state.retirement === undefined) {
@@ -28138,7 +28157,22 @@ function _renderBgtMainTable(state) {
     // section total + chevron on right. No drift figure. No progress
     // bar. The section total is always visible whether expanded or
     // collapsed, so the user can scan all four sections at a glance.
-    return `<div class="bgt-section-card ${cls}" data-collapsible="${collapsibleKey}">
+    //
+    // Read the collapse state directly at render time and bake
+    // .collapsed into the class list. This is more robust than relying
+    // on _applyMobileCollapseState to retrofit the class post-render.
+    // Default to collapsed when the storage key is missing OR truthy.
+    // Only an explicit `false` will render expanded.
+    let isCollapsed = true;
+    try {
+      const savedState = _readCollapseState();
+      if (savedState && savedState[collapsibleKey] === false) {
+        isCollapsed = false;
+      }
+    } catch (e) { /* fall back to collapsed */ }
+    const collapsedCls = isCollapsed ? ' collapsed' : '';
+
+    return `<div class="bgt-section-card ${cls}${collapsedCls}" data-collapsible="${collapsibleKey}">
       <div class="bgt-section-card-header" onclick="toggleMobileCollapse('${collapsibleKey}')">
         <div class="bgt-section-card-header-row">
           <div class="bgt-section-card-header-info">
