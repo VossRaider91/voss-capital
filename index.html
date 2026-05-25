@@ -10,6 +10,47 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; scroll-padding-top: 24px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ═════════════════════════════════════════════════════════════════════
+   iOS SAFARI HARDENING — prevent the page from "feeling like a website"
+   ═════════════════════════════════════════════════════════════════════
+   Two pain points being solved here:
+
+   1. Auto-zoom on input focus. iOS Safari zooms the entire page when
+      it focuses an <input> / <select> / <textarea> whose font-size is
+      smaller than 16px. The zoom persists, leaves the page wider than
+      the viewport, and creates horizontal scrolling. Mitigation: bump
+      every form element to font-size: 16px at mobile breakpoints.
+
+   2. Horizontal scroll on the document itself. overflow-x: hidden on
+      both html AND body locks horizontal panning at the page level.
+      Intentional horizontal scrollers (e.g. the mortgage planner
+      amortisation table) sit inside their own scroll-x containers
+      with overflow-x: auto, which are NOT affected by this rule.
+
+   Defensive overflow-wrap on the major card containers catches any
+   long unbroken strings that might otherwise push content wider than
+   the viewport.
+   ═════════════════════════════════════════════════════════════════════ */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+@media (max-width: 520px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  .month-pill-display, .month-pill-input, .date-pill-input {
+    font-size: 16px !important;
+  }
+}
+
+.container, .card, .card-gold, .plan-card, .bgt-section-card {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
 :root {
   /* ── LIQUID MERCURY GLASS TOKENS (May 2026 redesign) ──────────
      The canvas is a deep blued-graphite void with a soft chrome
@@ -4536,6 +4577,132 @@ body.privacy-mode-active .portfolio-delta-pill {
 .bgt-row-card-cell-diff-neg .bgt-cell-text {
   color: var(--red);
   font-weight: 600;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   v22.16 BUDGET TRACKER REDESIGN — tap-to-edit single value row
+   Replaces the old .bgt-row-card 3-cell grid (Planned / Actual /
+   Difference). Each row is a flex container: tick + category name on
+   the left, value display on the right. Tapping the value swaps it
+   for an inline input via bgtBeginEdit. The old .bgt-row-card CSS is
+   retained so the History view (which still shows past months with
+   their original planned/actual split) renders correctly.
+   ════════════════════════════════════════════════════════════════════ */
+.bgt-row-card-v2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  background: linear-gradient(180deg, rgba(220,235,250,0.05) 0%, rgba(180,195,220,0.02) 100%);
+  border: 1px solid rgba(200,215,240,0.12);
+  border-radius: 10px;
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.22);
+}
+.bgt-row-card-v2-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.bgt-row-card-v2-left .bgt-row-card-tick {
+  flex-shrink: 0;
+}
+.bgt-row-card-v2-left .bgt-row-card-name {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.1px;
+}
+.bgt-row-card-v2-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+  text-align: right;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(200,215,240,0.10);
+  min-width: 96px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  user-select: none;
+}
+.bgt-row-card-v2-val:hover {
+  background: rgba(0,0,0,0.32);
+  border-color: rgba(200,215,240,0.20);
+}
+.bgt-row-card-v2-val.bgt-row-val-income { color: var(--green); }
+.bgt-row-card-v2-val.bgt-row-val-tax    { color: var(--red); }
+.bgt-row-card-v2-input {
+  background: rgba(0,0,0,0.30);
+  border: 1px solid rgba(106,178,255,0.50);
+  border-radius: 7px;
+  padding: 5px 9px;
+  font-size: 14px;
+  color: var(--white);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  width: 110px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30), 0 0 0 3px rgba(106,178,255,0.15);
+  outline: none;
+  font-family: inherit;
+}
+
+/* v22.16 header right-side: section total + chevron block. Left side
+   (pill + filled counter) reuses .bgt-section-card-header-info. */
+.bgt-section-card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.bgt-section-card-header-right .bgt-section-card-headline {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+.bgt-section-card-header-right .bgt-section-card-chevron {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.55);
+  font-size: 14px;
+  transition: transform 0.15s;
+}
+.bgt-section-card.collapsed .bgt-section-card-header-right .bgt-section-card-chevron {
+  transform: rotate(-90deg);
+}
+
+/* Mobile tightening for v2 rows */
+@media (max-width: 520px) {
+  .bgt-row-card-v2 {
+    padding: 10px;
+    gap: 10px;
+  }
+  .bgt-row-card-v2-val {
+    font-size: 13px;
+    min-width: 84px;
+    padding: 5px 9px;
+  }
+  .bgt-row-card-v2-input {
+    font-size: 16px;  /* iOS Safari floor — see top of CSS */
+    width: 96px;
+  }
+  .bgt-row-card-v2-left .bgt-row-card-name {
+    font-size: 11.5px;
+  }
 }
 
 /* Section totals row inside the body (replaces the table's Total row) */
@@ -9896,7 +10063,6 @@ body.modal-active .container > footer {
     <!-- Quick Add bar — page opens here directly. No top header so the
          user lands straight on the action they're most likely to take. -->
     <div class="card mb16">
-      <div class="section-label mb12">Quick Add Expense</div>
       <div class="bgt-quick-add">
         <div class="input-group">
           <span class="input-label">Category</span>
@@ -10972,7 +11138,7 @@ body.modal-active .container > footer {
       <div id="analyse-budget-perf-year-select" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="analyse-budget-perf-cards"></div>
       <div style="background:linear-gradient(180deg,rgba(225,235,250,0.14) 0%,rgba(160,180,210,0.03) 100%);border:1px solid rgba(200,215,240,0.18);box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.12);border-radius:10px;padding:14px 18px;margin-bottom:16px">
-        <div class="section-label mb12" style="color:var(--amber)">Income vs Expenses — Plan vs Actual</div>
+        <div class="section-label mb12" style="color:var(--amber)">Annual Totals</div>
         <div id="analyse-budget-perf-table"></div>
       </div>
     </div>
@@ -13138,6 +13304,25 @@ function _applyMobileCollapseState() {
     };
     _writeCollapseState(state);
   } else {
+    // v22.16 one-shot reset for the four Budget Tracker section cards.
+    // The redesign requires every section to start collapsed on every
+    // render — but any user who had previously expanded a section had
+    // `false` baked into LS, which the backfill below cannot override
+    // because backfill only fills MISSING keys. This reset force-closes
+    // all four sections once, then drops a version stamp so it never
+    // runs again. After this, manual toggles persist normally.
+    try {
+      const VERSION_KEY = 'bgtCollapseResetV2216';
+      if (!localStorage.getItem(VERSION_KEY)) {
+        state['bgt-income']   = true;
+        state['bgt-tax']      = true;
+        state['bgt-fixed']    = true;
+        state['bgt-variable'] = true;
+        _writeCollapseState(state);
+        localStorage.setItem(VERSION_KEY, '1');
+      }
+    } catch (e) { /* localStorage unavailable — fail silent */ }
+
     // Backfill: if user upgraded from a build before retirement was collapsible,
     // their saved state won't have a retirement key. Default it to collapsed too.
     if (state.retirement === undefined) {
@@ -25849,81 +26034,65 @@ function renderBudgetPerformance() {
     const months = byYear[year] || [];
     const ann    = _bgtAnnualSummary(months);
 
+    // v22.16: Annual Budget Performance is now actuals-only. The user
+    // no longer enters planned figures in the redesigned tracker, so
+    // Plan-vs-Actual variance figures (incomeVariance, expenseVariance,
+    // savings vs plan rate) have all been dropped. Past months
+    // archived before the redesign still have plannedSnapshot data on
+    // their monthHistory record but it isn't surfaced here any more.
     const netActual    = ann.netActual;
-    const netPlanned   = ann.incomePlanned - ann.expPlanned;
     const savingsRate  = ann.incomeActual > 0 ? (netActual / ann.incomeActual * 100) : 0;
-    const planRate     = ann.incomePlanned > 0 ? (netPlanned / ann.incomePlanned * 100) : 0;
-    const varIncome    = ann.incomeActual - ann.incomePlanned;
-    const varExp       = ann.expActual    - ann.expPlanned;   // positive = overspent
+    const monthCount   = ann.count || 1;
+    const avgMonthly   = netActual / monthCount;
 
-    // ── Summary cards ──
+    // ── Summary cards (actuals only) ──
     const cardsEl = document.getElementById('analyse-budget-perf-cards');
     if (cardsEl) {
-      const savingsCls = savingsRate >= planRate ? 'green' : 'amber';
+      const savingsCls = savingsRate >= 20 ? 'green' : savingsRate >= 10 ? 'amber' : 'red';
       const savedCls   = netActual >= 0 ? 'green' : 'red';
-      const incVarCls  = varIncome >= 0 ? 'green' : 'red';
-      const expVarCls  = varExp <= 0 ? 'green' : 'red';
       cardsEl.innerHTML = `
         <div class="plan-card">
           <div class="plan-card-header">
             <span class="plan-card-ticker">Annual Performance</span>
-            <span class="plan-card-context">Plan vs actual for ${year}</span>
+            <span class="plan-card-context">Actuals across ${year}</span>
           </div>
-          <div class="plan-card-metrics cols-4">
+          <div class="plan-card-metrics cols-3">
             <div class="plan-card-metric">
               <div class="plan-card-metric-label">Savings Rate</div>
               <div class="plan-card-metric-value lg ${savingsCls}">${savingsRate.toFixed(1)}%</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Plan was ${planRate.toFixed(1)}%</div>
+              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Of total income</div>
             </div>
             <div class="plan-card-metric">
               <div class="plan-card-metric-label">Total Saved</div>
               <div class="plan-card-metric-value lg ${savedCls}" data-balance-sensitive>${netActual>=0?'+':'−'}£${fmtNum(Math.round(Math.abs(netActual)),0)}</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px" data-balance-sensitive>Planned £${fmtNum(Math.round(Math.abs(netPlanned)),0)}</div>
+              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Across ${monthCount} month${monthCount===1?'':'s'}</div>
             </div>
             <div class="plan-card-metric">
-              <div class="plan-card-metric-label">Income Variance</div>
-              <div class="plan-card-metric-value lg ${incVarCls}" data-balance-sensitive>${varIncome>=0?'+':'−'}£${fmtNum(Math.round(Math.abs(varIncome)),0)}</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">${varIncome >= 0 ? 'Above plan' : 'Below plan'}</div>
-            </div>
-            <div class="plan-card-metric">
-              <div class="plan-card-metric-label">Expense Variance</div>
-              <div class="plan-card-metric-value lg ${expVarCls}" data-balance-sensitive>${varExp<=0?'+':'−'}£${fmtNum(Math.round(Math.abs(varExp)),0)}</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">${varExp <= 0 ? 'Under budget' : 'Over budget'}</div>
+              <div class="plan-card-metric-label">Avg Monthly</div>
+              <div class="plan-card-metric-value lg ${savedCls}" data-balance-sensitive>${avgMonthly>=0?'+':'−'}£${fmtNum(Math.round(Math.abs(avgMonthly)),0)}</div>
+              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Saved per month</div>
             </div>
           </div>
         </div>
       `;
     }
 
-    // ── Plan vs Actual table ──
+    // ── Annual totals table (actuals only) ──
     const fmt = v => `£${fmtNum(Math.round(Math.abs(v)),0)}`;
-    const varCls = (v, isExp) => isExp
-      ? (v <= 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"')
-      : (v >= 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"');
-    const varStr = (v, isExp) => {
-      const prefix = isExp ? (v<=0?'✓ -£':'✗ +£') : (v>=0?'+£':'-£');
-      return prefix + fmtNum(Math.round(Math.abs(v)), 0);
-    };
     const tblEl = document.getElementById('analyse-budget-perf-table');
     if (tblEl) tblEl.innerHTML = `
       <table class="bgt-perf-table">
         <thead><tr>
           <th style="text-align:left">Category</th>
-          <th>Planned</th><th>Actual</th><th>Variance</th>
+          <th>Amount</th>
         </tr></thead>
         <tbody>
           <tr><td>Total Income</td>
-            <td>${fmt(ann.incomePlanned)}</td>
-            <td>${fmt(ann.incomeActual)}</td>
-            <td ${varCls(varIncome,false)}>${varStr(varIncome,false)}</td></tr>
+            <td>${fmt(ann.incomeActual)}</td></tr>
           <tr><td>Total Expenses</td>
-            <td>${fmt(ann.expPlanned)}</td>
-            <td>${fmt(ann.expActual)}</td>
-            <td ${varCls(varExp,true)}>${varStr(varExp,true)}</td></tr>
+            <td>${fmt(ann.expActual)}</td></tr>
           <tr class="bgt-perf-total"><td>Net Position</td>
-            <td style="color:var(--gold)">${netPlanned>=0?'+':''}£${fmtNum(Math.round(Math.abs(netPlanned)),0)}</td>
-            <td class="${netActual>=0?'bgt-diff-pos':'bgt-diff-neg'}">${netActual>=0?'+':''}£${fmtNum(Math.round(Math.abs(netActual)),0)}</td>
-            <td ${varCls(netActual-netPlanned,false)}>${varStr(netActual-netPlanned,false)}</td></tr>
+            <td class="${netActual>=0?'bgt-diff-pos':'bgt-diff-neg'}">${netActual>=0?'+':''}£${fmtNum(Math.round(Math.abs(netActual)),0)}</td></tr>
         </tbody>
       </table>`;
   };
@@ -27965,191 +28134,94 @@ function _renderBgtMainTable(state) {
 
   const recurring = state.recurring || {};
 
-  // Build one collapsible section card. `cls` is the colour class
-  // (bgt-section-income / bgt-section-tax / bgt-section-fixed /
-  // bgt-section-variable) for pill colour. `isIncome` flips the diff
-  // sign convention. `isVariable` is passed through to the actual cell
-  // builder so the per-row mini progress bar renders correctly.
+  // v22.16 Budget Tracker redesign: rows have a single tap-to-edit value
+  // cell instead of the old 3-column Planned/Actual/Difference grid. Voss
+  // doesn't really plan budgets — he tracks actual spend and lets the
+  // Monthly Net Position card give him the running picture. The old
+  // planned bucket is still persisted in storage (snapshots, recurring
+  // seed fallback) for backward compatibility, but it's no longer
+  // surfaced in the UI. Past months viewed in History keep their
+  // original planned/actual split intact.
   const sectionCard = (label, cls, items, isIncome, isVariable, collapsibleKey) => {
-    const sp = items.reduce((s,n) => s+(parseFloat(planned[n])||0), 0);
+    // Section total = sum of actuals only. The old "drift" figure
+    // (On Plan / Under / Over) is meaningless without planned, so it's
+    // removed from the header entirely. Filled counter stays.
     const sa = items.reduce((s,n) => s+(parseFloat(actual[n]) ||0), 0);
-    const sd = isIncome ? sa-sp : sp-sa;
-    const driftCls = sd > 0.005 ? 'var(--green)' : sd < -0.005 ? 'var(--red)' : 'var(--muted)';
-    const driftStr = Math.abs(sd) < 0.005
-      ? 'On Plan'
-      : (isIncome
-        ? (sd > 0 ? `+£${fmtNum(Math.abs(sd),2)}` : `-£${fmtNum(Math.abs(sd),2)}`)
-        : (sd > 0 ? `-£${fmtNum(Math.abs(sd),2)} Under` : `+£${fmtNum(Math.abs(sd),2)} Over`));
 
-    // Filled count — rows where an actual figure has been entered (or
-    // auto-filled from the Tax page / Income Tax Calculator). Says
-    // "X/N filled" so the user can tell at a glance whether the section
-    // has been reconciled for the month. Rows with actual = 0 don't count.
+    // Filled count — rows where an actual figure has been entered.
+    // Same semantics as before. "X/N filled" still tells the user how
+    // much of the section has been reconciled this month.
     const filledCount = items.filter(n => (parseFloat(actual[n]) || 0) > 0).length;
 
-    // Progress bar — actual vs planned within the section
-    let barPlanWidth = 0, barActualWidth = 0, barActualColor = 'rgba(255,255,255,0.32)';
-    if (sp > 0 && sa <= sp) {
-      barPlanWidth = 100;
-      barActualWidth = (sa / sp) * 100;
-      barActualColor = 'rgba(255,255,255,0.32)';
-    } else if (sp > 0 && sa > sp) {
-      barPlanWidth = (sp / sa) * 100;
-      barActualWidth = 100;
-      barActualColor = isIncome ? 'var(--green)' : 'var(--amber)';
-    } else if (sp === 0 && sa > 0) {
-      barPlanWidth = 0;
-      barActualWidth = 100;
-      barActualColor = isIncome ? 'var(--green)' : 'var(--amber)';
-    }
-
     const rowsHtml = items.map(name => {
-      const p    = parseFloat(planned[name]) || 0;
       const a    = parseFloat(actual[name])  || 0;
-      const diff = isIncome ? (a - p) : (p - a);
-      const dCls = diff > 0.005 ? 'bgt-row-card-cell-diff-pos' : diff < -0.005 ? 'bgt-row-card-cell-diff-neg' : '';
       const isRecurring = !!recurring[name];
-      // Two-state tick. Green tick = fully recurring (planned + actual
-      // both auto-fill from previous month). Amber rotate = planned-only
-      // (planned carries forward, actual resets so the user enters fresh
-      // each month). Tap to toggle. Same handler as before so the
-      // existing audit-log and carry-forward logic is unchanged.
+
+      // Tick semantics:
+      //   ✓ green = recurring (auto-copies last month's actual)
+      //   ↻ amber = not recurring (resets to £0 each new month)
       const tickHtml = isRecurring
-        ? `<span class="bgt-row-card-tick tick-confirmed" onclick="bgtToggleRecurring('${name}')" title="Fully recurring — planned and actual both auto-fill each new month from £${fmtNum(p,0)}. Tap to make planned-only.">✓</span>`
-        : `<span class="bgt-row-card-tick tick-pending" onclick="bgtToggleRecurring('${name}')" title="Planned-only — the planned figure carries forward each new month, but actual resets so you can enter the real spend. Tap to mark as fully recurring.">↻</span>`;
+        ? `<span class="bgt-row-card-tick tick-confirmed" onclick="event.stopPropagation();bgtToggleRecurring('${name}')" title="Recurring — value carries forward each new month. Tap to switch off.">✓</span>`
+        : `<span class="bgt-row-card-tick tick-pending" onclick="event.stopPropagation();bgtToggleRecurring('${name}')" title="Not recurring — resets to £0 each new month. Tap to make recurring.">↻</span>`;
 
-      const diffDisplay = Math.abs(diff) < 0.005
-        ? '+£0.00'
-        : (diff > 0 ? `+£${fmtNum(Math.abs(diff),2)}` : `-£${fmtNum(Math.abs(diff),2)}`);
+      // Tap-to-edit value cell. By default a plain span. Tap swaps it
+      // for an input via bgtBeginEdit; commit on blur/Enter via
+      // bgtUpdateActual. Income green, tax red, neutral for other.
+      const valCls = isIncome ? 'bgt-row-val-income' : (label === 'Tax Provision' ? 'bgt-row-val-tax' : '');
 
-      return `<div class="bgt-row-card">
-        <div class="bgt-row-card-header">
-          <span class="bgt-row-card-name">${name}</span>
+      return `<div class="bgt-row-card-v2" data-bgt-row="${name}">
+        <div class="bgt-row-card-v2-left">
           ${tickHtml}
+          <span class="bgt-row-card-name">${name}</span>
         </div>
-        <div class="bgt-row-card-grid">
-          <div>
-            <span class="bgt-row-card-cell-label">Planned</span>
-            <div class="bgt-cell-pill bgt-cell-pill-planned">
-              <input class="bgt-cell-input" type="text" inputmode="decimal" value="${p > 0 ? p.toFixed(2) : '0.00'}"
-                onchange="bgtUpdatePlanned('${name}',this.value)" onfocus="this.select()" step="0.01" min="0">
-            </div>
-          </div>
-          <div>
-            <span class="bgt-row-card-cell-label">Actual</span>
-            <div class="bgt-cell-pill bgt-cell-pill-actual">
-              <input class="bgt-cell-input" type="text" inputmode="decimal" value="${a > 0 ? a.toFixed(2) : ''}"
-                placeholder="0.00" step="0.01" min="0"
-                onchange="bgtUpdateActual('${name}',this.value)"
-                onfocus="this.select()">
-            </div>
-          </div>
-          <div>
-            <span class="bgt-row-card-cell-label">Difference</span>
-            <div class="bgt-cell-pill ${dCls}">
-              <span class="bgt-cell-text">${diffDisplay}</span>
-            </div>
-          </div>
-        </div>
+        <div class="bgt-row-card-v2-val ${valCls}" onclick="bgtBeginEdit('${name}')">£${fmtNum(a, 2)}</div>
       </div>`;
     }).join('');
 
-    return `<div class="bgt-section-card ${cls}" data-collapsible="${collapsibleKey}">
+    // Read the collapse state directly at render time and bake
+    // .collapsed into the class list. This is more robust than relying
+    // on _applyMobileCollapseState to retrofit the class post-render.
+    // Default to collapsed when the storage key is missing OR truthy.
+    // Only an explicit `false` will render expanded.
+    let isCollapsed = true;
+    try {
+      const savedState = _readCollapseState();
+      if (savedState && savedState[collapsibleKey] === false) {
+        isCollapsed = false;
+      }
+    } catch (e) { /* fall back to collapsed */ }
+    const collapsedCls = isCollapsed ? ' collapsed' : '';
+
+    return `<div class="bgt-section-card ${cls}${collapsedCls}" data-collapsible="${collapsibleKey}">
       <div class="bgt-section-card-header" onclick="toggleMobileCollapse('${collapsibleKey}')">
         <div class="bgt-section-card-header-row">
           <div class="bgt-section-card-header-info">
             <span class="bgt-section-pill">${label}</span>
-            <span class="bgt-section-card-headline">£${fmtNum(sa,2)}</span>
-            <span class="bgt-section-card-drift" style="color:${driftCls}">${driftStr}</span>
-            <span class="bgt-section-card-confirm">${filledCount}/${items.length} Filled</span>
+            <span class="bgt-section-card-confirm">${filledCount}/${items.length} filled</span>
           </div>
-          <span class="bgt-section-card-chevron" aria-hidden="true">⌄</span>
-        </div>
-        <div class="bgt-section-card-bar">
-          <div class="bgt-section-card-bar-plan" style="width:${barPlanWidth}%"></div>
-          <div class="bgt-section-card-bar-actual" style="width:${barActualWidth}%;background:${barActualColor}"></div>
+          <div class="bgt-section-card-header-right">
+            <span class="bgt-section-card-headline">£${fmtNum(sa,2)}</span>
+            <span class="bgt-section-card-chevron" aria-hidden="true">⌄</span>
+          </div>
         </div>
       </div>
       <div class="bgt-section-card-body">
         ${rowsHtml}
-        <div class="bgt-section-card-totals">
-          <span class="bgt-section-card-totals-label">Total ${label}</span>
-          <div class="bgt-section-card-totals-figures">
-            <span style="color:var(--muted)">Plan £${fmtNum(sp,2)}</span>
-            <span class="bgt-section-card-totals-actual">Actual £${fmtNum(sa,2)}</span>
-          </div>
-        </div>
       </div>
     </div>`;
   };
 
-  const tIP = BGT_INCOME.reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
+  // Net position calculation — reads from actuals only. Tax provision
+  // is treated as an outflow alongside fixed + variable.
   const tIA = BGT_INCOME.reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
-  // Tax provision is a separate section but counts as an outflow against income
-  // for net-position purposes — it's money set aside, not retained income.
-  const tTP = BGT_TAX.reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
   const tTA = BGT_TAX.reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
-  const tEP = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+(parseFloat(planned[n])||0),0);
   const tEA = [...BGT_FIXED,...BGT_VARIABLE].reduce((s,n)=>s+(parseFloat(actual[n]) ||0),0);
-  const netPlan = tIP - tTP - tEP, netAct = tIA - tTA - tEA;
+  const netAct = tIA - tTA - tEA;
 
-  // Planned-deficit warning takes precedence — render as a separate red
-  // banner above the standard narrative so the user can't miss it.
-  // Uses the bgt-status-banner component family for visual consistency
-  // with the tax provision banner below.
-  const planDeficitWarning = netPlan < 0
-    ? `<div class="bgt-status-banner danger">
-         <div class="bgt-status-banner-icon">!</div>
-         <div class="bgt-status-banner-body">
-           <div class="bgt-status-banner-headline">Plan does not balance</div>
-           <div class="bgt-status-banner-text">Planned outgoings exceed planned income by <strong>£${fmtNum(Math.abs(netPlan),0)}</strong>. Either add missing income (e.g. dividends to the Dividend Salary row), reduce planned outgoings, or accept the gap will come from savings.</div>
-         </div>
-       </div>`
-    : '';
-
-  // Tax provision status — uses the same simple model as the Tax tab.
-  // Three states (on track, slightly off, behind) rendered through the
-  // shared bgt-status-banner component. Copy keeps "for tax" / "on tax"
-  // in every headline so the banner is self-explanatory regardless of
-  // which colour state is showing. Suppressed entirely when the user has
-  // not set any planned tax provision (May 2026) — the warning was firing
-  // on a fresh month before the user had a chance to enter their plan,
-  // which felt nagging. Only surfaces once a planned figure is in.
-  const taxStatusHtml = (() => {
-    const thisYear = window._selfAssessmentLiability || 0;
-    if (thisYear < 0.01) return '';
-    const plannedProvision = parseFloat(planned['Tax Provision']) || 0;
-    if (plannedProvision <= 0) return '';
-    const recommended = Math.ceil((thisYear / 12) * 1.1 / 50) * 50;
-    const provisioned = parseFloat(actual['Tax Provision']) || 0;
-    const shortfall   = recommended - provisioned;
-    const recStr      = `£${fmtNum(Math.round(recommended),0)}/mo`;
-    const shortStr    = `£${fmtNum(Math.round(shortfall),0)}`;
-    let variant, icon, headline, body;
-    if (shortfall <= 0) {
-      // "On track for tax" success banner suppressed (5 May 2026) — when
-      // everything is fine the green banner adds no signal, only takes up
-      // vertical space at the top of the Budget Tracker. The warn and
-      // danger variants below still render because those are actionable
-      // alerts the user benefits from seeing prominently.
-      return '';
-    } else if (shortfall < recommended * 0.25) {
-      variant  = 'warn'; icon = '!';
-      headline = 'Slightly off for tax';
-      body     = `<strong>${shortStr}</strong> short of ${recStr} target.`;
-    } else {
-      variant  = 'danger'; icon = '!';
-      headline = 'Behind on tax';
-      body     = `<strong>${shortStr}</strong> short of ${recStr} target · top up this month.`;
-    }
-    return `<div class="bgt-status-banner ${variant}">
-      <div class="bgt-status-banner-icon">${icon}</div>
-      <div class="bgt-status-banner-body">
-        <div class="bgt-status-banner-headline">${headline}</div>
-        <div class="bgt-status-banner-text">${body}</div>
-      </div>
-    </div>`;
-  })();
+  // v22.16: planned-deficit warning and tax-provision status banners
+  // are suppressed in the redesigned tracker because both depend on
+  // planned figures the user no longer enters. The Monthly Net Position
+  // card below still surfaces an overall deficit via its red variant.
 
   document.getElementById('bgt-main-table').innerHTML = `
     ${sectionCard('Income','bgt-section-income',BGT_INCOME,true,false,'bgt-income')}
@@ -28176,8 +28248,6 @@ function _renderBgtMainTable(state) {
         </div>
       </div>
     </div>
-    ${planDeficitWarning}
-    ${taxStatusHtml}
   `;
 
   // Cascade: keep all the analytics panels in sync with every edit
@@ -28185,7 +28255,9 @@ function _renderBgtMainTable(state) {
   _renderBgtBreakdownPanel(state);
   _renderBgtAveragesPanel(state);
 
-  // Apply collapsed state to the new section cards
+  // Apply collapsed state to the new section cards (defensive — the
+  // markup already bakes .collapsed in, but this catches any other
+  // collapsibles inside the YTD/breakdown panels)
   if (typeof _applyMobileCollapseState === 'function') {
     _applyMobileCollapseState();
   }
@@ -29319,6 +29391,60 @@ function bgtUpdateActual(name, value) {
   state.actual[name] = parseFloat(value) || 0;
   bgtSave(state);
   _renderBgtMainTable(state);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TAP-TO-EDIT for the v22.16 Budget Tracker redesign
+// Each row's value cell is a span by default. Tapping it swaps the span
+// for an <input>, focuses+selects, and commits on blur or Enter. Escape
+// cancels and reverts. Only re-renders the table if the value actually
+// changed by more than 0.005 — avoids churning the DOM and undo stack
+// on tap-in / tap-out without edits.
+// ════════════════════════════════════════════════════════════════════
+function bgtBeginEdit(name) {
+  const row = document.querySelector(`.bgt-row-card-v2[data-bgt-row="${CSS.escape(name)}"]`);
+  if (!row) return;
+  const valEl = row.querySelector('.bgt-row-card-v2-val');
+  if (!valEl || valEl.querySelector('input')) return; // already editing
+
+  const state = bgtLoad();
+  const currentVal = parseFloat((state.actual || {})[name]) || 0;
+
+  const input = document.createElement('input');
+  input.type        = 'text';
+  input.inputMode   = 'decimal';
+  input.value       = currentVal > 0 ? currentVal.toFixed(2) : '';
+  input.placeholder = '0.00';
+  input.className   = 'bgt-row-card-v2-input';
+  input.dataset.bgtCommitting = '0';
+
+  const commit = (saveIt) => {
+    if (input.dataset.bgtCommitting === '1') return;
+    input.dataset.bgtCommitting = '1';
+    if (saveIt) {
+      const raw = (input.value || '').trim().replace(/,/g, '');
+      const num = parseFloat(raw);
+      const safeNum = isNaN(num) ? 0 : Math.max(0, num);
+      if (Math.abs(safeNum - currentVal) > 0.005) {
+        bgtUpdateActual(name, safeNum);
+        return; // bgtUpdateActual re-renders the table
+      }
+    }
+    // No change or cancelled — restore the static span cheaply
+    const text = currentVal > 0 ? `£${fmtNum(currentVal, 2)}` : '£0.00';
+    valEl.textContent = text;
+  };
+
+  input.addEventListener('blur',    () => commit(true));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter')  { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { commit(false); input.blur(); }
+  });
+
+  valEl.textContent = '';
+  valEl.appendChild(input);
+  input.focus();
+  input.select();
 }
 
 function bgtDeleteAuditEntry(originalIdx) {
