@@ -10,6 +10,53 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; scroll-padding-top: 24px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ═════════════════════════════════════════════════════════════════════
+   iOS SAFARI HARDENING — prevent the page from "feeling like a website"
+   ═════════════════════════════════════════════════════════════════════
+   Two pain points being solved here:
+
+   1. Auto-zoom on input focus. iOS Safari zooms the entire page when
+      it focuses an <input> / <select> / <textarea> whose font-size is
+      smaller than 16px. The zoom persists, leaves the page wider than
+      the viewport, and creates horizontal scrolling. Mitigation: bump
+      every form element to font-size: 16px at mobile breakpoints. Does
+      NOT affect desktop because the @media gate. Visible inputs may
+      look slightly chunkier on phone — that's the price of "app feel".
+
+   2. Horizontal scroll on the document itself. overflow-x: hidden on
+      both html AND body locks horizontal panning at the page level.
+      Intentional horizontal scrollers (e.g. the mortgage planner
+      amortisation table) sit inside their own scroll-x containers
+      with overflow-x: auto, which are NOT affected by this rule —
+      they scroll internally, the page does not.
+
+   Defensive overflow-wrap on the major card containers catches any
+   long unbroken strings (URLs, ticker codes, snapshot labels) that
+   might otherwise push content wider than the viewport.
+   ═════════════════════════════════════════════════════════════════════ */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+@media (max-width: 520px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  /* Buttons styled as inputs (e.g. month-pill displays) also need the
+     16px floor — tapping them sometimes triggers the same zoom in
+     iOS Safari even though they're not focusable. Cheap insurance. */
+  .month-pill-display, .month-pill-input, .date-pill-input {
+    font-size: 16px !important;
+  }
+}
+
+.container, .card, .card-gold, .plan-card, .bgt-section-card {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
 :root {
   /* ── LIQUID MERCURY GLASS TOKENS (May 2026 redesign) ──────────
      The canvas is a deep blued-graphite void with a soft chrome
