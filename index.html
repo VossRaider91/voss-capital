@@ -10114,7 +10114,6 @@ body.modal-active .container > footer {
       </div>
       <div class="bgt-pivot-actions" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex-shrink:0">
         <button class="btn-ghost btn-sm bgt-pivot-btn" onclick="openBgtHistory()">📋 View History</button>
-        <button class="btn-gold btn-sm bgt-pivot-btn" onclick="completeBgtMonth()">Complete Month →</button>
       </div>
     </div>
 
@@ -26058,19 +26057,19 @@ function renderBudgetPerformance() {
           </div>
           <div class="plan-card-metrics cols-3">
             <div class="plan-card-metric">
-              <div class="plan-card-metric-label">Savings Rate</div>
+              <div class="plan-card-metric-label">Leftover Rate</div>
               <div class="plan-card-metric-value lg ${savingsCls}">${savingsRate.toFixed(1)}%</div>
               <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Of total income</div>
             </div>
             <div class="plan-card-metric">
-              <div class="plan-card-metric-label">Total Saved</div>
+              <div class="plan-card-metric-label">Leftover</div>
               <div class="plan-card-metric-value lg ${savedCls}" data-balance-sensitive>${netActual>=0?'+':'−'}£${fmtNum(Math.round(Math.abs(netActual)),0)}</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Across ${monthCount} month${monthCount===1?'':'s'}</div>
+              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Income minus all outflows · across ${monthCount} month${monthCount===1?'':'s'}</div>
             </div>
             <div class="plan-card-metric">
               <div class="plan-card-metric-label">Avg Monthly</div>
               <div class="plan-card-metric-value lg ${savedCls}" data-balance-sensitive>${avgMonthly>=0?'+':'−'}£${fmtNum(Math.round(Math.abs(avgMonthly)),0)}</div>
-              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Saved per month</div>
+              <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Average leftover per month</div>
             </div>
           </div>
         </div>
@@ -26164,12 +26163,8 @@ function renderAnalyseNetWorth() {
   const nwIncome        = parseFloat(nwTaxSettings.income)    || 100000;
   const nwAllowance     = parseFloat(nwTaxSettings.allowance) || 3000;
   const nwPool          = buildSection104Pool();
-  // Mirror the Section 104 gain calc used by the Tax page and Portfolio
-  // Overview: the pool's KEY is the ticker, not a field on the value. Earlier
-  // code read p.ticker (always undefined) so getCurrentPrice returned 0 and
-  // the gain collapsed to -totalCost. Use the entry key for the price lookup.
   let   nwGIAGain       = 0;
-  Object.entries(nwPool).forEach(([ticker, p]) => { nwGIAGain += p.units * (getCurrentPrice(ticker) || 0) - p.totalCost; });
+  Object.entries(nwPool).forEach(([, p]) => { nwGIAGain += p.units * (getCurrentPrice(p.ticker||'') || 0) - p.totalCost; });
   const nwCgtCalc       = calculateCGTRate(nwIncome, nwGIAGain, nwAllowance);
   // The marginal rate that applies to this user's gains (18% or 24%)
   const nwMarginalRate  = nwCgtCalc.marginalRate; // already a percentage (18 or 24)
@@ -28389,8 +28384,8 @@ function _renderBgtYtdPanel(state) {
       <!-- Hero — Annual Net Position is the takeaway -->
       <div class="plan-card is-hero">
         <div class="plan-card-header">
-          <span class="plan-card-ticker">Annual Net Position</span>
-          <span class="plan-card-context">Income £${fmtNum(ann.incomeActual,0)} · Expenses £${fmtNum(ann.expActual,0)}</span>
+          <span class="plan-card-ticker">Leftover Year-to-Date</span>
+          <span class="plan-card-context">Income £${fmtNum(ann.incomeActual,0)} minus all outflows £${fmtNum(ann.expActual,0)}</span>
         </div>
         <div class="plan-card-body">
           <div class="plan-card-headline" style="color:${netActual>=0?'var(--green)':'var(--red)'};text-shadow:0 0 24px ${netActual>=0?'rgba(48,209,88,0.30)':'rgba(255,69,58,0.30)'}" data-balance-sensitive>${signedFmt(netActual)}</div>
@@ -28414,7 +28409,7 @@ function _renderBgtYtdPanel(state) {
             })()}</div>
           </div>
           <div class="plan-card-metric">
-            <div class="plan-card-metric-label">Avg Monthly Saved</div>
+            <div class="plan-card-metric-label">Avg Monthly Leftover</div>
             <div class="plan-card-metric-value lg ${netActual>=0?'green':'red'}" data-balance-sensitive>${signedFmt(netActual / monthsCount)}</div>
             <div class="plan-card-metric-label" style="margin-top:4px;text-transform:none;letter-spacing:0;font-size:9px">Across ${monthsLabel}</div>
           </div>
@@ -28869,7 +28864,7 @@ function _renderBgtHistList() {
   if (!el) return;
 
   if (!history.length) {
-    el.innerHTML = '<div class="stat-sub">No months completed yet. Use Complete Month → to archive the current month.</div>';
+    el.innerHTML = '<div class="stat-sub">No months completed yet. The current month archives automatically when it ends.</div>';
     return;
   }
 
