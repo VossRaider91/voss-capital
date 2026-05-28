@@ -2667,6 +2667,35 @@ h1 {
   margin-top: 4px;
   letter-spacing: -0.1px;
 }
+/* Ticker Summary sort segmented control (v22.17). Single-tap sorts the
+   list high→low on the chosen metric; the active button is highlighted.
+   Mirrors the seg-toggle aesthetic used elsewhere but scoped to this card. */
+.ticker-summary-sort {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+}
+.ticker-summary-sort-btn {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ticker-summary-sort-btn:hover { color: rgba(255,255,255,0.85); }
+.ticker-summary-sort-btn.active {
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+}
 .ticker-summary-empty {
   font-size: 12px;
   color: rgba(255,255,255,0.50);
@@ -10323,7 +10352,13 @@ body.modal-active .container > footer {
         <div class="section-label">Ticker Summary</div>
         <div id="tickerSummaryMeta" class="ticker-summary-meta">Shows prices of all tickers combined across all wrappers</div>
       </div>
-      <button id="btn-tickerSummaryCard" class="btn-ghost btn-sm" onclick="toggleSection('tickerSummaryCard')" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <div class="ticker-summary-sort" role="group" aria-label="Sort tickers">
+          <button id="tickerSort-value" class="ticker-summary-sort-btn" onclick="setTickerSummarySort('value')">Value</button>
+          <button id="tickerSort-percent" class="ticker-summary-sort-btn" onclick="setTickerSummarySort('percent')">%</button>
+        </div>
+        <button id="btn-tickerSummaryCard" class="btn-ghost btn-sm" onclick="toggleSection('tickerSummaryCard')" style="font-size:9px;padding:4px 10px">▼ Collapse</button>
+      </div>
     </div>
     <div id="tickerSummaryCard"><div id="tickerSummaryBody"></div></div>
   </div>
@@ -19312,17 +19347,33 @@ function renderTickerSummary(colourMap) {
     if ((h.price || 0) > byTicker[t].price) byTicker[t].price = h.price || 0;
   });
 
-  // Derive value, avg cost, gain. Sort by value descending.
+  // Derive value, avg cost, gain. Sort high→low on the user's chosen
+  // metric (value or percentage gain), persisted in LS.UI.tickerSummarySort
+  // and defaulting to value. Rows with no cost basis (gainPct effectively
+  // undefined) sort to the bottom of a percentage sort so they don't jump
+  // to the top on a 0% reading.
+  const sortMode = _getTickerSummarySort();
   const rows = Object.values(byTicker)
     .map(t => {
       const value   = t.shares * t.price;
       const avgCost = t.shares > 0 ? t.totalCost / t.shares : 0;
       const gain    = value - t.totalCost;
       const gainPct = t.totalCost > 0 ? (gain / t.totalCost) * 100 : 0;
-      return { ...t, value, avgCost, gain, gainPct };
+      const hasCost = t.totalCost > 0;
+      return { ...t, value, avgCost, gain, gainPct, hasCost };
     })
     .filter(r => r.value > 0)
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => {
+      if (sortMode === 'percent') {
+        // No-cost-basis rows always sink below rows that have a real %.
+        if (a.hasCost !== b.hasCost) return a.hasCost ? -1 : 1;
+        return b.gainPct - a.gainPct;
+      }
+      return b.value - a.value;
+    });
+
+  // Reflect the active sort in the header buttons.
+  _setTickerSortButtonsActive(sortMode);
 
   if (metaEl) metaEl.textContent = `Shows prices of all tickers combined across all wrappers · ${rows.length} ticker${rows.length === 1 ? '' : 's'}`;
 
@@ -19396,6 +19447,65 @@ function renderTickerSummary(colourMap) {
   </div>`;
 
   body.innerHTML = rowsHtml + summaryHtml;
+}
+
+// ── Ticker Summary sort (v22.17) ──
+// Read the persisted sort mode for the Ticker Summary card. Valid values
+// are 'value' (default) and 'percent'. Stored in LS.UI.tickerSummarySort so
+// it survives reload and syncs cross-device via the standard LS.UI plumbing.
+function _getTickerSummarySort() {
+  try {
+    const ui = lsGet(LS.UI, {}) || {};
+    return ui.tickerSummarySort === 'percent' ? 'percent' : 'value';
+  } catch (e) {
+    return 'value';
+  }
+}
+
+// Highlight whichever sort button matches the active mode.
+function _setTickerSortButtonsActive(mode) {
+  const vBtn = document.getElementById('tickerSort-value');
+  const pBtn = document.getElementById('tickerSort-percent');
+  if (vBtn) vBtn.classList.toggle('active', mode !== 'percent');
+  if (pBtn) pBtn.classList.toggle('active', mode === 'percent');
+}
+
+// Rebuild the ticker→colour map exactly as renderPortfolio does: group the
+// portfolio by ticker, rank by value descending, and assign PIE_COLOURS by
+// rank index. Keyed by ticker so swatches stay consistent with the pie chart
+// no matter how the Ticker Summary itself is sorted. Used when re-rendering
+// the card on a sort tap, where the original colourMap isn't in scope.
+function _buildTickerColourMap() {
+  const map = {};
+  try {
+    const portfolio = lsGet(LS.PORTFOLIO, []) || [];
+    const grouped = {};
+    portfolio.forEach(h => {
+      if (!h.ticker || !(h.shares > 0)) return;
+      const val = h.shares * (h.price || 0);
+      if (!grouped[h.ticker]) grouped[h.ticker] = { ticker: h.ticker, value: 0 };
+      grouped[h.ticker].value += val;
+    });
+    Object.values(grouped)
+      .filter(g => g.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .forEach((g, i) => { map[g.ticker] = PIE_COLOURS[i % PIE_COLOURS.length]; });
+  } catch (e) {}
+  return map;
+}
+
+// Set the sort mode (single tap → high-to-low on that metric), persist it,
+// and re-render the card. No-op if the mode is already active so we don't
+// thrash the DOM.
+function setTickerSummarySort(mode) {
+  const next = mode === 'percent' ? 'percent' : 'value';
+  try {
+    const ui = lsGet(LS.UI, {}) || {};
+    if (ui.tickerSummarySort === next) { _setTickerSortButtonsActive(next); return; }
+    ui.tickerSummarySort = next;
+    lsSet(LS.UI, ui);
+  } catch (e) {}
+  renderTickerSummary(_buildTickerColourMap());
 }
 
 function toggleSection(id) {
