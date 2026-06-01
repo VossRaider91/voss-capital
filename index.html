@@ -11253,6 +11253,13 @@ body.modal-active .container > footer {
         <div class="pound-wrap"><input class="mp-input" type="text" inputmode="decimal" id="mp-balance" value="309,413.81" oninput="mpRecalc()"></div>
       </div>
       <div class="mp-input-group">
+        <label class="mp-input-label" for="mp-balance-asof">Balance As Of</label>
+        <div class="month-pill-wrap">
+          <div class="month-pill-display" id="mp-balance-asof-display">June 2026</div>
+          <input class="month-pill-input" type="month" id="mp-balance-asof" value="2026-06" onchange="_mpAsOfChanged()">
+        </div>
+      </div>
+      <div class="mp-input-group">
         <label class="mp-input-label" for="mp-rate">Current Rate %</label>
         <input class="mp-input" type="text" inputmode="decimal" id="mp-rate" value="4.20" step="0.05" min="0" max="20" oninput="mpRecalc()">
       </div>
@@ -25434,12 +25441,56 @@ function mpParseNum(id) {
 function mpLoadState() {
   const saved = lsGet(LS.MORTGAGE, {});
   if (!saved || !saved.balance) return; // use HTML defaults on first load
+
+  // ── Auto roll-forward (June 2026) ──────────────────────────────────────
+  // The stored balance was accurate as of `saved.asOf` (YYYY-MM). If real
+  // calendar time has moved past that month, we run the standard amortisation
+  // schedule forward by the elapsed number of payments using the SAME maths
+  // the projection table uses, so the displayed balance always matches what
+  // the user would see on their bank statement today. Penny-accurate against
+  // any external amortisation schedule (verified against Voss's spreadsheet).
+  //
+  // The roll-forward also advances the `saved.asOf` field to the current
+  // month so subsequent reloads don't redo work that's already been applied.
+  // If the user manually edits the balance, _mpAsOfChanged() / mpRecalc's
+  // save path resets asOf to the current month, treating the typed figure
+  // as authoritative.
+  let workingBalance = saved.balance;
+  let workingAsOf    = saved.asOf || _mpCurrentMonthStr();
+  const elapsed = _mpMonthsBetween(workingAsOf, _mpCurrentMonthStr());
+  if (elapsed > 0 && saved.payment > 0 && saved.rate >= 0 && saved.term > 0) {
+    const rolled = _mpRollForward({
+      balance:    saved.balance,
+      annualRate: saved.rate,
+      payment:    saved.payment,
+      overpay:    saved.overpay || 0,
+      term:       saved.term,
+      fromAsOf:   workingAsOf,
+      months:     elapsed,
+      switchDate: saved.switchDate || '2029-05',
+      newRate:    saved.newRate || saved.rate,
+    });
+    workingBalance = rolled.balance;
+    workingAsOf    = _mpCurrentMonthStr();
+    // Persist the rolled-forward state so we don't recompute next time.
+    lsSet(LS.MORTGAGE, { ...saved, balance: workingBalance, asOf: workingAsOf, term: rolled.termLeft });
+  }
+
   const setVal = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
-  setVal('mp-balance', typeof saved.balance === 'number' && saved.balance > 999
-    ? saved.balance.toLocaleString('en-GB', {maximumFractionDigits:2})
-    : saved.balance);
+  setVal('mp-balance', typeof workingBalance === 'number' && workingBalance > 999
+    ? workingBalance.toLocaleString('en-GB', {maximumFractionDigits:2})
+    : workingBalance);
+  setVal('mp-balance-asof', workingAsOf);
+  // Recompute the months-remaining input too, since the roll-forward chips
+  // away at the term as each payment lands. Without this, the term input
+  // would still show the original 219 months even months after the balance
+  // had advanced, which would mis-state the payoff date.
+  if (elapsed > 0 && saved.term > 0) {
+    setVal('mp-term', Math.max(1, saved.term - elapsed));
+  } else {
+    setVal('mp-term', saved.term);
+  }
   setVal('mp-rate', saved.rate);
-  setVal('mp-term', saved.term);
   setVal('mp-payment', typeof saved.payment === 'number' && saved.payment > 999
     ? saved.payment.toLocaleString('en-GB', {maximumFractionDigits:2})
     : saved.payment);
@@ -25460,11 +25511,14 @@ function mpLoadState() {
       }
     }
   }
+  // Same pattern for the Balance As Of display.
+  _mpSyncAsOfDisplay();
 }
 
 function mpSaveState() {
   lsSet(LS.MORTGAGE, {
     balance:    mpParseNum('mp-balance'),
+    asOf:       document.getElementById('mp-balance-asof')?.value || _mpCurrentMonthStr(),
     rate:       mpParseNum('mp-rate'),
     term:       parseInt(document.getElementById('mp-term')?.value) || 219,
     payment:    mpParseNum('mp-payment'),
@@ -25472,6 +25526,93 @@ function mpSaveState() {
     switchDate: document.getElementById('mp-switch-date')?.value || '2029-05',
     newRate:    mpParseNum('mp-new-rate'),
   });
+}
+
+// ── Roll-forward helpers (June 2026) ────────────────────────────────────
+// Return the current calendar month as a YYYY-MM string. Single source of
+// truth so every call site agrees on "now".
+function _mpCurrentMonthStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Whole months between two YYYY-MM strings. Negative if `to` is before
+// `from`; zero if same month. Used to decide how many payments to roll
+// forward when restoring state.
+function _mpMonthsBetween(fromStr, toStr) {
+  if (!fromStr || !toStr) return 0;
+  const [fy, fm] = fromStr.split('-').map(Number);
+  const [ty, tm] = toStr.split('-').map(Number);
+  if (!fy || !fm || !ty || !tm) return 0;
+  return (ty - fy) * 12 + (tm - fm);
+}
+
+// Step the balance forward by `months` payments using the standard
+// amortisation PMT model. Correctly handles a rate switch that falls inside
+// the roll-forward window (e.g. user opens the app for the first time in
+// three years and the 2029 remortgage has come and gone in the interim).
+// Returns the resulting balance AND the remaining term, which the caller
+// uses to keep the Months Remaining input in sync. Pure function — no DOM
+// touched, no LS writes.
+function _mpRollForward({ balance, annualRate, payment, overpay, term, fromAsOf, months, switchDate, newRate }) {
+  let bal = balance;
+  let termLeft = term;
+  let activePayment = payment;
+  // Parse switch date once so we can compare against each rolled month.
+  const [swYear, swMonth] = (switchDate || '2099-01').split('-').map(Number);
+  const [fy, fm] = fromAsOf.split('-').map(Number);
+  for (let i = 1; i <= months && termLeft > 0 && bal > 0.005; i++) {
+    // Calculate which calendar month this payment falls in. fromAsOf is the
+    // month the stored balance was correct for; the first payment after
+    // that lands one month later, hence (fm + i - 1) then +1 below for 1-indexed.
+    const stepDate = new Date(fy, fm - 1 + i, 1);
+    const stepYear  = stepDate.getFullYear();
+    const stepMonth = stepDate.getMonth() + 1;
+    const isPostSwitch = (stepYear > swYear) || (stepYear === swYear && stepMonth >= swMonth);
+    const isExactSwitch = (stepYear === swYear && stepMonth === swMonth);
+    const annRate = isPostSwitch ? newRate : annualRate;
+    const monthlyRate = annRate / 100 / 12;
+    // At the exact switch month, recompute the payment using PMT over the
+    // remaining term, matching what the lender does in real life.
+    if (isExactSwitch && newRate !== annualRate) {
+      if (monthlyRate <= 0) {
+        activePayment = bal / termLeft;
+      } else {
+        const f = Math.pow(1 + monthlyRate, termLeft);
+        activePayment = bal * monthlyRate * f / (f - 1);
+      }
+    }
+    const interest  = bal * monthlyRate;
+    const totalPay  = Math.min(activePayment + (overpay || 0), bal + interest);
+    const principal = totalPay - interest;
+    bal = Math.max(0, bal - principal);
+    termLeft--;
+  }
+  return { balance: bal, termLeft };
+}
+
+// Refresh the visible "Balance As Of" pill label to match the input value.
+// Mirrors _updateMortgageSwitchDate's pattern.
+function _mpSyncAsOfDisplay() {
+  const input = document.getElementById('mp-balance-asof');
+  const display = document.getElementById('mp-balance-asof-display');
+  if (!input || !display) return;
+  if (input.value) {
+    const [year, month] = input.value.split('-').map(Number);
+    if (year && month) {
+      const d = new Date(year, month - 1, 1);
+      display.textContent = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    }
+  }
+}
+
+// User has manually picked a new as-of month. Treat the current Balance
+// input as authoritative AS OF that new month — no roll-forward applied,
+// just update the display and persist. mpRecalc fires to refresh dependent
+// figures (projection cards, amortisation table).
+function _mpAsOfChanged() {
+  _mpSyncAsOfDisplay();
+  mpRecalc();
 }
 
 function mpBuildSchedule(balance, annualRate, monthlyPayment, overpay, term, switchDate, newAnnualRate) {
