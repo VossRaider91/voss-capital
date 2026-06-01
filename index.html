@@ -14885,25 +14885,69 @@ function calculate() {
     f.overweight = currentPortVal > 0 ? (f.currentVal/currentPortVal*100) - f.normTarget*100 : 0;
   });
 
-  // Build allocation weights applying drift rules
-  const withNeeds = data.map(f => {
-    let deployWeight = 1;
+  // Build allocation weights applying drift rules.
+  //
+  // Reduce Deployment v2 (1 Jun 2026). Three changes vs the original:
+  //
+  //  1. Gate on driftLimit, not zero. Reduction now only kicks in when a
+  //     fund is OVER the drift limit. A fund that's 0.5% over target with
+  //     a 5% drift limit gets full deployment, because it's within the
+  //     band the user defined. This makes the drift-limit input meaningful
+  //     for the Reduce path, not just the Hard path.
+  //
+  //  2. Minimum deployment floor of 15%. Once a fund crosses the drift
+  //     limit, reduction scales linearly from 100% at the limit down to
+  //     15% as overweight grows. Never zero. This matches the tooltip
+  //     promise of "still gets some buying, just less" and separates the
+  //     Reduce path from Hard (which still goes to zero). At 15% × a 12%
+  //     target × a typical £4-5k budget, that's enough £ to fund roughly
+  //     one whole unit of a mid-priced fund, so the "AT LIMIT" zero badge
+  //     no longer fires misleadingly.
+  //
+  //  3. Denominator excludes reduced funds proportionally. The previous
+  //     totalNeeded summed every fund's gap to ideal, even funds that
+  //     would then be scaled down. That left underweight funds slightly
+  //     under-allocated because the denominator was inflated by needs the
+  //     calc wasn't actually going to meet. Now each fund's contribution
+  //     to totalNeeded is multiplied by the same deployWeight that will
+  //     scale its own deployment, so the freed-up budget redistributes
+  //     cleanly to the funds that aren't being reduced.
+  const REDUCE_FLOOR = 0.15; // never deploy less than 15% of a fund's normal share
 
-    if (currentPortVal > 0) {
-      if (useHard && f.overweight > driftLimit) {
-        return { ...f, idealDeploy: 0, sharesFloor: 0, sharesCeil: 0, skipped: true, reducedBy: 0 };
-      }
-      if (useReduce && f.overweight > 0) {
-        const reduction = Math.min(f.overweight / driftLimit, 1);
-        deployWeight = Math.max(0, 1 - reduction);
-      }
+  // First pass: compute each fund's deployWeight so we can use them in the
+  // shared denominator. Done as a Map keyed by ticker for cheap lookup.
+  const deployWeights = new Map();
+  data.forEach(f => {
+    if (useHard && currentPortVal > 0 && f.overweight > driftLimit) {
+      deployWeights.set(f.ticker, 0); // will be skipped entirely
+      return;
     }
+    if (useReduce && currentPortVal > 0 && f.overweight > driftLimit) {
+      // Linear taper from 1.0 at the limit down to REDUCE_FLOOR. excess of
+      // 0 → weight 1.0; excess equal to driftLimit (i.e. fund is 2× the
+      // limit) → weight REDUCE_FLOOR; further over → still REDUCE_FLOOR.
+      const excess = f.overweight - driftLimit;
+      const taper = Math.min(excess / driftLimit, 1);
+      const weight = 1 - (1 - REDUCE_FLOOR) * taper;
+      deployWeights.set(f.ticker, Math.max(REDUCE_FLOOR, weight));
+      return;
+    }
+    deployWeights.set(f.ticker, 1);
+  });
+
+  const withNeeds = data.map(f => {
+    if (useHard && currentPortVal > 0 && f.overweight > driftLimit) {
+      return { ...f, idealDeploy: 0, sharesFloor: 0, sharesCeil: 0, skipped: true, reducedBy: 0 };
+    }
+
+    const deployWeight = deployWeights.get(f.ticker) ?? 1;
 
     const idealTotal = projTotal * f.normTarget;
     const needed = Math.max(0, idealTotal - f.currentVal);
     const totalNeeded = data.reduce((s,d) => {
       if (useHard && d.overweight > driftLimit) return s;
-      return s + Math.max(0, projTotal * d.normTarget - d.currentVal);
+      const dWeight = deployWeights.get(d.ticker) ?? 1;
+      return s + Math.max(0, projTotal * d.normTarget - d.currentVal) * dWeight;
     }, 0);
 
     let rawDeploy = totalNeeded > 0 ? (needed/totalNeeded)*sharesBudget : sharesBudget*f.normTarget;
@@ -14917,13 +14961,18 @@ function calculate() {
     // less, ignoring the user's setting). Now buffer is always honoured.
     const priceForFloors = f.price;
 
+    // reducedBy reports the % reduction applied (for the UI badge). 0 when
+    // the fund isn't being reduced; 100*(1-weight) when it is.
+    const isReduced = useReduce && currentPortVal > 0 && f.overweight > driftLimit;
+    const reducedBy = isReduced ? (1 - deployWeight) * 100 : 0;
+
     return {
       ...f,
       idealDeploy: rawDeploy,
       sharesFloor: Math.floor(rawDeploy / priceForFloors),
       sharesCeil: Math.ceil(rawDeploy / priceForFloors),
       skipped: false,
-      reducedBy: useReduce && f.overweight > 0 ? Math.min(f.overweight/driftLimit,1)*100 : 0,
+      reducedBy,
     };
   });
 
