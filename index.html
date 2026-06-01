@@ -1978,58 +1978,13 @@ h1 {
    Pill-shaped container that wraps the projection's progress bar
    and its caption beneath. Replaces a loose progress bar + footer
    line that used to float in space. */
-/* ── RETIREMENT — Floating section anchor nav ─────────────────────
-   Desktop-only left rail anchored to the four Retirement sections
-   (Settings, Projection, Current Pot, Freedom Number). Sticks while
-   scrolling, with the active section highlighted via .is-active set
-   by IntersectionObserver. Hidden below 1100px where the 900px content
-   column leaves no room for a side rail. */
-/* Floating section anchor nav for the retirement tab. Sticky on the
-   left side of the content column with smooth-scroll anchors and
-   IntersectionObserver-driven active highlighting. Only shows on
-   genuinely wide viewports (≥1300px) where there's actual room beside
-   the 900px content column for a 160px-wide rail with breathing space.
-   Math: 900 (content) + 160 (nav width) + 40 (left margin) + 200 (gap
-   between nav and content edge) ≈ 1300px floor. Below 1300px it's
-   hidden because the `left` calc would fall back to the 20px floor
-   which lands inside the content area, overlapping the first inputs
-   at the top of the retirement page. */
-.ret-anchor-nav {
-  display: none;
-}
-@media (min-width: 1300px) {
-  .ret-anchor-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    position: fixed;
-    left: max(20px, calc((100vw - 900px) / 2 - 180px));
-    top: 100px;
-    width: 160px;
-    z-index: 5;
-  }
-  .ret-anchor-nav a {
-    display: block;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--muted);
-    text-decoration: none;
-    border-radius: 8px;
-    border-left: 2px solid transparent;
-    transition: color 0.15s, background 0.15s, border-color 0.15s;
-    letter-spacing: -0.05px;
-  }
-  .ret-anchor-nav a:hover {
-    color: var(--white);
-    background: rgba(255,255,255,0.06);
-  }
-  .ret-anchor-nav a.is-active {
-    color: var(--white);
-    border-left-color: var(--blue);
-    background: rgba(10,132,255,0.08);
-  }
-}
+/* The floating section anchor nav (.ret-anchor-nav) was removed on 1 Jun
+   2026. It was a desktop-only left-rail with anchors to Settings,
+   Projection, Current Pot, Freedom Number. It kept overlapping content on
+   real-world viewport widths (the `left` calc could land inside the content
+   area on some Mac widths) and the page is already organised in clear
+   vertical sections, so the side nav added more visual noise than value.
+   Markup, CSS, JS observer, and call site all removed together. */
 
 .ret-progress-strip {
   background: linear-gradient(180deg, rgba(225,235,250,0.14) 0%, rgba(160,180,210,0.03) 100%);
@@ -9455,15 +9410,9 @@ body.modal-active .container > footer {
      RETIREMENT TRACKER TAB
 ═══════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-retirement">
-  <!-- Floating section anchor nav. Desktop only (≥1100px). Sticks to
-       the left of the content column with smooth-scroll anchors and
-       IntersectionObserver-driven active highlighting. -->
-  <nav class="ret-anchor-nav" aria-label="Retirement sections">
-    <a href="#ret-settings-section" data-anchor="ret-settings-section">Settings</a>
-    <a href="#retResults" data-anchor="retResults">Projection</a>
-    <a href="#ret-current-position" data-anchor="ret-current-position">Current Pot</a>
-    <a href="#ret-freedom-card" data-anchor="ret-freedom-card">Freedom Number</a>
-  </nav>
+  <!-- Floating section anchor nav removed 1 Jun 2026 — see CSS comment.
+       The retirement page is organised in clear vertical sections, so a
+       side nav added overhead without enough payoff. -->
   <div data-collapsible="retirement" class="card card-left ret-settings-collapsible chevron-collapsible mb16" id="ret-settings-section">
     <div class="collapsible-header" onclick="toggleMobileCollapse('retirement')">
       <div class="flex-between" style="margin-bottom:0">
@@ -30637,10 +30586,8 @@ function init() {
   // resumes immediately on visibility change.
   _startAutoRefreshCountdown();
 
-  // Scroll-spy for Retirement tab anchor nav. Highlights the active
-  // section as the user scrolls. Only initialises if the nav element
-  // exists, so does nothing on viewports below 1100px.
-  _initRetirementScrollSpy();
+  // (Retirement scroll-spy observer removed 1 Jun 2026 along with the
+  // floating section anchor nav it powered.)
 
   // Sync the visible labels on the Entry Log filter month-pills to the
   // underlying input state at boot. Browsers occasionally persist month
@@ -30657,37 +30604,12 @@ function init() {
   if (typeof _initHelpTooltips === 'function') _initHelpTooltips();
 }
 
-function _initRetirementScrollSpy() {
-  const nav = document.querySelector('.ret-anchor-nav');
-  if (!nav) return;
-  const links = Array.from(nav.querySelectorAll('a[data-anchor]'));
-  if (!links.length) return;
-  const linkById = {};
-  links.forEach(a => { linkById[a.dataset.anchor] = a; });
-  const targets = links.map(a => document.getElementById(a.dataset.anchor)).filter(Boolean);
-  if (!targets.length) return;
-  const visible = new Set();
-  const setActive = () => {
-    if (visible.size === 0) return;
-    let topMost = null;
-    let topY = Infinity;
-    visible.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const y = el.getBoundingClientRect().top;
-      if (y < topY) { topY = y; topMost = id; }
-    });
-    links.forEach(a => a.classList.remove('is-active'));
-    if (topMost && linkById[topMost]) linkById[topMost].classList.add('is-active');
-  };
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) visible.add(e.target.id);
-      else visible.delete(e.target.id);
-    });
-    setActive();
-  }, { threshold: [0, 0.25, 0.5], rootMargin: '-80px 0px -50% 0px' });
-  targets.forEach(t => obs.observe(t));
+function _initRetirementScrollSpy_REMOVED() {
+  // Removed 1 Jun 2026 along with the .ret-anchor-nav side rail it served.
+  // Function name kept as a tombstone in case anything outside the codebase
+  // (a backup, a search) references it; renaming to _REMOVED means any
+  // accidental caller would throw a ReferenceError loudly rather than fail
+  // silently. Body deliberately empty.
 }
 
 // ════════════════════════════════════════════════════════════════════
