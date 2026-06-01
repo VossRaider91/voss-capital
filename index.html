@@ -25661,10 +25661,18 @@ function mpBuildSchedule(balance, annualRate, monthlyPayment, overpay, term, swi
     const monthlyRate   = activeAnnRate / 100 / 12;
     const isRateSwitch  = rowYear === switchYear && rowMonth === switchMonth;
 
-    // Recalculate the payment exactly once, at the moment of the switch.
-    // PMT formula: P × r(1+r)^n / ((1+r)^n − 1) where r is monthly rate and
-    // n is the remaining number of months in the original term.
-    if (isRateSwitch) {
+    // Recalculate the payment exactly once, at the moment of the switch,
+    // BUT only if the rate has actually changed. Without this guard, a user
+    // who enters a switch date with the SAME rate as their current one (e.g.
+    // a placeholder while they wait to see real remortgage offers) would
+    // see the Projected path drift away from the Standard path even though
+    // nothing economically has changed. The PMT recalc over the now-shorter
+    // remaining term produces a slightly different payment than the user's
+    // current locked-in figure, and that tiny per-month difference compounds
+    // over 15+ years into a spurious "saving" of £1,000+. Gating on actual
+    // rate change makes Standard and Projected paths identical when the
+    // rates match, which matches reality.
+    if (isRateSwitch && newAnnualRate !== annualRate) {
       const remainingMonths = term - i;
       if (remainingMonths > 0) {
         if (monthlyRate <= 0) {
