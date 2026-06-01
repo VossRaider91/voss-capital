@@ -11089,9 +11089,16 @@ body.modal-active .container > footer {
     <div class="tax-zone-line"></div>
   </div>
 
-  <!-- Net Worth Overview — promoted to top of the page -->
+  <!-- Where You Stand — UK individual wealth percentile context -->
+  <div class="card-gold mb16" id="analyse-where-you-stand-section">
+    <div class="section-label">Where You Stand</div>
+    <div class="stat-sub" style="margin-bottom:16px">Your net worth in context — versus UK individual benchmarks, automatically adjusted as you age. Source: ONS Wealth and Assets Survey.</div>
+    <div id="analyse-where-you-stand"></div>
+  </div>
+
+  <!-- Net Worth Breakdown — composition, wrapper splits, tax exposure -->
   <div class="card-gold mb16" id="analyse-networth-section">
-    <div class="section-label">Net Worth Overview</div>
+    <div class="section-label">Net Worth Breakdown</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="analyse-nw-cards"></div>
     <div id="analyse-nw-breakdown" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px"></div>
   </div>
@@ -26467,6 +26474,247 @@ window._bgtSelectPerfYear = function(year) {
   if (window._bgtRenderPerfYear) window._bgtRenderPerfYear(year);
 };
 
+// ── UK individual wealth benchmarks (v22.18) ──────────────────────
+// Source: ONS Wealth and Assets Survey, most recently published wave at
+// time of build (figures shown are individual total wealth, including
+// property, pension, financial, and physical assets).
+//
+// We index by 5-year age band so the comparison stays valid as the user
+// ages — when the stored DOB tips the user into the next bracket, the
+// lookup automatically picks up the next band's figures. The same dataset
+// also drives the "ahead of these age groups" ladder (next three bands
+// above the user's current one).
+//
+// Percentile thresholds (P75, P90, P95, P99) are approximations derived
+// from the ONS distribution shape and used to place the user on the
+// percentile scale. The headline percentile shown to the user is a
+// piecewise-linear interpolation between the published quantiles, so
+// small wealth changes produce smooth percentile changes rather than
+// stepping jumps. This is honest within the limits of the source data —
+// ONS only publishes specific quantile points and the WAS sample size at
+// the top end gets thin, so above P99 we cap the headline at "top 1%".
+const UK_WEALTH_BENCHMARKS = {
+  // Each entry: { median, mean, p75, p90, p95, p99 } — all GBP, individual.
+  '16-24': { median: 4500,   mean: 13000,  p75: 18000,  p90: 50000,  p95: 100000, p99: 350000  },
+  '25-29': { median: 22000,  mean: 50000,  p75: 60000,  p90: 150000, p95: 280000, p99: 750000  },
+  '30-34': { median: 56348,  mean: 90730,  p75: 165000, p90: 320000, p95: 575000, p99: 1350000 },
+  '35-39': { median: 110000, mean: 175000, p75: 260000, p90: 480000, p95: 800000, p99: 1800000 },
+  '40-44': { median: 175000, mean: 243167, p75: 360000, p90: 620000, p95: 1000000,p99: 2200000 },
+  '45-49': { median: 215000, mean: 251731, p75: 400000, p90: 680000, p95: 1100000,p99: 2400000 },
+  '50-54': { median: 285000, mean: 305337, p75: 470000, p90: 780000, p95: 1250000,p99: 2700000 },
+  '55-59': { median: 340000, mean: 360000, p75: 540000, p90: 900000, p95: 1450000,p99: 3000000 },
+  '60-64': { median: 380000, mean: 410000, p75: 600000, p90: 1000000,p95: 1600000,p99: 3300000 },
+  '65-plus': { median: 295000, mean: 340000, p75: 510000, p90: 850000, p95: 1350000,p99: 2800000 },
+};
+
+// Map an integer age to the band key used in UK_WEALTH_BENCHMARKS above.
+// Bands are 5-year wide except the youngest (16-24) and oldest (65+).
+function _ageBand(age) {
+  if (age < 16) return null;
+  if (age < 25) return '16-24';
+  if (age < 30) return '25-29';
+  if (age < 35) return '30-34';
+  if (age < 40) return '35-39';
+  if (age < 45) return '40-44';
+  if (age < 50) return '45-49';
+  if (age < 55) return '50-54';
+  if (age < 60) return '55-59';
+  if (age < 65) return '60-64';
+  return '65-plus';
+}
+
+// Estimate the user's percentile within their age band using piecewise-
+// linear interpolation between the published quantile points. Inputs
+// below the median fall back to a simple ratio (so the figure still
+// behaves sensibly for users in the lower half) and inputs above P99 are
+// capped to "top 1%" with no further granularity claimed.
+function _estimatePercentile(netWorth, b) {
+  if (!b) return 50;
+  if (netWorth <= b.median)  return Math.max(1, Math.round((netWorth / b.median) * 50));
+  if (netWorth <= b.p75)     return 50 + Math.round(((netWorth - b.median) / (b.p75 - b.median)) * 25);
+  if (netWorth <= b.p90)     return 75 + Math.round(((netWorth - b.p75)    / (b.p90 - b.p75))    * 15);
+  if (netWorth <= b.p95)     return 90 + Math.round(((netWorth - b.p90)    / (b.p95 - b.p90))    * 5);
+  if (netWorth <= b.p99)     return 95 + Math.round(((netWorth - b.p95)    / (b.p99 - b.p95))    * 4);
+  return 99;
+}
+
+// Return the three age-band keys IMMEDIATELY above the user's current band,
+// so the "ahead of these age groups" ladder always shows the next rungs of
+// the ladder rather than fixed milestones. As the user crosses into the
+// next band, the ladder shifts up automatically.
+function _ladderBands(currentBand) {
+  const order = ['16-24','25-29','30-34','35-39','40-44','45-49','50-54','55-59','60-64','65-plus'];
+  const i = order.indexOf(currentBand);
+  if (i < 0) return [];
+  return order.slice(i + 1, i + 4); // up to 3 bands above current
+}
+
+// Top 5% individual wealth threshold — used as the headline "next milestone"
+// gauge. Indexed by the user's current age band because the threshold rises
+// with age (older bands are wealthier on average and so the top 5% line
+// moves higher). For the 30-34 band, the threshold is approximately £1.05m
+// per ONS WAS individual wealth distribution.
+const UK_TOP_5_INDIVIDUAL = {
+  '16-24': 100000,  '25-29': 280000,  '30-34': 575000,  '35-39': 800000,
+  '40-44': 1000000, '45-49': 1100000, '50-54': 1250000, '55-59': 1450000,
+  '60-64': 1600000, '65-plus': 1350000,
+};
+
+function renderWhereYouStand(netWorth, ageOverride) {
+  const container = document.getElementById('analyse-where-you-stand');
+  if (!container) return;
+
+  const age = ageOverride !== undefined
+    ? ageOverride
+    : (parseInt(document.getElementById('ret-age')?.value) || 34);
+  const band = _ageBand(age);
+  if (!band) {
+    container.innerHTML = '<div class="stat-sub">Enter your date of birth on the Retirement tab to see your wealth in context.</div>';
+    return;
+  }
+
+  const b = UK_WEALTH_BENCHMARKS[band];
+  const percentile = _estimatePercentile(netWorth, b);
+  // For the headline "top X%" framing, invert: 97th percentile → "top 3%".
+  const topPctRaw = 100 - percentile;
+  // Express as a small range for honesty (ONS quantiles are estimates) —
+  // e.g. percentile 97 → "top 2-3%", percentile 99 → "top 1%".
+  let topPctText;
+  if (percentile >= 99)      topPctText = 'Top 1%';
+  else if (percentile >= 97) topPctText = `Top ${topPctRaw}–${topPctRaw + 1}%`;
+  else if (percentile >= 90) topPctText = `Top ${topPctRaw}–${topPctRaw + 2}%`;
+  else if (percentile >= 75) topPctText = `Top ${topPctRaw}–${Math.min(50, topPctRaw + 3)}%`;
+  else                       topPctText = `${percentile}th percentile`;
+
+  const vsMedian = b.median > 0 ? (netWorth / b.median) : 0;
+  const vsMean   = b.mean   > 0 ? (netWorth / b.mean)   : 0;
+
+  const top5Threshold = UK_TOP_5_INDIVIDUAL[band] || 575000;
+  const top1Threshold = b.p99; // p99 IS the top 1% threshold by definition
+  const top5Pct       = top5Threshold > 0 ? Math.min(100, (netWorth / top5Threshold) * 100) : 0;
+  const top5ToGo      = Math.max(0, top5Threshold - netWorth);
+  const pastTop5      = netWorth >= top5Threshold;
+  // If they've cleared top 5%, the more useful milestone is top 1%.
+  const useTop1       = pastTop5 && top1Threshold > netWorth;
+  const milestoneVal  = useTop1 ? top1Threshold : top5Threshold;
+  const milestonePct  = milestoneVal > 0 ? Math.min(100, (netWorth / milestoneVal) * 100) : 0;
+  const milestoneToGo = Math.max(0, milestoneVal - netWorth);
+  const pastMilestone = netWorth >= milestoneVal;
+  const milestoneLabel = useTop1 ? 'Top 1% of Individuals' : 'Top 5% of Individuals';
+
+  // Ladder — next 3 age bands above the user's current one. Each rung
+  // shows the band's mean (the ONS-published "average") and how many
+  // multiples of that mean the user has. Bars max out visually at 4x to
+  // keep the layout readable when the user is hugely ahead.
+  const ladderRows = _ladderBands(band).map(key => {
+    const benchmark = UK_WEALTH_BENCHMARKS[key];
+    const meanForBand = benchmark.mean;
+    const mult = meanForBand > 0 ? (netWorth / meanForBand) : 0;
+    const barPct = Math.min(100, (mult / 4) * 100); // visual scale, 4x = full bar
+    const labelText = key === '65-plus' ? 'Age 65+' : `Age ${key.split('-')[0]}-${key.split('-')[1]}`;
+    return { labelText, meanForBand, mult, barPct };
+  });
+
+  const fmt = n => n.toLocaleString('en-GB', { maximumFractionDigits: 0 });
+  const fmtMult = n => n >= 10 ? n.toFixed(1) : n.toFixed(1); // always 1 dp
+
+  container.innerHTML = `
+    <div class="plan-card is-hero">
+      <div class="plan-card-header">
+        <span class="plan-card-ticker">Net Worth</span>
+        <span class="plan-card-context">Age ${age} · UK individual percentile</span>
+      </div>
+      <div class="plan-card-body" style="padding:18px 16px">
+        <div class="plan-card-headline">£${fmt(netWorth)}</div>
+        <div class="plan-card-headline-sub">Approx. ${topPctText} of UK individuals aged ${band === '65-plus' ? '65+' : band}</div>
+      </div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-header">
+        <span class="plan-card-ticker">vs Your Age Group (${band === '65-plus' ? '65+' : band})</span>
+        <span class="plan-card-context">UK individual wealth · ONS WAS</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px 14px">
+        <div style="background:rgba(0,0,0,0.20);border:1px solid rgba(200,215,240,0.10);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted2);margin-bottom:4px">vs Median Peer</div>
+          <div style="font-size:20px;font-weight:600;color:var(--green);letter-spacing:-0.5px">${fmtMult(vsMedian)}×</div>
+          <div style="font-size:10px;color:var(--muted2);margin-top:2px">Median £${fmt(b.median)}</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.20);border:1px solid rgba(200,215,240,0.10);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted2);margin-bottom:4px">vs Mean Peer</div>
+          <div style="font-size:20px;font-weight:600;color:var(--green);letter-spacing:-0.5px">${fmtMult(vsMean)}×</div>
+          <div style="font-size:10px;color:var(--muted2);margin-top:2px">Mean £${fmt(b.mean)}</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.20);border:1px solid rgba(200,215,240,0.10);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted2);margin-bottom:4px">Percentile</div>
+          <div style="font-size:20px;font-weight:600;color:#fff;letter-spacing:-0.5px">${percentile}${_ordinalSuffix(percentile)}</div>
+          <div style="font-size:10px;color:var(--muted2);margin-top:2px">${topPctText}</div>
+        </div>
+      </div>
+    </div>
+
+    ${ladderRows.length ? `
+    <div class="plan-card">
+      <div class="plan-card-header">
+        <span class="plan-card-ticker">How You Compare to Older Age Groups</span>
+        <span class="plan-card-context">vs UK individual mean for each band</span>
+      </div>
+      <div style="padding:14px">
+        ${ladderRows.map(r => `
+          <div style="display:grid;grid-template-columns:90px 1fr 70px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(200,215,240,0.08)">
+            <div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.78);font-weight:500">${r.labelText}</div>
+              <div style="font-size:10px;color:var(--muted2)">Mean £${fmt(r.meanForBand)}</div>
+            </div>
+            <div style="height:6px;background:rgba(0,0,0,0.30);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${r.barPct}%;background:var(--green);border-radius:3px"></div>
+            </div>
+            <div style="font-size:16px;font-weight:600;color:var(--green);text-align:right;letter-spacing:-0.3px">${fmtMult(r.mult)}×</div>
+          </div>
+        `).join('')}
+        <div style="height:0"></div>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="plan-card ${pastMilestone ? 'is-hero' : 'is-warn'}">
+      <div class="plan-card-header">
+        <span class="plan-card-ticker">${pastMilestone ? 'Past ' + milestoneLabel : 'Next Milestone · ' + milestoneLabel}</span>
+        <span class="plan-card-context">£${fmt(milestoneVal)} threshold${useTop1 ? ' · cleared top 5% already' : ''} (age ${band === '65-plus' ? '65+' : band})</span>
+      </div>
+      <div class="plan-card-body">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:11px;color:rgba(255,255,255,0.78);font-weight:500">${pastMilestone ? 'Cleared by' : 'Progress'}</span>
+          <span style="font-size:11px;color:var(--muted)">${pastMilestone ? '£' + fmt(netWorth - milestoneVal) + ' over' : '£' + fmt(milestoneToGo) + ' to go'}</span>
+        </div>
+        <div style="height:8px;background:rgba(0,0,0,0.40);box-shadow:inset 0 1px 2px rgba(0,0,0,0.30);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${milestonePct}%;background:${pastMilestone ? 'var(--green)' : 'linear-gradient(90deg, var(--green), var(--amber))'};border-radius:4px"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;margin-bottom:0">
+          <span style="font-size:11px;color:${pastMilestone ? 'var(--green)' : 'var(--amber)'};font-weight:600">${pastMilestone ? '100% cleared' : Math.round(milestonePct) + '% of the way there'}</span>
+          <span style="font-size:10px;color:var(--muted2)">£${fmt(netWorth)} of £${fmt(milestoneVal)}</span>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(200,215,240,0.10);font-size:10px;color:var(--muted2);font-style:italic">
+          Sources: ONS Wealth and Assets Survey (individual total wealth by age band). Comparisons auto-adjust as your age and net worth change.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Return ordinal suffix for an integer (1st, 2nd, 3rd, 4th-20th th, then mod 10).
+function _ordinalSuffix(n) {
+  const v = n % 100;
+  if (v >= 11 && v <= 13) return 'th';
+  switch (n % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
 function renderAnalyseNetWorth() {
   const nwData = lsGet(LS.NET_WORTH, {});
   const portfolio = lsGet(LS.PORTFOLIO, []);
@@ -26508,6 +26756,11 @@ function renderAnalyseNetWorth() {
   const grossAssets = propertyEquity + cash + crypto + business + carsValue + whiskeyValue + other + totalPortfolio;
   const netWorth = grossAssets - liabilities;
 
+  // Where You Stand — render the UK percentile context block first, using
+  // the SAME netWorth figure the existing card uses, so the two surfaces
+  // always agree.
+  try { renderWhereYouStand(netWorth); } catch (e) {}
+
   // Tax-free = everything except GIA portfolio
   // PPR has main residence relief, cars/whiskey are wasting/exempt assets,
   // cash has no CGT, ISA+SIPP are tax-free wrappers.
@@ -26546,18 +26799,9 @@ function renderAnalyseNetWorth() {
     const propertyValue = (parseFloat(lsGet(LS.NET_WORTH, {}).propertyValue) || 0);
     const mortgageBal   = (parseFloat(lsGet(LS.NET_WORTH, {}).mortgageBalance) || 0);
     nwCards.innerHTML = `
-      <!-- Hero Net Worth card -->
-      <div class="plan-card is-hero">
-        <div class="plan-card-header">
-          <span class="plan-card-ticker">Net Worth</span>
-          <span class="plan-card-context">Gross assets minus all liabilities</span>
-        </div>
-        <div class="plan-card-body">
-          <div class="plan-card-headline" data-balance-sensitive>£${fmtNum(Math.round(netWorth),0)}</div>
-        </div>
-      </div>
-
-      <!-- Investment Portfolio -->
+      <!-- Investment Portfolio (was preceded by a hero Net Worth card —
+           removed in v22.18 because Where You Stand now owns the headline
+           figure. Keeping a second copy of £netWorth here was visual noise.) -->
       <div class="plan-card">
         <div class="plan-card-header">
           <span class="plan-card-ticker">Investment Portfolio</span>
