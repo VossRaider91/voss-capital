@@ -9160,6 +9160,11 @@ body.modal-active .container > footer {
           <span class="vc-help-icon" tabindex="0" aria-label="What does Allow Overspend do?">?<span class="vc-help-tip" role="tooltip"><div class="vc-help-tip-title">Allow overspend</div><div class="vc-help-tip-row"><span class="vc-help-tip-pill on">On</span><span class="vc-help-tip-text">Up to 2% over budget allowed for cleaner allocation. Buffer % stays exactly as set. Cash sits unspent if floor maths leaves a gap.</span></div><div class="vc-help-tip-row"><span class="vc-help-tip-pill off">Off</span><span class="vc-help-tip-text">Total deployed equals budget exactly. Buffer % stretched above your minimum to fill the whole-share gap. Use for fixed direct debits.</span></div></span></span>
           <span id="budgetNote" style="font-size:9px;color:var(--gold);margin-left:8px;font-weight:600"></span>
         </label>
+        <label class="check-wrap">
+          <input type="checkbox" id="chk-single-ticker">
+          <span class="check-label">Single Ticker Deployment</span>
+          <span class="vc-help-icon" tabindex="0" aria-label="What does Single Ticker Deployment do?">?<span class="vc-help-tip" role="tooltip"><div class="vc-help-tip-title">Single ticker deployment</div><div class="vc-help-tip-row"><span class="vc-help-tip-pill on">On</span><span class="vc-help-tip-text">Deploys the entire budget into ONE ticker — the one that uses the most £ in whole units. Ideal for the leftover buffer pot after your direct debit clears. Ignores Reduce / Hard Limit / Allow Overspend rules and target percentages.</span></div><div class="vc-help-tip-row"><span class="vc-help-tip-pill off">Off</span><span class="vc-help-tip-text">Normal split deployment across all tickers using the rules above.</span></div></span></span>
+        </label>
         <div id="driftNote" style="font-size:9px;color:var(--amber);display:none"></div>
       </div>
       <div style="margin-left:auto;flex-shrink:0"></div>
@@ -14560,6 +14565,7 @@ function buildFundCards() {
   document.getElementById('chk-reduce').addEventListener('change', saveCalcInputs);
   document.getElementById('chk-hard').addEventListener('change', saveCalcInputs);
   document.getElementById('chk-overspend')?.addEventListener('change', () => { updateBudgetNote(); saveCalcInputs(); });
+  document.getElementById('chk-single-ticker')?.addEventListener('change', saveCalcInputs);
 
   updateLiveDrift();
   updateBudgetNote();
@@ -14609,6 +14615,7 @@ function saveCalcInputs() {
     chkReduce: document.getElementById('chk-reduce').checked,
     chkHard: document.getElementById('chk-hard').checked,
     chkOverspend: document.getElementById('chk-overspend')?.checked !== false,
+    chkSingleTicker: document.getElementById('chk-single-ticker')?.checked === true,
     lastPullWrapper: document.getElementById('lastPullWrapper')?.dataset.wrapper || '',
     activeWrapper: document.getElementById('activeWrapper')?.value || 'GIA',
     funds: FUNDS.map(f => ({
@@ -14629,6 +14636,10 @@ function loadCalcInputs() {
   if (saved.chkReduce !== undefined) document.getElementById('chk-reduce').checked = saved.chkReduce;
   if (saved.chkHard !== undefined) document.getElementById('chk-hard').checked = saved.chkHard;
   if (saved.chkOverspend !== undefined) document.getElementById('chk-overspend').checked = saved.chkOverspend;
+  if (saved.chkSingleTicker !== undefined) {
+    const el = document.getElementById('chk-single-ticker');
+    if (el) el.checked = saved.chkSingleTicker;
+  }
   // Restore active wrapper dropdown
   if (saved.activeWrapper) {
     const dropdown = document.getElementById('activeWrapper');
@@ -14813,6 +14824,7 @@ function calculate() {
   const useReduce = document.getElementById('chk-reduce').checked;
   const useHard = document.getElementById('chk-hard').checked;
   const allowOverspend = document.getElementById('chk-overspend')?.checked !== false;
+  const useSingleTicker = document.getElementById('chk-single-ticker')?.checked === true;
 
   // Calculate total trade fees across all funds that will be bought
   const tradeFees = FUNDS.reduce((s, f) => {
@@ -14979,12 +14991,50 @@ function calculate() {
   const scoreKey = 'price';
   let bestAlloc = withNeeds.map(f => ({ ...f, shares: f.sharesFloor }));
   let bestScore = scoreAlloc(bestAlloc, sharesBudget, projTotal, scoreKey);
-  for (let mask=1; mask<(1<<n); mask++) {
-    const trial = withNeeds.map((f,i) => ({ ...f, shares: (mask>>i&1) ? f.sharesCeil : f.sharesFloor }));
-    const tot = trial.reduce((s,f) => s + f.shares * f.price, 0);
-    if (tot > maxSpend) continue;
-    const score = scoreAlloc(trial, sharesBudget, projTotal, scoreKey);
-    if (score < bestScore) { bestScore=score; bestAlloc=trial; }
+
+  // ── Single Ticker Deployment (2 Jun 2026) ─────────────────────────
+  // When this toggle is on, the user wants to deploy the ENTIRE budget
+  // into one ticker — the one that uses the most £ in whole units. The
+  // typical use case is the leftover buffer pot after the monthly direct
+  // debit has cleared, where splitting £50-£300 across all tickers would
+  // round most allocations to zero anyway. So we pick the single ticker
+  // whose `floor(sharesBudget / price) * price` fills the budget best
+  // (i.e. leaves the smallest unspent gap), zero out everything else,
+  // and skip the mask search + gap-fill below entirely. Drift, Reduce,
+  // Hard Limit, and Allow Overspend rules are ignored per user's spec.
+  // The chosen ticker is whichever has the largest deployment value;
+  // ties (rare) are broken by lower current allocation (most underweight).
+  if (useSingleTicker && sharesBudget > 0) {
+    let bestTicker = null;
+    let bestDeploy = -1;
+    let bestUnderweight = Infinity;
+    withNeeds.forEach(f => {
+      if (!f.price || f.price <= 0) return;
+      const units = Math.floor(sharesBudget / f.price);
+      if (units <= 0) return;
+      const deployVal = units * f.price;
+      const underweight = -(f.overweight || 0); // more underweight = larger positive
+      if (deployVal > bestDeploy ||
+          (deployVal === bestDeploy && underweight < bestUnderweight)) {
+        bestDeploy = deployVal;
+        bestUnderweight = underweight;
+        bestTicker = f.id;
+      }
+    });
+    if (bestTicker !== null) {
+      bestAlloc = withNeeds.map(f => ({
+        ...f,
+        shares: f.id === bestTicker ? Math.floor(sharesBudget / f.price) : 0,
+      }));
+    }
+  } else {
+    for (let mask=1; mask<(1<<n); mask++) {
+      const trial = withNeeds.map((f,i) => ({ ...f, shares: (mask>>i&1) ? f.sharesCeil : f.sharesFloor }));
+      const tot = trial.reduce((s,f) => s + f.shares * f.price, 0);
+      if (tot > maxSpend) continue;
+      const score = scoreAlloc(trial, sharesBudget, projTotal, scoreKey);
+      if (score < bestScore) { bestScore=score; bestAlloc=trial; }
+    }
   }
 
   // Exact Budget mode: the user's buffer % is the MINIMUM reservation per
@@ -14999,7 +15049,10 @@ function calculate() {
   // than inflating buffer above the user's setting, since the trade-off
   // there is "minimise drift, accept 0-2% overspend" rather than "match
   // budget exactly".
-  if (!allowOverspend && sharesBudget > 0) {
+  // Single Ticker mode bypasses Exact Budget gap-fill: the chosen ticker
+  // already deploys as much of the budget as whole units allow; any
+  // remaining few £ are accepted as buffer rather than inflated artificially.
+  if (!allowOverspend && sharesBudget > 0 && !useSingleTicker) {
     const activeFunds = bestAlloc.filter(f => !f.skipped && f.shares > 0 && f.rawPrice > 0);
     if (activeFunds.length > 0) {
       const currentTotal = activeFunds.reduce((s, f) => s + f.shares * f.price, 0);
