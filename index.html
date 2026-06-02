@@ -26369,11 +26369,20 @@ function renderBudgetPerformance() {
 
   section.style.display = 'block';
 
-  if (history.length === 0) {
+  // Annual Budget Performance now includes the current month-in-progress so
+  // it agrees with the YTD panel directly below it (which has always done
+  // this). Previously the card only counted archived months, so an in-flight
+  // June with a +£1,458 surplus was invisible and the card could read red
+  // even when YTD was green. The synthesised record is appended to whichever
+  // year it belongs to and treated the same as an archived month from there.
+  const currentMonthRecord = _bgtSyntheticCurrentMonth(state);
+  const allMonths = currentMonthRecord ? [...history, currentMonthRecord] : history.slice();
+
+  if (allMonths.length === 0) {
     document.getElementById('analyse-budget-perf-year-select').innerHTML = '';
     document.getElementById('analyse-budget-perf-cards').innerHTML = `
       <div style="grid-column:1/-1;padding:24px 0;text-align:center;color:var(--muted);font-size:11px;font-style:italic">
-        No archived months yet. Complete your first month on the Budget Tracker to start seeing annual performance data here.
+        No months yet. Start filling in the Budget Tracker to see annual performance data here.
       </div>`;
     document.getElementById('analyse-budget-perf-table').innerHTML = '';
     return;
@@ -26381,7 +26390,7 @@ function renderBudgetPerformance() {
 
   // Group by calendar year
   const byYear = {};
-  history.forEach(m => {
+  allMonths.forEach(m => {
     const year = (m.month || '').split(' ')[1] || 'Unknown';
     if (!byYear[year]) byYear[year] = [];
     byYear[year].push(m);
@@ -28889,26 +28898,21 @@ function _renderBgtYtdPanel(state) {
   const yearMonths = history.filter(m => (m.month || '').split(' ')[1] === activeYear);
 
   // Build a synthetic record for the in-progress month from state.planned/state.actual
-  // so YTD figures include the month you're currently editing
-  const currentPlanned = state.planned || {};
-  const currentActual  = state.actual  || {};
-  const cIP = BGT_INCOME.reduce((s,n) => s + (parseFloat(currentPlanned[n])||0), 0);
-  const cIA = BGT_INCOME.reduce((s,n) => s + (parseFloat(currentActual[n]) ||0), 0);
-  // Tax provision counts as an outflow alongside fixed + variable for net-position
-  // purposes, so include it in the expense rollup totals.
-  const cEP = [...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE].reduce((s,n) => s + (parseFloat(currentPlanned[n])||0), 0);
-  const cEA = [...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE].reduce((s,n) => s + (parseFloat(currentActual[n]) ||0), 0);
-  const currentMonthRecord = {
+  // so YTD figures include the month you're currently editing. Uses the shared
+  // _bgtSyntheticCurrentMonth helper so the Annual Budget Performance card on
+  // the Analyse page synthesises identically (no risk of the two cards drifting
+  // apart later if this logic gets tweaked).
+  const currentMonthRecord = _bgtSyntheticCurrentMonth(state) || {
     month:              state.activeMonth,
-    totalIncomePlanned: cIP,
-    totalIncomeActual:  cIA,
-    totalExpPlanned:    cEP,
-    totalExpActual:     cEA,
-    netPlanned:         cIP - cEP,
-    netActual:          cIA - cEA,
-    plannedSnapshot:    currentPlanned,
-    actualSnapshot:     currentActual,
+    totalIncomePlanned: 0, totalIncomeActual: 0,
+    totalExpPlanned:    0, totalExpActual:    0,
+    netPlanned:         0, netActual:         0,
+    plannedSnapshot:    state.planned || {}, actualSnapshot: state.actual || {},
   };
+  const cIP = currentMonthRecord.totalIncomePlanned;
+  const cIA = currentMonthRecord.totalIncomeActual;
+  const cEP = currentMonthRecord.totalExpPlanned;
+  const cEA = currentMonthRecord.totalExpActual;
   const allMonths = [...yearMonths, currentMonthRecord];
 
   // Empty state — only the current month and it has no figures yet
@@ -29444,6 +29448,36 @@ function openBgtHistory() {
 function closeBgtHistory() {
   document.getElementById('bgt-history-view').style.display = 'none';
   document.getElementById('bgt-live-view').style.display    = 'block';
+}
+
+// Build a month-history-shaped record for the current month-in-progress
+// from state.planned/state.actual. Mirrors the synthesis the YTD panel
+// has always done inline, lifted here so the Analyse-tab Annual Budget
+// Performance card can include the current month too — without this,
+// completed months only and the in-progress surplus/deficit gets ignored
+// until month-end, which leaves the two cards on the Analyse page
+// disagreeing with each other (June 2026 sat at +£1,458 actual surplus
+// in YTD but the Analyse card showed −£175 across "2 months" because
+// June wasn't yet archived). Returns null if there's no data to include.
+function _bgtSyntheticCurrentMonth(state) {
+  const currentPlanned = state.planned || {};
+  const currentActual  = state.actual  || {};
+  const cIP = BGT_INCOME.reduce((s,n) => s + (parseFloat(currentPlanned[n])||0), 0);
+  const cIA = BGT_INCOME.reduce((s,n) => s + (parseFloat(currentActual[n]) ||0), 0);
+  const cEP = [...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE].reduce((s,n) => s + (parseFloat(currentPlanned[n])||0), 0);
+  const cEA = [...BGT_TAX, ...BGT_FIXED, ...BGT_VARIABLE].reduce((s,n) => s + (parseFloat(currentActual[n]) ||0), 0);
+  if (cIP === 0 && cIA === 0 && cEP === 0 && cEA === 0) return null;
+  return {
+    month:              state.activeMonth,
+    totalIncomePlanned: cIP,
+    totalIncomeActual:  cIA,
+    totalExpPlanned:    cEP,
+    totalExpActual:     cEA,
+    netPlanned:         cIP - cEP,
+    netActual:          cIA - cEA,
+    plannedSnapshot:    currentPlanned,
+    actualSnapshot:     currentActual,
+  };
 }
 
 function _bgtAnnualSummary(months) {
