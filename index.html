@@ -16573,6 +16573,17 @@ function renderHistory(filter='all') {
     return;
   }
 
+  // Sort by entry date (newest first) so the visible order matches the
+  // actual date on each card, not the insertion order. Without this, an
+  // entry created today and dated last week would appear above an entry
+  // created yesterday and dated this morning — confusing because the user
+  // creates entries from the Calculator page (timestamped now) and then
+  // edits the date afterwards to reflect when the trade actually happened.
+  // `timestamp` is the canonical date field: saveEditForm updates it in
+  // lockstep with the displayed date string whenever the user edits the
+  // date input, so it always reflects the user's chosen date.
+  filtered.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
   const renderedCards = filtered.map((entry, idx) => {
     // Sold entries get a special card
     if (entry.type === 'sold') {
