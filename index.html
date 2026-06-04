@@ -16502,6 +16502,92 @@ function _updateDatePillDisplay(inputId) {
   display.classList.remove('empty');
 }
 
+// ── Historical portfolio valuation (4 Jun 2026) ────────────────────────
+// Reconstructs the portfolio value as of any historical timestamp by
+// walking the entry log and applying every contribution/sale on or before
+// that date, then valuing the resulting cumulative units using the most
+// recent price recorded on or before that same date. Replaces the
+// fundamentally broken `entry.portfolioValue` snapshot which was captured
+// at SAVE time using live market prices — meaning an entry dated last week
+// but saved this morning would store this morning's portfolio value, not
+// last week's. Worse, editing an entry would re-snapshot to "now" again,
+// so a back-dated edit would scramble the historical reading.
+//
+// This function takes no shortcuts: it processes every Personal, Employer,
+// and Sold entry in chronological order up to `asOfTimestamp`, accumulating
+// `cumulativeUnits` and `latestPrice` per (ticker, wrapper) key. Legacy
+// seeded holdings (which predate the history log and live in LS.PORTFOLIO
+// alone) are added on as a constant — the user has owned them throughout
+// the entire history window, so they belong in every snapshot.
+//
+// Returns a single GBP figure. Deterministic — same inputs always produce
+// the same output. No DOM access, no LS writes, no side effects.
+function _computeHistoricalPortfolioValue(asOfTimestamp, allHistory) {
+  if (!asOfTimestamp || !Array.isArray(allHistory)) return 0;
+
+  // Chronological pass: oldest first. We want cumulative units AT the
+  // as-of date, so include any entry whose timestamp is ≤ asOfTimestamp.
+  const eligible = allHistory
+    .filter(e => e && e.timestamp && e.timestamp <= asOfTimestamp && Array.isArray(e.funds))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  // Key holdings by ticker+wrapper because the same ticker can exist in
+  // multiple wrappers (e.g. VWRP in both GIA and ISA) and units don't
+  // cross between them.
+  const state = {}; // { 'TICKER|WRAPPER': { units, lastPrice } }
+
+  eligible.forEach(entry => {
+    const wrapper = entry.wrapper || 'GIA';
+    const isSold = entry.type === 'sold';
+    entry.funds.forEach(f => {
+      if (!f.ticker) return;
+      const key = `${f.ticker}|${wrapper}`;
+      if (!state[key]) state[key] = { units: 0, lastPrice: 0 };
+      const units = Math.abs(parseFloat(f.held) || 0);
+      const price = parseFloat(f.price) || 0;
+      if (isSold) {
+        // Sale reduces units. Don't take the units below zero on bad data.
+        state[key].units = Math.max(0, state[key].units - units);
+      } else {
+        state[key].units += units;
+      }
+      // Always update lastPrice if a real price was recorded on this
+      // entry, even on a sale — sale prices ARE market prices and they
+      // tell us what the ticker was worth on the sale date.
+      if (price > 0) state[key].lastPrice = price;
+    });
+  });
+
+  // Value the live (from-history) cumulative position
+  let total = 0;
+  Object.values(state).forEach(s => {
+    if (s.units > 0 && s.lastPrice > 0) total += s.units * s.lastPrice;
+  });
+
+  // Add legacy seeded holdings — these predate the history log entirely.
+  // Their `price` and `shares` in LS.PORTFOLIO are the figures Voss had at
+  // app inception; they are CONSTANT across the entire historical window
+  // because no later entry has touched them. (Sales of legacy holdings
+  // would, but legacy holdings are flagged includeInCalc:false and
+  // typically aren't sold inside the app.) If a future legacy is sold via
+  // a sold entry, the ticker would already be in the `state` map above
+  // and we'd double-count — so we only add legacy holdings whose ticker
+  // doesn't appear in any history entry of the same wrapper.
+  const portfolio = lsGet(LS.PORTFOLIO, []);
+  const seenInHistory = new Set(Object.keys(state));
+  portfolio.forEach(h => {
+    if (!h || !h.seeded) return;
+    const wrapper = h.wrapper || 'GIA';
+    const key = `${h.ticker}|${wrapper}`;
+    if (seenInHistory.has(key)) return; // would double-count
+    const units = parseFloat(h.shares) || 0;
+    const price = parseFloat(h.price)  || 0;
+    if (units > 0 && price > 0) total += units * price;
+  });
+
+  return total;
+}
+
 function renderHistory(filter='all') {
   const history = lsGet(LS.HISTORY, []);
   const el = document.getElementById('historyList');
@@ -16583,6 +16669,21 @@ function renderHistory(filter='all') {
   // lockstep with the displayed date string whenever the user edits the
   // date input, so it always reflects the user's chosen date.
   filtered.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  // Precompute the correct historical portfolio value for each entry by
+  // walking ALL history (not just the visible filtered subset) once. This
+  // way the value shown on each entry is the user's actual total portfolio
+  // worth on that entry's date, computed from the chain of contributions
+  // and the prices recorded on each entry — not from the broken
+  // entry.portfolioValue save-time snapshot. Looking up via id avoids
+  // duplicate computation when the same entry is rendered multiple times.
+  const histValueById = {};
+  const allHistorySorted = (history || [])
+    .filter(e => e && e.timestamp)
+    .slice();
+  filtered.forEach(entry => {
+    histValueById[entry.id] = _computeHistoricalPortfolioValue(entry.timestamp, allHistorySorted);
+  });
 
   const renderedCards = filtered.map((entry, idx) => {
     // Sold entries get a special card
@@ -16708,9 +16809,16 @@ function renderHistory(filter='all') {
             ? `<div class="history-val">£${fmtNum(Math.round(headlineAmt), 0)}</div>
                <div class="history-sub">${headlineLabel}</div>`
             : `<div class="history-val" style="color:var(--muted)">No contribution recorded</div>`}
-          ${entry.portfolioValue > 0
-            ? `<div class="history-sub" style="margin-top:4px">Portfolio balance: <span style="color:var(--white);font-weight:600">£${fmtNum(Math.round(entry.portfolioValue), 0)}</span></div>`
-            : ''}
+          ${(() => {
+            // Historical balance: pull from the precomputed map above.
+            // Falls back to the stored snapshot only if for some reason
+            // computation returned zero, so legacy entries before this
+            // change still show SOMETHING rather than disappearing.
+            const histVal = histValueById[entry.id] || entry.portfolioValue || 0;
+            return histVal > 0
+              ? `<div class="history-sub" style="margin-top:4px">Portfolio balance: <span style="color:var(--white);font-weight:600">£${fmtNum(Math.round(histVal), 0)}</span></div>`
+              : '';
+          })()}
           ${entry.notes ? `<div class="history-sub" style="font-style:italic;margin-top:2px">${_esc(entry.notes)}</div>` : ''}
           ${growthHtml}
         </div>
