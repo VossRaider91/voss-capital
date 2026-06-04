@@ -11640,6 +11640,59 @@ function backfillPriceHistoryFromMonthly() {
 // per ticker (90-day rolling window in recordPriceTick), so a binary
 // search would only marginally help. The series is already sorted
 // chronologically by recordPriceTick / backfillPriceHistoryFromMonthly.
+// Find the recorded price for a ticker closest to a target timestamp by
+// searching the user's history log itself. Each personal/employer/sold
+// entry stores `entry.funds[].price` — the actual market price paid (or
+// realised) for the ticker on that entry's date. This is REAL historical
+// price data the system already has, far more honest as a fallback than
+// today's live price when LS.PRICE_HISTORY has no entry for the target
+// day. Prefers the most recent entry on-or-before the target timestamp;
+// if no earlier entry exists (target is before the first history entry),
+// falls back to the earliest after-target entry. Returns 0 if no entry
+// records a price for this ticker at all.
+//
+// Why this matters: the Yearly chart's 1 May baseline was previously
+// being valued at TODAY's live prices because no LS.PRICE_HISTORY entry
+// existed for 1 May. That made the baseline drift with today's prices,
+// so the "Since 1 May" pill barely moved on price changes (both the
+// baseline AND today's point shifted together, leaving the difference
+// roughly constant). With this helper, the 1 May baseline gets anchored
+// to the price the user recorded on the nearest history entry (e.g.
+// 5 May ISA mass-buy at £134.333 for VWRP) — a genuine 1 May proxy.
+function _getPriceFromHistoryNear(ticker, timestamp, allHistory) {
+  if (!ticker || !isFinite(timestamp)) return 0;
+  const list = Array.isArray(allHistory) ? allHistory : lsGet(LS.HISTORY, []);
+  if (!list.length) return 0;
+
+  // Build a list of (timestamp, price) pairs for this ticker across all
+  // entries, sorted oldest-first. We don't care about wrapper or type —
+  // a price recorded for VWRP on any entry is a real market price for
+  // VWRP on that date regardless of who bought it or in what wrapper.
+  const pairs = [];
+  list.forEach(e => {
+    if (!e || !e.timestamp || !Array.isArray(e.funds)) return;
+    e.funds.forEach(f => {
+      if (!f || f.ticker !== ticker) return;
+      const p = parseFloat(f.price) || 0;
+      if (p > 0) pairs.push({ ts: e.timestamp, price: p });
+    });
+  });
+  if (pairs.length === 0) return 0;
+  pairs.sort((a, b) => a.ts - b.ts);
+
+  // Prefer the latest entry on-or-before the target timestamp. This is
+  // the most honest answer: "what price was this ticker at the most
+  // recent point we observed, leading up to that target date".
+  for (let i = pairs.length - 1; i >= 0; i--) {
+    if (pairs[i].ts <= timestamp) return pairs[i].price;
+  }
+  // Target is before our earliest record — fall back to the earliest
+  // forward-looking price. Not ideal (slight stale-forward bias) but
+  // bounded by the gap between target and first entry, and still much
+  // more honest than today's live price.
+  return pairs[0].price;
+}
+
 function _getPriceForTickerOnDay(ticker, timestamp) {
   if (!ticker || !isFinite(timestamp)) return 0;
   try {
@@ -20231,6 +20284,13 @@ function renderGrowthChart(type='monthly') {
       if (isLatestPoint) return getBestPrice(ticker);
       const hist = _getPriceForTickerOnDay(ticker, timestamp);
       if (hist > 0) return hist;
+      // Fall back to the nearest history-log price for this ticker before
+      // resorting to today's live price. This keeps historical points
+      // anchored to real historical data (the prices the user actually
+      // paid on entries near that date) instead of drifting with today's
+      // market — see _getPriceFromHistoryNear for why this matters.
+      const fromHist = _getPriceFromHistoryNear(ticker, timestamp, allHistory);
+      if (fromHist > 0) return fromHist;
       return getBestPrice(ticker);
     };
 
@@ -20393,11 +20453,18 @@ function renderGrowthChart(type='monthly') {
         });
       });
 
-      // Price-lookup with the same fallback chain as the monthly branch
+      // Price-lookup with the same fallback chain as the monthly branch.
+      // Falls through: live price (if latest point) → recorded daily price
+      // tick (LS.PRICE_HISTORY) → nearest history-log price → live price.
+      // The history-log fallback (new 4 Jun 2026) is what anchors old
+      // baselines like 1 May 2026 to real historical prices instead of
+      // letting them drift with today's market.
       const priceAtPoint = (ticker) => {
         if (isLatest) return getBestPrice(ticker);
         const hist = _getPriceForTickerOnDay(ticker, pd.ts);
         if (hist > 0) return hist;
+        const fromHist = _getPriceFromHistoryNear(ticker, pd.ts, allHistory);
+        if (fromHist > 0) return fromHist;
         return getBestPrice(ticker);
       };
 
