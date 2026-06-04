@@ -16792,22 +16792,38 @@ function _computeHistoricalPortfolioValue(asOfTimestamp, allHistory) {
 
   // Add legacy seeded holdings — these predate the history log entirely
   // and live in LS.PORTFOLIO alone. The legacy shares are PHYSICALLY
-  // SEPARATE from any history-recorded shares of the same ticker (Voss
-  // already owned 426 VWRP, 243 VUAG, 88 SMGB etc. in GIA before history
-  // tracking began, and any later history entries add MORE shares on top
-  // — they don't replace the legacy holding). So legacy is a constant
-  // additive term in every historical valuation, regardless of whether
-  // the same ticker also appears in history. The original anti-double-
-  // count check was wrong — it was excluding ~£87k of legacy value as
-  // soon as the user bought the same ticker through history, causing
-  // the balance to crash between consecutive entries. Removed: balance
-  // now correctly sums history-derived holdings + legacy holdings.
+  // SEPARATE from any history-recorded shares of the same ticker. So
+  // legacy is an additive term in every historical valuation.
+  //
+  // CRITICAL: value legacy at the price recorded for that ticker on or
+  // before asOfTimestamp, NOT at h.price which is whatever the live sync
+  // last wrote (typically today's price). Without this, TWR's sub-period
+  // valuations mix historical prices for history-derived units with
+  // today's prices for legacy units, which distorts the sub-period
+  // returns and produces a percentage figure that overstates true
+  // investment performance. Fallback chain matches what the chart uses:
+  //   1. LS.PRICE_HISTORY for the target day
+  //   2. Nearest price recorded in the history log
+  //   3. h.price as last resort (effectively today's price)
   const portfolio = lsGet(LS.PORTFOLIO, []);
   portfolio.forEach(h => {
     if (!h || !h.seeded) return;
     const units = parseFloat(h.shares) || 0;
-    const price = parseFloat(h.price)  || 0;
-    if (units > 0 && price > 0) total += units * price;
+    if (units <= 0) return;
+    // Try the daily price tick ledger first.
+    let price = 0;
+    if (typeof _getPriceForTickerOnDay === 'function') {
+      price = _getPriceForTickerOnDay(h.ticker, asOfTimestamp) || 0;
+    }
+    // Then the history log fallback (uses prices from entries near the
+    // target date, real market prices the user recorded).
+    if (price <= 0 && typeof _getPriceFromHistoryNear === 'function') {
+      price = _getPriceFromHistoryNear(h.ticker, asOfTimestamp, allHistory) || 0;
+    }
+    // Last resort: h.price, which is whatever the live sync last wrote.
+    // Acceptable fallback when no historical data exists at all.
+    if (price <= 0) price = parseFloat(h.price) || 0;
+    if (price > 0) total += units * price;
   });
 
   return total;
