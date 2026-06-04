@@ -16564,22 +16564,21 @@ function _computeHistoricalPortfolioValue(asOfTimestamp, allHistory) {
     if (s.units > 0 && s.lastPrice > 0) total += s.units * s.lastPrice;
   });
 
-  // Add legacy seeded holdings — these predate the history log entirely.
-  // Their `price` and `shares` in LS.PORTFOLIO are the figures Voss had at
-  // app inception; they are CONSTANT across the entire historical window
-  // because no later entry has touched them. (Sales of legacy holdings
-  // would, but legacy holdings are flagged includeInCalc:false and
-  // typically aren't sold inside the app.) If a future legacy is sold via
-  // a sold entry, the ticker would already be in the `state` map above
-  // and we'd double-count — so we only add legacy holdings whose ticker
-  // doesn't appear in any history entry of the same wrapper.
+  // Add legacy seeded holdings — these predate the history log entirely
+  // and live in LS.PORTFOLIO alone. The legacy shares are PHYSICALLY
+  // SEPARATE from any history-recorded shares of the same ticker (Voss
+  // already owned 426 VWRP, 243 VUAG, 88 SMGB etc. in GIA before history
+  // tracking began, and any later history entries add MORE shares on top
+  // — they don't replace the legacy holding). So legacy is a constant
+  // additive term in every historical valuation, regardless of whether
+  // the same ticker also appears in history. The original anti-double-
+  // count check was wrong — it was excluding ~£87k of legacy value as
+  // soon as the user bought the same ticker through history, causing
+  // the balance to crash between consecutive entries. Removed: balance
+  // now correctly sums history-derived holdings + legacy holdings.
   const portfolio = lsGet(LS.PORTFOLIO, []);
-  const seenInHistory = new Set(Object.keys(state));
   portfolio.forEach(h => {
     if (!h || !h.seeded) return;
-    const wrapper = h.wrapper || 'GIA';
-    const key = `${h.ticker}|${wrapper}`;
-    if (seenInHistory.has(key)) return; // would double-count
     const units = parseFloat(h.shares) || 0;
     const price = parseFloat(h.price)  || 0;
     if (units > 0 && price > 0) total += units * price;
