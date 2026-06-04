@@ -16615,25 +16615,87 @@ function _computeTWR(startTs, endTs, allHistory, startValueOverride, endValueOve
   if (!startTs || !endTs || endTs <= startTs) return { twr: 0, marketGain: 0, valid: false };
 
   // Collect cash flow events strictly INSIDE the window (startTs, endTs].
-  // The start-of-window value will be computed separately as the opening
-  // baseline; cash flows AT startTs would be part of that baseline, not
-  // a sub-period boundary.
-  const events = (allHistory || [])
+  // Each event carries its raw signed flow, its type (so we can pair sales
+  // with buys), and the entry id for traceability. We don't sort yet — the
+  // pairing step needs to consider absolute timestamps freely before we
+  // serialise into a chronological stream.
+  const rawEvents = (allHistory || [])
     .filter(e => e && e.timestamp > startTs && e.timestamp <= endTs && Array.isArray(e.funds))
     .map(e => {
-      // Net cash flow for this entry. Buys = +£, sales = −£ (cash leaves
-      // the portfolio as proceeds when units are sold). The £ value comes
-      // from units × price recorded on the entry, since that's the actual
-      // cash that changed hands.
       const cashFlow = e.funds.reduce((sum, f) => {
         const units = Math.abs(parseFloat(f.held) || 0);
         const price = parseFloat(f.price) || 0;
         return sum + units * price;
       }, 0);
-      const signedFlow = e.type === 'sold' ? -cashFlow : cashFlow;
-      return { ts: e.timestamp, cashFlow: signedFlow };
-    })
-    .sort((a, b) => a.ts - b.ts);
+      const isSale = e.type === 'sold';
+      return {
+        ts: e.timestamp,
+        type: isSale ? 'sale' : 'buy',
+        amount: cashFlow,        // always positive
+        cashFlow: isSale ? -cashFlow : cashFlow, // signed
+        id: e.id,
+        paired: false,
+      };
+    });
+
+  // ── Bed and Reinvest auto-pairing (4 Jun 2026) ────────────────────────
+  // When a sale and a buy happen within RECYCLE_WINDOW_DAYS of each other,
+  // treat them as a single recycle event rather than two independent cash
+  // flows. The DFNG-to-VWRP/VUAG/XNAQ/SMGB swap on 12 May 2026 is the
+  // canonical case: the £6,715 of DFNG proceeds didn't leave the portfolio
+  // — they got redeployed within hours into other tickers. Without pairing,
+  // TWR's market-gain figure would include a phantom £6,715 of "growth"
+  // attributable to treating the sale as cash leaving the pot.
+  //
+  // Algorithm: for each sale, find the closest buy within ±7 days, prefer
+  // matches on the same day, then by absolute amount distance (closer £
+  // values first). Once matched, both events are marked paired and a single
+  // synthetic event replaces them with cashFlow = (buy amount - sale
+  // amount). That correctly captures real top-ups (positive) or partial
+  // reinvestment with cash skim (negative) without double-counting.
+  //
+  // Sales without a matching buy stay as outflows (genuine withdrawals).
+  // Buys without a matching sale stay as contributions (fresh capital).
+  const RECYCLE_WINDOW_DAYS = 7;
+  const RECYCLE_WINDOW_MS = RECYCLE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const pairedEvents = [];
+  rawEvents.forEach(saleEv => {
+    if (saleEv.type !== 'sale' || saleEv.paired) return;
+    // Find candidate buys within the window, not yet paired, sorted by
+    // proximity (timestamp distance first, then amount distance).
+    const candidates = rawEvents.filter(b =>
+      b.type === 'buy'
+      && !b.paired
+      && Math.abs(b.ts - saleEv.ts) <= RECYCLE_WINDOW_MS
+    );
+    if (candidates.length === 0) return;
+    candidates.sort((a, b) => {
+      const dtA = Math.abs(a.ts - saleEv.ts);
+      const dtB = Math.abs(b.ts - saleEv.ts);
+      if (dtA !== dtB) return dtA - dtB;
+      const daA = Math.abs(a.amount - saleEv.amount);
+      const daB = Math.abs(b.amount - saleEv.amount);
+      return daA - daB;
+    });
+    const buyEv = candidates[0];
+    // Mark both consumed
+    saleEv.paired = true;
+    buyEv.paired = true;
+    // Synthesise the net event. Dated at whichever came later (when the
+    // net change settled in the portfolio).
+    pairedEvents.push({
+      ts: Math.max(saleEv.ts, buyEv.ts),
+      cashFlow: buyEv.amount - saleEv.amount, // small +/- top-up or skim
+      isRecycle: true,
+    });
+  });
+  // Unpaired events flow through as-is (their original signed cashFlow).
+  rawEvents.forEach(ev => {
+    if (ev.paired) return;
+    pairedEvents.push({ ts: ev.ts, cashFlow: ev.cashFlow, isRecycle: false });
+  });
+
+  const events = pairedEvents.sort((a, b) => a.ts - b.ts);
 
   // Opening baseline. Caller can pass a pre-computed value (the chart
   // already has points[0].value computed with the correct historical-
@@ -20761,17 +20823,25 @@ function renderGrowthChart(type='monthly') {
   // strips out the effect of contributions and sales so the percentage
   // reflects pure investment performance — directly comparable to fund
   // managers' reported returns and to benchmark indices. The £ figure
-  // alongside is the absolute market gain over the same window (what
-  // your investments grew by, in cash terms). If TWR can't be computed
-  // (insufficient starting value), we fall back to the previous market-
-  // growth-difference display so the pill always shows something.
+  // alongside is the CHANGE IN UNREALISED GAIN over the same window,
+  // which is the most intuitive "my held positions gained this much
+  // paper value" figure for the user. This pairing — Δ-unrealised-gain
+  // in £ + TWR in % — answers two different but complementary questions
+  // and is how most broker statements display per-period performance.
   const firstPoint = points[0];
   const latestPoint = points[points.length - 1];
   const twrResult = (typeof _computeTWR === 'function' && allHistory.length > 0)
     ? _computeTWR(firstPoint.timestamp, latestPoint.timestamp, allHistory, firstValue, latestValue)
     : { twr: 0, marketGain: 0, valid: false };
 
-  const totalChange = twrResult.valid ? twrResult.marketGain : (marketGrowth - firstMarketGrowth);
+  // £ figure: change in unrealised gain (value over cost basis) since
+  // first point. This is more relatable than TWR's marketGain field for
+  // the user's mental model — it answers "how much paper gain has my
+  // held portfolio accumulated this period". The two figures will
+  // typically differ when sales happened during the period (the realised
+  // P&L from those sales is absorbed by the cost-base-not-shrinking-on-
+  // sale convention, so Δ-unrealised-gain stays clean).
+  const totalChange = marketGrowth - firstMarketGrowth;
   const totalChangePct = twrResult.valid
     ? (twrResult.twr * 100)
     : (latestContrib > 0 ? (totalChange / latestContrib * 100) : 0);
@@ -21376,11 +21446,10 @@ function showGrowthTip(i, event) {
   const gain = p.value - p.contributed;
   const gainPct = p.contributed > 0 ? (gain / p.contributed * 100) : 0;
   const prev = i > 0 ? points[i-1] : null;
-  // "Vs prev" — compute TWR between the previous point and this one so
-  // the figure shown is a true investment return for that sub-period,
-  // not a raw value-change figure polluted by any contributions made
-  // between the two points. Falls back to raw value-change if TWR can't
-  // be computed (e.g. the previous point had no opening value).
+  // "Since prev point" — £ figure is change in unrealised gain (intuitive
+  // "paper gain accumulated this sub-period" for held positions). % is
+  // TWR (industry-standard return strip-out-of-cash-flows). Matches the
+  // headline pill's split.
   let monthChange = null;
   let monthChangePct = null;
   if (prev) {
@@ -21388,13 +21457,12 @@ function showGrowthTip(i, event) {
     const r = (typeof _computeTWR === 'function')
       ? _computeTWR(prev.timestamp, p.timestamp, allHist, prev.value, p.value)
       : { twr: 0, marketGain: p.value - prev.value, valid: false };
-    if (r.valid) {
-      monthChange = r.marketGain;
-      monthChangePct = r.twr * 100;
-    } else {
-      monthChange = p.value - prev.value;
-      monthChangePct = prev.value > 0 ? (monthChange / prev.value * 100) : 0;
-    }
+    const prevGain = prev.value - prev.contributed;
+    const thisGain = p.value - p.contributed;
+    monthChange = thisGain - prevGain; // Δ unrealised gain
+    monthChangePct = r.valid
+      ? r.twr * 100
+      : (prev.value > 0 ? ((p.value - prev.value) / prev.value * 100) : 0);
   }
   const gainCol = gain >= 0 ? 'var(--green)' : 'var(--red)';
   const mCol = monthChange !== null ? (monthChange >= 0 ? 'var(--green)' : 'var(--red)') : '';
