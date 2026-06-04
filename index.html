@@ -16713,16 +16713,37 @@ function _computeTWR(startTs, endTs, allHistory, startValueOverride, endValueOve
   // JUST BEFORE the cash flow is what we use as that sub-period's V_end.
   // The value JUST AFTER is V_end + cashFlow, which becomes V_start of
   // the next sub-period.
+  //
+  // breakdown[] captures each sub-period's maths for the debug panel
+  // (Show Maths button next to the Since pill). Each row records:
+  // startTs, endTs, vStart (V at sub-period start), vEnd (V just before
+  // cash flow), subReturn (r_i = vEnd/vStart), cashFlow (the boundary
+  // flow), cumulativeFactor (running product). Lets the user verify
+  // every multiplication that goes into the headline TWR.
   let prevBoundaryValue = startValue;
   let cumulativeReturnFactor = 1.0;
+  const breakdown = [];
+  let lastBoundaryTs = startTs;
 
   events.forEach(ev => {
     const valueBefore = _computeHistoricalPortfolioValue(ev.ts - 1, allHistory);
+    let subReturn = 1;
     if (prevBoundaryValue > 0 && valueBefore > 0) {
-      const subReturn = valueBefore / prevBoundaryValue;
+      subReturn = valueBefore / prevBoundaryValue;
       cumulativeReturnFactor *= subReturn;
     }
+    breakdown.push({
+      startTs: lastBoundaryTs,
+      endTs: ev.ts,
+      vStart: prevBoundaryValue,
+      vEnd: valueBefore,
+      subReturn,
+      cashFlow: ev.cashFlow,
+      isRecycle: !!ev.isRecycle,
+      cumulativeFactor: cumulativeReturnFactor,
+    });
     prevBoundaryValue = valueBefore + ev.cashFlow;
+    lastBoundaryTs = ev.ts;
   });
 
   // Final sub-period: from the last boundary (or startTs if no events)
@@ -16733,10 +16754,23 @@ function _computeTWR(startTs, endTs, allHistory, startValueOverride, endValueOve
   const endValue = endValueOverride > 0
     ? endValueOverride
     : _computeHistoricalPortfolioValue(endTs, allHistory);
+  let finalSubReturn = 1;
   if (prevBoundaryValue > 0 && endValue > 0) {
-    const subReturn = endValue / prevBoundaryValue;
-    cumulativeReturnFactor *= subReturn;
+    finalSubReturn = endValue / prevBoundaryValue;
+    cumulativeReturnFactor *= finalSubReturn;
   }
+  // Final sub-period (from last boundary to endTs, no cash flow at end).
+  breakdown.push({
+    startTs: lastBoundaryTs,
+    endTs: endTs,
+    vStart: prevBoundaryValue,
+    vEnd: endValue,
+    subReturn: finalSubReturn,
+    cashFlow: 0,
+    isRecycle: false,
+    cumulativeFactor: cumulativeReturnFactor,
+    isFinal: true,
+  });
 
   const twr = cumulativeReturnFactor - 1;
 
@@ -16745,7 +16779,98 @@ function _computeTWR(startTs, endTs, allHistory, startValueOverride, endValueOve
   const netContributions = events.reduce((s, e) => s + e.cashFlow, 0);
   const marketGain = endValue - startValue - netContributions;
 
-  return { twr, marketGain, valid: true };
+  return { twr, marketGain, valid: true, breakdown, startValue, endValue, netContributions };
+}
+
+// ── TWR Breakdown panel (Show maths button, 4 Jun 2026) ───────────────
+// Renders the sub-period breakdown of the most recent TWR calculation
+// into an on-screen panel next to the Since pill. Built for the user to
+// verify the chained sub-period maths without needing developer tools
+// or a browser console — the alternative would be hidden logs they
+// couldn't access. Tap the Show Maths button to expand, tap again to
+// collapse. Reads from window._lastTwrResult which the chart render
+// always refreshes after computing TWR.
+function _toggleTwrBreakdown() {
+  const panel = document.getElementById('twrBreakdownPanel');
+  if (!panel) return;
+  if (panel.style.display !== 'none') {
+    panel.style.display = 'none';
+    return;
+  }
+  const r = window._lastTwrResult;
+  const sinceLabel = window._lastTwrSinceLabel || 'start';
+  if (!r || !r.valid || !Array.isArray(r.breakdown)) {
+    panel.innerHTML = `<div style="padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:11px;color:var(--muted)">No TWR breakdown available for this view.</div>`;
+    panel.style.display = 'block';
+    return;
+  }
+  const fmtDate = ts => {
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  };
+  const fmtPound = n => '£' + (Math.round(n)).toLocaleString('en-GB');
+  const fmtPct = n => (n>=0?'+':'') + (n*100).toFixed(2) + '%';
+  const rows = r.breakdown.map((row, i) => {
+    const ret = row.subReturn - 1;
+    const days = Math.max(1, Math.round((row.endTs - row.startTs) / (24*3600*1000)));
+    const cfText = row.cashFlow !== 0
+      ? `${row.cashFlow > 0 ? '+' : ''}${fmtPound(row.cashFlow)}${row.isRecycle ? ' (recycle net)' : ''}`
+      : (row.isFinal ? 'end of period' : '—');
+    return `
+      <tr style="border-top:1px solid rgba(255,255,255,0.06)">
+        <td style="padding:8px 6px;font-size:10px;color:var(--muted)">${i+1}</td>
+        <td style="padding:8px 6px;font-size:10px">${fmtDate(row.startTs)} → ${fmtDate(row.endTs)}<div style="color:var(--muted2);font-size:9px;margin-top:2px">${days} day${days===1?'':'s'}</div></td>
+        <td style="padding:8px 6px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums">${fmtPound(row.vStart)}</td>
+        <td style="padding:8px 6px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums">${fmtPound(row.vEnd)}</td>
+        <td style="padding:8px 6px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums;color:${ret>=0?'var(--green)':'var(--red)'}">${fmtPct(ret)}</td>
+        <td style="padding:8px 6px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)">${cfText}</td>
+        <td style="padding:8px 6px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums">${fmtPct(row.cumulativeFactor - 1)}</td>
+      </tr>`;
+  }).join('');
+  panel.innerHTML = `
+    <div style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.10);border-radius:10px">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">TWR Sub-Period Breakdown · Since ${sinceLabel}</div>
+      <div style="font-size:10px;color:var(--muted2);margin-bottom:10px">Each row is a sub-period bounded by a cash flow event. The sub-period return (r) is computed as V_end ÷ V_start. The headline TWR is the product of all sub-period returns, minus 1. This is the industry-standard Time-Weighted Return formula.</div>
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead>
+          <tr style="color:var(--muted2);font-size:9px;letter-spacing:0.3px;text-transform:uppercase">
+            <th style="padding:6px;text-align:left">#</th>
+            <th style="padding:6px;text-align:left">Window</th>
+            <th style="padding:6px;text-align:right">V start</th>
+            <th style="padding:6px;text-align:right">V end</th>
+            <th style="padding:6px;text-align:right">Return (r)</th>
+            <th style="padding:6px;text-align:right">Cash flow</th>
+            <th style="padding:6px;text-align:right">Cumulative</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+        <div>
+          <div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Start Value</div>
+          <div style="font-size:13px;font-variant-numeric:tabular-nums">${fmtPound(r.startValue)}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">End Value</div>
+          <div style="font-size:13px;font-variant-numeric:tabular-nums">${fmtPound(r.endValue)}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Net Contributions</div>
+          <div style="font-size:13px;font-variant-numeric:tabular-nums">${fmtPound(r.netContributions)}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Market Gain (£)</div>
+          <div style="font-size:13px;font-variant-numeric:tabular-nums;color:${r.marketGain>=0?'var(--green)':'var(--red)'}">${r.marketGain>=0?'+':''}${fmtPound(r.marketGain)}</div>
+        </div>
+        <div style="grid-column:1/-1;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Headline TWR</div>
+          <div style="font-size:16px;font-weight:600;color:${r.twr>=0?'var(--green)':'var(--red)'}">${fmtPct(r.twr)}</div>
+        </div>
+      </div>
+    </div>`;
+  panel.style.display = 'block';
 }
 
 function _computeHistoricalPortfolioValue(asOfTimestamp, allHistory) {
@@ -20850,6 +20975,12 @@ function renderGrowthChart(type='monthly') {
     ? _computeTWR(firstPoint.timestamp, latestPoint.timestamp, allHistory, firstValue, latestValue)
     : { twr: 0, marketGain: 0, valid: false };
 
+  // Stash the latest TWR result on window so the Show Maths panel can
+  // render it on demand. Each chart re-render overwrites this with the
+  // current view's breakdown.
+  window._lastTwrResult = twrResult;
+  window._lastTwrSinceLabel = firstPoint.isBaseline ? 'Baseline' : firstPoint.label;
+
   // £ figure: change in unrealised gain (value over cost basis) since
   // first point. This is more relatable than TWR's marketGain field for
   // the user's mental model — it answers "how much paper gain has my
@@ -20898,7 +21029,9 @@ function renderGrowthChart(type='monthly') {
       <div class="growth-legend-chip"><div class="growth-legend-bar blue"></div>Contributions</div>
       <div class="growth-legend-chip"><div class="growth-legend-area"></div>Market Growth</div>
       <div class="growth-overall-chip ${totalChange>=0?'pos':'neg'}">${totalChange>=0?'+':''}£${fmtNum(Math.round(totalChange),0)} (${totalChangePct>=0?'+':''}${totalChangePct.toFixed(1)}%) ${sinceLabel}</div>
+      <button id="twrShowMathsBtn" onclick="_toggleTwrBreakdown()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:var(--muted);font-size:10px;padding:4px 10px;border-radius:8px;cursor:pointer;letter-spacing:0.3px">Show maths</button>
     </div>
+    <div id="twrBreakdownPanel" style="display:none;margin-top:8px"></div>
     <svg id="growthSVG" width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
       <defs>
         <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
