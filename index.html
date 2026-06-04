@@ -16575,6 +16575,117 @@ function _updateDatePillDisplay(inputId) {
 //
 // Returns a single GBP figure. Deterministic — same inputs always produce
 // the same output. No DOM access, no LS writes, no side effects.
+// ── Time-Weighted Return (4 Jun 2026) ─────────────────────────────────
+// Industry-standard TWR calculation used by every reputable broker
+// (Vanguard, HL, Fidelity, Schwab) on customer-facing performance
+// displays. The whole point is to strip out the effect of contributions
+// and withdrawals so the percentage reflects PURE market performance,
+// not "how lucky the timing of your deposits was".
+//
+// Algorithm:
+//   1. Identify every cash flow event (deposit or sale) in (startTs, endTs].
+//   2. Split the period into sub-periods bounded by these events.
+//   3. For each sub-period:
+//        V_start = value at sub-period start (uses same prices as previous
+//                  sub-period's V_end + the new cash flow if any)
+//        V_end   = portfolio value at sub-period end, valued at end-of-
+//                  period prices using the units that existed throughout
+//                  the sub-period (i.e. excluding the next boundary's
+//                  cash flow)
+//        r_i = (V_end - V_start) / V_start
+//   4. Chain: TWR = ∏(1 + r_i) - 1
+//
+// Each sub-period's return is a pure price return because units are
+// constant within it. Chaining these gives the cumulative return your
+// portfolio would have generated if a single lump sum had been invested
+// at the start.
+//
+// Returns an object: { twr, marketGain, valid } where:
+//   twr        = TWR as a decimal (0.053 = 5.3%)
+//   marketGain = absolute £ market gain over the period (informational)
+//   valid      = false if start-value is too small to compute meaningfully
+//                (caller should fall back to simple display)
+//
+// Reuses _computeHistoricalPortfolioValue for valuations at boundaries.
+// Cash flows are taken from history entries: a personal/employer entry
+// represents a buy (cash IN to the portfolio, value goes UP at the
+// boundary), and a sold entry represents a sale (cash OUT, value goes
+// DOWN at the boundary by the proceeds).
+function _computeTWR(startTs, endTs, allHistory, startValueOverride, endValueOverride) {
+  if (!startTs || !endTs || endTs <= startTs) return { twr: 0, marketGain: 0, valid: false };
+
+  // Collect cash flow events strictly INSIDE the window (startTs, endTs].
+  // The start-of-window value will be computed separately as the opening
+  // baseline; cash flows AT startTs would be part of that baseline, not
+  // a sub-period boundary.
+  const events = (allHistory || [])
+    .filter(e => e && e.timestamp > startTs && e.timestamp <= endTs && Array.isArray(e.funds))
+    .map(e => {
+      // Net cash flow for this entry. Buys = +£, sales = −£ (cash leaves
+      // the portfolio as proceeds when units are sold). The £ value comes
+      // from units × price recorded on the entry, since that's the actual
+      // cash that changed hands.
+      const cashFlow = e.funds.reduce((sum, f) => {
+        const units = Math.abs(parseFloat(f.held) || 0);
+        const price = parseFloat(f.price) || 0;
+        return sum + units * price;
+      }, 0);
+      const signedFlow = e.type === 'sold' ? -cashFlow : cashFlow;
+      return { ts: e.timestamp, cashFlow: signedFlow };
+    })
+    .sort((a, b) => a.ts - b.ts);
+
+  // Opening baseline. Caller can pass a pre-computed value (the chart
+  // already has points[0].value computed with the correct historical-
+  // price fallback chain); we use that when available so TWR stays in
+  // lockstep with what the chart actually shows. Otherwise compute from
+  // history.
+  const startValue = startValueOverride > 0
+    ? startValueOverride
+    : _computeHistoricalPortfolioValue(startTs, allHistory);
+  if (startValue <= 100) {
+    return { twr: 0, marketGain: 0, valid: false };
+  }
+
+  // Walk through the sub-periods. For each boundary timestamp, the value
+  // JUST BEFORE the cash flow is what we use as that sub-period's V_end.
+  // The value JUST AFTER is V_end + cashFlow, which becomes V_start of
+  // the next sub-period.
+  let prevBoundaryValue = startValue;
+  let cumulativeReturnFactor = 1.0;
+
+  events.forEach(ev => {
+    const valueBefore = _computeHistoricalPortfolioValue(ev.ts - 1, allHistory);
+    if (prevBoundaryValue > 0 && valueBefore > 0) {
+      const subReturn = valueBefore / prevBoundaryValue;
+      cumulativeReturnFactor *= subReturn;
+    }
+    prevBoundaryValue = valueBefore + ev.cashFlow;
+  });
+
+  // Final sub-period: from the last boundary (or startTs if no events)
+  // through to endTs. Use the caller's endValueOverride if provided —
+  // the chart's latest point uses LIVE prices, which is exactly what we
+  // want for the "today" valuation. Falls back to history-computed value
+  // otherwise (for past-year scenarios where endTs isn't today).
+  const endValue = endValueOverride > 0
+    ? endValueOverride
+    : _computeHistoricalPortfolioValue(endTs, allHistory);
+  if (prevBoundaryValue > 0 && endValue > 0) {
+    const subReturn = endValue / prevBoundaryValue;
+    cumulativeReturnFactor *= subReturn;
+  }
+
+  const twr = cumulativeReturnFactor - 1;
+
+  // Market gain in £: end value minus (start value + net contributions).
+  // Net contributions = sum of all signed cash flows.
+  const netContributions = events.reduce((s, e) => s + e.cashFlow, 0);
+  const marketGain = endValue - startValue - netContributions;
+
+  return { twr, marketGain, valid: true };
+}
+
 function _computeHistoricalPortfolioValue(asOfTimestamp, allHistory) {
   if (!asOfTimestamp || !Array.isArray(allHistory)) return 0;
 
@@ -20645,16 +20756,31 @@ function renderGrowthChart(type='monthly') {
   // picture of how their legacy holdings appreciated AND how their new
   // contribution has fared since being deposited.
   const firstMarketGrowth = firstValue - firstContrib;
-  const totalChange = marketGrowth - firstMarketGrowth;
-  // Percentage denominator: latest contributions (the money currently
-  // invested). This matches how investment returns are typically reported.
-  const totalChangePct = latestContrib > 0 ? (totalChange/latestContrib*100) : 0;
+
+  // Industry-standard Time-Weighted Return for the "Since X" pill. TWR
+  // strips out the effect of contributions and sales so the percentage
+  // reflects pure investment performance — directly comparable to fund
+  // managers' reported returns and to benchmark indices. The £ figure
+  // alongside is the absolute market gain over the same window (what
+  // your investments grew by, in cash terms). If TWR can't be computed
+  // (insufficient starting value), we fall back to the previous market-
+  // growth-difference display so the pill always shows something.
+  const firstPoint = points[0];
+  const latestPoint = points[points.length - 1];
+  const twrResult = (typeof _computeTWR === 'function' && allHistory.length > 0)
+    ? _computeTWR(firstPoint.timestamp, latestPoint.timestamp, allHistory, firstValue, latestValue)
+    : { twr: 0, marketGain: 0, valid: false };
+
+  const totalChange = twrResult.valid ? twrResult.marketGain : (marketGrowth - firstMarketGrowth);
+  const totalChangePct = twrResult.valid
+    ? (twrResult.twr * 100)
+    : (latestContrib > 0 ? (totalChange / latestContrib * 100) : 0);
+
   // Label suffix: tell the user the actual window the pill is measuring,
   // so they don't conflate it with the "Market Growth" metric which is
   // since-inception. For a synthetic baseline (one-history-entry wrappers
   // with seeded legacy), we read the marker. Otherwise we use the first
   // point's date label.
-  const firstPoint = points[0];
   const sinceLabel = firstPoint.isBaseline
     ? 'Since Baseline'
     : `Since ${firstPoint.label}`;
@@ -21250,8 +21376,26 @@ function showGrowthTip(i, event) {
   const gain = p.value - p.contributed;
   const gainPct = p.contributed > 0 ? (gain / p.contributed * 100) : 0;
   const prev = i > 0 ? points[i-1] : null;
-  const monthChange = prev ? p.value - prev.value : null;
-  const monthChangePct = prev && prev.value > 0 ? (monthChange / prev.value * 100) : null;
+  // "Vs prev" — compute TWR between the previous point and this one so
+  // the figure shown is a true investment return for that sub-period,
+  // not a raw value-change figure polluted by any contributions made
+  // between the two points. Falls back to raw value-change if TWR can't
+  // be computed (e.g. the previous point had no opening value).
+  let monthChange = null;
+  let monthChangePct = null;
+  if (prev) {
+    const allHist = lsGet(LS.HISTORY, []).filter(e => e && e.funds && e.funds.length > 0);
+    const r = (typeof _computeTWR === 'function')
+      ? _computeTWR(prev.timestamp, p.timestamp, allHist, prev.value, p.value)
+      : { twr: 0, marketGain: p.value - prev.value, valid: false };
+    if (r.valid) {
+      monthChange = r.marketGain;
+      monthChangePct = r.twr * 100;
+    } else {
+      monthChange = p.value - prev.value;
+      monthChangePct = prev.value > 0 ? (monthChange / prev.value * 100) : 0;
+    }
+  }
   const gainCol = gain >= 0 ? 'var(--green)' : 'var(--red)';
   const mCol = monthChange !== null ? (monthChange >= 0 ? 'var(--green)' : 'var(--red)') : '';
 
@@ -21269,7 +21413,7 @@ function showGrowthTip(i, event) {
       <span style="color:var(--muted)">Unrealised gain</span>
       <span style="font-weight:600;color:${gainCol}">${gain>=0?'+':''}£${fmtNum(Math.round(Math.abs(gain)),0)} (${gainPct>=0?'+':''}${gainPct.toFixed(1)}%)</span>
       ${monthChange !== null ? `
-      <span style="color:var(--muted)">Vs prev month</span>
+      <span style="color:var(--muted)">Since prev point</span>
       <span style="color:${mCol}">${monthChange>=0?'+':''}£${fmtNum(Math.round(Math.abs(monthChange)),0)} (${monthChangePct>=0?'+':''}${monthChangePct?.toFixed(1)}%)</span>
       ` : ''}
     </div>`;
