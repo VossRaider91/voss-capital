@@ -16882,6 +16882,50 @@ function _computeHistoricalPortfolioValue(asOfTimestamp, allHistory) {
     .filter(e => e && e.timestamp && e.timestamp <= asOfTimestamp && Array.isArray(e.funds))
     .sort((a, b) => a.timestamp - b.timestamp);
 
+  // PRE-PASS: identify "phantom" sold entries. A sold entry whose ticker
+  // has no prior buys in the history log AND isn't in current LS.PORTFOLIO
+  // legacy MUST represent a sale of a legacy holding that has since been
+  // removed from LS.PORTFOLIO (DFNG is the canonical case — sold 12 May
+  // 2026, seed removed afterwards). Without compensating, the function
+  // loses memory that this ticker ever existed, which causes catastrophic
+  // bugs in TWR sub-period calculations: V_end for any sub-period BEFORE
+  // the sale should include the legacy units worth ~£6,715, but doesn't,
+  // making subsequent sub-periods appear to "gain" that value from
+  // nowhere.
+  //
+  // For each phantom sale we identify, we record what units AND price the
+  // pre-sale legacy held, so historical valuations before the sale can
+  // include it.
+  const allHistoryEver = allHistory; // alias for clarity in nested scope
+  const phantomLegacy = {}; // { ticker: { units, price, soldAt } }
+  allHistoryEver.forEach(e => {
+    if (!e || e.type !== 'sold' || !Array.isArray(e.funds)) return;
+    e.funds.forEach(f => {
+      if (!f.ticker) return;
+      // Has this ticker been bought in history before this sale?
+      const hasPriorBuys = allHistoryEver.some(e2 =>
+        e2 && e2.type !== 'sold'
+        && Array.isArray(e2.funds)
+        && e2.timestamp < e.timestamp
+        && e2.funds.some(f2 => f2.ticker === f.ticker && (parseFloat(f2.held) || 0) > 0)
+      );
+      // Is this ticker in current legacy (seeded:true) in LS.PORTFOLIO?
+      const portfolio = lsGet(LS.PORTFOLIO, []);
+      const inLegacy = portfolio.some(h => h && h.seeded && h.ticker === f.ticker);
+      if (!hasPriorBuys && !inLegacy) {
+        // Phantom — record it. Sale units = how many legacy units existed
+        // pre-sale (assuming the user sold all of them; partial-sale
+        // legacy detection would need more logic). Sale price = the
+        // recorded price on the sale entry.
+        phantomLegacy[f.ticker] = {
+          units: Math.abs(parseFloat(f.held) || 0),
+          price: parseFloat(f.price) || 0,
+          soldAt: e.timestamp,
+        };
+      }
+    });
+  });
+
   // Key holdings by ticker+wrapper because the same ticker can exist in
   // multiple wrappers (e.g. VWRP in both GIA and ISA) and units don't
   // cross between them.
@@ -16919,36 +16963,32 @@ function _computeHistoricalPortfolioValue(asOfTimestamp, allHistory) {
   // and live in LS.PORTFOLIO alone. The legacy shares are PHYSICALLY
   // SEPARATE from any history-recorded shares of the same ticker. So
   // legacy is an additive term in every historical valuation.
-  //
-  // CRITICAL: value legacy at the price recorded for that ticker on or
-  // before asOfTimestamp, NOT at h.price which is whatever the live sync
-  // last wrote (typically today's price). Without this, TWR's sub-period
-  // valuations mix historical prices for history-derived units with
-  // today's prices for legacy units, which distorts the sub-period
-  // returns and produces a percentage figure that overstates true
-  // investment performance. Fallback chain matches what the chart uses:
-  //   1. LS.PRICE_HISTORY for the target day
-  //   2. Nearest price recorded in the history log
-  //   3. h.price as last resort (effectively today's price)
   const portfolio = lsGet(LS.PORTFOLIO, []);
   portfolio.forEach(h => {
     if (!h || !h.seeded) return;
     const units = parseFloat(h.shares) || 0;
     if (units <= 0) return;
-    // Try the daily price tick ledger first.
     let price = 0;
     if (typeof _getPriceForTickerOnDay === 'function') {
       price = _getPriceForTickerOnDay(h.ticker, asOfTimestamp) || 0;
     }
-    // Then the history log fallback (uses prices from entries near the
-    // target date, real market prices the user recorded).
     if (price <= 0 && typeof _getPriceFromHistoryNear === 'function') {
       price = _getPriceFromHistoryNear(h.ticker, asOfTimestamp, allHistory) || 0;
     }
-    // Last resort: h.price, which is whatever the live sync last wrote.
-    // Acceptable fallback when no historical data exists at all.
     if (price <= 0) price = parseFloat(h.price) || 0;
     if (price > 0) total += units * price;
+  });
+
+  // Add phantom legacy holdings — tickers that were sold via history but
+  // existed as legacy seeds that have since been removed from LS.PORTFOLIO.
+  // For any phantom whose sale date is AFTER our asOfTimestamp, the user
+  // still owned those units at this historical moment, so they need to
+  // be added back. Valued at the sale price (best proxy we have for the
+  // historical price near the sale date).
+  Object.entries(phantomLegacy).forEach(([ticker, info]) => {
+    if (info.soldAt > asOfTimestamp && info.units > 0 && info.price > 0) {
+      total += info.units * info.price;
+    }
   });
 
   return total;
