@@ -20784,6 +20784,34 @@ function renderGrowthChart(type='monthly') {
       }
     }
 
+    // Detect phantom legacy holdings — tickers that were sold via the
+    // history log but have been REMOVED from LS.PORTFOLIO (DFNG case).
+    // These need to be added back to historical valuations for dates
+    // BEFORE the sale, otherwise the chart line shape is wrong and the
+    // TWR calculations built on these point values overstate gains.
+    window._yearlyChartPhantom = [];
+    allHistory.forEach(e => {
+      if (!e || e.type !== 'sold' || !Array.isArray(e.funds)) return;
+      e.funds.forEach(f => {
+        if (!f.ticker) return;
+        const hasPriorBuys = allHistory.some(e2 =>
+          e2 && e2.type !== 'sold'
+          && Array.isArray(e2.funds)
+          && e2.timestamp < e.timestamp
+          && e2.funds.some(f2 => f2.ticker === f.ticker && (parseFloat(f2.held) || 0) > 0)
+        );
+        const inLegacy = portfolio.some(h => h && h.seeded && h.ticker === f.ticker);
+        if (!hasPriorBuys && !inLegacy) {
+          window._yearlyChartPhantom.push({
+            ticker: f.ticker,
+            units: Math.abs(parseFloat(f.held) || 0),
+            price: parseFloat(f.price) || 0,
+            soldAt: e.timestamp,
+          });
+        }
+      });
+    });
+
     // Build a point from each date entry. Reconstruct units that existed
     // at each timestamp; value at historical price on that day (or live
     // price if it's the 'today' point).
@@ -20826,11 +20854,22 @@ function renderGrowthChart(type='monthly') {
       const legacyVal = (portfolio.filter(h => h.seeded)).reduce((s, h) => {
         return s + (h.shares || 0) * priceAtPoint(h.ticker);
       }, 0);
+      // Phantom legacy compensation: for legacy holdings that have been
+      // deleted from LS.PORTFOLIO after being sold (DFNG case), add their
+      // pre-sale value back for any point dated before the sale. Without
+      // this, the chart's 1 May point misses ~£6,715 of DFNG value and
+      // the resulting line shape (and the TWR built on it) is wrong.
+      const phantomVal = (typeof window._yearlyChartPhantom !== 'undefined')
+        ? window._yearlyChartPhantom.reduce((s, ph) => {
+            if (ph.soldAt > pd.ts) return s + ph.units * priceAtPoint(ph.ticker);
+            return s;
+          }, 0)
+        : 0;
       // Value the reconstructed history units at this day's price
       const historyVal = Object.entries(unitsAtPoint).reduce((s, [ticker, units]) => {
         return s + units * priceAtPoint(ticker);
       }, 0);
-      const totalVal = legacyVal + historyVal;
+      const totalVal = legacyVal + phantomVal + historyVal;
 
       // Cumulative cost up to this point
       let contribAtPoint = seededCostBase;
@@ -21011,8 +21050,20 @@ function renderGrowthChart(type='monthly') {
   // and is how most broker statements display per-period performance.
   const firstPoint = points[0];
   const latestPoint = points[points.length - 1];
+  // NOTE: we intentionally pass `0` for startValueOverride so TWR computes
+  // its own startValue via _computeHistoricalPortfolioValue. The chart's
+  // `firstValue` is built by a separate codepath that doesn't know about
+  // phantom legacy holdings (seeded items that have been deleted from
+  // LS.PORTFOLIO after being sold via history — DFNG is the canonical
+  // case). If we override with firstValue, the start point misses the
+  // phantom legacy value and the first sub-period shows a fake gain when
+  // TWR's internal sub-period valuations DO include the phantom. By
+  // letting TWR compute startValue itself, V_start and all internal
+  // V_end values use the same valuation method consistently.
+  // latestValue stays as override because "today" is after the sale, so
+  // phantom legacy doesn't apply — and we want live prices for today.
   const twrResult = (typeof _computeTWR === 'function' && allHistory.length > 0)
-    ? _computeTWR(firstPoint.timestamp, latestPoint.timestamp, allHistory, firstValue, latestValue)
+    ? _computeTWR(firstPoint.timestamp, latestPoint.timestamp, allHistory, 0, latestValue)
     : { twr: 0, marketGain: 0, valid: false };
 
   // Stash the latest TWR result on window so the Show Maths panel can
